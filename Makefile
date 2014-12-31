@@ -1,17 +1,36 @@
-SOURCES=$(wildcard *.asc chapters/*.asc)
-MAIN=concurrencia.asc
+SOURCES=$(chapters/*.asc)
+BASE=concurrencia
+MAIN=$(BASE).asc
 
-all: mobi epub
+UNIFIED_BASE=unified_$(BASE)
+UNIFIED=unified_$(MAIN)
+EPUB_SPINE=epub_spine.asc
 
-mobi: output/concurrencia.mobi
+all: mobi epub html
 
-epub: output/concurrencia.epub
+$(UNIFIED): $(MAIN) $(SOURCES)
+	./unify.py $<  $@
 
-output/concurrencia.mobi: $(SOURCES)
-	asciidoctor-epub3 -a ebook-format=kf8 $(MAIN) -o $@
+$(EPUB_SPINE): $(UNIFIED)
+	./epub_spine.py $<  $@
 
-output/concurrencia.epub: $(SOURCES)
-	asciidoctor-epub3 $(MAIN) -o $@
+mobi: output/$(UNIFIED_BASE).mobi 
 
+epub: output/$(UNIFIED_BASE).epub
+
+html: output/$(UNIFIED_BASE).html
+
+output/$(UNIFIED_BASE).mobi: $(UNIFIED) $(EPUB_SPINE)
+	asciidoctor-epub3 -a ebook-format=kf8 $(EPUB_SPINE) -o $@
+	#-kindlegen output/$(UNIFIED_BASE).epub
+
+output/$(UNIFIED_BASE).epub: $(UNIFIED) $(EPUB_SPINE)
+	asciidoctor-epub3 $(EPUB_SPINE) -o $@ 
+	#a2x -f epub $(UNIFIED) -D output
+
+output/$(UNIFIED_BASE).html: $(UNIFIED)
+	asciidoctor $(UNIFIED) -o $@
+
+.PHONY: clean
 clean:
-	rm output/*
+	-rm output/* $(UNIFIED) $(EPUB_SPINE)
