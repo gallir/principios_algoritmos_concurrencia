@@ -4,7 +4,8 @@ MAIN=$(BASE).asc
 
 UNIFIED_BASE=unified_$(BASE)
 UNIFIED=unified_$(MAIN)
-EPUB_SPINE=epub_spine.asc
+EPUB_SPINE_BASE=epub_spine
+EPUB_SPINE=$(EPUB_SPINE_BASE).asc
 
 all: mobi epub html
 
@@ -14,19 +15,17 @@ $(UNIFIED): $(MAIN) $(SOURCES)
 $(EPUB_SPINE): $(UNIFIED)
 	./epub_spine.py $<  $@
 
-mobi: output/$(UNIFIED_BASE).mobi 
+mobi: output/$(EPUB_SPINE_BASE).mobi 
 
-epub: output/$(UNIFIED_BASE).epub
+epub: output/$(EPUB_SPINE_BASE).epub
 
 html: output/$(UNIFIED_BASE).html
 
-output/$(UNIFIED_BASE).mobi: $(UNIFIED) $(EPUB_SPINE)
-	asciidoctor-epub3 -a ebook-format=kf8 $(EPUB_SPINE) -o $@
-	#-kindlegen output/$(UNIFIED_BASE).epub
+output/$(EPUB_SPINE_BASE).mobi: $(UNIFIED) $(EPUB_SPINE)
+	asciidoctor-epub3 -a ebook-format=kf8 $(EPUB_SPINE) -o $@ #-kindlegen output/$(UNIFIED_BASE).epub
 
-output/$(UNIFIED_BASE).epub: $(UNIFIED) $(EPUB_SPINE)
-	asciidoctor-epub3 $(EPUB_SPINE) -o $@ 
-	#a2x -f epub $(UNIFIED) -D output
+output/$(EPUB_SPINE_BASE).epub: $(UNIFIED) $(EPUB_SPINE)
+	asciidoctor-epub3 $(EPUB_SPINE) -o $@ #a2x -f epub $(UNIFIED) -D output 
 
 output/$(UNIFIED_BASE).html: $(UNIFIED)
 	asciidoctor $(UNIFIED) -o $@
