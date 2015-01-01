@@ -1,7 +1,7 @@
 BASE=master
 OUTDIR=output
 SOURCES=$(wildcard chapters/*.asc)
-MAIN=$(BASE).asc
+MAIN=$(BASE).adoc
 
 
 all: mobi epub html
