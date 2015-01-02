@@ -13,7 +13,6 @@ const (
 var counter = 0
 
 func run(id, counts int, done chan bool) {
-	fmt.Printf("Starting %d\n", id)
 	for i := 0; i < counts; i++ {
 		counter++
 	}
@@ -33,5 +32,5 @@ func main() {
 		<-done
 	}
 
-	fmt.Printf("Counter value: %d Expected: %d Difference: %d\n", counter, MAX_COUNT, MAX_COUNT-counter);
+	fmt.Printf("Counter value: %d Expected: %d\n", counter, MAX_COUNT);
 }

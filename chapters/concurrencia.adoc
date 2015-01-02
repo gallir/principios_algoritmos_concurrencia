@@ -1,59 +1,127 @@
-== Concurrencia
+== Introducción a concurrencia
 
 La mayoría de los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa con las variable `a` y `b` inicializadas a `0`
 
 ----
 a = a + 1
 b = b + a
-print a, b
+print "a, b:", a, b
 ----
 
-Es muy fácil saber que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `2 3`, el siguiente `3 6`, etc. 
+Es muy fácil saber que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc. 
 
-Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente *intercalación*:
+Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente *intercalación* de las instrucciones del programa:
 
 
 ----
-Proceso P   |  Proceso Q 
+Proceso P               Proceso Q 
 
 ...
 a = a + 1      
-               a = a + 1
-               b = b + a
-               print a, b
-               ...
+                        a = a + 1
+                        b = b + a
+                        print "a, b:", a, b
+                        ...
 b = b + a
-print a, b
+print "a, b:", a, b
 ----
 
-El resultado que observaremos será:
+
+
+El resultado de la ejecución de estas instrucciones será:
 
 ----
-2 2 # Q
-2 4 # P
+a, b: 2 2
+a, b: 2 4
 ----
 
-Ninguno de ambos eran los valores que esperábamos
+Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa seguramente el resultado será diferente, el resultado final depende del instante en que cada proceso ejecuta sus instrucciones. Este problema se denomina *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos].
 
+Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas, el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son *atómicas*, el proceso puede ser interrumpido y ejecutarse otro proceso que modifique las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más sencillas, por ejemolo:
 
+	counter += 1
+
+Hay una creencia en suponer que una operación tan sencilla como sumar una constante (o _literal_) no es interrumpible, pero no es así. Al generarse el código ejecutable son al menos tres instrucciones del procesador:
 
 ----
-movl    counter(%rip), %eax
-addl    $1, %eax
-movl    %eax, counter(%rip)
+movl  counter(%rip), %eax
+addl  $1, %eax
+movl  %eax, counter(%rip)
 ----
 
-Puede verse el código en <<threads_c>>
+Si se ejecuta dos veces el valor de `counter` será `2`, es factible que se presente la siguiente condición de carrera ente dos procesos:
 
+----
+movl counter(%rip), %eax // <1>
+                        movl counter(%rip), %eax
+                        addl $1, %eax
+                        movl %eax, counter(%rip)
+addl $1, %eax // <2>
+movl %eax, counter(%rip)
+----
+
+<1> Se almacena 0 en el registro eax.
+<2> Aunque la variable ya tiene almacenado el valor `1`, el registro eax sigue teniendo 0.
+
+En este caso el valor será `1`, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación, son cuatro instrucciones:
+
+----
+LOAD_GLOBAL   0 (counter)
+LOAD_CONST    1 (1)
+INPLACE_ADD      
+STORE_GLOBAL  0 (counter)
+----
+
+En la sección <<counter_add>> está el código en C (<<threads_c>>) Go (<<threads_go>>) Java (<<threads_java>>) y Python (<<threads_py>>), todos ellos som similares, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10.000.000`). El resultado de la ejecución es la siguiente:
+
+----
+$ time ./threads_c
+Counter value: 5785131 Expected: 10000000
+real	0m0.010s
+user	0m0.017s
+sys	0m0.000s
+
+$ time ./threads_go
+Counter value: 5052927 Expected: 10000000
+real	0m0.021s
+user	0m0.032s
+sys	0m0.008s
+
+$ time python3 threads.py 
+Counter value: 7737979 Expected: 10000000
+real	0m5.400s
+user	0m5.365s
+sys	0m0.044s
+
+$ time java Threads 
+Counter value: 4406963 Expected: 10000000
+real	0m0.333s
+user	0m0.564s
+sys	0m0.020s
+----
+
+Se puede observar que en todos _se perdieron_ hasta más de la mitad de los incrementos.
+
+[NOTE]
+.Sobre los tiempos de CPU
+====
+Fíjate en los _tiempos de CPU_ comparados con el _tiempo de reloj_. Salvo Python todos superan lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (GIL, http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html[_The Problem with CPython Semantics_])
+====
+
+
+
+////
 === Concurrencia vs paralelismo
 
 Un conjunto de programas secuenciales, o procesos, que podrían ejecutarse en paralelo. Los procesos se escriben con un conjunto de instrucciones atómicas, la ejecución se realiza ejecutando una secuencia de instrucciones obtenidas por una intercalación arbitraria de los procesos.
 
 	p1 → p2 → q1 → q2
 	p1 → q1 → p2 → q2
+////
 
+[source,c,linenums]
 ----
-while(turno !=0)
+while(turno !=0);
 /* SC*/
 turno = 1;
 ----

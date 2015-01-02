@@ -7,16 +7,17 @@ Concurrencia
 :docinfo:
 :toc:
 :toclevels: 2
+:numbered!:
 :imagesdir: images
 :front-cover-image: image:cover.png[Concurrencia Cover,1600,2560]
 :hide-uri-scheme:
+:icons:
 
 
 
+include::chapters/intro.adoc[]
 
-include::chapters/intro.asc[]
+include::chapters/concurrencia.adoc[]
 
-include::chapters/concurrencia.asc[]
-
-include::chapters/codes.asc[]
+include::chapters/codes.adoc[]
 

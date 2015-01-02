@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import threading
 import time
 
@@ -35,6 +33,5 @@ for t in threads:
 for t in threads:
 	t.join()
 
-print("Counter value: {} Expected: {} Difference: {}".
-		format(myThread.counter, MAX_COUNT, MAX_COUNT - myThread.counter))
+print("Counter value: {} Expected: {}".format(myThread.counter, MAX_COUNT))
 

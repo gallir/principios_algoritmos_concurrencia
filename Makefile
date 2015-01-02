@@ -1,7 +1,10 @@
 BASE=master
 OUTDIR=output
-SOURCES=$(wildcard chapters/*.asc)
+SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
+
+CSS=epub.css
+A2XOPTIONS= --conf-file=resources/a2x.conf --stylesheet=resources/$(CSS) -a docinfo --attribute tabsize=2 
 
 
 all: mobi epub html
@@ -15,18 +18,18 @@ html: $(OUTDIR)/$(BASE).html
 validate: 
 	asciidoctor-epub3 -D $(OUTDIR) -a ebook-validate $(MAIN)
 
-$(OUTDIR)/$(BASE).mobi: $(OUTDIR)/$(BASE).epub
+$(OUTDIR)/$(BASE).mobi: $(SOURCES) $(OUTDIR)/$(BASE).epub 
 	-kindlegen $(OUTDIR)/$(BASE).epub
 
-$(OUTDIR)/$(BASE).epub: $(MAIN) $(SOURCES)
-	a2x -f epub --conf-file=resources/a2x.conf \
-			--stylesheet=resources/epub.css \
-			-a docinfo --attribute tabsize=2 \
-			-D $(OUTDIR) $(MAIN)
+$(OUTDIR)/$(BASE).epub: $(SOURCES)
+	scripts/a2x -f epub $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
-$(OUTDIR)/$(BASE).html: $(MAIN) $(SOURCES)
+$(OUTDIR)/$(BASE).html: $(SOURCES)
 	asciidoctor $(MAIN) -o $@
+	#a2x -f xhtml $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
 .PHONY: clean
 clean:
 	-rm -rf output/* 
+
+print-%  : ; @echo $* = $($*)

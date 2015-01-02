@@ -1,4 +1,4 @@
-// Compile with gcc -pthread  -o threads  threads.c
+// Compiled with gcc -O -pthread -o threads threads.c 
 
 #include <pthread.h>
 #include <stdio.h>
@@ -7,25 +7,24 @@
 
 
 #define NUM_THREADS	 2
-#define MAX_COUNT 10000000L
+#define MAX_COUNT 10000000
 
 // Just used to send the index of the id
 struct tdata {
 	int tid;
 };
 
-long counter = 0;
+int counter = 0;
 
 void *count(void *ptr) {
 	long i, max = MAX_COUNT/NUM_THREADS;
 	int tid = ((struct tdata *) ptr)->tid;
 
-	printf("Starting %d\n", tid);
 	for (i=0; i < max; i++) {
 		counter += 1; // The global variable, i.e. the critical section
 	}
 
-	printf("End %d counter: %ld\n", tid, counter);
+	printf("End %d counter: %d\n", tid, counter);
 	pthread_exit(NULL);
 }
 
@@ -47,7 +46,7 @@ int main (int argc, char *argv[]) {
 		pthread_join(threads[i], NULL);
 	}
 
-	printf("Counter value: %ld Expected: %ld Difference: %ld\n", counter, MAX_COUNT, MAX_COUNT-counter);
+	printf("Counter value: %d Expected: %d\n", counter, MAX_COUNT);
 	return 0;
 }
 

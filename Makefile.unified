@@ -1,6 +1,6 @@
-SOURCES=$(chapters/*.asc)
+SOURCES=$(wildcard chapters/*.asc)
 BASE=master
-MAIN=$(BASE).asc
+MAIN=$(BASE).adoc
 
 UNIFIED_BASE=unified_$(BASE)
 UNIFIED=unified_$(MAIN)
@@ -10,10 +10,10 @@ EPUB_SPINE=$(EPUB_SPINE_BASE).asc
 all: mobi epub html
 
 $(UNIFIED): $(MAIN) $(SOURCES)
-	./unify.py $<  $@
+	./scripts/unify.py $<  $@
 
 $(EPUB_SPINE): $(UNIFIED)
-	./epub_spine.py $<  $@
+	./scripts/epub_spine.py $<  $@
 
 mobi: output/$(EPUB_SPINE_BASE).mobi 
 
