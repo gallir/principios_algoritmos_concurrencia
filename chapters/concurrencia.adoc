@@ -72,7 +72,7 @@ INPLACE_ADD
 STORE_GLOBAL  0 (counter)
 ----
 
-En la sección <<counter_add>> está el código en C (<<threads_c>>) Go (<<threads_go>>) Java (<<threads_java>>) y Python (<<threads_py>>), todos ellos som similares, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10.000.000`). El resultado de la ejecución es la siguiente:
+En la sección <<counter_add>> está el código en C (<<threads_c>>) Go (<<threads_go>>) Java (<<threads_java>>) y Python (<<threads_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10.000.000`). El resultado de la ejecución es la siguiente:
 
 ----
 $ time ./threads_c
@@ -100,14 +100,19 @@ user	0m0.564s
 sys	0m0.020s
 ----
 
-Se puede observar que en todos _se perdieron_ hasta más de la mitad de los incrementos.
+
 
 [NOTE]
 .Sobre los tiempos de CPU
 ====
-Fíjate en los _tiempos de CPU_ comparados con el _tiempo de reloj_. Salvo Python todos superan lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (GIL, http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html[_The Problem with CPython Semantics_])
+Fíjate en los _tiempos de CPU_ comparados con el _tiempo de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (GIL, http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html[_The Problem with CPython Semantics_])
 ====
 
+Se puede observar que en todos _se perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones (_interleaving_), estas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una solución correcta es equivalente y funciona para ambos sistemas: el paralelismo es sólo un caso particular de la intercalación.
+
+Para que evitar los errores primero debemos identificar el código de ambos programas que acceden a recursos compartidos y que por lo tanto pueden ser víctimas de las _condiciones de carrera_. Esos *fragmentos de código se denominan _secciones críticas_*.
+
+La solución más sencilla y obvia es *evitar que la sección crítica de un proceso se ejecute mientras se está ejecutando la misma sección en otro proceso*: debemos asegurar *_exclusión mutua_*.
 
 
 ////
@@ -119,11 +124,81 @@ Un conjunto de programas secuenciales, o procesos, que podrían ejecutarse en pa
 	p1 → q1 → p2 → q2
 ////
 
-[source,c,linenums]
+=== Exclusión mutua para dos procesos
+
+En esta sección estudiaremos la solución al problema de la exclusión mutua para dos procesos, hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es una matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la panaderia_ de Leslie Lamport <<lamport>>.
+
+Por supuesto estos algoritmos no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que explico más resources/epub-doc.cssadelante. Tampoco se usan porque consumen mucha CPU al hacer _espera activa_ y existen otras primitivas que eliminan los problemas mencionados y que veremos a continuación: instrucciones por hardware, semáforos, monitores y paso de mensajes.
+
+El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes (que además sirven para que detectéis en vuestros programas, incluso en bases de datos, desarrollo web, y hasta en móviles), conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y su aplicación: _esperas activas_, _interbloqueos_ (_deadlocks_), _inanición_ (_starvation_), _livelocks_, etc.
+
+==== Convenciones
+Comenzaremos con las convenciones habituales cuando se presenta un problema de exclusión mutua. Consideramos que los programas tienen _secciones críticas_ y _resto del código_, no podemos modificar ninguna de ellas ni nos interesa lo que se hace en el _resto_. Este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, sólo asumimos que el tiempo que cada proceso está en la sección crítica es finito.
+
+Los procesos acceden a variables o recursos compartidos, ese no es nuestro problema ni podemos modificarlos. lo que haremos será desarrollar los algoritmos que se insertarán antes de la sección crítica (_pre-protocolo_ o _entrada de la sección crítica_) y después de la misma (_post_protocolo_ o _salida de la sección crítica_).
+
+
+.Inicialización de variables globales
 ----
-while(turno !=0);
-/* SC*/
-turno = 1;
+        turno = 1
+        estados = [0, 0]
+----
+
+.Programa que ejecuta cada proceso
+----
+while True:
+	# resto del código
+	#
+	entry_critical_section() # <1>
+	critical_section() # <2>
+	exit_critical_section() # <3>
+	#
+	# resto del código
+----
+<1> Entrada a sección crítica o pre-protocolo.
+<2> La sección crítica, por ejemplo `counter += 1`.
+<3> La salida de la sección crítica, o post-protocolo.
+
+==== Reglas y condiciones
+
+Existen tres reglas fundamentales que deben cumplir los algoritmos y primitivas de exclusión mutua.
+
+Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica, no se debe producir .
+Libre de interbloqueos (_deadlock_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
+Libre de inanición (_starvation_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito.
+
+<<stallings>> propone seis requerimientos equivalentes a los anteriores pero que facilitan el análisis y validar el código.
+
+. Debe asegurarse exclusión mutua.
+. Un proceso que se interrumpe en su sección no crítica (o _resto del código_) no debe interferir a los demás procesos.
+. No debe permitirse que ningún proceso espere indefinidamente en la _entrada de la sección crítica_ (es decir, libre de interbloqueo e inanición).
+. Si no hay ningún proceso en la sección crítica y uno desea entrar debe poder hacerlo inmediatamente.
+. No se deben hacer suposiciones de la velocidad relativa de los procesos ni del número de procesadores.
+. Un proceso permanece en su sección crítica por tiempo finito (lo asumimos como cierto).
+
+
+
+==== Primer intento
+----
+	while turno !=0:
+	  pass
+
+	/* SC*/
+	turno = 1;
 ----
 
 El código anterior...
+
+==== Segundo intento
+
+==== Tercer intento
+
+==== Cuarto intento
+
+==== Algoritmo de Dekker
+
+==== Algoritmo de Peterson
+
+
+=== Solución para N procesos: algoritmo de la panaderia
+

@@ -19,5 +19,9 @@ include::chapters/intro.adoc[]
 
 include::chapters/concurrencia.adoc[]
 
+include::chapters/semaforos.adoc[]
+
 include::chapters/codes.adoc[]
+
+include::chapters/bibliografia.adoc[]
 

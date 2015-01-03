@@ -9,26 +9,26 @@
 [source,c]
 .threads.c
 ----
-include::../code/threads.c[]
+include::../code/threads.c[tabsize=2]
 ----
 
 [[threads_py]]
 [source,python]
 .threads.py
 ----
-include::../code/threads.py[]
+include::../code/threads.py[tabsize=2]
 ----
 
 [[threads_go]]
 [source,go]
 .threads.go
 ----
-include::../code/threads.go[]
+include::../code/threads.go[tabsize=2]
 ----
 
 [[threads_java]]
 [source,java]
 .Threads.class
 ----
-include::../code/threads.java[]
+include::../code/threads.java[tabsize=2]
 ----
