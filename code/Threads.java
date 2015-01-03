@@ -1,20 +1,14 @@
 public class Threads implements Runnable {
 	static final int THREADS = 2;
-	static final int MAX_COUNT = 10000000;
-	volatile static int counter = 0;
-	int n, id;
+	int id;
 
-	public Threads(int id, int n) {
+	public Threads(int id) {
 		this.id = id;
-		this.n = n;
 	}
 
 	@Override
 	public void run() {
-		for (int i = 0; i < this.n; i++) {
-			counter += 1;
-		}
-		
+		System.out.printf("Hi, I'm thread %d\n", id);
 	}
 
 	public static void main(String[] args) throws InterruptedException {
@@ -22,18 +16,14 @@ public class Threads implements Runnable {
 		int i;
 		
 		for (i=0; i< THREADS; i++) {
-			threads[i] = new Thread(new Threads(i, MAX_COUNT/THREADS));
-		}
-
-		for (i=0; i< THREADS; i++) {
+			threads[i] = new Thread(new Threads(i));
 			threads[i].start();
 		}
-		
+
 		for (i=0; i< THREADS; i++) {
 			threads[i].join();
 		}
 		
-		System.out.printf("Counter value: %d Expected: %d\n", counter, MAX_COUNT);
 	}
 }
 
