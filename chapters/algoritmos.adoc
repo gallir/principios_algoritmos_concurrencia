@@ -1,32 +1,77 @@
 == Algoritmos de exclusión mutua
 
-En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos. Empezaremos analizando los problemas de algoritmos simples hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<Peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la panaderia_ de Leslie Lamport <<Lamport>>.
+En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos. Empezaremos analizando los problemas de algoritmos simples hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<Peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la panadería_ de Leslie Lamport <<Lamport>>.
 
-Por supuesto estos algoritmos no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican más adelante. Tampoco se usan porque consumen mucha CPU al hacer _espera activa_ y existen otras primitivas que eliminan los problemas mencionados y que veremos a continuación: instrucciones por hardware, semáforos, monitores y paso de mensajes.
+Por supuesto estos algoritmos actualmente no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que estos hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican más adelante. Tampoco se usan porque consumen mucha CPU al hacer _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: instrucciones por hardware, semáforos, monitores y paso de mensajes.
 
 El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y su aplicación: _esperas activas_, _interbloqueos_ (_deadlocks_), _inanición_ (_starvation_), _livelocks_, etc. Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de operaciones SQL en bases de datos.
 
+=== Memoria compartida
+
+En todos los algoritmos y técnicas que analizamos en este libro asumimos que nuestros programan tienen acceso a memoria compartida, es decir, podemos usar variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Es decir, se dice que nuestros algoritmos son del *tipo de memoria compartida*.
+
+El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, en este caso se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_ y _sincronización_ pero sus técnicas son más complejas al no disponer de _variables compartidas_ por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, además estos están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro. Aunque quizás lo sea en el siguiente.
+
+
+
+
+=== Convenciones de programación
+
+Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, sólo asumimos que el tiempo que cada proceso está en la sección crítica es finito.
+
+En las secciones críticas los procesos acceden a variables o recursos compartidos y que requieren que se asegure exclusión mutua con las mismas secciones críticas de otros procesos. Nuestra responsabilidad será desarrollar los algoritmos que se insertarán antes de la sección crítica (_pre-protocolo_ o _entrada de la sección crítica_) y después de la misma (_post_protocolo_ o _salida de la sección crítica_).
+
+
+.Inicialización de variables globales
+----
+        turno = 1
+        estados = [0, 0]
+----
+
+.Programa que ejecuta cada proceso
+----
+while True:
+	# resto del código
+	#
+	entry_critical_section() # <1>
+	critical_section() # <2>
+	exit_critical_section() # <3>
+	#
+	# resto del código
+----
+<1> Entrada a sección crítica o pre-protocolo.
+<2> La sección crítica, por ejemplo `counter += 1`.
+<3> La salida de la sección crítica, o post-protocolo.
 
 
 === Solución para dos procesos
 
+Vamos a intentar solucionar primero el problema de concurrencia más sencilla: para solo dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
 
+El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0`. Para este el _yo_ es el `0` y el _otro_ es el `1`. Obviamente, el algoritmo del proceso `1` será igual pero con los `0` y `1` intercambiados.
 
-<<Stallings>> propone seis requerimientos equivalentes a los anteriores pero que facilitan el análisis y validar el código.
-
-. Debe asegurarse exclusión mutua.
-. Un proceso que se interrumpe en su sección no crítica (o _resto del código_) no debe interferir a los demás procesos.
-. No debe permitirse que ningún proceso espere indefinidamente en la _entrada de la sección crítica_ (es decir, libre de interbloqueo e inanición).
-. Si no hay ningún proceso en la sección crítica y uno desea entrar debe poder hacerlo inmediatamente.
-. No se deben hacer suposiciones de la velocidad relativa de los procesos ni del número de procesadores.
-. Un proceso permanece en su sección crítica por tiempo finito (lo asumimos como cierto).
+Como generalización se suele usar `i` para identificar al propio proceso y `j` para identifica a los otros. También lo haremos así, pero más adelante. Por ahora basta con usar ambos números y nos centraremos en el *proceso `0`*. 
 
 
 ==== Primer intento
 
+
+La idea fundamental es que una variable, `turn` nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable puede tomar sólo los valores `0` y `1`, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero, pero puede tomar cualquiera de los dos valores.
+
+
 ----
         turn = 0
 ----
+
+El siguiente es el código. El primer `while` es la _entrada a la sección crítica_ y lo que hace es esperar a que sea el turno del proceso. En este caso esperará en el bucle mientras `turn` sea diferente a `0`. 
+
+
+[NOTE]
+.Espera activa
+====
+Esta espera en el `while` _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no podemos usar otras primitivas... por ejemplo cuando estamos implementando esas primitivas. En estos casos se los llama _spinlocks_, ya estudiaremos su implementación más eficiente con instrucciones por hardware.
+====
+
 ----
 while turn != 0:
   pass
@@ -35,6 +80,18 @@ critical_section()
 
 turno = 1;
 ----
+
+Cuando la variable sea `0` el proceso podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno al otro proceso. Muchos de vosotros ya os habréis dado cuenta del problema, pero aún así vamos a analizarlo en detalle comprobando si se cumplen los requisitos de <<six_requisites>>.
+
+. _Asegurar exclusión mutua_: Es fácil comprobar que la cumple. La variable `turn` solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que `turn` valía cero y uno simultáneamente, sabemos que es imposible.
+
+. _No interferencia_: Supongamos que el proceso `0` entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de `1` tendrá que esperar a que éste entre a su sección crítica para poder entrar a continuacón. Es decir, la entrada de `0` está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar, está en el _resto del código_.footnote:[O incluso ni siquiera se está ejecutando.] Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+
+. _Sin esperas infinitas_: Por la anterior se produce espera infinita si el proceso `1` no entra a la sección crítica.
+
+. _Entrada inmediata_: Si `turn` vale `1` pero este último está en el _resto del código_ no podrá entrar. Tampoco se cumple.
+
+. _Sin suposiciones de velocidad relativa_: Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple, de hecho el problema de este algoritmo es que exige *_alternancia exclusiva_*.
 
 
 ==== Segundo intento

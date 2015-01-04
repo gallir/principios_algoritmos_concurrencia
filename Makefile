@@ -4,14 +4,15 @@ SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
 
 CSS=epub.css
-A2XOPTIONS=-v --conf-file=resources/a2x.conf --stylesheet=resources/$(CSS)  --attribute tabsize=4 
+A2XOPTIONS=--conf-file=resources/a2x.conf --stylesheet=resources/$(CSS)  --attribute tabsize=4 
 
 
-all: epub
+epub: $(OUTDIR)/$(BASE).epub
+
+all: epub mobi
 
 mobi: $(OUTDIR)/$(BASE).mobi
 
-epub: $(OUTDIR)/$(BASE).epub
 
 html: $(OUTDIR)/$(BASE).html
 

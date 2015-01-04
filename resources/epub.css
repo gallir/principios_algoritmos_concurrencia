@@ -408,10 +408,10 @@ dd {
 
 ol {
   list-style-type: decimal;
-  margin-top: 8px !important;
-  margin-bottom: 8px !important;
-  margin-left: 5px !important;
-  padding-left: 20px !important;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-left: 5px;
+  padding-left: 20px;
 }
 
 ol ol {
@@ -793,3 +793,10 @@ pre img {
 vertical-align: text-bottom;
 }
 
+ol, ul {
+  margin-left: 1em;
+}
+
+a.xref {
+    font-style: italic;
+}

@@ -1,6 +1,6 @@
 == Exclusión mutua
 
-La exclusión mutua es un tema fundamental cuando se estudian los problemas y soluciones de programación concurrentefootnote:[El otro es _sincronización_, los veremos más adelante cuando hayamos afianzado conceptos y estudiado primitivas fundamentales.]. En este capítulo se describen los problemas que generan los accesos _concurrente_ desde diferentes procesosfootnote:[O hilos, a menos que especifique lo contrario uso el término indistantemente.] a recursos compartidos. 
+La exclusión mutua es un tema fundamental cuando se estudian los problemas y soluciones de programación concurrentefootnote:[El otro es _sincronización_, los veremos más adelante cuando hayamos afianzado conceptos y estudiado primitivas fundamentales.]. En este capítulo se describen los problemas que generan los accesos _concurrente_ desde diferentes procesosfootnote:[O hilos, a menos que especifique lo contrario uso el término indistintanmente.] a recursos compartidos. 
 
 === Intercalado de instrucciones
 
@@ -39,9 +39,9 @@ a, b: 2 2
 a, b: 2 4
 ----
 
-Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa seguramente el resultado será diferente, el resultado final depende del instante en que cada proceso ejecuta sus instrucciones. Este problema se denomina *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos].
+Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa seguramente el resultado será diferente, el resultado final depende del instante en que cada proceso ejecuta sus instrucciones. Este problema se denomina *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
-Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas, el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son *atómicas*, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más sencillas, por ejemolo:
+Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas, el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son *atómicas*, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más sencillas, por ejemplo:
 
 	counter += 1
 
@@ -56,11 +56,11 @@ movl  %eax, counter(%rip)
 Si se ejecuta dos veces el valor de `counter` será `2`, es factible que se presente la siguiente condición de carrera ente dos procesos:
 
 ----
-movl counter(%rip), %eax // <1>
+movl counter(%rip), %eax <1>
                         movl counter(%rip), %eax
                         addl $1, %eax
                         movl %eax, counter(%rip)
-addl $1, %eax // <2>
+addl $1, %eax <2>
 movl %eax, counter(%rip)
 ----
 
@@ -81,29 +81,30 @@ En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocou
 ----
 $ time ./counter
 Counter value: 5785131 Expected: 10000000
-real	0m0.010s
+real	0m0.010s <1>
 user	0m0.017s
 sys	0m0.000s
 
 $ time ./gocounter
 Counter value: 5052927 Expected: 10000000
-real	0m0.021s
+real	0m0.021s <1>
 user	0m0.032s
 sys	0m0.008s
 
-$ time python3 counter.py 
-Counter value: 7737979 Expected: 10000000
-real	0m5.400s
-user	0m5.365s
-sys	0m0.044s
-
 $ time java Counter
 Counter value: 4406963 Expected: 10000000
-real	0m0.333s
+real	0m0.333s <1>
 user	0m0.564s
 sys	0m0.020s
-----
 
+$ time python3 counter.py 
+Counter value: 7737979 Expected: 10000000
+real	0m5.400s <2>
+user	0m5.365s
+sys	0m0.044s
+----
+<1> El tiempo de _reloj_ es *menor* al tiempo acumulado de CPU.
+<2> El tiempo de _reloj_ es *mayor* al tiempo acumulado de CPU.
 
 
 [NOTE]
@@ -120,42 +121,35 @@ Para que evitar los errores primero debemos identificar el código de ambos prog
 La solución más sencilla y obvia es *evitar que la sección crítica de un proceso se ejecute mientras se está ejecutando la misma sección en otro proceso*: debemos asegurar *_exclusión mutua_*.
 
 
-=== Convenciones
-
-Comenzaremos con las convenciones habituales cuando se presenta un problema de exclusión mutua que hemos de soljucionar. Consideramos que los programas tienen _secciones críticas_ y _resto del código_, no podemos modificar ninguna de ellas ni nos interesa lo que se hace en el _resto_. Este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, sólo asumimos que el tiempo que cada proceso está en la sección crítica es finito.
-
-Los procesos acceden a variables o recursos compartidos, ese no es nuestro problema ni podemos modificarlos. lo que haremos será desarrollar los algoritmos que se insertarán antes de la sección crítica (_pre-protocolo_ o _entrada de la sección crítica_) y después de la misma (_post_protocolo_ o _salida de la sección crítica_).
-
-
-.Inicialización de variables globales
-----
-        turno = 1
-        estados = [0, 0]
-----
-
-.Programa que ejecuta cada proceso
-----
-while True:
-	# resto del código
-	#
-	entry_critical_section() # <1>
-	critical_section() # <2>
-	exit_critical_section() # <3>
-	#
-	# resto del código
-----
-<1> Entrada a sección crítica o pre-protocolo.
-<2> La sección crítica, por ejemplo `counter += 1`.
-<3> La salida de la sección crítica, o post-protocolo.
-
 
 === Requisitos para la soluciones de EM
 
-Existen tres requisitos fundamentales que deben cumplir los algoritmos y primitivas de exclusión mutua.
+Se definieron tres requisitos fundamentales que deben cumplir los algoritmos y primitivas que pretenden solucionar el exclusión mutua.
 
+[[em_requisites]]
+[TIP]
+.Requisitos para exclusión mutua
+====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica, no se debe producir .
 Libre de interbloqueos (_deadlock_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
 Libre de inanición (_starvation_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito.
+====
+
+
+Estas tres condiciones nos servirán para evaluar cualquier algoritmo y primitiva. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
+
+Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<Stallings>> propone seis requisitos *equivalentes* a los anteriores pero que al ser más específicos facilitan el análisis y validación del código.
+
+[[six_requisites]]
+.Seis requisitos para exclusión mutua
+. Asegurar *exclusión mutua*.
+. Un proceso que se interrumpe en su sección no crítica (o _resto del código_) *no debe interferir* a los demás procesos.
+. No debe permitir *esperas infinitas* en la _entrada de la sección crítica_ (es decir, libre de interbloqueo e inanición).
+. Debe permitir la *entrada inmediata* a la sección crítica si no hay ningún proceso en ella. 
+. No se deben hacer *suposiciones de la velocidad relativa* de los procesos ni del número de procesadores.
+. Un proceso permanece en su sección crítica por tiempo finito. Dado que nuestro interés es desarrollar los algoritmos de entrada y salida a la sección crítica, damos por cierta la validez de esta reglafootnote:[Pero sí se debe tomar en cuenta cuando se desarrollan los programas que *implementan* la sección crítica.].
+
+
 
 
 
