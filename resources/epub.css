@@ -130,7 +130,6 @@ h4 {
 
 /* Appropriate heading hyphenation suppression for different ereaders */
 h1, h2, h3, h4 { 
-  -webkit-hyphens: none;
   hyphens: none;
   adobe-hyphenate: none;
 }
@@ -147,7 +146,7 @@ img {
 div.figure {
 	margin: 10px 0 10px 0 !important;
 	text-align: center;
-    -webkit-border-radius: 5px;
+    border-radius: 5px;
     border: 1px solid #000;
     background-color: transparent;
     padding: 0 5px !important;
@@ -174,7 +173,7 @@ div.informalfigure {
 
 div.sidebar {
   margin: 10px 0 10px 0 !important;
-  -webkit-border-radius: 5px;
+  border-radius: 5px;
   border: 1px solid #000;
   background-color: transparent;
   font-size: 90%;
@@ -738,6 +737,28 @@ code, pre {
   margin-left: 20px;
 }
 
+div.chapter>div.titlepage {
+  width: 100%;
+  padding: 15px 10px 20px 15px;
+  background-color: #000;
+  color: #fff;
+  margin-bottom: 30px;
+}
+
+div.chapter>div.titlepage h1 {
+  text-transform: uppercase;
+  font-size: 1.8em;
+  text-align: right;
+}
+
+h2 { 
+  font: bold 1.2em sans-serif;
+}
+
+h3 {
+  font: bold 1.0em sans-serif;
+}
+
 div.tip, div.note {
   border: 1px solid #6cafd0;
   background-color: #D3E2E8;
@@ -745,9 +766,18 @@ div.tip, div.note {
 
 
 div.calloutlist table {
-  background: #f4f4f4;
+  margin: 10px 0px !important;
+  background: #ffffff;
   font-size: 0.9em;
+  border: none;
 }
+
+div.calloutlist table tr, div.calloutlist table tr th, div.calloutlist table tr td {
+  border: none;
+  background: none;
+  padding: 0.2em;
+}
+
 
 dt span.term {
   font-style: bold;
@@ -756,7 +786,10 @@ dt span.term {
 
 
 pre {
--moz-tab-size: 4;
--o-tab-size: 4;
 tab-size: 4;
 } 
+
+pre img {
+vertical-align: text-bottom;
+}
+

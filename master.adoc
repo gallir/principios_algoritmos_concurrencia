@@ -12,12 +12,19 @@ Concurrencia
 :front-cover-image: image:cover.png[Concurrencia Cover,1600,2560]
 :hide-uri-scheme:
 :icons:
+//:source-highlighter: source-highlight
+
+////
+--stringparam toc.section.depth 1 --stringparam generate.section.toc.level 1 
+////
 
 
 
 include::chapters/intro.adoc[]
 
-include::chapters/concurrencia.adoc[]
+include::chapters/exclusion_mutua.adoc[]
+
+include::chapters/algoritmos.adoc[]
 
 include::chapters/semaforos.adoc[]
 

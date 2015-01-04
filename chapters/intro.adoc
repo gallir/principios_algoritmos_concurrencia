@@ -9,7 +9,7 @@ El código está en <<source_code>>
 
 
 
-== Procesos
+=== Procesos
 
 Intro a procesos.
 
@@ -17,17 +17,17 @@ Intro a procesos.
 
 Cómo comparten memoria los procesos.
 
-== Mecanismos de sincronización
+=== Mecanismos de sincronización
 
 Algoritmos.
 
 Instrucciones hardware.
 
 
-== Hilos
+=== Hilos
 
 Explicar hilos. Comparten memoria
 
-== Mecanismos de sincronización
+=== Mecanismos de sincronización
 
 POSIX Threads, bla bla.

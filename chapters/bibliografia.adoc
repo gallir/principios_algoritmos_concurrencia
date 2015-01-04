@@ -1,7 +1,7 @@
 == Bibliografía
 
 [bibliography]
-- [[[stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
+- [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
 - [[[railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
-- [[[peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
-- [[[lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974 http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
+- [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
+- [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974 http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf

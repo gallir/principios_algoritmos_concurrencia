@@ -2,8 +2,8 @@
 == Código fuente
 
 
-[[counter_add]]
-=== Incrementar un contador con dos hilos
+[[threads_source]]
+=== Creación de threads
 
 [[threads_c]]
 [source,c]
@@ -19,16 +19,52 @@ include::../code/threads.c[tabsize=2]
 include::../code/threads.py[tabsize=2]
 ----
 
-[[threads_go]]
+[[gothreads_go]]
 [source,go]
-.threads.go
+.gothreads.go
 ----
-include::../code/threads.go[tabsize=2]
+include::../code/gothreads.go[tabsize=2]
 ----
 
 [[threads_java]]
 [source,java]
-.Threads.class
+.Threads.java
 ----
-include::../code/threads.java[tabsize=2]
+include::../code/Threads.java[tabsize=2]
 ----
+
+
+
+[[counter_add]]
+=== Incrementar un contador con dos hilos
+
+[[counter_c]]
+[source,c]
+.counter.c
+----
+include::../code/counter.c[tabsize=2]
+----
+
+[[counter_py]]
+[source,python]
+.counter.py
+----
+include::../code/counter.py[tabsize=2]
+----
+
+[[gocounter_go]]
+[source,go]
+.gocounter.go
+----
+include::../code/gocounter.go[tabsize=2]
+----
+
+[[counter_java]]
+[source,java]
+.Counter.java
+----
+include::../code/Counter.java[tabsize=2]
+----
+
+
+
