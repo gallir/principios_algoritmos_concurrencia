@@ -33,9 +33,9 @@ En las secciones críticas los procesos acceden a variables o recursos compartid
 while True:
 	# resto del código
 	#
-	entry_critical_section() # <1>
-	critical_section() # <2>
-	exit_critical_section() # <3>
+	entry_critical_section() <1>
+	critical_section() <2>
+	exit_critical_section() <3>
 	#
 	# resto del código
 ----
@@ -48,9 +48,9 @@ while True:
 
 Vamos a intentar solucionar primero el problema de concurrencia más sencilla: para solo dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
 
-El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0`. Para este el _yo_ es el `0` y el _otro_ es el `1`. Obviamente, el algoritmo del proceso `1` será igual pero con los `0` y `1` intercambiados.
+El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0` (o _P0_). Para éste el _yo_ es el `0` y el _otro_ es el `1` (o _P1_). Obviamente, el algoritmo de P1 será igual al de P0 pero con los `0` y `1` intercambiados.
 
-Como generalización se suele usar `i` para identificar al propio proceso y `j` para identifica a los otros. También lo haremos así, pero más adelante. Por ahora basta con usar ambos números y nos centraremos en el *proceso `0`*. 
+Como generalización se suele usar `i` para identificar al propio proceso y `j` para identificar a los otros. También lo haremos así, pero más adelante. Por ahora basta con usar ambos números y nos centraremos en el *proceso `0`* (o _P0_). 
 
 
 ==== Primer intento
@@ -69,7 +69,7 @@ El siguiente es el código. El primer `while` es la _entrada a la sección crít
 [NOTE]
 .Espera activa
 ====
-Esta espera en el `while` _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no podemos usar otras primitivas... por ejemplo cuando estamos implementando esas primitivas. En estos casos se los llama _spinlocks_, ya estudiaremos su implementación más eficiente con instrucciones por hardware.
+Esta espera en el `while` _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_.]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no podemos usar otras primitivas... por ejemplo cuando estamos implementando esas primitivas. En estos casos se los llama _spinlocks_, ya estudiaremos su implementación más eficiente con instrucciones por hardware.
 ====
 
 ----
@@ -81,27 +81,37 @@ critical_section()
 turno = 1;
 ----
 
-Cuando la variable sea `0` el proceso podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno al otro proceso. Muchos de vosotros ya os habréis dado cuenta del problema, pero aún así vamos a analizarlo en detalle comprobando si se cumplen los requisitos de <<six_requisites>>.
+Cuando la variable `turn` sea `0` P0 podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno a P1. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando si se cumplen los requisitos de <<six_requisites>>.
 
-. _Asegurar exclusión mutua_: Es fácil comprobar que la cumple. La variable `turn` solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que `turn` valía cero y uno simultáneamente, sabemos que es imposible.
+_Asegurar exclusión mutua_::
+	Es fácil comprobar que la cumple. La variable `turn` solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que `turn` valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, la asignación de enteros es atómica en los procesadores, al final sólo se almacenará 0 *o* 1.].
 
-. _No interferencia_: Supongamos que el proceso `0` entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de `1` tendrá que esperar a que éste entre a su sección crítica para poder entrar a continuacón. Es decir, la entrada de `0` está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar, está en el _resto del código_.footnote:[O incluso ni siquiera se está ejecutando.] Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+_No interferencia_::
+	Supongamos que el proceso `0` entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de `1` tendrá que esperar a que éste entre a su sección crítica para poder entrar a continuacón. Es decir, la entrada de `0` está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar, está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
 
-. _Sin esperas infinitas_: Por la anterior se produce espera infinita si el proceso `1` no entra a la sección crítica.
+_Sin esperas infinitas_::
+	Por la anterior se produce espera infinita si el proceso `1` no entra a la sección crítica.
 
-. _Entrada inmediata_: Si `turn` vale `1` pero este último está en el _resto del código_ no podrá entrar. Tampoco se cumple.
+_Entrada inmediata_:: 
+	Si `turn` vale `1` pero este último está en el _resto del código_ no podrá entrar. Tampoco se cumple.
 
-. _Sin suposiciones de velocidad relativa_: Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple, de hecho el problema de este algoritmo es que exige *_alternancia exclusiva_*.
+_Sin suposiciones de velocidad relativa_::
+	Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple. 
+
+
+El problema de este algoritmo es que obliga a una *_alternancia exclusiva_*.
 
 
 ==== Segundo intento
 
+Si el problema del anterior es que la variable `turn` exigía alternancia exclusiva se puede solucionar con un array, cada posición del mismo indica si el proceso correspondiente está (`True`) o no (`False`) en la sección crítica. Antes de entrar verifica el estado del otro, si no está marca en su posición que ahora está para que el otro no pueda entrar.
+
 ----
         states = [False, False]
 ----
 
 ----
-while state[1]:
+while states[1]:
 	pass
 states[0] = True
 
@@ -111,11 +121,24 @@ states[0] = False
 
 ----
 
+Este algoritmo no asegura la condición principal, exclusión mutua. Basta con probar que ambos valores de `states` son `1`. Sí, puede ocurrir. Recordad que ambas operaciones, el `while` footnote:[El `while` es traduciodo a una serie de instrucciones que involucan un `if`.] y la asignación posterior, no son operaciones operación atómica (o _indivisible_), el proceso puede ser interrumpido entre ellas.
+
+Puede ocurrir la siguiente secuencia de ejecución de instrucciones, a la izquierda las de P0 y a la derecha las de P1.
+
+  P0                    P1
+  ¿states[1]? -> False
+                        ¿states[0]? -> False
+                        states[1] = True
+                        ...
+  states[0] = True 
+  ...
+              ¡BUUUUUUUUUUM!
+
+P0 verifica el estado de P1, sale del bucle es _espera_ porque es falso e inmediatamente es interrumpido. P1 hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta P1 que también entra a la sección crítica.
+
 ==== Tercer intento
 
-----
-        states = [False, False]
-----
+El problema del anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado, por lo que la solución es obvia. Si se asigna el estado antes de verificar el otro nos aseguraremos que no se llegue a la sección crítica sin si el otro proceso ya está en ella.
 
 ----
 states[0] = True
@@ -125,30 +148,77 @@ while states[1]:
 critical_section()
 
 states[0] = False
-
 ----
+
+Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamento el primero que ejecute la asiganción a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si P1 está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con P0 y éste podrá entrar y salir varias veces sin intererencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
+
+El gran problema es que no cumple la _sin esperas infinitas_, de hecho el algoritmo genera un interbloqueo si se da la siguiente secuencia de ejecución:
+
+
+  P0                    P1
+  states[0] = True 
+                        states[1] = True
+                        ¿states[0]? -> True
+  ¿states[1]? -> True
+  ...
+                   ¡DEADLOCK!
+
+
+P0 asigna su estado, se interrumpe y se ejecuta P1, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del `while` hasta que P0 cambie su estado falso. Pero P0 tampoco saldrá del bucle hasta que P1 cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
+
+Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
+
+____
+Cuando dos trenes se encuentran en un cruce de vías cada uno deberá detenerse completamente y ninguno deberá continuar hasta que el otro se haya ido.
+____
 
 
 ==== Cuarto intento
 
-----
-        states = [False, False]
-        turn   = 0
-----
+Se puede romper el interbloqueo que se genera en el caso de la _condición de carrera_ explicada previamente cambiando temporalmente el estado del proceso a falso e inmediatamente volver a ponerlo en verdadero. Así se abrirá una _ventana temporal_ para que alguno de los procesos pueda continuar:
 
 ----
 states[0] = True
 while states[1]:
-	if turn == 1:
-		states[0] = False
-		states[0] = True
+	states[0] = False <1>
+	states[0] = True  <2>
 
 critical_section()
 
 states[0] = False
-
 ----
 
+Si ambos procesos entran _simultáneamente_ al bucle de entrada en algún momento, por ejemplo, P1 pondrá a falso `states[1]` y se interrumpirá por lo que P0 podrá entrar a su sección crítica. P1 cambiará `states[1]` otra vez a verdadero y volverá a quedar esperando en el bucle, pero P0 ya estará en la sección crítica y cuando salga pondrá su estado a falso y P1 podrá entrar.
+
+[NOTE]
+====
+Pensarás que se puede hacer algo entre <1> y <2> para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundosfootnote:[Una idea, _exponential backoff_ que se usa en los algoritmos distribuidos de redes como Ethernet o WiFi para evitar la saturación por repetición de envíos debido a un colisión (es decir, un "fallo" en la exclusión mutua).] con un `sleep()` o incluso cediendo el procesadorfootnote:[`sched_yield()` en Linux.]. Una técnica así puede servir para mejorar el rendimiento -si no hubiese otra solución mejorfootnote:[Las hay, a partir del siguiente algoritmo todos son mejores, podéis olvidaros de éste una vez que lo hayáis entendido.]-, pero formalmente son equivalentes. Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- que la probabilidad de que uno de ellos se interrumpa justo después de asignar falso es bastante elevada y por la velocidad de los procesadores ocurriría en pocos nanosegundos.
+====
+
+Vamos a analizar si cumple los requisitos:
+
+
+_Exclusión mutua_:: 
+	En ese caso es algo más difícil la demostración ya que no podemos recurrir al caso simple de que una variable tenga un valor u otro, o que el array `states` no tenga ambos valores en verdadero ya que es posible que así sea y haya exclusión mutua. Hay dos casos:
+	.. P0 entra a su sección crítica antes que P1 verifique el valor de `states[0]`, en este caso no hay problemas, P1 quedará en la espera activa y P0 saldrá de su sección crítica y P1 podrá entrar.
+	.. Se produce una condición de carrera como la comentada previamente. En este caso para que uno pueda entrar el otro proceso debe haberse interrumpido justo después de <1>, cuando continúe su ejecución volverá o poner su estado en verdadero por lo que volverá a esperar en el bucle hasta que el otro proceso haya salido.
+
+_No interferencia_::
+	Si un proceso está en el resto del código, su estado será falso por lo que el otro podrá entrar sin esperar.
+
+_Sin esperas infinitas_:: 
+	_Prácticamente_ (y _formalmente_ por estadísticas) no se producen esperas infinitas aunque no se puede asegurar que se produzcan en un número de _pasos_ definido. Este fenómeno se denomina *_bloqueo activo_* (_livelock_), sabemos que en algún momento uno de ellos saldrá del bloque pero mientras tanto ambos procesos cambian valores de una variable sin hacer nada útil.
++
+También tiene otro problema, para demostrar que no se producen esperas infinitas hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que P0 y P1 desean entrar, entra P1 y P0 queda esperando. Para asegurar que P0 no espera indefinidamente deberíamos demostrar que si P1 sale de la sección crítica y pretende volver a entrar lo hará después de P0. Esto no lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan *_débiles_* (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
+
+_Entrada inmediata_::
+	Si uno de los procesos no desea entrar a la sección crítica su estado estará en falso, por lo que el otro podrá entrar inmediatamente y sin espera.
+
+_Sin suposiciones de velocidad relativa_::
+	Salvo el problema del _livelock_ y la _debilidad_, no se hacen suposiciones sobre las velocidades relativas de acceso a la sección crítica.
+
+
+Aunque este algoritmo tiene problemas estamos muy cerca de una solución correcta que cumple con todos los criterios.
 
 ==== Algoritmo de Dekker
 
@@ -168,6 +238,7 @@ while states[1]:
 
 critical_section()
 
+turn = 1
 states[0] = False
 ----
 

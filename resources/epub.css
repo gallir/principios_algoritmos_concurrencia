@@ -734,7 +734,8 @@ code, pre {
 }
 
 .literallayout {
-  margin-left: 20px;
+  margin-left: 1em;
+  font-size: 0.9em;
 }
 
 div.chapter>div.titlepage {

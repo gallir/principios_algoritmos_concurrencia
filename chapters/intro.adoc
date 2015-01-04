@@ -30,4 +30,11 @@ Explicar hilos. Comparten memoria
 
 === Mecanismos de sincronización
 
+fork
+exec
+clone
+futex
+mmap
+posix_threads
+
 POSIX Threads, bla bla.
