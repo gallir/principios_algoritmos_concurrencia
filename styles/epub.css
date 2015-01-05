@@ -343,7 +343,7 @@ span.line-through { text-decoration: line-through; }
 
 
 /* Local styles */
-p, dd {
+p, dd, li {
   text-align: justify;
 }
 
@@ -351,19 +351,23 @@ h1, h2, h3, h4, h5, h6 {
   text-align: left;
 }
 
-h1 { 
+h3, h4, h5, h6 {
+  line-height: 1.1 !important;
+  font-size: 1.0em;
+}
+
+body h1 { 
   font-size: 1.5em;
   margin-top: 0.7em;
 }
 
-h2 { 
+body h2 { 
   font-size: 1.2em;
 }
 
-h3 {
+body h3 {
   font-size: 1.0em;
 }
-
 
 
 div.tip, div.note, div.warning, div.caution, div.important {
@@ -465,6 +469,29 @@ pre {
 div.calloutlist p {
   margin-top: 4px;
 }
+
+blockquote p, div.blockquote p {
+  font-style: italic;
+  font-size: 95%;
+}
+
+
+div.footnote {
+  font-size: 90%;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+ol ol {
+  list-style-type: lower-alpha;
+}
+
+ol ol ol {
+  list-style-type: lower-roman;
+}
+
 
 /*
 pre img {

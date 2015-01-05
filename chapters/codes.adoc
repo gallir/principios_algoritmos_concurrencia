@@ -9,28 +9,28 @@
 [source,c]
 .threads.c
 ----
-include::../code/threads.c[tabsize=2]
+include::../code/threads.c[]
 ----
 
 [[threads_py]]
 [source,python]
 .threads.py
 ----
-include::../code/threads.py[tabsize=2]
+include::../code/threads.py[]
 ----
 
 [[gothreads_go]]
 [source,go]
 .gothreads.go
 ----
-include::../code/gothreads.go[tabsize=2]
+include::../code/gothreads.go[]
 ----
 
 [[threads_java]]
 [source,java]
 .Threads.java
 ----
-include::../code/Threads.java[tabsize=2]
+include::../code/Threads.java[]
 ----
 
 
@@ -42,29 +42,41 @@ include::../code/Threads.java[tabsize=2]
 [source,c]
 .counter.c
 ----
-include::../code/counter.c[tabsize=2]
+include::../code/counter.c[]
 ----
 
 [[counter_py]]
 [source,python]
 .counter.py
 ----
-include::../code/counter.py[tabsize=2]
+include::../code/counter.py[]
 ----
 
 [[gocounter_go]]
 [source,go]
 .gocounter.go
 ----
-include::../code/gocounter.go[tabsize=2]
+include::../code/gocounter.go[]
 ----
 
 [[counter_java]]
 [source,java]
 .Counter.java
 ----
-include::../code/Counter.java[tabsize=2]
+include::../code/Counter.java[]
 ----
+
+[[counter_peterson]]
+=== Algoritmo de Peterson con barrera de memoria
+
+[[counter_peterson_c]]
+[source,c]
+.counter_peterson.c
+----
+include::../code/counter_peterson.c[]
+----
+
+
 
 
 
