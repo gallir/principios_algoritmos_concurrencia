@@ -4,7 +4,15 @@ En este capítulo estudiaremos la solución al problema de la exclusión mutua p
 
 Por supuesto estos algoritmos actualmente no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que estos hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican más adelante. Tampoco se usan porque consumen mucha CPU al hacer _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: instrucciones por hardware, semáforos, monitores y paso de mensajes.
 
-El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y su aplicación: _esperas activas_, _interbloqueos_ (_deadlocks_), _inanición_ (_starvation_), _livelocks_, etc. Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de operaciones SQL en bases de datos.
+El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones: 
+
+- esperas activas (_busy wait_),
+- interbloqueos (_deadlocks_), 
+- inanición (_starvation_), 
+- bloqueos activos (_livelocks_), 
+- etc.
+
+Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de operaciones SQL en bases de datos.
 
 === Memoria compartida
 
@@ -326,7 +334,7 @@ number[i] = 0
 
 Como véis la idea es sencilla. Cada proceso tiene asociado un identificador entero que lo usa acceder al array `number` footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle `for j...` su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
 
-Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que P0 está ejecutando `max()` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta P1 y coge el mismo número que P1. El estado del `number` es el siguiuente:
+Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que P0 está ejecutando `max()` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta P1 y coge el mismo número que P1. El estado del `number` es el siguiente:
 
 	[1, 1, 0, ..., 0]
 

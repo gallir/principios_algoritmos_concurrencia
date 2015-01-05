@@ -327,3 +327,159 @@ span.small { font-size: 0.6em; }
 span.underline { text-decoration: underline; }
 span.overline { text-decoration: overline; }
 span.line-through { text-decoration: line-through; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Local styles */
+p, dd {
+  text-align: justify;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-align: left;
+}
+
+h1 { 
+  font-size: 1.5em;
+  margin-top: 0.7em;
+}
+
+h2 { 
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1.0em;
+}
+
+
+
+div.tip, div.note, div.warning, div.caution, div.important {
+  margin: 10px 0 !important;
+  border-radius: 5px;
+  font-size: 90%;
+  padding: 10px 8px 20px 8px !important;
+  page-break-inside: avoid;
+}
+
+div.tip, div.note {
+  border: 1px solid #6cafd0;
+  background-color: transparent;
+}
+
+div.warning, div.caution {
+  border: 1px solid #8e0012;
+  /* background-color: #fce5e8; */
+}
+
+div.important {
+/*  background-color: #FFF68F; */
+  border: 1px solid #615E3F;
+}
+
+div.itemizedlist li, div.orderedlist li {
+  margin-left: 0px;
+}
+
+.programlisting, .screen {
+  margin: 0.7em 0 0.7em 0;
+  border: 1px solid silver;
+  background-color: #f4f4f4;
+  padding: 5px 5px;
+  font-size: 0.9em;
+}
+
+.literallayout {
+  margin-left: 1em;
+  font-size: 0.9em;
+}
+
+div.calloutlist table {
+  font-size: 0.9em;
+}
+
+/*
+div.calloutlist table {
+  margin: 10px 0px !important;
+  background: #ffffff;
+  font-size: 0.9em;
+  border: none;
+}
+
+div.calloutlist table tr, div.calloutlist table tr th, div.calloutlist table tr td {
+  border: none;
+  background: none;
+  padding: 0.2em;
+}
+
+
+dt span.term {
+  font-style: bold;
+  color: navy;
+}
+
+
+*/
+
+div.chapter>div.titlepage {
+  width: 100%;
+  padding: 15px 10px 20px 15px;
+  background-color: #000;
+  color: #fff;
+  margin-bottom: 30px;
+}
+
+div.chapter>div.titlepage h1 {
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 1.8em;
+  text-align: right;
+}
+
+p { 
+  margin: 8px 0 0 0;
+}
+
+
+code, pre {
+  font-size: 1em;
+  font-family: monospace;
+}
+
+pre {
+  tab-size: 4;
+}
+
+div.calloutlist p {
+  margin-top: 4px;
+}
+
+/*
+pre img {
+vertical-align: text-bottom;
+}
+
+ol, ul {
+  margin-left: 1em;
+}
+*/
+
+/* keep this body statement last */
+body {
+  font-family: Georgia, Caecilia, Palatino, serif;
+  font-size: medium;
+  /*margin: 0.5em 2% 0.5em 2%;*/
+  line-height: 1.2;
+}
