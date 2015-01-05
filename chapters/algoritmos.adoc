@@ -286,6 +286,21 @@ states[0] = False
 <1> _Cede_ el turno al otro proceso.
 <2> Espera si el estado del otro es verdadero y es su turno.
 
+Como ya hemos analizado en detalles cinco algoritmos con los seis requisitos me limitaré a demostrar que se cumplen las tres fundamentales (<<em_requisites>>):
+
+_Exclusión mutua_:: 
+  La demostración formal se relativamente sencilla. Para que haya dos procesos en la sección crítica y por la condición `states[j] and turn == j` se tienen que cumplir una de las dos condiciones:
++
+. Que `states` sea `[False, False]`: es imposible porque los procesos que desean entrar antes asignan `True` a su posición.
+. Que el último que desea entrar sea P0 y  `states` sea `[True, True]` y que `turn` sea 0. Es imposible porque antes de la comparación P0 hizo `turn = 1`. La inversa se aplica si P1 es el último en pretender entrar.
+. Si los dos procesos desean entrar más o menos simultáneamente (es una condición de carrera) y que `turn` valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado `turn = x`.
+
+_Libre de interbloqueos_:: No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j\]` para el otro para `states[i\]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
+
+_Libre de inanición_:: El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un proceso que ejecutó entró antes al bucle de comparación es el primero que entrará. Si este mismo sale y vuelve a intentar entrar habiendo otro esperando le cederá el turno. Así se demuestra que cualquier proceso tendrá que esperar como máximo a que el otro salga una vez de la sección crítica, luego le tocará el turno indefectiblemente.
+
+
+
 
 
 === Solución para N procesos: algoritmo de la panaderia
