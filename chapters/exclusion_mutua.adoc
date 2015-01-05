@@ -127,7 +127,7 @@ La solución más sencilla y obvia es *evitar que la sección crítica de un pro
 Se definieron tres requisitos fundamentales que deben cumplir los algoritmos y primitivas que pretenden solucionar el exclusión mutua.
 
 [[em_requisites]]
-[TIP]
+[IMPORTANT]
 .Requisitos para exclusión mutua
 ====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica, no se debe producir .

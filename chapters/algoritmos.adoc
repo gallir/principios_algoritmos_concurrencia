@@ -13,8 +13,6 @@ En todos los algoritmos y técnicas que analizamos en este libro asumimos que nu
 El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, en este caso se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_ y _sincronización_ pero sus técnicas son más complejas al no disponer de _variables compartidas_ por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, además estos están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro. Aunque quizás lo sea en el siguiente.
 
 
-
-
 === Convenciones de programación
 
 Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, sólo asumimos que el tiempo que cada proceso está en la sección crítica es finito.
@@ -93,7 +91,7 @@ _Sin esperas infinitas_::
 	Por la anterior se produce espera infinita si el proceso `1` no entra a la sección crítica.
 
 _Entrada inmediata_:: 
-	Si `turn` vale `1` pero este último está en el _resto del código_ no podrá entrar. Tampoco se cumple.
+	Si `turn` vale `1` pero este último está en el _resto del código_ y no podrá entrar. Tampoco se cumple.
 
 _Sin suposiciones de velocidad relativa_::
 	Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple. 
@@ -246,6 +244,7 @@ critical_section()
 
 states[0] = False
 turn = 1 <2>
+
 ----
 <1> P0 esperará si no es su turno, su estado se mantendrá en falso y P1 podrá entrar a la sección crítica.
 <2> Cuando un proceso sale de su sección crítica cede el turno al otro, si ese estaba esperando en <1> podrá continuar.
@@ -295,36 +294,107 @@ _Exclusión mutua_::
 . Que el último que desea entrar sea P0 y  `states` sea `[True, True]` y que `turn` sea 0. Es imposible porque antes de la comparación P0 hizo `turn = 1`. La inversa se aplica si P1 es el último en pretender entrar.
 . Si los dos procesos desean entrar más o menos simultáneamente (es una condición de carrera) y que `turn` valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado `turn = x`.
 
-_Libre de interbloqueos_:: No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j\]` para el otro para `states[i\]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
+_Libre de interbloqueos_:: No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j\]` para el otro (u otros) y `states[i\]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
 
 _Libre de inanición_:: El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un proceso que ejecutó entró antes al bucle de comparación es el primero que entrará. Si este mismo sale y vuelve a intentar entrar habiendo otro esperando le cederá el turno. Así se demuestra que cualquier proceso tendrá que esperar como máximo a que el otro salga una vez de la sección crítica, luego le tocará el turno indefectiblemente.
 
 
 
+=== Solución para _N_ procesos: algoritmo de la panaderia
 
+Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, algo que no es de extrema utilidad en cualquier sistema informático diseñado en los últimos 50 años. La solución más simple conocida la publicó Leslie Lamport en 197 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panaderíafootnote:[Para que se comprenda mejor la idea quizás en España deberíamos llamarle _de la oficina de Correos_.] sacan un número para saber el orden en que serán atendidos.
 
-=== Solución para N procesos: algoritmo de la panaderia
-
-----
-        # N is the max number of processes
-        choosing = [False, ..., False] # size N
-        number   = [0, ..., 0] # size N
-----
+La implementación básica de la idea es la siguiente:
 
 ----
-choosing[i] = True
-number[i] = max(choosing) <1>
-choosing[i] = False
-for j in range(0, N):
-	while choosing[j]: <2>
-		pass
-	while number[j] < number[i] or <3>
-		(number[j] == number[i] and
-			j < i):
+        number  = [0, ..., 0] <1>
+
+number[i] = 1 + max(number) <2>
+for j in range(0, N): <3>
+	while number[j] > 0 
+		and number[j] < number[i]: <4>
 		pass
 
 critical_section()
 
 number[i] = 0
 ----
+<1> El tamaño del array debe ser igual al número máximo de procesos que pueden acceder a una sección crítica.
+<2> La función max() retorna el mayor número que encuentra en el array `number`.
+<3> Se recorre todo el array para verificar el número de los demás procesos.
+<4> Esperará en el bucle si el proceso _j_ tiene un número menor al mío (_i_)footnoteref:[i_j].
+
+Como véis la idea es sencilla. Cada proceso tiene asociado un identificador entero que lo usa acceder al array `number` footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle `for j...` su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
+
+Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que P0 está ejecutando `max()` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta P1 y coge el mismo número que P1. El estado del `number` es el siguiuente:
+
+	[1, 1, 0, ..., 0]
+
+Es decir, podemos tener números duplicados. La solución es usar el id de cada proceso para _desempatar_ en caso que hayan seleccionado el mismo número:
+
+----
+number[i] = 1 + max(number)
+for j in range(0, N):
+	while number[j] > 0 
+		and (number[j] < number[i] or 
+		(number[j] == number[i] <1>
+		 and j < i)):
+		pass:
+
+critical_section()
+
+number[i] = 0
+----
+<1> La nueva condición, si ambos números son iguales y el id del otro (es decir el valor de _j_) es menor que _i_ entonces también deberá esperar.
+
+
+[IMPORTANT]
+.El requisito de los ids
+====
+Como habréis notado en todos los algoritmos cada proceso necesita un identificador único. Como queda claro en este algoritmo, además deben tener una relación de precedencia, i.e., debe ser un conjunto ordenado. Ambos requisitos son indispensables para las soluciones de exclusión mutua y la mayoría de algoritmos distribuidos.
+====
+
+
+Todavía no hemos resuelto el problema. Puede ocurrir que cuando P1 haya llegado al bucle `for j...` el proceso P0 todavía no haya almacenado su número en `number[0]` y vea los siguientes valores:
+
+	[0, 1, 0, ..., 0]
+
+La condición `number[0] > 0` será falsa y P1 entrará a la sección crítica. Momentos después P0 almacena su número:
+
+	[1, 1, 0, ..., 0]
+
+Cuando verifique el número de P1 ambos tendrán el mismo (0) pero la siguiente condición 
+
+	number[1] == number[0] and 0 < 1
+
+es falsa por lo que P0 también entrará a la sección crítica, no asegura exclusión mutua.
+
+Para evitar que ocurra habrá que poner un mecanismo para impedir que el proceso que desea entrar no avance si el proceso contra el que está por comparar su número todavía lo está seleccionando. Para ello añadimos otro array, `choosing`, que indicará si el proceso todavía no almacenó su número.
+
+----
+        choosing = [False, ..., False] <1>
+        number   = [0, ..., 0]
+
+
+choosing[i] = True <2>
+number[i]   = 1 + max(number)
+choosing[i] = False <3>
+for j in range(0, N):
+	while choosing[j]: <4>
+		pass
+	while number[j] > 0 
+		and (number[j] < number[i] or 
+		(number[j] == number[i]
+		 and j < i)):
+		pass
+
+critical_section()
+
+number[i] = 0
+----
+<1> El array tiene la misma dimensión que `number`.
+<2> Se indica que se está por entrar a selección número.
+<3> Se indica que ya se acabó la selección.
+<4> Si el proceso _j_ está seleccionando se le espera porque podría corresponderle el turno.
+
 
