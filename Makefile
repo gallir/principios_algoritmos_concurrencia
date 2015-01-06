@@ -2,15 +2,15 @@ BASE=master
 OUTDIR=output
 SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
-
 CSS=epub.css
 
-A2XOPTIONS=-v --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  --icons
+RESOURCES=--resource styles/docbook-xsl.css --resource styles/asciidoctor-default.css
+A2XOPTIONS=-v $(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
 
 
 epub: $(OUTDIR)/$(BASE).epub
 
-force: clean epub
+redo: clean epub
 
 all: clean epub mobi
 
