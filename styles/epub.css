@@ -169,6 +169,10 @@ div.glossary dd p {
   margin-top: 0.2em;
 }
 
+body blockquote {
+  line-height: inherit;
+}
+
 dl {
   margin: .8em 0;
   line-height: 1.2;
@@ -460,6 +464,7 @@ p {
 code, pre {
   font-size: 1em;
   font-family: monospace;
+  white-space: pre-wrap;
 }
 
 pre {
@@ -473,6 +478,10 @@ div.calloutlist p {
 blockquote p, div.blockquote p {
   font-style: italic;
   font-size: 95%;
+}
+
+div.bibliomixed p {
+  text-align: left;
 }
 
 

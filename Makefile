@@ -10,7 +10,9 @@ A2XOPTIONS=-v --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attri
 
 epub: $(OUTDIR)/$(BASE).epub
 
-all: epub mobi
+force: clean epub
+
+all: clean epub mobi
 
 mobi: $(OUTDIR)/$(BASE).mobi
 

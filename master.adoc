@@ -25,7 +25,11 @@ include::chapters/exclusion_mutua.adoc[]
 
 include::chapters/algoritmos.adoc[]
 
+include::chapters/hardware.adoc[]
+
 include::chapters/semaforos.adoc[]
+
+include::chapters/mensajes.adoc[]
 
 include::chapters/codes.adoc[]
 

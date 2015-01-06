@@ -5,3 +5,6 @@
 - [[[railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
 - [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
 - [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974 http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
+- [[Barriers]] David Howells. _Linux Kernel Memory Barriers_.
+https://www.kernel.org/doc/Documentation/memory-barriers.txt
+- [[Atomics]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html

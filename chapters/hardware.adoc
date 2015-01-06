@@ -1,0 +1,7 @@
+== Soluciones por hardware
+
+=== Deshabilitar interrupciones
+
+=== Test&Set
+
+=== Compare&Swap
