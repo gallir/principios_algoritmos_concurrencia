@@ -1,4 +1,9 @@
+[[hardware]]
 == Soluciones por hardware
+
+
+..
+
 
 === Deshabilitar interrupciones
 

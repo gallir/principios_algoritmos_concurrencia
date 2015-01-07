@@ -79,6 +79,7 @@ STORE_GLOBAL  0 (counter)
 En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocounter_go>>) Java (<<counter_java>>) y Python (<<counter_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10 000 000`). El resultado de la ejecución es la siguiente:
 
 [[counter_times]]
+.Resultados y tiempos de CPU
 ----
 $ time ./counter
 Counter value: 5785131 Expected: 10000000

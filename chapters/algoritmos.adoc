@@ -277,6 +277,7 @@ Este algoritmo, ¡el primero que vemos! cumple todos los requisitos de los algor
 
 Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 
+[[peterson]]
 ==== Algoritmo de Peterson
 
 En 1981, cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Recordad que ya había solucione más prácticas para 2 o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y simple de entender.
@@ -441,16 +442,7 @@ No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ p
 
 En este capítulo hemos analizado las soluciones algorítmicas al problema más importante de concurrencia. Pero lo más importante que espero haber logrado transmitir es la complejidad y matices a la hora de diseñar algoritmos concurrentes, necesitamos pensar de una forma muy diferente a la secuencial estricta que estamos acostumbrados.
 
-También
+Hemos visto qué requisitos han de cumplir las soluciones de exclusión mutua y las hemos demostrado analíticamente sin entrar en notaciones formales y académicas.
 
-----
-$ time ./counter_peterson 
-End 1 counter: 10000000
-End 0 counter: 9999981
-Counter value: 10000000 Expected: 10000000
-real	0m0.660s
-user	0m1.313s
-sys	0m0.000s
-----
 
 

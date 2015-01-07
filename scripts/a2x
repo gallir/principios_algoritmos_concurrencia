@@ -499,7 +499,6 @@ class A2X(AttrDict):
         if self.verbose:
             self.asciidoc_opts += ' --verbose'
             self.dblatex_opts += ' -V'
-        print "****** ICONS: ", self.icons
         if self.icons or self.icons_dir:
             params = [
                 'callout.graphics 1',

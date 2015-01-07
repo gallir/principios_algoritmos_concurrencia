@@ -1,8 +1,161 @@
 == Barreras de memoria
 
 
-No quería hacer tan largo el capítulo anterior y me pareció que este tema merecía un capítulo separado aunque sea muy breve. O eso espero al escribir estas primeras líneas.
+No quería hacer tan largo el capítulo anterior y me pareció que este tema merecía un capítulo separado aunque sea muy breve. O eso espero al escribir estas primeras líneas. 
+
+Aunque los algoritmos anteriores son formalmente correctos *no funcionarán* en la mayoría de procesadores modernos. No deberías decepcionarte, el objetivo fue estudiar los algoritmos y aprender a reconocer y solucionar los problemas inherentes de la programación concurrente, no para que los uses direcamentefootnote:[En <<hardware>> aprenderás cómo se puede solucionar mejor el problema con instrucciones de hardware, si es que tienes que recurrir a ellas.].
+
+
+Hay dos razones por la que los algoritmos anteriores no funcionarán. Por la incoherencia de cache de memoria, un problema habitual si tienes varios procesadores en chips diferenesfootnote:[En contraposición a tener varios núcleos en un único chip, donde hay una única cache o están sincronizadas.]. El caso más habitual es que tengáis varios núcleos en un único chip, en este caso el problema es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. 
+
+
+=== Ejecución fuera de orden
+
+Los algoritmos anteriores no funcionarán porque los procesadores reordenan las instrucciones con el objeto de optimizar la ejecución ahorrando ciclos de reloj. Por ejemplo porque ya tiene valores cargados en registros. Se usan mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_).
+
+Supongamos que tenemos un programa con las siguientes instrucciones:
+
+	a = x
+	b = y
+	c = a * 2
+
+El procesador puede ejecutarlas en diferentes secuencias sin que afecte al resultado, por ejemplo:
+
+	a = x
+	c = a * 2
+	b = y
+
+o
+
+	b = y
+	a = x
+	c = a * 2
+
+
+Detecta que la asigación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si estos modifican las variables pueden ocasionar problemas. Tomemos el algoritmo correcta más sencillo, [[peterson]], cuya entrada a la sección crítica es
 
 ----
-mcr     p15, 0, r0, c7, c10, 5
+states[0] = True
+turn = 1
+while states[1] and turn == 1:
+	pass:
 ----
+
+El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre `states[0]` y `states[1]`, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
+
+----
+turn = 1
+while states[1] and turn == 1:
+	pass:
+states[0] = True
+
+¡¡¡BUUUM!!!
+----
+
+Por supuesto eso haría que el algoritmo de exlusión mutua fallase. De hecho programé el algoritmo y probé el programa de la misma forma que antes (<<counter_times>>)footnoteref:[paciencia, Ten un poco de paciencia, el código está en el libro, ya enlazo la solución correcta un poco más adelante.]:
+
+----
+$ time ./counter_peterson 
+$ time ./counter_peterson 
+Counter value: 9879533 Expected: 10000000
+
+real	0m0.598s
+user	0m1.189s
+sys	0m0.000s
+----
+
+Fijaros que además del incremento notable de tiempo de CPU el resultado sigue siendo erróneo.
+
+=== Barreras de memoria
+
+Para hacer que el algoritmo funcione correctanente debemos especificar _barreras_ (_fences_ o _barriers_) al ordenador para impedir que ejecute ciertas instrucciones en el orden equivocado. Una intrucción de *barrera general* indica al procesador:
+
+. Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
+
+. Ninguna operación de lectura o escritura posterior a la barrera deben ejecutarse antes que esta.
+
+Aunque en el código de ejemplo no hay dependencias detectables entre ellas, supongamos que deseamos que la asignación de `c` sea siempe posterior a la asignación de `a`y `b`. Debemos insertar una barrera entre ellas:
+
+	a = x
+	b = y
+	BARRIER()
+	c = a * 2
+
+Esto forzará a que ambas asignaciones y lecturas de `x` e `y` se hegan antes de la asignación a `c` lo que sólo permitirá ls siguiente alternativa además de la secuencia original:
+
+	b = y
+	a = x
+	BARRIER()
+	c = a * 2
+
+Para hacer que el algoritmo de Peterson funcione debemos insertar una barrera entre la asignación de `states` y `turn` y el while que verifica el turno y el estado del otro proceso:
+
+----
+states[0] = True
+turn = 1
+BARRIER()
+while states[1] and turn == 1:
+	pass:
+----
+
+Así el código ya funcionará correctamentefootnoteref:[paciencia].
+
+[NOTE]
+====
+Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres típicas son la general, la de lecura y la de escritura. La primera es la que acabamos de ver, la de lectura se aplican sólo a las operaciones de lectura y la última sólo a las de escrituras.
+
+También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Barriers>>.
+====
+
+==== Cómo usar las barreras
+Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de 1990 (con la introducción del procesador Power1) por la complejidad que significa. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras por lo que no existen instrucciones estándares y mucho menos instrucciones espefícas en los lenguajes de programación de alto nivel.
+
+Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC: <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: ___sync_synchronize()_.
+
+Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del código completo en C: <<counter_peterson_c>>.
+
+[source,c]
+----
+void lock(int i) {
+	int j =  (i + 1) % 2;
+
+	states[i] = 1;
+	turn = j;
+	__sync_synchronize();
+	while (states[j] && turn == j);
+}
+----
+
+Y la ejecución si es correcta y lo que esperábamos:
+
+----
+$ time ./counter_peterson 
+Counter value: 10000000 Expected: 10000000
+real	0m0.616s
+user	0m1.230s
+sys	0m0.000s
+----
+
+
+En ese punto del programa el GCC las siguientes instrucciones para las diferentes arquitecturas:
+
+.Intel 64 bits
+----
+	mfence
+----
+
+.Intel 32 bits
+----
+
+	lock orl	$0, (%esp)
+----
+
+
+.Arm de 32 bits (Raspberry Pi)
+----
+	mcr     p15, 0, r0, c7, c10, 5
+----
+
+
+
+
