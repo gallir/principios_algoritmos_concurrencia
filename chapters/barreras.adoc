@@ -1,0 +1,8 @@
+== Barreras de memoria
+
+
+No quería hacer tan largo el capítulo anterior y me pareció que este tema merecía un capítulo separado aunque sea muy breve. O eso espero al escribir estas primeras líneas.
+
+----
+mcr     p15, 0, r0, c7, c10, 5
+----

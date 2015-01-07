@@ -437,6 +437,11 @@ Si un proceso entra y pretende volver a entrar cogerá un número mayor de los q
 
 No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ procesos desean entrar simultáneamente como máximo tendrán que esperar que entren _n-1_ procesos.
 
+=== Recapitulación
+
+En este capítulo hemos analizado las soluciones algorítmicas al problema más importante de concurrencia. Pero lo más importante que espero haber logrado transmitir es la complejidad y matices a la hora de diseñar algoritmos concurrentes, necesitamos pensar de una forma muy diferente a la secuencial estricta que estamos acostumbrados.
+
+También
 
 ----
 $ time ./counter_peterson 

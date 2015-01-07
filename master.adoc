@@ -26,6 +26,8 @@ include::chapters/exclusion_mutua.adoc[]
 
 include::chapters/algoritmos.adoc[]
 
+include::chapters/barreras.adoc[]
+
 include::chapters/hardware.adoc[]
 
 include::chapters/semaforos.adoc[]
