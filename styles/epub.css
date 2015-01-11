@@ -17,6 +17,11 @@ p, dd, li {
 
 h1, h2, h3, h4, h5, h6 {
   text-align: left;
+  color: #980000;
+}
+
+a {
+color: #980000;
 }
 
 h3, h4, h5, h6 {
@@ -24,12 +29,35 @@ h3, h4, h5, h6 {
   font-size: 1.0em;
 }
 
-body h1 { 
+div.toc p:first-child,
+div.list-of-figures p:first-child,
+div.list-of-tables p:first-child,
+div.list-of-examples p:first-child,
+div.example p.title,
+div.sidebar p.title {
+  color: #980000;
+}
+
+div.table thead,
+div.table tfoot,
+div.table tbody,
+div.informaltable thead,
+div.informaltable tfoot,
+div.informaltable tbody {
+    /* No effect in IE6. */
+    border-top: 3px solid #980000;
+    border-bottom: 3px solid #980000;
+}
+
+
+
+
+body h1 {
   font-size: 1.5em;
   margin-top: 0.7em;
 }
 
-body h2 { 
+body h2 {
   font-size: 1.2em;
 }
 
@@ -129,7 +157,7 @@ div.chapter>div.titlepage h1 {
   text-align: right;
 }
 
-p { 
+p {
   margin: 8px 0 0 0;
 }
 

@@ -84,7 +84,7 @@ while turn != 0:
 
 critical_section()
 
-turno = 1;
+turno = 1
 ----
 
 Cuando la variable `turn` sea `0` P0 podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno a P1. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando si se cumplen los requisitos de <<six_requisites>>.
@@ -311,7 +311,7 @@ Como ya hemos analizado en detalles cinco algoritmos con los seis requisitos me 
 
 ===== Libre de interbloqueos
 
-No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j\]` para el otro (u otros) y `states[i\]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
+No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j]` para el otro (u otros) y `states[i]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
 
 ===== Libre de inanición
 
@@ -418,7 +418,7 @@ number[i] = 0
 
 ===== Exclusión mutua
 
-Para dos procesos estén en la sección crítica tiene que ocurrir que puedan entrar dos o más con el mismo número. Pero el uso del ID único y con relación de precedencia asegura que en estos casos siempre habrá uno de ellos que será el _menor_ y el único que saldrá del último bucle.
+Para que dos procesos estén en la sección crítica tiene que ocurrir que ambos tengan el mismo número. Pero el uso del ID único y con relación de precedencia asegura que en estos casos siempre habrá uno de ellos que será el _menor_ y el único que saldrá del último bucle.
 
 Para que un segundo proceso (P2) entre a la sección crítica después si hay un proceso (P1) en ella debe cumplirse que el número de P2 es menor que P1. No puede ocurrir, si P1 esta en la sección crítica habrá ejecutado `while choosing[2]` y pueden darse uno de ambos casos:
 
