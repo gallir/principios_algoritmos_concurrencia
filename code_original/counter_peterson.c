@@ -6,7 +6,7 @@
 #include <sys/types.h>
 
 
-#define NUM_THREADS	 2
+#define NUM_THREADS	     2
 #define MAX_COUNT 10000000
 
 // Just used to send the index of the id

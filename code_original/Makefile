@@ -13,7 +13,7 @@ EXES=$(basename $(wildcard *.c *.go ))
 
 .PHONY: clean
 clean:
-	-rm -f $(PROGS) $(EXES) *.class
+	-rm -f $(PROGS) $(EXES) *.class *~
 
 print-%:
 	@echo $* = $($*)
