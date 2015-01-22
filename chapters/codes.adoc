@@ -66,6 +66,14 @@ include::../code/gocounter.go[]
 include::../code/Counter.java[]
 ----
 
+[[counter_local_c]]
+[source,c]
+.counter_local.c
+----
+include::../code/counter_local.c[]
+----
+
+
 [[counter_peterson]]
 === Algoritmo de Peterson con barrera de memoria
 

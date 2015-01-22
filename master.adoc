@@ -1,5 +1,5 @@
-Concurrencia
-============
+Principios de concurrencia
+==========================
 :doctype: book
 :author: Ricardo Galli
 :copyrights:  Creative Commons Attribution-NonCommercial CC BY-NC
