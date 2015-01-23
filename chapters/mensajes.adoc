@@ -4,4 +4,10 @@
 
 === Sincronización
 
-=== Ejemplo en Go
+==== Con y sin buffer
+
+=== Exclusión mutua con mensajes
+
+==== Ejemplo en Go
+
+=== Otros algoritmos

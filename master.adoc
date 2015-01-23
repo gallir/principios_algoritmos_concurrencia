@@ -32,7 +32,11 @@ include::chapters/hardware.adoc[]
 
 include::chapters/semaforos.adoc[]
 
+include::chapters/monitores.adoc[]
+
 include::chapters/mensajes.adoc[]
+
+include::chapters/estructuras.adoc[]
 
 include::chapters/codes.adoc[]
 

@@ -2,7 +2,27 @@
 
 === Introducción
 
-=== Mutexes
+=== Semáforos
+
+==== Binarios
+
+==== Contadores
+
+==== Mutexes
+
+==== Ejemplos en varios lenguajes
+
+===== C
+
+===== Java
+
+===== Go
+
+=== Algoritmos tradicionales
+
+==== Productor-Consumidor
+
+==== Lectores-Escritories
 
 === Deadlocks
 

@@ -368,7 +368,7 @@ number[i] = 0
 
 
 [IMPORTANT]
-.El requisito de los ids
+.El requisito de identificadores únicos
 ====
 Como habréis notado en todos los algoritmos cada proceso necesita un identificador único. Como queda claro en este algoritmo, además deben tener una relación de precedencia, i.e., debe ser un conjunto ordenado. Ambos requisitos son indispensables para las soluciones de exclusión mutua y la mayoría de algoritmos distribuidos.
 ====
