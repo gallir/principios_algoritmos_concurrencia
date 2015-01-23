@@ -57,9 +57,9 @@ image::intel-quickpath.png[height=400, align="center"]
 
 Para mantener la consistencia entre las diferentes copias de cacue se usa un algoritmo como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) o derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. Cada línea tiene uno de esos cuatro estados, cada cache _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.
 
-Cuando un procesador lee de la memoria y carga en cache el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ ésta se marcada como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le envíe la última copia, caso contrario accede a la memoria RAM para obtener la copia.
+Cuando un procesador lee de la memoria y carga en cache el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ ésta se marcada como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con su valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
 
-Este mecanismo asegura la consistencia de cache y no es el responsable de que los algoritmos de exclusión mutua no funcionen pero lo expliqué porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
+Este mecanismo asegura la consistencia de cache y no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
 
 [IMPORTANT]
 .El problema del acceso a variables compartidas
@@ -88,15 +88,11 @@ Podéis comparar los tiempos en un sistema con al menos dos núcleos y veréis q
 Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegurarse que no compartan líneas de cache, por ejemplo por usar las mismas direcciones o posiciones cercanas en un array. Si es posible es mejor hacerlo con variables _distantes_ (por ejemplo locales de cada hilo) para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes en el _front side bus_ afectando así a todo el rendimiento del programa.
 ====
 
+
+
 === Ejecución fuera de orden
 
-El caso más habitual es que tengáis varios núcleos en un único chip, en este caso el problema es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. 
-
-
-
-
-
-Los algoritmos anteriores no funcionarán porque los procesadores reordenan las instrucciones con el objeto de optimizar la ejecución ahorrando ciclos de reloj. Por ejemplo porque ya tiene valores cargados en registros. Se usan mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_).
+El problema con la implementación de los algoritmos de exclusión mutua es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. Los procesadores reordenan las instrucciones con el objeto de optimizar la ejecución ahorrando ciclos de reloj. Por ejemplo porque ya tiene valores cargados en registros, o porque una instrucción posterior ya ha sido decodificada en el _pipeline_ y usará menos ciclos de reloj. Por lo tanto el procesador no asegura la consisencia secuencial con respecto al orden del programa. En cambio usa mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_) de acceso a memoria.
 
 Supongamos que tenemos un programa con las siguientes instrucciones:
 
@@ -117,7 +113,7 @@ o
 	c = a * 2
 
 
-Detecta que la asigación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si estos modifican las variables pueden ocasionar problemas. Tomemos el algoritmo correcta más sencillo, [[peterson]], cuya entrada a la sección crítica es
+Detecta que la asigación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos porcesos. Tomemos el algoritmo correcta más sencillo, [[peterson]], cuya entrada a la sección crítica es:
 
 ----
 states[0] = True
@@ -137,10 +133,8 @@ states[0] = True
 ¡¡¡BUUUM!!!
 ----
 
-Por supuesto eso haría que el algoritmo de exlusión mutua fallase. 
+Por supuesto eso haría que el algoritmo de exlusión mutua fallase. Para solucionarlo debes pedir _bajo demanda_ que el procesador respete el orden de acceso a memoria de nuestro programa, esto se hace con las _barreras de memoria_
 
-///
-///
 
 === Barreras de memoria
 
@@ -183,10 +177,10 @@ Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres típica
 También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Barriers>>.
 ====
 
-==== Cómo usar las barreras
+==== Uso de barreras
 Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de 1990 (con la introducción del procesador Power1) por la complejidad que significa. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras por lo que no existen instrucciones estándares y mucho menos instrucciones espefícas en los lenguajes de programación de alto nivel.
 
-Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC: <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: ___sync_synchronize()_.
+Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: ___sync_synchronize()_.
 
 Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del código completo en C: <<counter_peterson_c>>.
 
@@ -232,6 +226,13 @@ En ese punto del programa el GCC las siguientes instrucciones para las diferente
 	mcr     p15, 0, r0, c7, c10, 5
 ----
 
-<<<<
+=== Recapitulación
+
+En este capítulo hemos explicado uno de los mayores problemas ocasionados por la ejecución fuera de orden de los procesadores modernos, cómo solucionarlos y los problemas de rendimiento. Pero el uso de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado (varios cientos de ciclos de reloj) que se suman a la presión que introducimos al sistema de cache. No sólo eso, también es complicado saber exactamente donde hay que implementar las barreras y al mismo tiempo no abusar de ellas por el enorme coste que introducen (si queréis hacer un buen ejercicio demostrativo, implementad el algoritmo de la panadería y haced que funcione con el menor número de barreras posibles, no es nada obvio).
+
+En el próximo capítulo analizaremos soluciones mejores de hardware que permiten no solo la exlusión mutua sino implementar mecanismos de consenso para cualquier número de procesos.
+
+
+
 
 
