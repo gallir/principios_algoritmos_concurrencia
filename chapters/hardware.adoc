@@ -2,7 +2,22 @@
 == Soluciones por hardware
 
 
-..
+A nivel de hardware los hilos se comunican leyendo y escribiendo en memoria compartida.
+
+=== Tipos de registros
+
+Desde el punto de vista del hardware la comunicaición se hace vía registros de lectura-escritura. No se trata sólo de los registros del procesador, es más general, puede involucrar a zonas de memoria RAM (recordad que hay coherencia de cache) o en términos generales a un _objeto compartido_. Un registro de este tipo encapsula dos métodos, _read_ y _store_, o más genéricamente _get_ y _write_.
+
+Los registros de procesadores modernos que estudiarmos son _registros atómicos_, generalmente bytes únicos o enteros de varios bytes que cumplen las siguientes dos condiciones (<<Lamport2>>):
+
+1. El método _get_ retorna el último valor escrito, si una lectura retorna un valor y no hubo otra escritura intermedia la siguiente electura será el mismo valor.
+
+2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Por ejemplo, si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000, ni un valor intermedio ni del rango posible que puede tomar el registro.
+
+Hay otros tipos de registros que no cumplen con estas condiciones, esos son llamados _registros seguros_ pero por mero accidente, son muy inseguros (<<Herlihy>>). Otra alternativa intermedia son los _registros regulares_ donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que están siendo escritos. Se dice que estos registros sólo aseguran _consistencia por inactividad_ (_quiescent consistency_) ya que sólo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _read_.
+
+
+
 
 
 === Deshabilitar interrupciones

@@ -30,6 +30,8 @@ $(OUTDIR)/$(BASE).epub: $(SOURCES)
 
 $(OUTDIR)/$(BASE).html: $(SOURCES)
 	asciidoctor $(MAIN) -o $@
+	## Call original a2x to avoid icons
+	#a2x -f xhtml $(A2XOPTIONS) -a icons -a admon.graphics -a callout.graphics -D $(OUTDIR) $(MAIN)
 	#a2x -f xhtml $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
 .PHONY: clean

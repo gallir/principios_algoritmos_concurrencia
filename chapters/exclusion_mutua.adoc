@@ -133,8 +133,8 @@ Se definieron tres requisitos fundamentales que deben cumplir los algoritmos y p
 .Requisitos para exclusión mutua
 ====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
-Libre de interbloqueos (_deadlock_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
-Libre de inanición (_starvation_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito.
+Libre de interbloqueos (_deadlock_ o _wait-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
+Libre de inanición (_starvation_ o _lock-free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito.
 ====
 
 
