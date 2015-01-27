@@ -1,13 +1,26 @@
 == Bibliografía
 
 [bibliography]
+
 - [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
+
 - [[[railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
+
 - [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
+
 - [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974 http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
+
 - [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication. Journal of the ACM. 1986.
+
 - [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_.
 https://www.kernel.org/doc/Documentation/memory-barriers.txt
+
 - [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
-- [[[Herlihy]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
+- [[[Herlihy12]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
+
+- [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
+
+- [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
+
+Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<
