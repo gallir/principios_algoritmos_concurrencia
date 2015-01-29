@@ -23,4 +23,4 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 
-Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<
+// Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<
