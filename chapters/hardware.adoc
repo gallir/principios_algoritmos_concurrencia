@@ -1,25 +1,46 @@
 [[hardware]]
 == Soluciones por hardware
 
+Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y con sólo __registros de lectura-escritura atómicos_. Hemos visto que tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (Panadería) se necesita una cantidad de registros proporcional al número de procesos que han de sincronizar. Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio
+
+Los algoritmos anteriores implementan _spinlocks_ pero son muy ineficientes. Además de la sobrecarga para mantene la consistencia de cache se recorren múltiples registros aunentando el consumo de CPU y la presión sobre la cache. Si habéis probado los algoritmo anteriores, en algunos procesadores puede tomar tiempos de órdenes de magnitud superiores a otros. En el caso de un único procesador el avance es tan lento que lo que tarda décimas en uno puede tomar horas en otrosfootnote:[Como pasa en la Raspberry 1.] en el caso de que exista mucha _competencia_ (o _contention_) para entrar a la sección crítica.
+
+Obviamente desde el inicio se buscó una solución con soporte del hardware.
+
 
 === Deshabilitar interrupciones
 
+Si el problema fundamental es el intercalado de instrucciones generado por las interrupciones al procesador ¿por qué no deshabilitarlas?. Aunque es una solución que se usa en casos muy específicos en los sistemas operativosfootnote:[Como local_irq_disable() o local_irq_enable() en Linux.] no es una solución segura: si los procesos pueden deshabilitar las interrupciones entonces pueden tomar control del sistemafootnote:[Deshabilita la cualidad de _apropiativo_ (o _preemptive_) del _scheduler_.]. Por lo tanto es una solución genérica válida para los procesos de usuario.
 
-A nivel de hardware los hilos se comunican leyendo y escribiendo en memoria compartida.
+Aún al nivel del núcleo del sistema operativo presenta dificultades: la complicación de deshabilitar todas las interrupciones en todos los procesadores y el riesgo de perder interrupciones. Dada la dificultad de deshabilitar las interrrupciones en todos los procesadores tampoco es una solución para asegurar exclusión mutua dado que un _registro_ puede ser modificado por un procesador diferente sin que haya habido intercalación en el mismo procesador.
+
+Por ello se buscaron otras alternativas que en general son conocidas como _primitivas de sincronización_ de los procesadores. Son instrucción especiales que leen y modifican el valor de un registro sin ser interrumpidas y además asegurando la coherencia de cache. Hay muchas variantes de estas instrucciones, -_GetAndAdd_, _TestAndSet_, _Swap_, _CompareAndSwap_, etc.-, cada una con propiedades diferentes. Pero antes de estudiarlas veremos definiciones más genéricas de _registros_ que nos proporcionen modelos genéricos y simples de consistencia por encima de las interrrupciones o mecanismos de consistencia de cache.
+
+
 
 === Tipos de registros
 
-Desde el punto de vista del hardware la comunicación se hace vía registros de lectura-escritura. Un registro de este tipo encapsula dos métodos, _read_ y _store_, o más genéricamente _get_ y _write_.
+El término _registro_ no trata sólo de los registros del procesador, su uso es más general. Puede involucrar a zonas de memoria RAM (recordad que hay coherencia de cache) o en términos generales a un _objeto compartido_. 
+
+A nivel de hardware los hilos se comunican leyendo y escribiendo en memoria compartida. Desde el punto de vista del hardware la comunicación se hace vía registros de lectura-escritura. Un registro de este tipo encapsula dos métodos, _read_ y _store_, o más genéricamente _get_ y _write_.
+
+
+==== Registros atómicos
 
 Los registros de procesadores modernos que usamos para la implementación de los algoritmos de exclusión mutua son _registros atómicos_, generalmente bytes únicos, enteros de varios bytes o referencias a memoria u objetos que cumplen las siguientes dos condiciones (<<Lamport2>>):
 
-1. El método _get_ retorna el último valor escrito, si una lectura retorna un valor y no hubo otra escritura intermedia la siguiente electura será el mismo valor.
+1. El método _get_ retorna el último valor escrito, si una lectura retorna un valor y no hubo otra escritura intermedia la siguiente lectura será el mismo valor.
 
 2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Por ejemplo, si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000, ni un valor intermedio ni del rango posible que puede tomar el registro.
 
-Hay otros tipos de registros que no cumplen con estas condiciones, esos son llamados _registros seguros_ pero por mero accidente, son muy inseguros (<<Herlihy12>>). Otra alternativa intermedia son los _registros regulares_ donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que están siendo escritos. Se dice que estos registros sólo aseguran _consistencia por inactividad_ (_quiescent consistency_) ya que sólo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _read_.
 
-El término _registro_ no trata sólo de los registros del procesador, su uso es más general. Puede involucrar a zonas de memoria RAM (recordad que hay coherencia de cache) o en términos generales a un _objeto compartido_. 
+==== Registros _seguros_ y regulares
+
+Hay otros tipos de registros que no cumplen con las condiciones de los registros atómicos, los _registros seguros_ pero por mero accidente, son muy inseguros (<<Herlihy12>>). Otra alternativa intermedia son los _registros regulares_ donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que están siendo escritos. Se dice que estos registros sólo aseguran _consistencia por inactividad_ (_quiescent consistency_) ya que sólo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _read_.
+
+Un ejemplo de estos _registros_ (en sentido genérico) son las copias de de varios elementos de un array o una estructura a memoria. No son atómicos, por lo que los valores leídos no se corresponden con 
+
+
 
 
 
