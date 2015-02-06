@@ -84,6 +84,31 @@ include::../code/counter_local.c[]
 include::../code/counter_peterson.c[]
 ----
 
+=== Instrucciones por hardware
+
+
+[[getAndSet]]
+==== getAndSet
+
+[[counter_get_and_set_c]]
+[source,c]
+.counter_get_and_set.c
+----
+include::../code/counter_get_and_set.c[]
+----
+
+
+
+[[getAndAdd]]
+==== getAndAdd
+
+[[counter_get_and_add_c]]
+[source,c]
+.counter_get_and_add.c
+----
+include::../code/counter_get_and_add.c[]
+----
+
 
 
 

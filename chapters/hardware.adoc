@@ -14,16 +14,25 @@ Si el problema fundamental es el intercalado de instrucciones generado por las i
 
 Aún al nivel del núcleo del sistema operativo presenta dificultades: la complicación de deshabilitar todas las interrupciones en todos los procesadores y el riesgo de perder interrupciones. Dada la dificultad de deshabilitar las interrrupciones en todos los procesadores tampoco es una solución para asegurar exclusión mutua dado que un _registro_ puede ser modificado por un procesador diferente sin que haya habido intercalación en el mismo procesador.
 
-Por ello se buscaron otras alternativas que en general son conocidas como _primitivas de sincronización_ de los procesadores. Son instrucción especiales que leen y modifican el valor de un registro sin ser interrumpidas y además asegurando la coherencia de cache. Hay muchas variantes de estas instrucciones, -_GetAndAdd_, _TestAndSet_, _Swap_, _CompareAndSwap_, etc.-, cada una con propiedades diferentes. Pero antes de estudiarlas veremos definiciones más genéricas de _registros_ que nos proporcionen modelos genéricos y simples de consistencia por encima de las interrrupciones o mecanismos de consistencia de cache.
+=== Sincronización por hardware
+Por ello se buscaron otras alternativas que en general son conocidas como _primitivas de sincronización de hardware_. Son instrucciones del procesador que leen y modifican el valor de un registro sin ser interrumpidas y asegurando la coherencia de cache (introducen barreras de memoria). Hay muchas variantes de estas instrucciones, -_getAndAdd_, _testAndSet (TAS)_, _swap_, _compareAndSwap (CAS)_, etc.-, cada una con propiedades diferentes. Pero antes de estudiarlas veremos definiciones más genéricas de _registros_ que  proporcionen modelos simples y genéricos de consistencia por encima de las interrrupciones o mecanismos de consistencia de cache.
 
 
 
 === Tipos de registros
 
-El término _registro_ no trata sólo de los registros del procesador, su uso es más general. Puede involucrar a zonas de memoria RAM (recordad que hay coherencia de cache) o en términos generales a un _objeto compartido_. 
+El término _registro_ no trata sólo de los registros del procesador, su uso es más general. Puede involucrar a zonas de memoria RAM o en términos generales a un _objeto compartido_. Aunque nos interesan los registros de hardware hay que tener en cuenta que estos son intermediarios de la memoria RAM lo que implica asegurar consistencia de cache.
 
-A nivel de hardware los hilos se comunican leyendo y escribiendo en memoria compartida. Desde el punto de vista del hardware la comunicación se hace vía registros de lectura-escritura. Un registro de este tipo encapsula dos métodos, _read_ y _store_, o más genéricamente _get_ y _write_.
+A nivel de hardware los hilos se comunican leyendo y escribiendo en memoria compartida. Desde el punto de vista del hardware la comunicación se hace vía registros de lectura-escritura. Un registro de este tipo encapsula dos métodos, _read_ y _store_. O _get_ y _write_ cuando nos referimos a objetos compartidos en general y que pueden ser implementados en lenguajes de alto nivel.
 
+
+==== Registros _seguros_
+
+Los registros con las propiedades de consistencia más débiles son los _registros seguros_, su nombre es un mero accidente histórico, son muy inseguros (<<Herlihy12>>). Estos tipos de registros sólo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario podrá devolver cualquier valor aceptable en el rango del registro.
+
+==== Registros regulares
+
+Una alternativa intermedia son los _registros regulares_ donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que están siendo escritos. Se dice que estos registros sólo aseguran _consistencia por inactividad_ (_quiescent consistency_) ya que sólo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
 
 ==== Registros atómicos
 
@@ -33,15 +42,65 @@ Los registros de procesadores modernos que usamos para la implementación de los
 
 2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Por ejemplo, si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000, ni un valor intermedio ni del rango posible que puede tomar el registro.
 
+==== Primitivas de harware y registros Read-Modify-Write
+Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el númeto de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la cache, por lo que son muy indeficientes. El otro problema era tener que introducir barreras de memoria para forzar la consistencia secuencial.
 
-==== Registros _seguros_ y regulares
+Por ello no es de extrañar que desde el principio se introdujen instrucciones atómicas del procesador que permitiesen implementar operaciones de sincronización de forma más sencilla y eficiente. Este tipo de operaciones pueden ser expresadas como construcciones de registros que denominados genéricamente _registros Read-Modify-Write_-. Hay varios tipos:
 
-Hay otros tipos de registros que no cumplen con las condiciones de los registros atómicos, los _registros seguros_ pero por mero accidente, son muy inseguros (<<Herlihy12>>). Otra alternativa intermedia son los _registros regulares_ donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que están siendo escritos. Se dice que estos registros sólo aseguran _consistencia por inactividad_ (_quiescent consistency_) ya que sólo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _read_.
+- _getAndSet_: Asigna un nuevo valor al registro y retorna el anterior.
+- _getAndAdd_: Incrementa el valor del registro en el valor indicado y retorna el valor anterior.
+- _testAndSet_: verifica el valor del registro, si es cero asigna el nuyevo valor (habitualmente 1, por ejemplo en IBM 360 el registro es binario o booleano, solo admite 0 y 1).
+- _swap_: Intercambia el valor de dos registros.
+- _compareAndSwap_: Compara el valor del registro con otro, si son iguales asigna un nuevo y retorna el anterior.
 
-Un ejemplo de estos _registros_ (en sentido genérico) son las copias de de varios elementos de un array o una estructura a memoria. No son atómicos, por lo que los valores leídos no se corresponden con 
+Los fabricantes proveen muchas operaciones diferentes, y compiladores como el GCC tienen macros que generan estas instrucciones o sus equivalentes: <<Atomics>>. Vamos a ver cómo implementar exclusión mutua con algunas de estas primitivas
+
+===== getAndSet
+
+Usaremos una variable global `mutex` que estará inicializada a cero e indica que no hay procesos en la sección crítica. En la entrada de la sección crítica se almacena 1 y se verifica si el valor anterior era 0 (es decir, no había nadie en la sección crítica). Si era diferente a cero esperará hasta que lo sea.
+
+La función `lock()` es la entrada a la sección crítica y `unlock()` la salida.
+
+----
+		mutex = 0
+
+def lock():
+	while getAndAdd(mutex, 1) != 0:
+		pass
+
+def unlock():
+	mutex = 0
+
+----
+
+En <<getAndSet>> esté el código en C implementado con el macro `__sync_lock_test_and_set`. A pesar de su nombre no es la instrucción testAndSet sino un equivalente de Intel para _getAndSet_.
 
 
 
+
+===== getAndAdd
+
+Se puede implementar exclusión mutua con una idea muy similar a la del algoritmo de la panadería, cada proceso obtiene un número y espera a tu turno. Sólo que esta vez la obtención del _siguiente número_ es atómica y por lo tanto no se necesita un array de números ni hacer un bucle de controles adicionales.
+
+Usaremos dos variables, `number` para el siguiente número y `turn` para indicar a qué número le corresponde entrar a la sección crítica. 
+
+
+----
+		number = 0
+		turn = 0
+
+def lock():
+	""" current is a local variable """
+	current = getAndAdd(number, 1)
+	while current != turn:
+		pass
+
+def unlock():
+	getAndAdd(turn, 1)
+
+----
+
+En <<getAndADD>> esté el código en C implementado con el macro `__sync_fetch_and_add`. A diferencia de la implementación con _getAndSet_, esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
 
 
 === Test&Set
