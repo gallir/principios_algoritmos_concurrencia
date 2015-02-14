@@ -1,3 +1,4 @@
+[[barriers]]
 == La realidad del hardware moderno
 
 No quería hacer tan largo el capítulo anterior y me pareció que este tema merecía un capítulo independiente. Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y N procesos son formalmente correctos *no funcionarán* en la mayoría de procesadores modernos. No debería sorprenderte, los fabricantes de de procesasores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleosfootnote:[Una de las razones de la popularización de la _programación concurrente_, que permite maximizar y sacar provecho a varios procesadores.]. Más adelante veremos que sin un soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.

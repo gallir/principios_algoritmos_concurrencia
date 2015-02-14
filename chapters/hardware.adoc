@@ -1,7 +1,7 @@
 [[hardware]]
 == Soluciones por hardware
 
-Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y con sólo __registros de lectura-escritura atómicos_. Hemos visto que tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (Panadería) se necesita una cantidad de registros proporcional al número de procesos que han de sincronizar. Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio
+Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y con sólo _registros de lectura-escritura atómicos_. Hemos visto que tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (Panadería) se necesita una cantidad de registros proporcional al número de procesos que han de sincronizar. Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio
 
 Los algoritmos anteriores implementan _spinlocks_ pero son muy ineficientes. Además de la sobrecarga para mantene la consistencia de cache se recorren múltiples registros aunentando el consumo de CPU y la presión sobre la cache. Si habéis probado los algoritmo anteriores, en algunos procesadores puede tomar tiempos de órdenes de magnitud superiores a otros. En el caso de un único procesador el avance es tan lento que lo que tarda décimas en uno puede tomar horas en otrosfootnote:[Como pasa en la Raspberry 1.] en el caso de que exista mucha _competencia_ (o _contention_) para entrar a la sección crítica.
 
@@ -100,7 +100,7 @@ def unlock():
 
 ----
 
-En <<getAndADD>> esté el código en C implementado con el macro `__sync_fetch_and_add`. A diferencia de la implementación con _getAndSet_, esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
+En <<getAndAdd>> esté el código en C implementado con el macro `__sync_fetch_and_add`. A diferencia de la implementación con _getAndSet_, esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
 
 
 === Test&Set

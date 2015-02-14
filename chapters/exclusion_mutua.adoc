@@ -1,6 +1,17 @@
 == Exclusión mutua
 
-La exclusión mutua es un tema fundamental cuando se estudian los problemas y soluciones de programación concurrentefootnote:[El otro es _sincronización_, los veremos más adelante cuando hayamos afianzado conceptos y estudiado primitivas fundamentales.]. En este capítulo se describen los problemas que generan los accesos _concurrente_ desde diferentes procesosfootnote:[O hilos, a menos que especifique lo contrario uso el término indistintanmente.] a recursos compartidos. 
+La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartifa_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.,
+
+El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros accedidos por todos los procesos del sistema, fragmentos de la memoria del navegador web que están siendo accedidos y modificados desde diferentes hilos de ejecución, hasta variables enteras simples
+
+Hace unas décadas el interés de estas soluciones estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y la lógica evolución de intentar que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_. 
+
+Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo, por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Las soluciones Los programas concurrentes, y por extensión los paralelos, consisten de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_). Esta intercalación de instrucciones produce los mismos problemas que su ejecución en paralelo.
+
+Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
+
+Este capítulo describe el problema de la exclusión mutua, en qué casos se presenta y qué condiciones deben cumplir una solución correcta al problema. En los siguientes capítulos analizaremos cómo solucionarla algorítmicamente, los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no sólo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización (productor-consumidor, lectores-escritores, etc.).
+
 
 === Intercalado de instrucciones
 
@@ -12,9 +23,9 @@ b = b + a
 print "a, b:", a, b
 ----
 
-Es muy fácil saber que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc. 
+Por el modelo de consoistencia secuencia es fácil deducir que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc. 
 
-Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente *intercalación* de las instrucciones del programa:
+Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente intercalación de las instrucciones del programa:
 
 
 ----
@@ -39,13 +50,13 @@ a, b: 2 2
 a, b: 2 4
 ----
 
-Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa seguramente el resultado será diferente, el resultado final depende del instante en que cada proceso ejecuta sus instrucciones. Este problema se denomina *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
+Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa el resultado podría ser diferente, éste depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
-Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas, el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son *atómicas*, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más sencillas, por ejemplo:
+Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más básicas y sobre las que solemos hacer suposiciones erróneas:
 
 	counter += 1
 
-Se suele suponer que una operación tan básica como sumar una constante (o _literal_) a una variable no es interrumpible, pero no es así. El código ejecutable está compuesto de al menos tres instrucciones de procesador:
+Se suele suponer que una operación tan básica como sumar una constante (o _literal_) a una variable no es interrumpible, pero no es así. El código ejecutable está compuesto por al menos tres instrucciones de procesador:
 
 ----
 movl  counter(%rip), %eax
