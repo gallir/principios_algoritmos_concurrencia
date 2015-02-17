@@ -2,11 +2,11 @@
 
 La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartifa_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.,
 
-El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros accedidos por todos los procesos del sistema, fragmentos de la memoria del navegador web que están siendo accedidos y modificados desde diferentes hilos de ejecución, hasta variables enteras simples
+El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta variables enteras simples
 
-Hace unas décadas el interés de estas soluciones estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y la lógica evolución de intentar que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_. 
+Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y el lógica interés en que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_. 
 
-Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo, por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Las soluciones Los programas concurrentes, y por extensión los paralelos, consisten de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_). Esta intercalación de instrucciones produce los mismos problemas que su ejecución en paralelo.
+Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Las soluciones para programas concurrentes, y por extensión los paralelos, consisten de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_). Esta intercalación de instrucciones produce los mismos problemas que su ejecución en paralelo.
 
 Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
@@ -23,7 +23,7 @@ b = b + a
 print "a, b:", a, b
 ----
 
-Por el modelo de consoistencia secuencia es fácil deducir que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc. 
+Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc. 
 
 Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente intercalación de las instrucciones del programa:
 
@@ -52,7 +52,7 @@ a, b: 2 4
 
 Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa el resultado podría ser diferente, éste depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
-Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ que no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables compartidas. Lo mismo puede ocurrir con _instrucciones_ más básicas y sobre las que solemos hacer suposiciones erróneas:
+Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con _instrucciones_ más básicas y sobre las que solemos hacer suposiciones erróneas:
 
 	counter += 1
 
@@ -76,9 +76,9 @@ movl %eax, counter(%rip)
 ----
 
 <1> Se almacena 0 en el registro eax.
-<2> Aunque la variable ya tiene almacenado el valor `1`, el registro eax sigue teniendo 0.
+<2> Aunque la variable ya tiene almacenado el valor `1`, el registro %eax sigue siendo 0.
 
-En este caso el valor será `1`, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación, son cuatro instrucciones:
+En este caso el valor será `1`, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
 
 ----
 LOAD_GLOBAL   0 (counter)
@@ -86,6 +86,8 @@ LOAD_CONST    1 (1)
 INPLACE_ADD      
 STORE_GLOBAL  0 (counter)
 ----
+
+==== Ejemplos en diferentes lenguajes
 
 En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocounter_go>>) Java (<<counter_java>>) y Python (<<counter_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10 000 000`). El resultado de la ejecución es la siguiente:
 
@@ -126,18 +128,21 @@ sys	0m0.044s
 Fíjate en los _tiempos de CPU_ comparados con el _tiempo de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (GIL, http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html[_The Problem with CPython Semantics_])
 ====
 
-Se puede observar que en todos _se perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones (_interleaving_), estas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una solución correcta es equivalente y funciona para ambos sistemas: el paralelismo es sólo un caso particular de la intercalación.
+
 
 === Exclusión mutua
+
+En los ejemplos anteriores se observa que en todos _se perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, recordad que éstas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una *solución correcta de exclusión mutua es equivalente y funciona para ambos modos*: el paralelismo es sólo un caso particular de la intercalación.
+
 Para que evitar los errores primero debemos identificar el código de ambos programas que acceden a recursos compartidos y que por lo tanto pueden ser víctimas de las _condiciones de carrera_. Esos *fragmentos de código se denominan _secciones críticas_*.
 
-La solución más sencilla y obvia es *evitar que la sección crítica de un proceso se ejecute mientras se está ejecutando la misma sección en otro proceso*: debemos asegurar *_exclusión mutua_*.
+La solución más sencilla y obvia es *evitar que la sección crítica de un proceso se ejecute mientras se está ejecutando la misma sección en otro proceso*: debemos asegurar *_exclusión mutua_* en su ejecución.
 
 
 
-=== Requisitos para la soluciones de EM
+=== Requisitos para la soluciones de exclusión muta
 
-Se definieron tres requisitos fundamentales que deben cumplir los algoritmos y primitivas que pretenden solucionar el exclusión mutua.
+Hay tres requisitos que deben cumplir los algoritmos y primitivas que pretenden solucionar el exclusión mutua.
 
 [[em_requisites]]
 [IMPORTANT]
@@ -149,7 +154,7 @@ Libre de inanición (_starvation free_):: Si cualquier proceso desea entrar en l
 ====
 
 
-Estas tres condiciones nos servirán para evaluar cualquier algoritmo y primitiva. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
+Estas tres condiciones nos servirán para evaluar los algoritmos o mecanismos para asegurar la exclusión mutua. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
 
 Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<Stallings>> propone seis requisitos *equivalentes* a los anteriores pero que al ser más específicos facilitan el análisis y validación del código.
 
@@ -157,7 +162,7 @@ Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<S
 .Seis requisitos para exclusión mutua
 . Asegurar *exclusión mutua*.
 . Un proceso que se interrumpe en su sección no crítica (o _resto del código_) *no debe interferir* a los demás procesos.
-. No debe permitir *esperas infinitas* en la _entrada de la sección crítica_ (es decir, libre de interbloqueo e inanición).
+. No debe permitir *esperas infinitas* en la _entrada de la sección crítica_. Es decir, libre de interbloqueo e inanición.
 . Debe permitir la *entrada inmediata* a la sección crítica si no hay ningún proceso en ella. 
 . No se deben hacer *suposiciones de la velocidad relativa* de los procesos ni del número de procesadores.
 . Un proceso permanece en su sección crítica por tiempo finito. Dado que nuestro interés es desarrollar los algoritmos de entrada y salida a la sección crítica, damos por cierta la validez de esta reglafootnote:[Pero sí se debe tomar en cuenta cuando se desarrollan los programas que *implementan* la sección crítica.].

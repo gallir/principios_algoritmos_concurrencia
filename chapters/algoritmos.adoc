@@ -1,10 +1,12 @@
 == Algoritmos de exclusión mutua
 
-En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos. Empezaremos analizando los problemas de algoritmos simples hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<Peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la panadería_ de Leslie Lamport <<Lamport>>.
+En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos y luego para 2 o más procesos.
 
-Por supuesto estos algoritmos actualmente no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que estos hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al hacer _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: instrucciones por hardware, semáforos, monitores y paso de mensajes.
+Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<Peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la panadería_ de Leslie Lamport <<Lamport>>.
 
-El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones: 
+Por supuesto estos algoritmos actualmente no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que estos hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: instrucciones por hardware, semáforos, monitores y paso de mensajes.
+
+El objetivo de estudiar estos algoritmos y su evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones: 
 
 - esperas activas (_busy wait_),
 - interbloqueos (_deadlocks_), 
@@ -12,18 +14,21 @@ El objetivo de estudiar estos algoritmos y la evolución hasta encontrar la solu
 - bloqueos activos (_livelocks_), 
 - etc.
 
-Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de operaciones SQL en bases de datos.
+Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de consultas a bases de datos.
 
 === Memoria compartida
 
 En todos los algoritmos y técnicas que analizamos en este libro asumimos que nuestros programan tienen acceso a memoria compartida, es decir, podemos usar variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Es decir, se dice que nuestros algoritmos son del *tipo de memoria compartida*.
 
-El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, en este caso se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_ y _sincronización_ pero sus técnicas son más complejas al no disponer de _variables compartidas_ por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, además estos están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro. Aunque quizás lo sea en el siguiente.
-
+[NOTE]
+.Algoritmos distribuidos
+====
+El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas al no disponer de variables compartidas por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, que están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro. 
+====
 
 === Convenciones de programación
 
-Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, sólo asumimos que el tiempo que cada proceso está en la sección crítica es finito.
+Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, suponemos que el tiempo que cada proceso está en la sección crítica es finito.
 
 En las secciones críticas los procesos acceden a variables o recursos compartidos y que requieren que se asegure exclusión mutua con las mismas secciones críticas de otros procesos. Nuestra responsabilidad será desarrollar los algoritmos que se insertarán antes de la sección crítica (_pre-protocolo_ o _entrada de la sección crítica_) y después de la misma (_post_protocolo_ o _salida de la sección crítica_).
 
@@ -45,24 +50,24 @@ while True:
 	#
 	# resto del código
 ----
-<1> Entrada a sección crítica o pre-protocolo.
+<1> Entrada a sección crítica o pre-protocolo. Habitualmente se usa `lock()`.
 <2> La sección crítica, por ejemplo `counter += 1`.
-<3> La salida de la sección crítica, o post-protocolo.
+<3> La salida de la sección crítica, post-protocolo, o `unlock()`.
 
 
 === Solución para dos procesos
 
-Vamos a intentar solucionar primero el problema de concurrencia más sencilla: para solo dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
+Vamos a intentar solucionar primero el problema de concurrencia más sencillo. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
 
-El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0` o _P0_. Para P0 el _otro_ es el `1` (o _P1_). Obviamente, el algoritmo de P1 será igual al de P0 pero con los valores `0` y `1` intercambiados.
+El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0` o _P0_. Para el proceso P0 el _otro_ proceso es el `1` (o _P1_). Obviamente, el algoritmo de P1 será igual al de P0 pero con los valores `0` y `1` intercambiados.
 
-Como generalización se suele usar `i` para identificar al propio proceso y `j` para identificar a los otros. También lo haremos así, pero más adelante. Por ahora basta con usar ambos números y nos centraremos en P0. 
+Como generalización se suele usar `i` para identificar al propio proceso y `j` para identificar a los otros. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos `0` y `1` y nos centraremos desde el punto de vista del proceso P0. 
 
 
 ==== Primer intento
 
 
-La idea fundamental es que una variable, `turn` nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable puede tomar sólo los valores `0` y `1`, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero, pero puede tomar cualquiera de los dos valores.
+La idea fundamental es que la variable entera `turn` nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiarmos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar sólo los valores `0` y `1`, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
 
 
 ----
@@ -75,7 +80,7 @@ El siguiente es el código. El primer `while` es la _entrada a la sección crít
 [NOTE]
 .Espera activa
 ====
-Esta espera en el `while` _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_.]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no podemos usar otras primitivas... por ejemplo cuando estamos implementando esas primitivas. En estos casos se los llama _spinlocks_, ya estudiaremos su implementación más eficiente con instrucciones por hardware.
+Esta espera en el `while` _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_.]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no podemos usar otras primitivas... por ejemplo cuando estamos implementando esas primitivas. En estos casos se los llama _spinlocks_, ya el capítulo <<hardware>> estudiaremos implementaciones más eficientes con instrucciones por hardware.
 ====
 
 ----
@@ -95,7 +100,7 @@ Es fácil comprobar que la cumple. La variable `turn` solo puede tomar uno de en
 
 ===== No interferencia
 
-Supongamos que P0 entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de P1 tendrá que esperar a que éste entre a su sección crítica para poder entrar a continuacón. Es decir, la entrada de P0 está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar, está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+Supongamos que P0 entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de P1 tendrá que esperar a que éste entre a su sección crítica para entrar a continuacón. Es decir, la entrada de P0 está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
 
 ===== Sin esperas infinitas
 
@@ -110,12 +115,12 @@ Si `turn` vale `1` pero este último está en el _resto del código_ y no podrá
 Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple. 
 
 
-El problema de este algoritmo es que obliga a una *_alternancia exclusiva_*.
+El problema de este algoritmo es que obliga a una *_alternancia exclusiva_* que provoca espera infinitas.
 
 
 ==== Segundo intento
 
-Si el problema del anterior es que la variable `turn` exigía alternancia exclusiva se puede solucionar con un array, cada posición del mismo indica si el proceso correspondiente está (`True`) o no (`False`) en la sección crítica. Antes de entrar verifica el estado del otro, si no está marca en su posición que ahora está para que el otro no pueda entrar.
+Si el problema del anterior es que la variable `turn` exigía alternancia exclusiva se puede solucionar con un array. Cada posición del mismo indica si el proceso correspondiente está (`True`) o no (`False`) dentro de la sección crítica. Cuando un proceso desea entrar verifica el estado del otro, si no está en la sección crítica pone `True` en su posición del array y continúa (entrando a la sección crítica).
 
 ----
         states = [False, False]
@@ -131,7 +136,7 @@ states[0] = False
 
 ----
 
-Este algoritmo no asegura la condición principal, exclusión mutua. Basta con probar que ambos valores de `states` son verdaderos. Sí, puede ocurrir. Recordad que ambas operaciones, el `while` footnote:[El `while` es traduciodo a una serie de instrucciones que involucan un `if`.] y la asignación posterior, no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas.
+Este algoritmo no asegura la condición principal: exclusión mutua. Basta con probar que ambos valores de `states` son verdaderos. Sí, puede ocurrir. Recordad que ambas operaciones, el `while` footnote:[El `while` es traduciodo a una serie de instrucciones que involucan un `if`.] y la asignación posterior, no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas.
 
 Puede ocurrir la siguiente secuencia de ejecución de instrucciones, a la izquierda las de P0 y a la derecha las de P1.
 
@@ -148,7 +153,7 @@ P0 verifica el estado de P1, sale del bucle es _espera_ porque es falso e inmedi
 
 ==== Tercer intento
 
-El problema del anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado, por lo que la solución es obvia. Si se asigna el estado antes de verificar el otro nos aseguraremos que no se llegue a la sección crítica sin si el otro proceso ya está en ella.
+El problema del algoritmo anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado, la solución parece obvia. Si se asigna el estado propio antes de verificar el otro nos aseguraremos que no se llegue a la sección crítica sin si el otro proceso ya está en ella.
 
 ----
 states[0] = True
@@ -162,7 +167,7 @@ states[0] = False
 
 Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamento el primero que ejecute la asiganción a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si P1 está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con P0 y éste podrá entrar y salir varias veces sin intererencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
-El gran problema es que no cumple la _sin esperas infinitas_, de hecho el algoritmo genera un interbloqueo si se da la siguiente secuencia de ejecución:
+El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho el algoritmo *genera un interbloqueo* si se da la siguiente secuencia de intrucciones:
 
 
   P0                    P1
@@ -280,7 +285,7 @@ Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 [[peterson]]
 ==== Algoritmo de Peterson
 
-En 1981, cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Recordad que ya había solucione más prácticas para 2 o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y simple de entender.
+En 1981, cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Recordad que ya había soluciones más prácticas para 2 o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y simple de entender.
 
 Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar intrucciones de procesador es mucho más sencillo de comprender:
 
@@ -302,12 +307,13 @@ states[0] = False
 
 Como ya hemos analizado en detalles cinco algoritmos con los seis requisitos me limitaré a demostrar que se cumplen las tres fundamentales (<<em_requisites>>):
 
-. _Exclusión mutua_:
-  La demostración formal se relativamente sencilla. Para que haya dos procesos en la sección crítica y por la condición `states[j] and turn == j` se tienen que cumplir una de las siguientes condiciones condiciones:
-+
+=====  Exclusión mutua
+La demostración formal se relativamente sencilla. Para que haya dos procesos en la sección crítica y por la condición `states[j] and turn == j` se tienen que cumplir una de las siguientes condiciones condiciones:
+
 	a. Que `states` sea `[False, False]`: es imposible porque los procesos que desean entrar antes asignan `True` a su posición.
 	b. Que el último que desea entrar sea P0 y  `states` sea `[True, True]` y que `turn` sea 0. Es imposible porque antes de la comparación P0 hizo `turn = 1`. La inversa se aplica si P1 es el último en pretender entrar.
 	c. Si los dos procesos desean entrar más o menos simultáneamente (es una condición de carrera) y que `turn` valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado `turn = x`.
+
 
 ===== Libre de interbloqueos
 
@@ -321,7 +327,7 @@ El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un p
 
 === Solución para N procesos: algoritmo de la panaderia
 
-Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, no son de extrema utilidad para cualquier sistema informático diseñado en los últimos 50 años. La solución más simple conocida la publicó Leslie Lamport en 197 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panaderíafootnote:[Para que se comprenda mejor la idea quizás en España deberíamos llamarle _de la oficina de Correos_.] sacan un número para saber el orden en que serán atendidos.
+Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, no son de extrema utilidad para cualquier sistema informático diseñado en los últimos 50 años. La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panaderíafootnote:[Para que se comprenda mejor la idea quizás en España deberíamos llamarle _de la oficina de Correos_.] sacan un número para saber el orden en que serán atendidos.
 
 La implementación básica de la idea es la siguiente:
 
@@ -367,7 +373,7 @@ number[i] = 0
 <1> La nueva condición, si ambos números son iguales y el id del otro (es decir el valor de _j_) es menor que _i_ entonces también deberá esperar.
 
 
-[IMPORTANT]
+[NOTE]
 .Requisito de identificadores únicos
 ====
 Como habréis notado en todos los algoritmos cada proceso necesita un identificador único. Como queda claro en este algoritmo, además deben tener una relación de precedencia, i.e., debe ser un conjunto ordenado. Ambos requisitos son indispensables para las soluciones de exclusión mutua y la mayoría de algoritmos distribuidos.
@@ -442,7 +448,6 @@ No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ p
 
 En este capítulo hemos analizado las soluciones algorítmicas al problema más importante de concurrencia. Pero lo más importante que espero haber logrado transmitir es la complejidad y matices a la hora de diseñar algoritmos concurrentes, necesitamos pensar de una forma muy diferente a la secuencial estricta que estamos acostumbrados.
 
-Hemos visto qué requisitos han de cumplir las soluciones de exclusión mutua y las hemos demostrado analíticamente sin entrar en notaciones formales y académicas.
-
+Hemos visto qué requisitos han de cumplir las soluciones de exclusión mutua y las hemos demostrado analíticamente sin entrar en detalles de notaciones formales y académicas.
 
 
