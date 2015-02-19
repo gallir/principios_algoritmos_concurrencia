@@ -11,7 +11,7 @@ Principios de concurrencia
 :imagesdir: images
 :front-cover-image: image:cover.png[Concurrencia Cover,1600,2560]
 :hide-uri-scheme:
-//:icons:
+:icons:
 //:source-highlighter: source-highlight
 
 ////

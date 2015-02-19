@@ -45,8 +45,11 @@ Los registros de procesadores modernos que usamos para la implementación de los
 ==== Primitivas de harware y registros Read-Modify-Write
 Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el númeto de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la cache, por lo que son muy indeficientes. El otro problema era tener que introducir barreras de memoria para forzar la consistencia secuencial.
 
-Por ello no es de extrañar que desde el principio se introdujen instrucciones atómicas del procesador que permitiesen implementar operaciones de sincronización de forma más sencilla y eficiente. Este tipo de operaciones pueden ser expresadas como construcciones de registros que denominados genéricamente _registros Read-Modify-Write_-. Hay varios tipos:
+Por ello no es de extrañar que desde el principio se introdujen instrucciones atómicas del procesador que permitiesen implementar operaciones de sincronización de forma más sencilla y eficiente. Este tipo de operaciones pueden ser expresadas como construcciones de registros denominados genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ son interesantes porque pueden implementarse en construcciones de lenguajes o como instrucciones de procesador, sus propiedades son similares.
 
+Hay varios tipos de intrucciones que implementan registros _RMW_:
+
+- _get_: Retorna el valor del registro, se denomina también _función identidad_.
 - _getAndSet_: Asigna un nuevo valor al registro y retorna el anterior.
 - _getAndAdd_: Incrementa el valor del registro en el valor indicado y retorna el valor anterior.
 - _testAndSet_: verifica el valor del registro, si es cero asigna el nuyevo valor (habitualmente 1, por ejemplo en IBM 360 el registro es binario o booleano, solo admite 0 y 1).
@@ -54,6 +57,14 @@ Por ello no es de extrañar que desde el principio se introdujen instrucciones a
 - _compareAndSwap_: Compara el valor del registro con otro, si son iguales asigna un nuevo y retorna el anterior.
 
 Los fabricantes proveen muchas operaciones diferentes, y compiladores como el GCC tienen macros que generan estas instrucciones o sus equivalentes: <<Atomics>>. Vamos a ver cómo implementar exclusión mutua con algunas de estas primitivas
+
+[NOTE]
+.Registros RMW no triviales
+====
+Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ se denominan _no triviales_. <<Herlihy91>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anterioremente (a excepción de la identidad, como es obvio) implementan registros RMW no triviales. 
+
+De todas las implementaciones, _compareAndSwap_ es la más potente. <<Herlihy91>> demostró que pertenece a la clase de consenso N (o _infinito_). Este tipo de instrucciones son, en palabras de <<Herlihy12>>, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_. Afortunadamente la mayoría de procesadores implementan la instrucción _compareAndSet_ o la similar _load-linked/store-conditional_ (o _LLSC_, disponible en la arquitectura ARM).
+====
 
 ===== getAndSet
 
@@ -74,8 +85,6 @@ def unlock():
 ----
 
 En <<getAndSet>> esté el código en C implementado con el macro `__sync_lock_test_and_set`. A pesar de su nombre no es la instrucción testAndSet sino un equivalente de Intel para _getAndSet_.
-
-
 
 
 ===== getAndAdd
@@ -100,10 +109,38 @@ def unlock():
 
 ----
 
-En <<getAndAdd>> esté el código en C implementado con el macro `__sync_fetch_and_add`. A diferencia de la implementación con _getAndSet_, esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
+En <<getAndAdd>> podéis ver el código en C implementado con el macro `__sync_fetch_and_add` y en Go con `atomic.AddUint32`.footnote:[Estrictamente no es getAndAdd sino addAndGet, devuelve el valor después de sumar, pero son equivalentes, sólo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
 
 
-=== Test&Set
+===== testAndSet
+
+La instrucción testAndSet fue la instrucción usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permitían niveles (_clase_) de consenso más elevados. La implementación en IBM 360 consistía de una variable entera binaria (o _booleana_) que podía tomar sólo los valores 0 y 1. La intrucción recibe dos argumentos, la dirección de memoria y el nuevo valor. Si el valor de la dirección de memoria es 0 le asigna el nuevo valor y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
+
+----
+def testAndSet(register, value):
+	if register == 0:
+		register = value
+		return 1
+
+	return 0
+----
+
+La implementación de exclusión mutua con testAndSet es muy similar a getAndSet:
+
+----
+		mutex = 0
+
+def lock():
+	while testAndSet(mutex, 1) == 0:
+		pass
+
+def unlock():
+	mutex = 0
+
+----
+
+
+=== Swap
 
 === Compare&Swap
 

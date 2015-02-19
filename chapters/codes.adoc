@@ -110,6 +110,14 @@ include::../code/counter_get_and_add.c[]
 ----
 
 
+[[gocounter_get_and_add_go]]
+[source,go]
+.gocounter_get_and_add.go
+----
+include::../code/gocounter_get_and_add.go[]
+----
+
+
 
 
 
