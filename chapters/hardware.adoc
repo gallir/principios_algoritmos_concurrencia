@@ -114,7 +114,7 @@ En <<getAndAdd>> podéis ver el código en C implementado con el macro `__sync_f
 
 ===== testAndSet
 
-La instrucción testAndSet fue la instrucción usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permitían niveles (_clase_) de consenso más elevados. La implementación en IBM 360 consistía de una variable entera binaria (o _booleana_) que podía tomar sólo los valores 0 y 1. La intrucción recibe dos argumentos, la dirección de memoria y el nuevo valor. Si el valor de la dirección de memoria es 0 le asigna el nuevo valor y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
+La instrucción _testAndSet_ o _TAS_ fue la instrucción usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permitían niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que podía tomar sólo los valores 0 y 1. La intrucción recibe dos argumentos, la dirección de memoria y el nuevo valor. Si el valor de la dirección de memoria es 0 le asigna el nuevo valor y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
 
 ----
 def testAndSet(register, value):
@@ -125,7 +125,7 @@ def testAndSet(register, value):
 	return 0
 ----
 
-La implementación de exclusión mutua con testAndSet es muy similar a getAndSet:
+La implementación de exclusión mutua con TAS es muy similar a getAndSet:
 
 ----
 		mutex = 0
@@ -142,9 +142,45 @@ def unlock():
 
 === Swap
 
+Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bits. No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función está implementada <<Atomics>> con el confuso nombre de ___sync_lock_test_and_set_ pero realmemte ekjecuta la instrucción XCHG y devuelve el valor anterior de la primer variable.
+
+Si algoritmo es siumilar al genérico:
+
+----
+def swap(register1, register2):
+	tmp = register1
+	register1 = register2
+	register2 = tmp
+	return tmp
+----
+
+El algoritmo de exclusión mutua con _swap_:
+
+----
+		mutex = 0
+
+def lock():
+	local = 1
+	while local != 0:
+		swap(mutex, local)
+
+def unlock():
+	mutex = 0
+----
+
+
+
 === Compare&Swap
+
+
+Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
+https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
 
 
 ==== ABA problem
 (http://nullprogram.com/blog/2014/09/02/)
+
+Ticket Spinlocks: http://lwn.net/Articles/267968/
+
+MCSLocks http://lwn.net/Articles/590243/
 
