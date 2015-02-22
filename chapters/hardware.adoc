@@ -109,8 +109,7 @@ def unlock():
 
 ----
 
-En <<getAndAdd>> podéis ver el código en C implementado con el macro `__sync_fetch_and_add` y en Go con `atomic.AddUint32`.footnote:[Estrictamente no es getAndAdd sino addAndGet, devuelve el valor después de sumar, pero son equivalentes, sólo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará.
-
+En <<getAndAdd>> podéis ver el código en C implementado con el macro `__sync_fetch_and_add` y en Go con `atomic.AddUint32`.footnote:[Estrictamente no es getAndAdd sino addAndGet, devuelve el valor después de sumar, pero son equivalentes, sólo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también llamados _Ticket lock_ y son muy usados, incluso en el núcleo de Linux, por aseguran que no se producen esperas infinitas y además que los procesos entran a la sección crítica en orden FIFO (_fairness_).
 
 ===== testAndSet
 
@@ -125,7 +124,7 @@ def testAndSet(register, value):
 	return 0
 ----
 
-La implementación de exclusión mutua con TAS es muy similar a getAndSet:
+La implementación de exclusión mutua con TAS es muy similar a _getAndSet_:
 
 ----
 		mutex = 0
@@ -142,16 +141,13 @@ def unlock():
 
 === Swap
 
-Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bits. No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función está implementada <<Atomics>> con el confuso nombre de ___sync_lock_test_and_set_ pero realmemte ekjecuta la instrucción XCHG y devuelve el valor anterior de la primer variable.
-
-Si algoritmo es siumilar al genérico:
+Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función está implementada <<Atomics>> con el confuso nombre de ___sync_lock_test_and_set_ pero realmemte ejecuta la instrucción XCHG y devuelve el valor anterior de la primer variable. Su algoritmo es igual al genérico pero devuelve el valor previo de la primer variable, en este sentido es equivalente a _getAndSet_]. El algoritmo es tan sencillo como parece:
 
 ----
 def swap(register1, register2):
 	tmp = register1
 	register1 = register2
 	register2 = tmp
-	return tmp
 ----
 
 El algoritmo de exclusión mutua con _swap_:
@@ -168,7 +164,7 @@ def unlock():
 	mutex = 0
 ----
 
-
+La implementación con el macro atómico `__sync_lock_test_and_set` es similar al _getAndSet_. En Go se pueden usar las funciones atómicas implementadas en el paquete `sync/atomic`, por ejemplo con `atomic.SwapInt32`: <<gocounter_swap_go>>footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry aségurate de tener una versión de Go más moderna.].
 
 === Compare&Swap
 
@@ -183,4 +179,11 @@ https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spin
 Ticket Spinlocks: http://lwn.net/Articles/267968/
 
 MCSLocks http://lwn.net/Articles/590243/
+
+
+MCS Spinlocks
+
+[[mcs_queue]]
+.Cola MCS
+image::mcs.png[width=400, align="center"]
 
