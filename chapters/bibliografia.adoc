@@ -17,6 +17,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
+- [[[Atomics_C11]]] Built-in functions for memory model aware atomic operations. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
+
 - [[[Herlihy12]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
 
 - [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf

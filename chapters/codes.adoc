@@ -135,6 +135,22 @@ include::../code/counter_swap.c[]
 include::../code/gocounter_swap.go[]
 ----
 
+[[compareAndSwap]]
+==== compareAndSwap
+
+[[counter_compare_and_swap_c]]
+[source,c]
+.counter_compare_and_swap.c
+----
+include::../code/counter_compare_and_swap.c[]
+----
+
+[[gocounter_swap_go]]
+[source,go]
+.gocounter_compare_and_swap.go
+----
+include::../code/gocounter_compare_and_swap.go[]
+----
 
 
 

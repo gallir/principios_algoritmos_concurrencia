@@ -59,11 +59,12 @@ Hay varios tipos de intrucciones que implementan registros _RMW_:
 Los fabricantes proveen muchas operaciones diferentes, y compiladores como el GCC tienen macros que generan estas instrucciones o sus equivalentes: <<Atomics>>. Vamos a ver cómo implementar exclusión mutua con algunas de estas primitivas
 
 [NOTE]
+[[consensus]]
 .Registros RMW no triviales
 ====
 Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ se denominan _no triviales_. <<Herlihy91>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anterioremente (a excepción de la identidad, como es obvio) implementan registros RMW no triviales. 
 
-De todas las implementaciones, _compareAndSwap_ es la más potente. <<Herlihy91>> demostró que pertenece a la clase de consenso N (o _infinito_). Este tipo de instrucciones son, en palabras de <<Herlihy12>>, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_. Afortunadamente la mayoría de procesadores implementan la instrucción _compareAndSet_ o la similar _load-linked/store-conditional_ (o _LLSC_, disponible en la arquitectura ARM).
+De todas las implementaciones, _compareAndSwap_ es la más potente. <<Herlihy91>> demostró que pertenece a la clase de consenso N (o _infinito_). Este tipo de instrucciones son, en palabras de <<Herlihy12>>, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_. Afortunadamente la mayoría de procesadores implementan la instrucción _compareAndSwap_ o la similar _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas Power, MIPS y ARM).
 ====
 
 ===== getAndSet
@@ -111,6 +112,11 @@ def unlock():
 
 En <<getAndAdd>> podéis ver el código en C implementado con el macro `__sync_fetch_and_add` y en Go con `atomic.AddUint32`.footnote:[Estrictamente no es getAndAdd sino addAndGet, devuelve el valor después de sumar, pero son equivalentes, sólo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también llamados _Ticket lock_ y son muy usados, incluso en el núcleo de Linux, por aseguran que no se producen esperas infinitas y además que los procesos entran a la sección crítica en orden FIFO (_fairness_).
 
+[IMPORTANT]
+====
+A partir del siguiente ejemplo usaremos las primitivas atómicas de las últimas versiones de GCC (<<Atomics_C11>>). Estas primitivas implementan el modelo de memoria de C11 y C\+\+11, no las usamos antes porque no funcionan con versiones enteriores de GCC, y no podéis probar el código en Raspberry con la distribución actual de esa plataforma (al momento de escribir este capítulo).
+====
+
 ===== testAndSet
 
 La instrucción _testAndSet_ o _TAS_ fue la instrucción usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permitían niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que podía tomar sólo los valores 0 y 1. La intrucción recibe dos argumentos, la dirección de memoria y el nuevo valor. Si el valor de la dirección de memoria es 0 le asigna el nuevo valor y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
@@ -141,7 +147,7 @@ def unlock():
 
 === Swap
 
-Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función está implementada <<Atomics>> con el confuso nombre de ___sync_lock_test_and_set_ pero realmemte ejecuta la instrucción XCHG y devuelve el valor anterior de la primer variable. Su algoritmo es igual al genérico pero devuelve el valor previo de la primer variable, en este sentido es equivalente a _getAndSet_]. El algoritmo es tan sencillo como parece:
+Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función estaba implementada en el antiguo <<Atomics>> con el confuso nombre de `__sync_lock_test_and_set` pero realmemte ejecuta la instrucción XCHG y devuelve el valor anterior de la primer variable. Su algoritmo es igual al genérico pero devuelve el valor previo de la primer variable, en este sentido es equivalente a _getAndSet_]. El algoritmo de la instrucción es tan sencillo como parece:
 
 ----
 def swap(register1, register2):
@@ -164,9 +170,54 @@ def unlock():
 	mutex = 0
 ----
 
-La implementación con el macro atómico `__sync_lock_test_and_set` es similar al _getAndSet_. En Go se pueden usar las funciones atómicas implementadas en el paquete `sync/atomic`, por ejemplo con `atomic.SwapInt32`: <<gocounter_swap_go>>footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry aségurate de tener una versión de Go más moderna.].
+La implementación con el macro `__atomic_exchange` de las últimas versiones de GCC: <<counter_swap_c>>. En Go se pueden usar las funciones atómicas implementadas en el paquete `sync/atomic`, por ejemplo con `atomic.SwapInt32`: <<gocounter_swap_go>>footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry aségurate de tener una versión de Go moderna.].
 
 === Compare&Swap
+
+Esta instrucción, o _CAS_, es la más comúnfootnote:[Es la que se usa en la arquitectura Intel/AMD.] y la que provee el mayor _nivel de consenso_ (ver nota <<consensus>>)footnote:[Aunque sufre el _problema ABA_.]. La instrucción trabaja con tres valores:
+
+. Registro: que se comparará y asignará un nuevo valor si corresponde.
+. Nuevo valor: el valor que se asignará.
+. Valor a comparar: si el valor del resgistro es igual a este valor entonces se asigna al registro.
+
+Dependiendo de la versión que se use, puede retornar _verdadero_ o _falso_ si se hizo el cambio o el valor anterior del registro. En los antiguos <<atomics>> son `__sync_bool_compare_and_swap` y `__sync_val_compare_and_swap` respectivamente. El algoritmo -para el primer caso- es:
+
+----
+def compareAndSwap(register, expected, desired):
+	if registro == expected:
+		register = desired
+		return True
+	else:
+		return False
+----
+
+En las versiones modernas de los macros atómicos es `__atomic_compare_exchange_n` y `__atomic_compare_exchange_n`, ambas retornan un booleano si se puedo hacer el cambio o no, lo único que cambian es la forma de los parámetros (en el último caso son todos punteros). La diferencia importante con la nueva versión es que si no se pudo hacer el cambio actualizan el valor del "esperado". El algoritmo de estos últimos esfootnote:[Cuando analizemos el _problema ABA_ trabajeremos con estos nuevos macros.]:
+
+----
+def compareAndSwap(register, expected, desired):
+	if registro == expected:
+		registro = desired
+		return True
+	else:
+		expected = register
+		return False
+----
+
+
+
+
+La implementación de exclusión mutua es sencilla y similar a _swap_ o _testAndSet_:
+
+----
+		mutex = 0
+
+def lock():
+	while not compareAndSwap(mutex, 0, 1):
+		pass
+
+def unlock():
+	mutex = 0
+----
 
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
