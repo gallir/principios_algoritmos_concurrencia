@@ -117,6 +117,17 @@ include::../code/counter_get_and_add.c[]
 include::../code/gocounter_get_and_add.go[]
 ----
 
+[[testAndSet]]
+==== testAndSet
+
+[[counter_test_and_set_c]]
+[source,c]
+.counter_test_and_set.c
+----
+include::../code/counter_test_and_set.c[]
+----
+
+
 [[swap]]
 ==== Swap
 
@@ -135,6 +146,7 @@ include::../code/counter_swap.c[]
 include::../code/gocounter_swap.go[]
 ----
 
+
 [[compareAndSwap]]
 ==== compareAndSwap
 
@@ -145,12 +157,32 @@ include::../code/gocounter_swap.go[]
 include::../code/counter_compare_and_swap.c[]
 ----
 
-[[gocounter_swap_go]]
+[[gocounter_compare_and_swap_go]]
 [source,go]
 .gocounter_compare_and_swap.go
 ----
 include::../code/gocounter_compare_and_swap.go[]
 ----
 
+==== ABA
 
+[[stack_cas_malloc_c]]
+[source,c]
+.stack_cas_malloc.c
+----
+include::../code/stack_cas_malloc.c[]
+----
 
+[[stack_cas_freelist_c]]
+[source,c]
+.stack_cas_freelist.c
+----
+include::../code/stack_cas_freelist.c[]
+----
+
+[[stack_cas_tagged_c]]
+[source,c]
+.stack_cas_tagged.c
+----
+include::../code/stack_cas_tagged.c[]
+----
