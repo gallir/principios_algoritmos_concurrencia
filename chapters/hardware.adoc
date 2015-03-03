@@ -37,7 +37,7 @@ Los registros de procesadores modernos que usamos para la implementación de los
 
 2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Por ejemplo, si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000, ni un valor intermedio ni del rango posible que puede tomar el registro.
 
-==== Primitivas de harware y registros Read-Modify-Write
+=== Primitivas de hardware y registros _Read-Modify-Write_
 Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el número de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la cache, por lo que son muy ineficientes. El otro problema era tener que introducir barreras de memoria para forzar la consistencia secuencial.
 
 Por ello no es de extrañar que desde el principio se introdujen instrucciones atómicas del procesador que permitiesen implementar operaciones de sincronización de forma más sencilla y eficiente. Este tipo de operaciones pueden ser expresadas como construcciones de registros denominados genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ son interesantes porque pueden implementarse en construcciones de lenguajes o como instrucciones de procesador, sus propiedades son similares.
@@ -63,6 +63,7 @@ Hay varios tipos de intrucciones que implementan registros _RMW_:
 - _swap_: Intercambia el valor de dos registros.
 - _compareAndSwap_: Compara el valor del registro con otro, si son iguales asigna un nuevo y retorna el anterior.
 
+
 Los fabricantes proveen muchas operaciones diferentes, y compiladores como el GCC tienen macros que generan estas instrucciones o sus equivalentes: <<Atomics_C11>> y las antiguas <<Atomics>>.  Estudiaremos cómo implementar exclusión mutua con algunas de estas primitivas.
 
 [IMPORTANT]
@@ -73,7 +74,7 @@ A partir de aquí usaremos las primitivas atómicas de las últimas versiones de
 ====
 
 
-===== getAndSet
+==== getAndSet
 Usaremos una variable global `mutex` que estará inicializada a cero e indica que no hay procesos en la sección crítica. En la entrada de la sección crítica se almacena 1 y se verifica si el valor anterior era 0 (es decir, no había nadie en la sección crítica). Si era diferente a cero esperará hasta que lo sea.
 
 La función `lock()` es la entrada a la sección crítica y `unlock()` la salida.
@@ -93,7 +94,7 @@ def unlock():
 En <<getAndSet>> está el código en C implementado con el macro `__atomic_exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente para _getAndSet_.
 
 
-===== getAndAdd
+==== getAndAdd
 
 Se puede implementar exclusión mutua con una idea muy similar a la del algoritmo de la panadería, cada proceso obtiene un número y espera a tu turno. Sólo que esta vez la obtención del _siguiente número_ es atómica y por lo tanto no se necesita un array de números ni hacer un bucle de controles adicionales.
 
@@ -119,7 +120,7 @@ En <<getAndAdd>> podéis ver el código en C implementado con el macro `__atomic
 
 
 
-===== testAndSet
+==== testAndSet
 
 La instrucción _testAndSet_ o _TAS_ fue la instrucción usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permitían niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que podía tomar valores 0 y 1. La intrucción sólo recibe un argumento, la dirección de memoria. Si el valor de la dirección de memoria es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
 
@@ -148,7 +149,7 @@ def unlock():
 
 El código en C implementado con el macro `__atomic_test_and_set`: <<testAndSet>>.
 
-=== Swap
+==== Swap
 
 Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits. Esta función estaba implementada en el antiguo <<Atomics>> con el confuso nombre de `__sync_lock_test_and_set` pero realmemte ejecuta la instrucción XCHG y devuelve el valor anterior de la primer variable. Su algoritmo es igual al genérico pero devuelve el valor previo de la primer variable, en este sentido es equivalente a _getAndSet_]. El algoritmo de la instrucción es tan sencillo como parece:
 
@@ -175,7 +176,7 @@ def unlock():
 
 La implementación con el macro `__atomic_exchange` de las últimas versiones de GCC: <<counter_swap_c>>. En Go se pueden usar las funciones atómicas implementadas en el paquete `sync/atomic`, por ejemplo con `atomic.SwapInt32`: <<gocounter_swap_go>>footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry asegúrate de tener una versión de Go moderna.].
 
-=== Compare&Swap
+==== Compare&Swap
 
 Esta instrucción, o _CAS_, es la más comúnfootnote:[Es la que se usa en la arquitectura Intel/AMD.] y la que provee el mayor _nivel de consenso_ (ver nota <<consensus>>)footnote:[Aunque sufre el _problema ABA_.]. La instrucción trabaja con tres valores:
 
@@ -213,7 +214,7 @@ def unlock():
 	mutex = 0
 ----
 
-La instrucción `CompareAndSwapInt32` en Go ()<<gocounter_compare_and_swap_go>>) es algo diferente y más similar al antiguo macro de GCC. Los argumentos del valor _esperado_ y el _nuevo_ no se pasan por puntero sino por valor. La función en Go queda de la siguiente forma:
+La instrucción `CompareAndSwapInt32` en Go (<<gocounter_compare_and_swap_go>>) es algo diferente y más similar al antiguo macro de GCC. Los argumentos del valor _esperado_ y el _nuevo_ no se pasan por puntero sino por valor. La función en Go queda de la siguiente forma:
 
 [source,go]
 ----
@@ -223,15 +224,9 @@ func lock() {
 ----
 
 
+===== El problema ABA
 
-
-Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
-https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
-
-
-==== El problema ABA
-
-_CAS_ tiene un problema conocido, el _problema ABA_, aunque este no se presenta en casos sencillos como el de exclusión mutua sino en casos de intercalado donde uno de los procesos pudo modificar el registro y volver a poner el mismo valor que antes antes que el otro se vuelva a ejecutar. Para explicar mejor el problema analizaremos un caso real.
+_CAS_ tiene un problema conocido, el _problema ABA_, aunque este no se presenta en casos sencillos como el de exclusión mutua sino en casos de intercalados donde un proceso lee el valor _A_ y cede la CPU a otro proceso, otro modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes antes que el primero se vuelva a ejecutar. Éste ejecutará la instrucción _CAS_ sin haber notado el cambio. Veamos un caso práctico.
 
 Tenemos implementada una pila de estructuras _node_, con las funciones _push_ y _pop_ para agregar y quitar elementos de la pila. _push_ recibe como argumentos el puntero a la variable cabecera de la pilafootnote:[Es decir, al primer nodo.] y el puntero al nodo a añadir. _pop_ sólo recibe el puntero a la cabeza de la pila y devuelve el puntero al primer elemento de la pila (o NULL sin no hay ninguno). A continuación el código en C _simplificado_ de ambas funciones.
 
@@ -247,10 +242,11 @@ struct node *pop(struct node **head) {
 	struct node *result, *orig;
 
 	orig = *head; <3>
-	if (! orig) {
-		return NULL; <4>
-	}
-	while (! CAS(head, &orig, &orig->next); <5>
+	do {
+		if (! orig) {
+			return NULL; <4>
+		}
+	} while (! CAS(head, &orig, &orig->next); <5>
 
 	return orig; <6>
 }
@@ -258,15 +254,15 @@ struct node *pop(struct node **head) {
 <1> _push_: El nodo siguiente al nodo a insertar será el apuntado por la cabecera.
 <2> _push_: Si la cabecera no fue modificada se hará el cambio y ahora apuntará al nuevo nodo `e`. Si por el contrario `head` fue modificada, el nuevo valor de `head` se copia a `e->next` (ahora apuntará al elemento nuevo que apuntaba `head`) y se volverá a intentar. Cuando se haya podido hacer el _swap_ `head` apuntará correctamente a `e` y `e->next` al elemento que estaba antes.
 <3> _pop_: Se hace una copia de la cabecera.
-<4> _pop_: Si es NULL la pila está vacía y retorna el mismo valor.
+<4> _pop_: Si es NULL la pila está vacía y retorna el mismo valor. Recordad que _CAS_ copia el valor anterior de `head` en `orig`, por lo que podría darse el caso que sea NULL, de allí que la comparación esté dentro del bucle `do... while`.
 <5> _pop_: Si por el contrario la cabecera apuntaba a un nodo y ésta no fue modificada se hará el cambio y la cebecera apuntará al siguiente nodo. Si por el contrario fue modificada se hará una copia del último valor a `orig` y se volverá a intentar.
 <6> _pop_: Se retorna el puntero al nodo que antes apuntaba la cabecera.
 
-Este algoritmo funciona sin problemas, de hecho es un algoritmo correcto para gestionar una pila concurrente... solo si es imposible eliminar un nodo y volver a insertar otro nuevo con la misma dirección de memoria. Con _CAS_ es imposible saber si otro proceso ha modificado y vuelto a poner el mismo valor del que hicimos una copia. Supongamos que tenemos una pila con tres nodos que comienzan en la direcciones 10, 20 y 30:
+Este algoritmo funciona sin problemas, de hecho es un algoritmo correcto para gestionar una pila concurrente... solo si es imposible eliminar un nodo y volver a insertar otro nuevo con la misma dirección de memoria. Con _CAS_ es imposible saber si otro proceso ha modificado y vuelto a poner el mismo valor que copiamos (en este caso `orig`). Supongamos que tenemos una pila con tres nodos que comienzan en la direcciones 10, 20 y 30:
 
     head -> [10] -> [20] -> [30]
 
-El proceso _P1_ que acaba de ejecutar `orig = *head;` dentro de _pop_ y es interrumpido. Otro procesos eliminan dos elementos de la pila:
+El proceso _P1_ que acaba de ejecutar `orig = *head;` dentro de _pop_ y es interrumpido. Otro u otros procesos eliminan dos elementos de la pila:
 
     head -> [30]
 
@@ -274,35 +270,72 @@ Y luego se inserta un nuevo nodo con una dirección usada previamente:
 
     head -> [10] -> [30]
 
-Cuando _P1_ continue su ejecución el CAS hará el cambio ya que la direccion es también `10`. El problema es que era una copia antigua que apuntaba antes a `[20]` por lo que dejará la cabecera apuntando a un nodo que ya no existe y los siguientes habrá quedado _descolgados_ de la pila:
+Cuando _P1_ continue su ejecución _CAS_ hará el cambio ya que la direccion es también `10`. El problema es que era una copia antigua que apuntaba antes a `[20]` por lo que dejará la cabecera apuntando a un nodo que ya no existe y los siguientes habrá quedado _descolgados_ de la pila:
 
     head -> ¿20?    [30]
 
-Este caso es muy habitual si usamos `malloc` para cada nuevo nodo que insertamos y luego el `free` cuando lo eliminamos de la listafootnote:[Las implementaciones de `malloc` suelen reusar las direcciones de los elementos que acaban de ser liberados.]. En <<stack_cas_malloc_c>> está este código, si lo ejecutáis veréis que la mayoría de las veces da un _Segmentation Fault_ debido a que se intentó acceder a un nodo ya _liberado_ (el casi de [20] en el ejemplo) y otras veces errores del tipo _double free or corruption (fasttop)_ por liberar dos veces la misma memoria:
-
-Algunas implementaciones de `malloc` no retornan las direcciones usadas recientemente (como la Debian de Raspberry) por lo que quizás no observes el problema. Podemos forzar al reuso de direcciones recientes mediante una segunda pila. En vez de liberar la memoria de los nodos con el `free` los insertamos en una segunda lista `free_nodes`. El código <<stack_cas_freelist_c>> ejecuta repetidamente el siguiente código:
+Este caso es muy habitual si usamos `malloc` para cada nuevo nodo que insertamos y luego el `free` cuando lo eliminamos de la listafootnote:[Las implementaciones de `malloc` suelen reusar las direcciones de los elementos que acaban de ser liberados.]. El programa <<stack_cas_malloc_c>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
 
 [source, c]
 ----
-e = pop(&free_nodes);
+e = malloc(sizeof(struct node));
+e->data.tid = tid;
+e->data.c = i;
+push(&head, e); <1>
+e = pop(&head); <2>
+if (e) {
+	e->next = NULL; <3>
+	free(e);
+} else {
+	printf("Error, stack empty\n"); <4>
+}
+----
+<1> Agregamos el elemento nuevo a la pila, la memoria de este fue obtenida con el malloc anterior.
+<2> Inmediatamente lo quitamos de la lista. El resultado nunca debería ser NULL ya que siempre debería haber al menos un elemento: todos los hilos primero agregan y luego lo quitan.
+<3> Antes de liberar la memoria del elemento recién quitado ponemos el puntero al siguiente en NULL. No debería hacer falta pero agregamos por seguridad y para que observéis que no hay errores no provocados por el efecto ABA.
+<4> Si no pudo obtener un elemento de la lista es un error y lo indicamos.
+
+Si lo ejecutáis veréis que en todos los casos da el error de la pila vacía y/o de error por intentar liberar dos veces la misma memoria.
+----
+Error, stack empty
+*** Error in `./stack_cas_malloc': free(): invalid pointer: 0x00007fcc700008b0 ***
+Aborted (core dumped)
+----
+
+En sistemas con un único procesador, como en Raspberry 1, quizás necesites de varias ejecuciones para que aparezca el error, o aumentar el número de operaciones en `OPERATIONS`, pero ocurrirá. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectar. Algunas implementaciones de `malloc` no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
+
+En vez de liberar la memoria de los nodos con el `free` los insertamos en una segunda lista `free_nodes`, los nodos que se eliminan de la lista `head` son insertados en la lista de libres. En vez de asignar memoria con `malloc`cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa. El código <<stack_cas_freelist_c>> ejecutará repetidamente el siguiente código:
+
+[source, c]
+----
+e = pop(&free_nodes); <1>
 if (! e) {
-	e = malloc(sizeof(struct node)); <1>
+	e = malloc(sizeof(struct node)); <2>
+	printf("malloc\n");
 }
 e->data.tid = tid;
 e->data.c = i;
-push(&head, e); <2>
-e = pop(&head); <3>
+push(&head, e); <3>
+e = pop(&head); <4>
 if (e) {
-	push(&free_nodes, e); <4>
+	push(&free_nodes, e); <5>
+} else {
+	printf("Error, stack empty\n"); <6>
 }
 ----
-<1> La lista es libres estaba vacía, se solicita memoria.
-<2> Se agrega el elemento a la pila de `head`.
-<3> Se elimina un elemento de la pila de `head`
-<4> Si no es NULL se agrega el elemento a la pila de libres.
+<1> Obtenemos un nodo de la lista de libres.
+<2> La lista de libres estaba vacía, se solicita memoria. En la siguiente línea se imprime, debería haber como máximo tantos `malloc` como hilos.
+<3> Se agrega el elemento a la pila de `head`.
+<4> Se elimina un elemento de la pila de `head`.
+<5> Se se pudo obtener el elemento se agrega el elemento a la pila de libres.
+<6> La lista estaba vacía, es un error.
+
+La ejecución del programa dará numerosos errores de de la pila vacía y se harán también más `malloc` de los que debería. Es consecuencia del problema ABA.
+
+
 
 ===== Compare&Swap etiquetado
-La solución para el problema ABA es usar bits adicionales para identificar una _transacción_. Para ello algunas arquitecturas introdujeron instrucciones CAS que permiten la verificación e intercambio de más de una palabra, como el casi de Intel con la instrucción `cmpxchg8b` y `cmpxchg16b` que permite trabajar con 64 bits o 128 bits. En vez de sólo comparar punteros se pueden hacer también comparaciones con estructuras mayores. En nuestro caso necesitamos hacerlo
+Una solución para el problema ABA es el usar bits adicionales como etiquetas para identificar una _transacción_ (_tagged CAS_). Para ello algunas arquitecturas introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de más de una palabrafootnote:[Los _registros atómicos_ explicados antes.], como Intel con las instrucciones `cmpxchg8b` y `cmpxchg16b` dobles que permiten trabajar con estructuras de 64 y 128 bits, en vez de sólo registros atómicos de 32 o 64 bits. En nuestro caso necesitamos hacerlo sólo para verificar el intercambio de las cabeceras, por lo que usaremos la estructura `node_head` para ambas.
 
 [source, c]
 ----
@@ -313,25 +346,98 @@ struct node_head {
 
 struct node_head stack_head; <3>
 struct node_head free_nodes;
-
 ----
 <1> El puntero al nodo que contiene los datos.
 <2> Será usada como etiqueta, un contador que se incrementará en cada _transacción_. Es un entero del mismo tamaño que los punteros (32 o 64 bits según la arquitectura),
 <3> Los punteros a las pilas no serán un simple puntero sino la estructura con el puntero y la etiqueta.
 
+El código completo en C está en <<stack_cas_tagged_c>>, pero analizemos el funcionamiento de de _push_.
+
+[source, c]
 ----
 void push(struct node_head *head, struct node *e) {
 	struct node_head orig, next;
 
-	__atomic_load(head, &orig);
+	__atomic_load(head, &orig); <1>
 	do {
-		next.aba = orig.aba + 1;
+		next.aba = orig.aba + 1; <2>
 		next.node = e;
-		e->next = orig.node;
-	} while (! CAS(head, &orig, &next);
+		e->next = orig.node; <3>
+	} while (! CAS(head, &orig, &next); <4>
 }
+----
+<1> Al tratarse de una estructura no es un _registro atómico_ debemos asegurar que se hace una copia atómica de `head` a `orig`.
+<2> `next` tendrá los datos de `head` después del _CAS_, en este incrementamos el valor de `aba`.
+<3> El nodo siguiente de nuevo nodo es el que está ahora en la cola.
+<4> Se intenta el intercambio, sólo se hará si tanto el puntero al nodo y el entero `aba` son idénticos a los copiados en `orig`. Si entre <1> y <4> el valor de `head` es cambiado por otros procesos el valor de `aba` habrá cambiado (será un valor mayor) por lo que _CAS_ retornará falso aunque el puntero al nodo sea el mismo.
 
------
+
+==== Load-link/store-conditional (_LL/SC_)
+
+De las operaciones atómicas anteriores atómicas _compareAndSwap_ es la más potente de todas ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). Sin embargo en algunas arquitecturas RISC (PowerPC, Alpha, MIPS y ARM) se implementaron una técnica diferente para implementar registros _RMW_ tan potente que puede emular a cualquiera de las anteriores, el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado llamadas a esas operaciones por una serie de instrucciones que las emulan.
+
+El diseño de _LL/SC_ es muy ingenioso, se basa en dos operaciones diferentes que trabajan en cooperación con la gestión de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria en un registro: LWARX en PowerPC, LL en MIPS, LDREX en ARM. La otra a la de almacenar (_store_) un registro en una dirección de memoria: STWC en PowerPC, SC en MIPS y STREX en ARM. La diferencia es que ambas están _enlazadas_, tomemos LDREX y STREX de la arquitectura ARM.
+
+LDREX::
+Carga una dirección de memoria en un registro y _etiqueta_ o marca esa dirección como de _acceso exclusivo_. Luego puede ejecutarse cualquier número de instrucciones hasta el STREX.
+
+STREX::
+Almacena el valor de un registro en una dirección de memoria pero solo si esa dirección ha sido _reservada_ anteriormente con un LDREX y no ha sido modificada por ningún otro proceso. Por ejemplo la siguiente instrucción :
+
+El siguiente código carga el contenido de la dirección indicada por `r0` en el registro `r1` y marca esa direcciónfootnote:[En ARM se etiqueta en el sistema del _monitor de acceso exclusivo_, en otras arquitecturas asocia un bit del TLB o de memorica cache.]:
+
+
+----
+ldrex   r1, [r0] <1>
+...
+strex   r2, r1, [r0] <2>
+----
+<1> Carga el contenido de la dirección indicada por `r0` en el registro `r1` y marca esa direcciónfootnote:[En ARM se etiqueta en el sistema del _monitor de acceso exclusivo_, en otras arquitecturas asocia un bit del TLB o de memorica cache.]
+<2> Almacena el valor del resgistro `r1` en la dirección apuntada por `r0` si y solo sí esa dirección no fue modificada por otro proceso. Si se almacenó se pone `r2` en `0`, caso contrario en `1`.
+
+Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootnote:[Si quieres presumir has de llamarles "implementaciones de registros _RMW_".], por ejemplo _getAndAdd_ y _compareAndSwap_:
+
+._getAndadd_
+----
+.L1:
+    ldrex   r1, [r0] <1>
+    add     r1, r1, #1 <2>
+    strex   r2, r1, [r0] <3>
+    cmp     r2, #0
+    bne     .L1 <4>
+----
+<1> Carga la dirección especificada por `r0` en `r1`.
+<2> Incrementa en 1.
+<3> Almacena _condicionalmente_ la suma.
+<4> Si falló vuelve a intentarlo cargando el nuevo valor.
+
+._compareAndSwap_
+----
+	ldr     r0, [r2] <1>
+.L1
+	ldrex   r1, [r3] <2>
+	cmp     r1, r0
+	bne     .L2 <3>
+	strex   lr, ip, [r3] <4>
+	cmp     lr, #0
+	bne     .L1 <5>
+.L2
+	...
+----
+<1> Carga el contenido de la primera dirección en `r0`.
+<2> Carga el contenido de la segunda dirección en `r1`.
+<3> El resultado de la comparación es falso, sale del CAS.
+<4> Intenta almacenar el nuevo valor en la dirección indicada por `r3` (es decir, hace el _swap_).
+<5> Si no se pudo almacenar vuelve a intentarlo.
+
+
+
+https://twitter.com/sergiolpascual
+
+
+
+Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
+https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
 
 
 
@@ -347,7 +453,7 @@ MCSLocks http://lwn.net/Articles/590243/
 Improving ticket spinlocks  http://lwn.net/Articles/531254/
 
 
-MCS Spinlocks
+==== MCS Spinlocks
 
 [[mcs_queue]]
 .Cola MCS
