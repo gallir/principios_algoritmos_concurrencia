@@ -1,3 +1,4 @@
+[algorithms]
 == Algoritmos de exclusión mutua
 
 En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos y luego para 2 o más procesos.
@@ -6,12 +7,12 @@ Empezaremos analizando los problemas de algoritmos simples para dos procesos has
 
 Por supuesto estos algoritmos actualmente no se usan por varios motivos, uno de ellos es que no funcionan en las arquitecturas de procesadores modernos ya que estos hacen reordenamiento de instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: instrucciones por hardware, semáforos, monitores y paso de mensajes.
 
-El objetivo de estudiar estos algoritmos y su evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones: 
+El objetivo de estudiar estos algoritmos y su evolución hasta encontrar la solución es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones:
 
 - esperas activas (_busy wait_),
-- interbloqueos (_deadlocks_), 
-- inanición (_starvation_), 
-- bloqueos activos (_livelocks_), 
+- interbloqueos (_deadlocks_),
+- inanición (_starvation_),
+- bloqueos activos (_livelocks_),
 - etc.
 
 Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de consultas a bases de datos.
@@ -23,7 +24,7 @@ En todos los algoritmos y técnicas que analizamos en este libro asumimos que nu
 [NOTE]
 .Algoritmos distribuidos
 ====
-El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas al no disponer de variables compartidas por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, que están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro. 
+El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas al no disponer de variables compartidas por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, que están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro.
 ====
 
 === Convenciones de programación
@@ -61,7 +62,7 @@ Vamos a intentar solucionar primero el problema de concurrencia más sencillo. L
 
 El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por `0` y `1` footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el `0` o _P0_. Para el proceso P0 el _otro_ proceso es el `1` (o _P1_). Obviamente, el algoritmo de P1 será igual al de P0 pero con los valores `0` y `1` intercambiados.
 
-Como generalización se suele usar `i` para identificar al propio proceso y `j` para identificar a los otros. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos `0` y `1` y nos centraremos desde el punto de vista del proceso P0. 
+Como generalización se suele usar `i` para identificar al propio proceso y `j` para identificar a los otros. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos `0` y `1` y nos centraremos desde el punto de vista del proceso P0.
 
 
 ==== Primer intento
@@ -74,7 +75,7 @@ La idea fundamental es que la variable entera `turn` nos va a indicar qué proce
         turn = 0
 ----
 
-El siguiente es el código. El primer `while` es la _entrada a la sección crítica_ y lo que hace es esperar a que sea el turno del proceso. En este caso esperará en el bucle mientras `turn` sea diferente a `0`. 
+El siguiente es el código. El primer `while` es la _entrada a la sección crítica_ y lo que hace es esperar a que sea el turno del proceso. En este caso esperará en el bucle mientras `turn` sea diferente a `0`.
 
 
 [NOTE]
@@ -112,7 +113,7 @@ Si `turn` vale `1` pero este último está en el _resto del código_ y no podrá
 
 ===== Sin suposiciones de velocidad relativa
 
-Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple. 
+Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple.
 
 
 El problema de este algoritmo es que obliga a una *_alternancia exclusiva_* que provoca espera infinitas.
@@ -145,7 +146,7 @@ Puede ocurrir la siguiente secuencia de ejecución de instrucciones, a la izquie
                         ¿states[0]? -> False
                         states[1] = True
                         ...
-  states[0] = True 
+  states[0] = True
   ...
               ¡BUUUUUUUUUUM!
 
@@ -171,7 +172,7 @@ El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho 
 
 
   P0                    P1
-  states[0] = True 
+  states[0] = True
                         states[1] = True
                         ¿states[0]? -> True
   ¿states[1]? -> True
@@ -336,7 +337,7 @@ La implementación básica de la idea es la siguiente:
 
 number[i] = 1 + max(number) <2>
 for j in range(0, N): <3>
-	while number[j] > 0 
+	while number[j] > 0
 		and number[j] < number[i]: <4>
 		pass
 
@@ -360,8 +361,8 @@ Es decir, podemos tener números duplicados. La solución es usar el id de cada 
 ----
 number[i] = 1 + max(number)
 for j in range(0, N):
-	while number[j] > 0 
-		and (number[j] < number[i] or 
+	while number[j] > 0
+		and (number[j] < number[i] or
 		(number[j] == number[i] <1>
 		 and j < i)):
 		pass:
@@ -388,7 +389,7 @@ La condición `number[0] > 0` será falsa y P1 entrará a la sección crítica. 
 
 	[1, 1, 0, ..., 0]
 
-Cuando verifique el número de P1 ambos tendrán el mismo (0) pero la siguiente condición 
+Cuando verifique el número de P1 ambos tendrán el mismo (0) pero la siguiente condición
 
 	number[1] == number[0] and 0 < 1
 
@@ -407,8 +408,8 @@ choosing[i] = False <3>
 for j in range(0, N):
 	while choosing[j]: <4>
 		pass
-	while number[j] > 0 
-		and (number[j] < number[i] or 
+	while number[j] > 0
+		and (number[j] < number[i] or
 		(number[j] == number[i]
 		 and j < i)):
 		pass
@@ -440,7 +441,7 @@ El peor de los casos es una condición de carrera donde todos los procesos prete
 
 ==== Libre de inanición
 
-Si un proceso entra y pretende volver a entrar cogerá un número mayor de los que ya están esperando, por lo que esos entrarán antes. 
+Si un proceso entra y pretende volver a entrar cogerá un número mayor de los que ya están esperando, por lo que esos entrarán antes.
 
 No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ procesos desean entrar simultáneamente como máximo tendrán que esperar que entren _n-1_ procesos.
 
@@ -449,5 +450,3 @@ No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ p
 En este capítulo hemos analizado las soluciones algorítmicas al problema más importante de concurrencia. Pero lo más importante que espero haber logrado transmitir es la complejidad y matices a la hora de diseñar algoritmos concurrentes, necesitamos pensar de una forma muy diferente a la secuencial estricta que estamos acostumbrados.
 
 Hemos visto qué requisitos han de cumplir las soluciones de exclusión mutua y las hemos demostrado analíticamente sin entrar en detalles de notaciones formales y académicas.
-
-
