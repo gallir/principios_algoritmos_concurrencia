@@ -54,7 +54,7 @@ Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el pr
 
 Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con _instrucciones_ más básicas y sobre las que solemos hacer suposiciones erróneas:
 
-	counter += 1
+    counter += 1
 
 Se suele suponer que una operación tan básica como sumar una constante (o _literal_) a una variable no es interrumpible, pero no es así. El código ejecutable está compuesto por al menos tres instrucciones de procesador:
 
@@ -96,27 +96,27 @@ En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocou
 ----
 $ time ./counter
 Counter value: 5785131 Expected: 10000000
-real	0m0.010s <1>
-user	0m0.017s
-sys	0m0.000s
+real    0m0.010s <1>
+user    0m0.017s
+sys 0m0.000s
 
 $ time ./gocounter
 Counter value: 5052927 Expected: 10000000
-real	0m0.021s <1>
-user	0m0.032s
-sys	0m0.008s
+real    0m0.021s <1>
+user    0m0.032s
+sys 0m0.008s
 
 $ time java Counter
 Counter value: 4406963 Expected: 10000000
-real	0m0.333s <1>
-user	0m0.564s
-sys	0m0.020s
+real    0m0.333s <1>
+user    0m0.564s
+sys 0m0.020s
 
 $ time python3 counter.py 
 Counter value: 7737979 Expected: 10000000
-real	0m5.400s <2>
-user	0m5.365s
-sys	0m0.044s
+real    0m5.400s <2>
+user    0m5.365s
+sys 0m0.044s
 ----
 <1> El tiempo de _reloj_ es *menor* al tiempo acumulado de CPU.
 <2> El tiempo de _reloj_ es *mayor* al tiempo acumulado de CPU.

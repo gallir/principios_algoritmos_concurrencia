@@ -1,4 +1,4 @@
-[algorithms]
+[[algorithms]]
 == Algoritmos de exclusión mutua
 
 En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos y luego para 2 o más procesos.
@@ -43,13 +43,13 @@ En las secciones críticas los procesos acceden a variables o recursos compartid
 .Programa que ejecuta cada proceso
 ----
 while True:
-	# resto del código
-	#
-	entry_critical_section() <1>
-	critical_section() <2>
-	exit_critical_section() <3>
-	#
-	# resto del código
+    # resto del código
+    #
+    entry_critical_section() <1>
+    critical_section() <2>
+    exit_critical_section() <3>
+    #
+    # resto del código
 ----
 <1> Entrada a sección crítica o pre-protocolo. Habitualmente se usa `lock()`.
 <2> La sección crítica, por ejemplo `counter += 1`.
@@ -128,7 +128,7 @@ Si el problema del anterior es que la variable `turn` exigía alternancia exclus
 
 
 while states[1]:
-	pass
+    pass
 states[0] = True
 
 critical_section()
@@ -159,7 +159,7 @@ El problema del algoritmo anterior es que un proceso verifica el estado del otro
 ----
 states[0] = True
 while states[1]:
-	pass
+    pass
 
 critical_section()
 
@@ -196,8 +196,8 @@ Se puede romper el interbloqueo que se genera en el caso de la _condición de ca
 ----
 states[0] = True
 while states[1]:
-	states[0] = False <1>
-	states[0] = True  <2>
+    states[0] = False <1>
+    states[0] = True  <2>
 
 critical_section()
 
@@ -220,8 +220,8 @@ Vamos a analizar si cumple los requisitos:
 
 En ese caso es algo más difícil la demostración ya que no podemos recurrir al caso simple de que una variable tenga un valor u otro, o que el array `states` no tenga ambos valores en verdadero ya que es posible que así sea y haya exclusión mutua. Hay dos casos:
 
-	. P0 entra a su sección crítica antes que P1 verifique el valor de `states[0]`, en este caso no hay problemas, P1 quedará en la espera activa y P0 saldrá de su sección crítica y P1 podrá entrar.
-	. Se produce una condición de carrera como la comentada previamente. En este caso para que uno pueda entrar el otro proceso debe haberse interrumpido justo después de <1>, cuando continúe su ejecución volverá o poner su estado en verdadero por lo que volverá a esperar en el bucle hasta que el otro proceso haya salido.
+    . P0 entra a su sección crítica antes que P1 verifique el valor de `states[0]`, en este caso no hay problemas, P1 quedará en la espera activa y P0 saldrá de su sección crítica y P1 podrá entrar.
+    . Se produce una condición de carrera como la comentada previamente. En este caso para que uno pueda entrar el otro proceso debe haberse interrumpido justo después de <1>, cuando continúe su ejecución volverá o poner su estado en verdadero por lo que volverá a esperar en el bucle hasta que el otro proceso haya salido.
 
 ===== No interferencia
 
@@ -256,11 +256,11 @@ El algoritmo queda de la siguiente forma:
 
 states[0] = True
 while states[1]:
-	if turn == 1:
-		states[0] = False
-		while turn != 0: <1>
-			pass
-		states[0] = True
+    if turn == 1:
+        states[0] = False
+        while turn != 0: <1>
+            pass
+        states[0] = True
 
 critical_section()
 
@@ -297,7 +297,7 @@ Las variables son las mismas y la idea fundamental no cambia, sólo el orden en 
 states[0] = True
 turn = 1 <1>
 while states[1] and turn == 1: <2>
-	pass:
+    pass:
 
 critical_section()
 
@@ -311,9 +311,9 @@ Como ya hemos analizado en detalles cinco algoritmos con los seis requisitos me 
 =====  Exclusión mutua
 La demostración formal se relativamente sencilla. Para que haya dos procesos en la sección crítica y por la condición `states[j] and turn == j` se tienen que cumplir una de las siguientes condiciones condiciones:
 
-	a. Que `states` sea `[False, False]`: es imposible porque los procesos que desean entrar antes asignan `True` a su posición.
-	b. Que el último que desea entrar sea P0 y  `states` sea `[True, True]` y que `turn` sea 0. Es imposible porque antes de la comparación P0 hizo `turn = 1`. La inversa se aplica si P1 es el último en pretender entrar.
-	c. Si los dos procesos desean entrar más o menos simultáneamente (es una condición de carrera) y que `turn` valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado `turn = x`.
+    a. Que `states` sea `[False, False]`: es imposible porque los procesos que desean entrar antes asignan `True` a su posición.
+    b. Que el último que desea entrar sea P0 y  `states` sea `[True, True]` y que `turn` sea 0. Es imposible porque antes de la comparación P0 hizo `turn = 1`. La inversa se aplica si P1 es el último en pretender entrar.
+    c. Si los dos procesos desean entrar más o menos simultáneamente (es una condición de carrera) y que `turn` valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado `turn = x`.
 
 
 ===== Libre de interbloqueos
@@ -337,9 +337,9 @@ La implementación básica de la idea es la siguiente:
 
 number[i] = 1 + max(number) <2>
 for j in range(0, N): <3>
-	while number[j] > 0
-		and number[j] < number[i]: <4>
-		pass
+    while number[j] > 0
+        and number[j] < number[i]: <4>
+        pass
 
 critical_section()
 
@@ -354,18 +354,18 @@ La idea es sencilla. Cada proceso tiene asociado un identificador entero que lo 
 
 Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que P0 está ejecutando `max()` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta P1 y coge el mismo número que P1. El estado del `number` es el siguiente:
 
-	[1, 1, 0, ..., 0]
+    [1, 1, 0, ..., 0]
 
 Es decir, podemos tener números duplicados. La solución es usar el id de cada proceso para _desempatar_ en caso que hayan seleccionado el mismo número:
 
 ----
 number[i] = 1 + max(number)
 for j in range(0, N):
-	while number[j] > 0
-		and (number[j] < number[i] or
-		(number[j] == number[i] <1>
-		 and j < i)):
-		pass:
+    while number[j] > 0
+        and (number[j] < number[i] or
+        (number[j] == number[i] <1>
+         and j < i)):
+        pass:
 
 critical_section()
 
@@ -383,15 +383,15 @@ Como habréis notado en todos los algoritmos cada proceso necesita un identifica
 
 Todavía no hemos resuelto el problema. Puede ocurrir que cuando P1 haya llegado al bucle `for j...` el proceso P0 todavía no haya almacenado su número en `number[0]` y vea los siguientes valores:
 
-	[0, 1, 0, ..., 0]
+    [0, 1, 0, ..., 0]
 
 La condición `number[0] > 0` será falsa y P1 entrará a la sección crítica. Momentos después P0 almacena su número:
 
-	[1, 1, 0, ..., 0]
+    [1, 1, 0, ..., 0]
 
 Cuando verifique el número de P1 ambos tendrán el mismo (0) pero la siguiente condición
 
-	number[1] == number[0] and 0 < 1
+    number[1] == number[0] and 0 < 1
 
 es falsa por lo que P0 también entrará a la sección crítica, no asegura exclusión mutua.
 
@@ -406,13 +406,13 @@ choosing[i] = True <2>
 number[i]   = 1 + max(number)
 choosing[i] = False <3>
 for j in range(0, N):
-	while choosing[j]: <4>
-		pass
-	while number[j] > 0
-		and (number[j] < number[i] or
-		(number[j] == number[i]
-		 and j < i)):
-		pass
+    while choosing[j]: <4>
+        pass
+    while number[j] > 0
+        and (number[j] < number[i] or
+        (number[j] == number[i]
+         and j < i)):
+        pass
 
 critical_section()
 
