@@ -90,11 +90,12 @@ include::../code/counter_peterson.c[]
 [[getAndSet]]
 ==== getAndSet
 
+
 [[counter_get_and_set_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/counter_get_and_set.c[counter_get_and_set.c]
 [source,c]
-.counter_get_and_set.c
 ----
-include::../code/counter_get_and_set.c[]
+include::../code/hardware/counter_get_and_set.c[]
 ----
 
 
@@ -103,28 +104,28 @@ include::../code/counter_get_and_set.c[]
 ==== getAndAdd
 
 [[counter_get_and_add_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/counter_get_and_add.c[counter_get_and_add.c]
 [source,c]
-.counter_get_and_add.c
 ----
-include::../code/counter_get_and_add.c[]
+include::../code/hardware/counter_get_and_add.c[]
 ----
 
 
 [[gocounter_get_and_add_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/gocounter_get_and_add.go[gocounter_get_and_add.go]
 [source,go]
-.gocounter_get_and_add.go
 ----
-include::../code/gocounter_get_and_add.go[]
+include::../code/hardware/gocounter_get_and_add.go[]
 ----
 
 [[testAndSet]]
 ==== testAndSet
 
 [[counter_test_and_set_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/counter_test_and_set.c[counter_test_and_set.c]
 [source,c]
-.counter_test_and_set.c
 ----
-include::../code/counter_test_and_set.c[]
+include::../code/hardware/counter_test_and_set.c[]
 ----
 
 
@@ -132,18 +133,18 @@ include::../code/counter_test_and_set.c[]
 ==== Swap
 
 [[counter_swap_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/counter_swap.c[counter_swap.c]
 [source,c]
-.counter_swap.c
 ----
-include::../code/counter_swap.c[]
+include::../code/hardware/counter_swap.c[]
 ----
 
 
 [[gocounter_swap_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/gocounter_swap.go[gocounter_swap.go]
 [source,go]
-.gocounter_swap.go
 ----
-include::../code/gocounter_swap.go[]
+include::../code/hardware/gocounter_swap.go[]
 ----
 
 
@@ -151,40 +152,40 @@ include::../code/gocounter_swap.go[]
 ==== compareAndSwap
 
 [[counter_compare_and_swap_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/counter_compare_and_swap.c[counter_compare_and_swap.c]
 [source,c]
-.counter_compare_and_swap.c
 ----
-include::../code/counter_compare_and_swap.c[]
+include::../code/hardware/counter_compare_and_swap.c[]
 ----
 
 [[gocounter_compare_and_swap_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/gocounter_compare_and_swap.go[gocounter_compare_and_swap.go]
 [source,go]
-.gocounter_compare_and_swap.go
 ----
-include::../code/gocounter_compare_and_swap.go[]
+include::../code/hardware/gocounter_compare_and_swap.go[]
 ----
 
 ==== ABA
 
 [[stack_cas_malloc_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/stack_cas_malloc.c[stack_cas_malloc.c]
 [source,c]
-.stack_cas_malloc.c
 ----
-include::../code/stack_cas_malloc.c[]
+include::../code/hardware/stack_cas_malloc.c[]
 ----
 
 [[stack_cas_freelist_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/stack_cas_freelist.c[stack_cas_freelist.c]
 [source,c]
-.stack_cas_freelist.c
 ----
-include::../code/stack_cas_freelist.c[]
+include::../code/hardware/stack_cas_freelist.c[]
 ----
 
 [[stack_cas_tagged_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/stack_cas_tagged.c[stack_cas_tagged.c]
 [source,c]
-.stack_cas_tagged.c
 ----
-include::../code/stack_cas_tagged.c[]
+include::../code/hardware/stack_cas_tagged.c[]
 ----
 
 
@@ -192,15 +193,15 @@ include::../code/stack_cas_tagged.c[]
 ==== LL/SC
 
 [[stack_llsc_freelist_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/arm/stack_llsc_freelist.c[stack_llsc_freelist.c]
 [source,c]
-.stack_llsc_freelist.c
 ----
-include::../code/arm/stack_llsc_freelist.c[]
+include::../code/hardware/arm/stack_llsc_freelist.c[]
 ----
 
 [[stack_llsc_freelist_s]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/hardware/arm/stack_llsc_freelist.s[stack_llsc_freelist.s]
 [source,c]
-.stack_llsc_freelist.s
 ----
-include::../code/arm/stack_llsc.s[]
+include::../code/hardware/arm/stack_llsc.s[]
 ----

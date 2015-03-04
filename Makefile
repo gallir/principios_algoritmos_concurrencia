@@ -29,7 +29,7 @@ $(OUTDIR)/$(BASE).epub: $(SOURCES)
 	scripts/a2x -f epub $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
 $(OUTDIR)/$(BASE).html: $(SOURCES)
-	asciidoctor $(MAIN) -o $@
+	asciidoctor $(MAIN) --attribute tabsize=4 -o $@
 	## Call original a2x to avoid icons
 	#a2x -f xhtml $(A2XOPTIONS) -a icons -a admon.graphics -a callout.graphics -D $(OUTDIR) $(MAIN)
 	#a2x -f xhtml $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
