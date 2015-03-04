@@ -188,4 +188,19 @@ include::../code/stack_cas_tagged.c[]
 ----
 
 
+[[LL_SC]]
 ==== LL/SC
+
+[[stack_llsc_freelist_c]]
+[source,c]
+.stack_llsc_freelist.c
+----
+include::../code/arm/stack_llsc_freelist.c[]
+----
+
+[[stack_llsc_freelist_s]]
+[source,c]
+.stack_llsc_freelist.s
+----
+include::../code/arm/stack_llsc.s[]
+----

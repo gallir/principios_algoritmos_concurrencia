@@ -304,7 +304,8 @@ Aborted (core dumped)
 
 En sistemas con un único procesador, como en Raspberry 1, quizás necesites de varias ejecuciones para que aparezca el error, o aumentar el número de operaciones en `OPERATIONS`, pero ocurrirá. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectar. Algunas implementaciones de `malloc` no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
 
-En vez de liberar la memoria de los nodos con el `free` los insertamos en una segunda lista `free_nodes`, los nodos que se eliminan de la lista `head` son insertados en la lista de libres. En vez de asignar memoria con `malloc`cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa. El código <<stack_cas_freelist_c>> ejecutará repetidamente el siguiente código:
+[[double_stack]] En vez de liberar la memoria de los nodos con el `free` los insertamos en una segunda lista `free_nodes`, los nodos que se eliminan de la lista `head` son insertados en la lista de libres. En vez de asignar memoria con `malloc`cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa. El código <<stack_cas_freelist_c>> ejecutará repetidamente el siguiente código:
+
 
 [source, c]
 ----
@@ -374,7 +375,7 @@ void push(struct node_head *head, struct node *e) {
 
 ==== Load-link/store-conditional (_LL/SC_)
 
-De las operaciones atómicas anteriores atómicas _compareAndSwap_ es la más potente de todas ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). Sin embargo en algunas arquitecturas RISC (PowerPC, Alpha, MIPS y ARM) se implementaron una técnica diferente para implementar registros _RMW_ tan potente que puede emular a cualquiera de las anteriores, el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado llamadas a esas operaciones por una serie de instrucciones que las emulan.
+_compareAndSwap_ es la más potente de las operaciones atómicas anteriores ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). Sin embargo en algunas arquitecturas RISC (PowerPC, Alpha, MIPS y ARM) implementaron una técnica diferente para implementar registros _RMW_ tan potente que puede emular a cualquiera de las anteriores, el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado llamadas a esas operaciones por una serie de instrucciones que las emulan.
 
 El diseño de _LL/SC_ es muy ingenioso, se basa en dos operaciones diferentes que trabajan en cooperación con la gestión de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria en un registro: LWARX en PowerPC, LL en MIPS, LDREX en ARM. La otra a la de almacenar (_store_) un registro en una dirección de memoria: STWC en PowerPC, SC en MIPS y STREX en ARM. La diferencia es que ambas están _enlazadas_, tomemos LDREX y STREX de la arquitectura ARM.
 
@@ -397,7 +398,7 @@ strex   r2, r1, [r0] <2>
 
 Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootnote:[Si quieres presumir has de llamarles "implementaciones de registros _RMW_".], por ejemplo _getAndAdd_ y _compareAndSwap_:
 
-._getAndadd_
+._getAndAdd_
 ----
 .L1:
     ldrex   r1, [r0] <1>
@@ -411,6 +412,8 @@ Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootn
 <3> Almacena _condicionalmente_ la suma.
 <4> Si falló vuelve a intentarlo cargando el nuevo valor.
 
+
+[[CAS_assembly]]
 ._compareAndSwap_
 ----
 	ldr     r0, [r2] <1>
@@ -431,10 +434,32 @@ Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootn
 <5> Si no se pudo almacenar vuelve a intentarlo.
 
 
+===== _LL/SC_ y ABA
+Las implementaciones en hardware de las instrucciones _LL/SC_ tiene algunos problemas que afectan a la eficiencia. El resultado del _store condicional_ retorne con errorfootnote:[No implica que falle el algoritmo implementado, solo que fuerza que se haga otro bucle de lectura y escritura.] _espurio_ por cambios de contexto, emisiones _broadcast_ en el bus de cache, actualizaciones en la misma línea de cache o incluso otras operaciones de lectura o escritura no relacionadas entre el _load_ y el _store_. Por eso la recomendación general es que el fragmento de código dentro de una seccion exclusiva sea lo más breve y eficiente posible.
+
+La mayor ventaja de las instrucciones _LL/SC es que no sufren del problema ABA. Es muy sencillo, con _LL/SC_ es imposible que ocurra porque el primer cambio invalidaría el _store_ condicional. Cuando analizamos el problema ABA vimos demostramos cómo se puede reproducir el problema <<double_stack, con un par de colas>>, una para los nodos y la otra para los que quedan libres. El algoritmo usa el macro atómico para _compareAndSwap_ y cuando se traduce a ensamblador para arquitecturas como ARM se traduce a código que emula el _compareAndSwap_
+
+
 
 https://twitter.com/sergiolpascual
 
 
+.Comparación de tiempos en Raspberry 1
+|===
+|Programa |Tiempo de reloj
+
+|Pila con malloc, CAS (problema ABA)
+|8.6 seg
+
+|Doble pila, CAS (problema ABA)
+|4.9 seg
+
+|Doble pila CAS etiquetado (sin ABA)
+|10.0 seg
+
+|Doble pila con LL/SC (ensamblador, sin ABA)
+|2.3 seg
+|===
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
 https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
