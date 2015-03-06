@@ -116,7 +116,7 @@ o
     c = a * 2
 
 
-Detecta que la asigación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos porcesos. Tomemos el algoritmo correcta más sencillo, [[peterson]], cuya entrada a la sección crítica es:
+Detecta que la asigación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos porcesos. Tomemos el algoritmo correcta más sencillo, <<peterson>>, cuya entrada a la sección crítica es:
 
 ----
 states[0] = True

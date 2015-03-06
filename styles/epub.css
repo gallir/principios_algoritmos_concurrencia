@@ -44,9 +44,10 @@ div.table tbody,
 div.informaltable thead,
 div.informaltable tfoot,
 div.informaltable tbody {
-    /* No effect in IE6. */
+/*
     border-top: 3px solid #980000;
     border-bottom: 3px solid #980000;
+*/
 }
 
 
@@ -115,6 +116,11 @@ div.itemizedlist li, div.orderedlist li {
   font-size: 0.9em;
 }
 
+code.literal {
+  color: initial;
+}
+
+
 div.calloutlist table {
   font-size: 0.9em;
 }
@@ -170,6 +176,11 @@ code, pre {
 
 pre {
   tab-size: 4;
+}
+
+.calloutlist a {
+text-decoration: none;
+color: navy;
 }
 
 div.calloutlist p {

@@ -5,7 +5,7 @@ MAIN=$(BASE).adoc
 CSS=epub.css
 
 RESOURCES=--resource styles/docbook-xsl.css --resource styles/asciidoctor-default.css
-A2XOPTIONS=$(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
+A2XOPTIONS=-v $(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
 
 
 epub: $(OUTDIR)/$(BASE).epub
@@ -29,10 +29,10 @@ $(OUTDIR)/$(BASE).epub: $(SOURCES)
 	scripts/a2x -f epub $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
 $(OUTDIR)/$(BASE).html: $(SOURCES)
-	asciidoctor $(MAIN) --attribute tabsize=4 -o $@
+	#asciidoctor $(MAIN) --attribute tabsize=4 -o $@
 	## Call original a2x to avoid icons
 	#a2x -f xhtml $(A2XOPTIONS) -a icons -a admon.graphics -a callout.graphics -D $(OUTDIR) $(MAIN)
-	#a2x -f xhtml $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
+	scripts/a2x -f xhtml $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
 
 .PHONY: clean
 clean:

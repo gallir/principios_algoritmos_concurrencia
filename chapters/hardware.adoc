@@ -44,7 +44,7 @@ Por ello no es de extrañar que desde el principio se introdujeron instrucciones
 .Registros RMW no triviales
 ====
 
-Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ se denominan _no triviales_. <<Herlihy91, Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anterioremente (a excepción de la identidad, obviamente) implementan registros _RMW_ no triviales.
+Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anterioremente (a excepción de la identidad, obviamente) implementan registros _RMW_ no triviales.
 
 De todas las implementaciones, _compareAndSwap_ (_CAS_) es la más potente. <<Herlihy91, Herlihy>> también demostró que pertenece a la clase de _consenso N_ (o _infinito_). Este tipo de instrucciones son, en palabras del autor, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_. Afortunadamente la mayoría de procesadores implementan _CAS_ o la similar _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
 
@@ -292,9 +292,9 @@ if (e) {
     printf("Error, stack empty\n"); <4>
 }
 ----
-<1> Agregamos el elemento nuevo a la pila, la memoria de éste fue obtenida con el malloc anterior.
-<2> Inmediatamente lo quitamos de la lista. El resultado nunca debería ser NULL ya que siempre debería haber al menos un elemento: todos los hilos primero agregan y luego lo quitan.
-<3> Antes de liberar la memoria del elemento recién eliminado se pone `next` en NULL. No debería hacer falta pero agregamos por seguridad y para que observéis que no hay errores no provocados por el efecto ABA.
+<1> Se agrega el elemento nuevo a la pila, la memoria de éste fue obtenida con el malloc de la línea anterior.
+<2> Inmediatamente se lo elimina de la lista. El resultado nunca debería ser NULL ya que siempre debería haber al menos un elemento: todos los hilos primero agregan y luego lo quitan.
+<3> Antes de liberar la memoria del elemento recién eliminado se pone `next` en NULL. No debería hacer falta pero lo hacemos por seguridad y para que observéis claramente que los errores son por el problema ABA.
 <4> Si no pudo obtener un elemento de la lista es un error y lo indicamos.
 
 Si lo ejecutáis veréis que en todos los casos da el error de la pila vacía y/o de error por intentar liberar dos veces la misma memoria.
@@ -444,7 +444,7 @@ Vamos a ello.
 
 [[llsc]]
 ===== _LL/SC_ en ensamblador nativo
-Partimoos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones _pop()_ y _push()_. Éstas están implementadas en ensamblador de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con <<safe_register, la misma estructura de pila anterior>>.
+Dividimos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones _pop()_ y _push()_. Éstas están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con <<safe_register, la misma estructura de pila anterior>>.
 
 El código es bastante sencillo de entender, vamos a ver analizar en detalle la función _pop()_ que es la más breve de ambas:
 
