@@ -1,0 +1,44 @@
+[[spinlocks]]
+== Spinlocks eficientes
+
+=== Tiempos hardware
+image::times-hardware.png[align="center"]
+
+
+=== Test local
+
+
+
+=== Ceder el procesador
+
+==== Intel i5 cuatro núcleos
+image::optimized-intel.png[align="center"]
+
+==== ARMv6 Raspberry 1
+image::optimized-arm.png[align="center"]
+
+
+
+
+Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
+https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
+
+
+
+(http://nullprogram.com/blog/2014/09/02/ https://github.com/skeeto/lstack)
+Common Pitfalls in Writing Lock-Free Algorithms http://blog.memsql.com/common-pitfalls-in-writing-lock-free-algorithms/
+
+Toward generic atomic operations/The C11 memory model http://lwn.net/Articles/509102/
+
+Ticket Spinlocks: http://lwn.net/Articles/267968/
+
+MCSLocks http://lwn.net/Articles/590243/
+
+Improving ticket spinlocks  http://lwn.net/Articles/531254/
+
+
+==== MCS Spinlocks
+
+[[mcs_queue]]
+.Cola MCS
+image::mcs.png[width=400, align="center"]
