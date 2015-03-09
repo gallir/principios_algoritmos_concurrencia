@@ -9,6 +9,7 @@ Principios de concurrencia
 :toclevels: 2
 :numbered!:
 :imagesdir: images
+:caption!:
 :front-cover-image: image:cover.png[Concurrencia Cover,1600,2560]
 :hide-uri-scheme:
 //:icons:

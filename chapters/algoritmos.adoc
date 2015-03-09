@@ -148,7 +148,7 @@ Puede ocurrir la siguiente secuencia de ejecución de instrucciones, a la izquie
                         ...
   states[0] = True
   ...
-              ¡BUUUUUUUUUUM!
+              BOOOM!
 
 P0 verifica el estado de P1, sale del bucle es _espera_ porque es falso e inmediatamente es interrumpido. P1 hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta P1 que también entra a la sección crítica.
 
@@ -177,7 +177,7 @@ El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho 
                         ¿states[0]? -> True
   ¿states[1]? -> True
   ...
-                   ¡DEADLOCK!
+                   DEADLOCK!
 
 
 P0 asigna su estado, se interrumpe y se ejecuta P1, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del `while` hasta que P0 cambie su estado falso. Pero P0 tampoco saldrá del bucle hasta que P1 cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.

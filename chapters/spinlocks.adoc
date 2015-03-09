@@ -1,12 +1,35 @@
 [[spinlocks]]
-== Spinlocks eficientes
+== _Spinlocks_ eficientes
+Todas las soluciones de exclusión mutua vistas hasta ahora tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Este tipo de técnicas se denominan _spinlocks_. El algoritmo de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua con instrucciones de harware del capítulo anterior son _spinlocks_. El uso de _spinlocks_ sólo tiene sentido en si se cumplen alguna de las condiciones anteriores:
 
-=== Tiempos hardware
+. El códígo que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
+
+. Los procesos se ejecutan en multiprocesadores por lo que mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas se usan fundamentalmente para evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
+
+
+El problema principal es de eficiencia, o mejor dicho de ineficiencia, provocada por la espera activa y los requerimientos de almacenamientofootnote:[Para las soluciones algorítmicas sin soporte de hardware se requieren tantos registros como procesos que compiten para entrar a la sección crítica.]. Por ello de desarrollaron las primitivas de harware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros diferentes como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas primitivas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura, como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
+
+En la siguiente figura se muestran los tiempos de _reloj_ de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda) y ARM v6 de Raspberry Pi 1 (barra naranja de la derecha).
+
+[[hardware_times]]
+.Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
+[caption=""]
 image::times-hardware.png[align="center"]
+
+El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_. Los siguientes hacia la derecha son los algoritmos del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
+
+Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante, pero éste no es uniforme para ambas plataformasfootnote:[En _get&add_ no incluí el tiempo en la Raspberry ya que tomó horas.]. En ARM la implementación más eficiente es con _compareAndSwap_ seguidas muy de cerca por _swap_ y _getAndSet_. En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_. Es un dato curioso, Intel tiene _CAS_ nativo pero ARM lo emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+
+=== Optimizaciones
+Los _spinlock_ vistos son ineficientes por dos razones:
+
+. La presión sobre la memoria cache, en sistemas con varios procesadores todos los procesos verifican el estado de la misma variable por lo que se generan mensajes de sincornización.
+
+. La competencia de procesador generado por la espera activa.
 
 
 === Test local
-
+Una forma de reducir
 
 
 === Ceder el procesador
@@ -17,8 +40,10 @@ image::optimized-intel.png[align="center"]
 ==== ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
+==== ticket vs MCS vs CLH
+image::ticket-mcs-clh.png[align="center"]
 
-
+Ticket implementation https://github.com/karthick18/ticket_spinlock/blob/master/spinlock.h
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
 https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
@@ -35,6 +60,8 @@ Ticket Spinlocks: http://lwn.net/Articles/267968/
 MCSLocks http://lwn.net/Articles/590243/
 
 Improving ticket spinlocks  http://lwn.net/Articles/531254/
+
+http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
 
 
 ==== MCS Spinlocks

@@ -9,12 +9,12 @@ Tampoco deberías decepcionarte. El objetivo fue estudiar los algoritmos y apren
 Para que veáis el problema programé el algoritmo de Peterson y ejecuté el programa de la misma forma que en el capítulo anterior (<<counter_times>>)footnoteref:[paciencia, Ten un poco de paciencia, el código está en el libro, ya enlazo la solución correcta un poco más adelante.]:
 
 ----
-$ time ./counter_peterson 
+$ time ./counter_peterson
 Counter value: 9879533 Expected: 10000000
 
 real    0m0.598s
 user    0m1.189s
-sys 0m0.000s
+sys     0m0.000s
 ----
 
 Además del incremento notable de tiempo de CPU (0.017s en la ejecución sin el algoritmo de Peterson) el resultado sigue siendo erróneo, no se cumple la exclusión mutua.
@@ -70,14 +70,14 @@ Este mecanismo asegura la consistencia de cache y no es el responsable de que lo
 Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesodores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
 ====
 
-El código de <<counter_local_c>> es similar al contador original <<counter_c>> con la única diferencia que la suma se hace sobre una variable local en cada hilo (i.e. no compartidas) y sólo se incrementa la global al final del bucle. 
+El código de <<counter_local_c>> es similar al contador original <<counter_c>> con la única diferencia que la suma se hace sobre una variable local en cada hilo (i.e. no compartidas) y sólo se incrementa la global al final del bucle.
 
 ----
 // The global variable
 int local_counter = 0;
 
 for (i=0; i < max; i++) {
-    local_counter += 1; 
+    local_counter += 1;
 }
 
 // Add to the shared variable
@@ -133,7 +133,7 @@ while states[1] and turn == 1:
     pass:
 states[0] = True
 
-   ¡¡¡BUUUM!!!
+   BOOOM!!!
 ----
 
 Por supuesto eso haría que el algoritmo de exlusión mutua fallase. Para solucionarlo debes pedir _bajo demanda_ que el procesador respete el orden de acceso a memoria de nuestro programa, esto se hace con las _barreras de memoria_
@@ -185,7 +185,7 @@ Los procesadores con ejecución fuera de orden no se popularizaron hasta mediado
 
 Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: ___sync_synchronize()_.
 
-Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del código completo en C: <<counter_peterson_c>>.
+Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del <<counter_peterson_c, código completo en C>>:
 
 [source,c]
 ----
@@ -202,11 +202,11 @@ void lock(int i) {
 Y la ejecución si es correcta y lo que esperábamos:
 
 ----
-$ time ./counter_peterson 
+$ time ./counter_peterson
 Counter value: 10000000 Expected: 10000000
 real    0m0.616s
 user    0m1.230s
-sys 0m0.000s
+sys     0m0.000s
 ----
 
 
@@ -219,14 +219,18 @@ En ese punto del programa el GCC las siguientes instrucciones para las diferente
 
 .Intel 32 bits
 ----
-
     lock orl    $0, (%esp)
 ----
 
 
-.Arm de 32 bits (Raspberry Pi)
+.ARMv6 de 32 bits (Raspberry Pi 1)
 ----
     mcr     p15, 0, r0, c7, c10, 5
+----
+
+.ARMv7 y siguientes
+----
+    dmb
 ----
 
 === Recapitulación
@@ -234,8 +238,3 @@ En ese punto del programa el GCC las siguientes instrucciones para las diferente
 En este capítulo hemos explicado uno de los mayores problemas ocasionados por la ejecución fuera de orden de los procesadores modernos, cómo solucionarlos y los problemas de rendimiento. Pero el uso de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado (varios cientos de ciclos de reloj) que se suman a la presión que introducimos al sistema de cache. No sólo eso, también es complicado saber exactamente donde hay que implementar las barreras y al mismo tiempo no abusar de ellas por el enorme coste que introducen (si queréis hacer un buen ejercicio demostrativo, implementad el algoritmo de la panadería y haced que funcione con el menor número de barreras posibles, no es nada obvio).
 
 En el próximo capítulo analizaremos soluciones mejores de hardware que permiten no solo la exlusión mutua sino implementar mecanismos de consenso para cualquier número de procesos.
-
-
-
-
-
