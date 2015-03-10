@@ -2,7 +2,7 @@
 == _Spinlocks_ eficientes
 Todas las soluciones de exclusión mutua vistas hasta ahora tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Este tipo de técnicas se denominan _spinlocks_. El algoritmo de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua con instrucciones de harware del capítulo anterior son _spinlocks_. El uso de _spinlocks_ sólo tiene sentido en si se cumplen alguna de las condiciones anteriores:
 
-. El códígo que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
+. El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
 
 . Los procesos se ejecutan en multiprocesadores por lo que mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas se usan fundamentalmente para evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
@@ -37,13 +37,15 @@ Una forma de reducir
 ==== Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
 
+==== ARMv7 Raspberry 2
+image::optimized-arm7.png[align="center"]
+
 ==== ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
 ==== ticket vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
 
-Ticket implementation https://github.com/karthick18/ticket_spinlock/blob/master/spinlock.h
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
 https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
@@ -56,6 +58,12 @@ Common Pitfalls in Writing Lock-Free Algorithms http://blog.memsql.com/common-pi
 Toward generic atomic operations/The C11 memory model http://lwn.net/Articles/509102/
 
 Ticket Spinlocks: http://lwn.net/Articles/267968/
+Ticket implementation https://github.com/karthick18/ticket_spinlock/blob/master/spinlock.h
+
+
+
+Lightweight Contention Management for
+Efficient Compare-and-Swap Operations http://arxiv.org/pdf/1305.5800.pdf
 
 MCSLocks http://lwn.net/Articles/590243/
 
@@ -69,3 +77,5 @@ http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
 [[mcs_queue]]
 .Cola MCS
 image::mcs.png[width=400, align="center"]
+
+Agradecimientos a Marc Pampols
