@@ -178,7 +178,7 @@ Nuevo valor:: El valor que se asignará al registro.
 Valor a comparar:: Si el valor del registro es igual a éste entonces se le asignará, caso contrario se copia el valor del registro al valor a comparar.
 
 
-En la versión modernafootnote:[En los <<atomics, antiguos macros de GCC>> las instrucciones equivalentes son `__sync_bool_compare_and_swap` y `__sync_val_compare_and_swap` respectivamente. La diferencia fundamental es que no se modifica el registro del valor a comparar.] de macros atómicos las dos versiones son `__atomic_compare_exchange_n` y `__atomic_compare_exchange_n`, ambas retornan un booleano si se pudo hacer el cambio, lo único que cambia es la forma de los parámetros (en el último caso son todos punteros). El algoritmo de estas instrucciones es:
+En la versión modernafootnote:[En los <<Atomics, antiguos macros de GCC>> las instrucciones equivalentes son `__sync_bool_compare_and_swap` y `__sync_val_compare_and_swap` respectivamente. La diferencia fundamental es que no se modifica el registro del valor a comparar.] de macros atómicos las dos versiones son `__atomic_compare_exchange_n` y `__atomic_compare_exchange_n`, ambas retornan un booleano si se pudo hacer el cambio, lo único que cambia es la forma de los parámetros (en el último caso son todos punteros). El algoritmo de estas instrucciones es:
 
 ----
 def compareAndSwap(register, expected, desired):

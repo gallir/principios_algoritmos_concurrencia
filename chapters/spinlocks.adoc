@@ -1,38 +1,101 @@
 [[spinlocks]]
 == _Spinlocks_ eficientes
-Todas las soluciones de exclusión mutua vistas hasta ahora tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Este tipo de técnicas se denominan _spinlocks_. El algoritmo de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua con instrucciones de harware del capítulo anterior son _spinlocks_. El uso de _spinlocks_ sólo tiene sentido en si se cumplen alguna de las condiciones anteriores:
+Todas las soluciones de exclusión mutua que hemos visto tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Este tipo de técnicas se denominan _spinlocks_. El algoritmo de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son _spinlocks_. Su uso solo tiene sentido si se cumplen alguna de las condiciones anteriores:
 
 . El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
 
-. Los procesos se ejecutan en multiprocesadores por lo que mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas se usan fundamentalmente para evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
+. Los procesos se ejecutan en paralelo en multiprocesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas se usan fundamentalmente para evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
 
-El problema principal es de eficiencia, o mejor dicho de ineficiencia, provocada por la espera activa y los requerimientos de almacenamientofootnote:[Para las soluciones algorítmicas sin soporte de hardware se requieren tantos registros como procesos que compiten para entrar a la sección crítica.]. Por ello de desarrollaron las primitivas de harware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros diferentes como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas primitivas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura, como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamientofootnote:[Para las soluciones algorítmicas sin soporte de hardware se requieren tantos registros como procesos que compiten para entrar a la sección crítica.]. Por ello de desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-En la siguiente figura se muestran los tiempos de _reloj_ de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda) y ARM v6 de Raspberry Pi 1 (barra naranja de la derecha).
+Ahora toca analizar brevemente el comportamiento de cada una y las técnicas más usadas para optimizar los _spinlocks_. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v6 de Raspberry Pi 1 (barra naranja central) y ARM v7 de Raspberry 2 con 4 núcleos (barra amarilla de la derecha).
 
 [[hardware_times]]
 .Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
 [caption=""]
 image::times-hardware.png[align="center"]
 
-El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_. Los siguientes hacia la derecha son los algoritmos del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
+Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
 
-Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante, pero éste no es uniforme para ambas plataformasfootnote:[En _get&add_ no incluí el tiempo en la Raspberry ya que tomó horas.]. En ARM la implementación más eficiente es con _compareAndSwap_ seguidas muy de cerca por _swap_ y _getAndSet_. En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_. Es un dato curioso, Intel tiene _CAS_ nativo pero ARM lo emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no incluí el tiempo en la Raspberry 1 ya que tomó horas.].
+
+En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida de cerca por _compareAndSwap_.
+En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_. Es un dato curioso, Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
 
 === Optimizaciones
-Los _spinlock_ vistos son ineficientes por dos razones:
+Los _spinlock_ son ineficientes por dos razones:
 
-. La presión sobre la memoria cache, en sistemas con varios procesadores todos los procesos verifican el estado de la misma variable por lo que se generan mensajes de sincornización.
+Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verificando el valor de una variable, si hay más hilos compitiendo que procesadores la mayor parte del tiempo se pierde en el bucle de verificación.
 
-. La competencia de procesador generado por la espera activa.
+La presión sobre la memoria cache:: En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable por lo que se generan mensajes o controles de sincronización con la memoria cache de los otros procesadores.
 
+Las técnicas para hacer más eficiente implican básicamente reducir ambos parámetros. Una muy sencilla, el _test local_ es evitar ejecutar las instrucciones atómicas ya que estas consumen más ciclos de reloj de CPU y sobre todo fuerzan a la sincronización de memeoria cache. Para minimizar la competencia por el procesador hay que hacer que un proceso que no puede entrar a la sección crítica ceda el procesador a otro, se hace de dos formas, solicitando al sistema operativo que le pase a la cola de listos (_sched_yield_) o bloquearse por un tiempo variable aleatorio e incremental (_exponential backoff_).
 
-=== Test local
+==== Test local
 Una forma de reducir
 
+[source]
+----
+        mutex = 0
 
-=== Ceder el procesador
+def lock():
+    while mutex or test_and_set(mutex):
+        pass
+----
+
+==== Ceder el procesador
+
+[source]
+----
+        mutex = 0
+
+def lock():
+    while mutex or TAS(mutex):
+        sched_yield()
+----
+
+
+==== Espera exponencial
+
+[source]
+----
+        mutex = 0
+
+def lock():
+    failures = 0
+
+    while mutex or TAS(mutex):
+        failures += 1
+        backoff(failures)
+----
+
+[NOTE]
+.Exponential backoff
+====
+El _exponential backoff_ es la técnica usada por las redes ethernet y similares para reintentar el envío si hubo una colisión, el _backoff_ se refiere a la espera y el _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos lo reintenten simultáneamente.].
+
+El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incremente el contado de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegunods. Luego se calcula el tiempo que esperará con un número random entre cero y el límite (se le suma `1` para que no de esperas de cero nanosegundos).
+
+
+[source,c]
+----
+#define FAILURES_LIMIT 12 // ~ 4096 in nanoseconds
+void backoff(int failures) {
+    struct timespec deadline = { .tv_sec = 0 };
+    unsigned limit;
+
+    if (failures > FAILURES_LIMIT) {
+        limit = 1 << FAILURES_LIMIT;
+    } else {
+        limit = 1 << failures;
+    }
+
+    deadline.tv_nsec = 1 + rand() % limit;
+    clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
+}
+----
+====
 
 ==== Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
