@@ -18,6 +18,8 @@
 
 ===== Go
 
+=== Inversión de prioridades
+
 === Algoritmos tradicionales
 
 ==== Productor-Consumidor

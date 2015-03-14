@@ -25,6 +25,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
 
+- [[[MCS]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
+
 
 // - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

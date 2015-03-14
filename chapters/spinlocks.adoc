@@ -4,8 +4,7 @@ Todas las soluciones de exclusión mutua vistas tienen algo en común, un bucle 
 
 . El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
 
-. Los procesos se ejecutan en paralelo en diferemtes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
-
+. Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
 El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
@@ -21,18 +20,18 @@ Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ning
 Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no están los tiempos de la Raspberry 1 y la instancia m3.large porque necesitan mucho tiempo, hasta horas.].
 
 En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida por _compareAndSwap_.
-En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]. Es muy curioso lo bien que se comporta la instancia EC2, y que _CAS_ sea el más eficiente, seguramente influenciado por las caractéristicas más modernas del procesador.
+En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]. Es interesante lo bien que se comporta la instancia EC2, y que _CAS_ sea el más eficiente, seguramente influenciado por las características más modernas del procesador.
 
 === Optimizaciones
 Los _spinlock_ son ineficientes por dos razones:
 
 Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verificando el valor de una variable, si hay más hilos compitiendo que procesadores la mayor parte del tiempo se pierde en el bucle de verificación.
 
-La presión sobre la memoria cache:: En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable por lo que se generan mensajes o controles de sincronización con la memoria cache de los otros procesadores.
+La presión sobre la memoria cache:: En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes de sincronización de cache entre los diferentes procesadores.
 
-Las técnicas para hacer más eficiente implican básicamente reducir ambos parámetros. Las tres que veremos a continuación son las más sencillas, veremos cómo implementarlas tomando como base la instrucción _testAndCompare_.
+Las técnicas para hacer más eficiente implican básicamente reducir ambos parámetros. Los algoritmos de _spinlock_ que reducen tanto la espera activa como la presión sobre la memoria cache avitando los _hot spots_ se denominan _escalables_ (<<MCS>>, <<Boyd-Wickizer>>)
 
- el _test local_ es evitar ejecutar las instrucciones atómicas ya que estas consumen más ciclos de reloj de CPU y sobre todo fuerzan a la sincronización de memoria cache. Para minimizar la competencia por el procesador hay que hacer que un proceso que no puede entrar a la sección crítica ceda el procesador a otro, se hace de dos formas, solicitando al sistema operativo que le pase a la cola de listos (_sched_yield_) o bloquearse por un tiempo variable aleatorio e incremental (_exponential backoff_).
+Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndCompare_, no pueden ser considerados _escalables_ ya que no reducen la presión sobre la memoria cache. Más adelantes veremos algunos de estos algoritmos, como MCS o CLH.
 
 ==== Test local
 La idea es evitar llamar a la instrucción atómica más _cara_ y compleja verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera, en nuestros casos `mutex`. Si éste vale `1` ya no llamamamos a la instrucción _TAS_.
@@ -63,13 +62,13 @@ La llamada a _sched_yield_ no significa que no continúe la ejecución, si no ha
 
 
 ==== Espera exponencial
-La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_. Cuando un _spinlock_ usa mecanismos de este tipo para reducir la competencia se denominan _escalables_ (<<Boyd-Wickizer>>).
+La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_.
 
 
 [NOTE]
 .Exponential backoff
 ====
-_Exponential backoff_ es la técnica usada por redes Ethernet o WiFi (y similares de bus compartido) para calcular el tiempo de espera para reenviar después de una colisión, _backoff_ se refiere a la espera y _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos reintenten simultáneamente.].
+_Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares de _bus compartido_ para calcular el tiempo de espera para reenviar después de una colisión, _backoff_ se refiere a la espera y _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos reintenten simultáneamente.].
 
 El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incrementa el contado de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegunodos. Luego se calcula el tiempo que esperará con un número random entre 1 y el límite.
 
@@ -155,10 +154,16 @@ Improving ticket spinlocks  http://lwn.net/Articles/531254/
 http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
 
 
-==== MCS Spinlocks
+==== MCS Spinlock
 
 [[mcs_queue]]
 .Cola MCS
-image::mcs.png[width=400, align="center"]
+image::mcs.png[align="center"]
+
+==== CLH Spinlock
+
+[[clh_queue]]
+.Cola CLH
+image::clh.png[align="center"]
 
 Agradecimientos a Marc Pampols
