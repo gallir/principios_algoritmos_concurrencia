@@ -1,15 +1,15 @@
 [[spinlocks]]
 == _Spinlocks_ eficientes
-Todas las soluciones de exclusión mutua que hemos visto tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Este tipo de técnicas se denominan _spinlocks_. El algoritmo de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son _spinlocks_. Su uso solo tiene sentido si se cumplen alguna de las condiciones anteriores:
+Todas las soluciones de exclusión mutua vistas tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso solo tiene sentido si se cumplen una de las siguientes condiciones:
 
 . El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
 
-. Los procesos se ejecutan en paralelo en multiprocesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas se usan fundamentalmente para evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
+. Los procesos se ejecutan en paralelo en diferemtes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
 
-El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamientofootnote:[Para las soluciones algorítmicas sin soporte de hardware se requieren tantos registros como procesos que compiten para entrar a la sección crítica.]. Por ello de desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-Ahora toca analizar brevemente el comportamiento de cada una y las técnicas más usadas para optimizar los _spinlocks_. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v6 de Raspberry Pi 1 (barra naranja central) y ARM v7 de Raspberry 2 con 4 núcleos (barra amarilla de la derecha).
+Ahora toca analizar brevemente el comportamiento de cada una y las técnicas más usadas para optimizar los _spinlocks_. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja central) y ARM v6 de Raspberry 1 (barra amarilla de la derecha).
 
 [[hardware_times]]
 .Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
@@ -20,8 +20,8 @@ Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ning
 
 Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no incluí el tiempo en la Raspberry 1 ya que tomó horas.].
 
-En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida de cerca por _compareAndSwap_.
-En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_. Es un dato curioso, Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida por _compareAndSwap_.
+En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
 
 === Optimizaciones
 Los _spinlock_ son ineficientes por dos razones:
@@ -30,22 +30,26 @@ Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verifica
 
 La presión sobre la memoria cache:: En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable por lo que se generan mensajes o controles de sincronización con la memoria cache de los otros procesadores.
 
-Las técnicas para hacer más eficiente implican básicamente reducir ambos parámetros. Una muy sencilla, el _test local_ es evitar ejecutar las instrucciones atómicas ya que estas consumen más ciclos de reloj de CPU y sobre todo fuerzan a la sincronización de memeoria cache. Para minimizar la competencia por el procesador hay que hacer que un proceso que no puede entrar a la sección crítica ceda el procesador a otro, se hace de dos formas, solicitando al sistema operativo que le pase a la cola de listos (_sched_yield_) o bloquearse por un tiempo variable aleatorio e incremental (_exponential backoff_).
+Las técnicas para hacer más eficiente implican básicamente reducir ambos parámetros. Las tres que veremos a continuación son las más sencillas, veremos cómo implementarlas tomando como base la instrucción _testAndCompare_.
+
+ el _test local_ es evitar ejecutar las instrucciones atómicas ya que estas consumen más ciclos de reloj de CPU y sobre todo fuerzan a la sincronización de memoria cache. Para minimizar la competencia por el procesador hay que hacer que un proceso que no puede entrar a la sección crítica ceda el procesador a otro, se hace de dos formas, solicitando al sistema operativo que le pase a la cola de listos (_sched_yield_) o bloquearse por un tiempo variable aleatorio e incremental (_exponential backoff_).
 
 ==== Test local
-Una forma de reducir
+La idea es evitar llamar a la instrucción atómica más _cara_ y compleja verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera, en nuestros casos `mutex`. Si éste vale `1` ya no llamamamos a la instrucción _TAS_.
 
 [source]
 ----
         mutex = 0
 
 def lock():
-    while mutex or test_and_set(mutex):
+    while mutex or TAS(mutex):
         pass
 ----
 
-==== Ceder el procesador
+La mejora de esta solución depende mucho de la arquitectura y de sus mecanismos de coherencia de cache.
 
+==== Ceder el procesador
+La idea es sencilla, si un proceso está forzado a continuar en la espera activa porque no se cumple la condición de salida del bucle es mejor ceder el procesador para que otro lo intente o salga de la sección crítica. En el ejemplo usamos la llamada de sistema estándar POSIX `sched_yield` que hace que el sistema operativo quite al proceso de ejecución y lo lleve a la cola de _listos para ejecutar_.
 [source]
 ----
         mutex = 0
@@ -55,34 +59,26 @@ def lock():
         sched_yield()
 ----
 
+La llamada a _sched_yield_ no significa que no continúe la ejecución, si no hay otro continuará el mismo. Por este motivo a veces no da los resultados esperados, en teoría debería beneficiar sobre todo a sistemas con un único procesador, pero como <<execution_times, se observa en los tiempos de ejecución>> en Raspberry 1 reduce muy poco e incluso perjudica en algunos casos. Las causas pueden ser el coste adicional de llamadas de sistemas y cambios de contexto, o el efecto ping-pong de procesos que cambian de estado continuamente.
+
 
 ==== Espera exponencial
+La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_
 
-[source]
-----
-        mutex = 0
-
-def lock():
-    failures = 0
-
-    while mutex or TAS(mutex):
-        failures += 1
-        backoff(failures)
-----
 
 [NOTE]
 .Exponential backoff
 ====
-El _exponential backoff_ es la técnica usada por las redes ethernet y similares para reintentar el envío si hubo una colisión, el _backoff_ se refiere a la espera y el _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos lo reintenten simultáneamente.].
+_Exponential backoff_ es la técnica usada por redes Ethernet o WiFi (y similares de bus compartido) para calcular el tiempo de espera para reenviar después de una colisión, _backoff_ se refiere a la espera y _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos reintenten simultáneamente.].
 
-El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incremente el contado de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegunods. Luego se calcula el tiempo que esperará con un número random entre cero y el límite (se le suma `1` para que no de esperas de cero nanosegundos).
+El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incrementa el contado de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegunodos. Luego se calcula el tiempo que esperará con un número random entre 1 y el límite.
 
 
 [source,c]
 ----
-#define FAILURES_LIMIT 12 // ~ 4096 in nanoseconds
+#define FAILURES_LIMIT 12
 void backoff(int failures) {
-    struct timespec deadline = { .tv_sec = 0 };
+    struct timespec deadline = {.tv_sec = 0};
     unsigned limit;
 
     if (failures > FAILURES_LIMIT) {
@@ -97,16 +93,33 @@ void backoff(int failures) {
 ----
 ====
 
-==== Intel i5 cuatro núcleos
+
+[source]
+----
+        mutex = 0
+
+def lock():
+    failures = 0
+
+    while mutex or TAS(mutex):
+        failures += 1
+        backoff(failures)
+----
+
+
+[[execution_times]]
+==== Tiempos de ejecución
+
+===== Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
 
-==== ARMv7 Raspberry 2
+===== ARMv7 Raspberry 2
 image::optimized-arm7.png[align="center"]
 
-==== ARMv6 Raspberry 1
+===== ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
-==== ticket vs MCS vs CLH
+===== Ticket vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
 
 
