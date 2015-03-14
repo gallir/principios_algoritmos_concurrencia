@@ -23,6 +23,10 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
 
-- [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
+- [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
+
+
+// - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
+
 
 // Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<

@@ -9,7 +9,7 @@ Todas las soluciones de exclusión mutua vistas tienen algo en común, un bucle 
 
 El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora tanto en eficiencia -de CPU y espacio- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar el trabajo a los programadores los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-Ahora toca analizar brevemente el comportamiento de cada una y las técnicas más usadas para optimizar los _spinlocks_. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja central) y ARM v6 de Raspberry 1 (barra amarilla de la derecha).
+Ahora toca analizar brevemente el comportamiento de cada una y las técnicas más usadas para optimizar los _spinlocks_. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja), ARM v6 de Raspberry 1 (barra amarilla) y finalmente la de una instancia m3.largefootnote:[Dos núcleos virtuales.] de Amazon EC2.
 
 [[hardware_times]]
 .Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
@@ -18,10 +18,10 @@ image::times-hardware.png[align="center"]
 
 Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
 
-Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no incluí el tiempo en la Raspberry 1 ya que tomó horas.].
+Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no están los tiempos de la Raspberry 1 y la instancia m3.large porque necesitan mucho tiempo, hasta horas.].
 
 En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida por _compareAndSwap_.
-En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]. Es muy curioso lo bien que se comporta la instancia EC2, y que _CAS_ sea el más eficiente, seguramente influenciado por las caractéristicas más modernas del procesador.
 
 === Optimizaciones
 Los _spinlock_ son ineficientes por dos razones:
@@ -63,7 +63,7 @@ La llamada a _sched_yield_ no significa que no continúe la ejecución, si no ha
 
 
 ==== Espera exponencial
-La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_
+La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_. Cuando un _spinlock_ usa mecanismos de este tipo para reducir la competencia se denominan _escalables_ (<<Boyd-Wickizer>>).
 
 
 [NOTE]
@@ -113,14 +113,21 @@ def lock():
 ===== Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
 
+===== Intel AWS m3.large
+image::optimized-m3-large.png[align="center"]
+
 ===== ARMv7 Raspberry 2
 image::optimized-arm7.png[align="center"]
 
 ===== ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
+
 ===== Ticket vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
+
+===== Ticket vs MCS vs CLH con sched_yield
+image::ticket-mcs-clh-yield.png[align="center"]
 
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
