@@ -101,7 +101,7 @@ Es fácil comprobar que la cumple. La variable `turn` solo puede tomar uno de en
 
 ===== No interferencia
 
-Supongamos que P0 entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de P1 tendrá que esperar a que éste entre a su sección crítica para entrar a continuacón. Es decir, la entrada de P0 está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+Supongamos que P0 entra a su sección crítica por primera vez, al salir hace `turn = 1` y al poco tiempo pretende volver a entrar. Como el turno es de P1 tendrá que esperar a que éste entre a su sección crítica para entrar a continuación. Es decir, la entrada de P0 está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
 
 ===== Sin esperas infinitas
 
@@ -166,7 +166,7 @@ critical_section()
 states[0] = False
 ----
 
-Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamento el primero que ejecute la asiganción a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si P1 está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con P0 y éste podrá entrar y salir varias veces sin intererencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
+Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamente el primero que ejecute la asignación a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si P1 está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con P0 y éste podrá entrar y salir varias veces sin interferencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
 El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho el algoritmo *genera un interbloqueo* si se da la siguiente secuencia de intrucciones:
 
@@ -433,11 +433,11 @@ Para que un segundo proceso (P2) entre a la sección crítica después si hay un
 
 - Si P2 todavía no entró a la selección de número entonces por `number[2] = 1 + max(number)` seleccionará un número mayor al de P1.
 
-La exlusión mutua se cumple.
+La exclusión mutua se cumple.
 
 ==== Libre de interbloqueos
 
-El peor de los casos es una condición de carrera donde todos los procesos pretendan entrar siumultáneamente seleccionando todos el mismo número. En este caso siempre habrá un único proceso _menor_ que porá entrar a la sección crítica. Cuando este salga podrá entrar el siguiente con el ID más bajo, y así sucesivamente y en el orden de IDs hasta que entrarán todos.
+El peor de los casos es una condición de carrera donde todos los procesos pretendan entrar siumultáneamente seleccionando todos el mismo número. En este caso siempre habrá un único proceso _menor_ que podrá entrar a la sección crítica. Cuando este salga podrá entrar el siguiente con el ID más bajo, y así sucesivamente y en el orden de IDs hasta que entrarán todos.
 
 ==== Libre de inanición
 
