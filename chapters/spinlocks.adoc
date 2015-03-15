@@ -29,7 +29,7 @@ Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verifica
 
 La presión sobre la memoria cache:: Estos algoritmos no son _escalables_ En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes de sincronización de cache entre los diferentes procesadores.
 
-Aunque lo más eficientes es tener _spinlocks_ escalables, antes veremos técnicas básicas para mejorar los anteriores.
+Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los _spinlocks_ anteriores, al final del capítulo veremos los dos algoritmos escalables más importantes.
 
 [NOTE]
 ._Spinlocks_ escalables
@@ -40,10 +40,10 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 
 ====
 
-Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndCompare_, no pueden ser considerados _escalables_ ya que no reducen la presión sobre la memoria cache.
+Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndSet_, no pueden ser considerados _escalables_ ya que no reducen la presión sobre la memoria cache.
 
-==== _TTAS_
-También conocido como _TATAS_, evitar la llamada a la instrucción atómica más _cara_ y compleja verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera, en nuestros casos `mutex`. Si éste vale `1` ya no llamamamos a la instrucción _TAS_. Este algoritmo, , ayuda a reducir la presión sobre la memoria cache y es una técnica reconocida, se la suele llamar _TTAS_ o _TATAS_.
+==== Verificación local
+Se trata de reducir la presión sobre el sistema de coherencia de cache y evitar la llamada a la instrucción atómica verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera -la variable `mutex` en los ejemplos-. Si ésta vale `1` ya no se llama a la instrucción atómica. Esta técnica se la conoce como _TAS_ o _TATAS_ cuando se usa con la instrucción _TAS_.
 
 [source]
 ----
@@ -55,6 +55,8 @@ def lock():
 ----
 
 La mejora de esta solución depende mucho de la arquitectura y de sus mecanismos de coherencia de cache. En los <<execution_times, tiempos de ejecución>> se observa que esta técnica mejora mucho la eficiencia en las arquitecturas Intel pero son casi despreciables en la arquitectura ARM.
+
+Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
 ==== Ceder el procesador
 La idea es sencilla, si un proceso está forzado a continuar en la espera activa porque no se cumple la condición de salida del bucle es mejor ceder el procesador para que otro lo intente o pueda salir antes de la sección crítica. En el ejemplo usamos la llamada de sistema estándar POSIX `sched_yield` que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos para ejecutar_.
@@ -68,6 +70,8 @@ def lock():
 ----
 La cesión del procesador <<execution_times, produce reducciones de tiempo importantes>> en todas las arquitecturas salvo excepciones como en _CAS_ sobre la Raspeberry con un único procesadorfootnote:[La causa pueden ser el coste adicional de llamadas de sistemas y cambios de contexto, o el efecto ping-pong de procesos que cambian de estado continuamente.].
 
+Código fuente para <<test_and_set_yield_c, _TAS_>>, <<swap_yield_c, _swap_>> y <<compare_and_swap_yield_c, _CAS_>>.
+
 
 ==== Espera exponencial
 La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_.
@@ -78,7 +82,7 @@ La forma de reducir la competencia (_contention_) y evitar que el efecto ping-po
 ====
 _Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares de _bus compartido_ para calcular el tiempo de espera para reenviar después de una colisión, _backoff_ se refiere a la espera y _exponential_ a que el valor límite del tiempo a esperar se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos reintenten simultáneamente.].
 
-El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incrementa el contador de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegunodos. Luego se calcula el tiempo que esperará con un número random entre 1 y el límite.
+El siguiente es el código en C usado en los ejemplos. En cada iteración fallida dentro del _spinlock_ el proceso incrementa el contador de fallos (`failures`) y llama a la función _backoff_. Ésta calcula el límite (`limit`) con desplazamiento de bits, cada posición desplazada multiplica por dos, por ello se desplaza el bit `1` hacia la izquierda con un máximo de 12, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número random entre 1 y el límite.
 
 
 [source,c]
@@ -101,7 +105,7 @@ void backoff(int failures) {
 ====
 
 
-[source]
+[source, c]
 ----
         mutex = 0
 
@@ -113,20 +117,25 @@ def lock():
         backoff(failures)
 ----
 
+La dificultad del _backoff_ reside en la elección de la unidad de tiempo de espera, no existe un valor ideal y depende de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al `sched_yield` con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ y de allí a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con las CPUs inactivas ya que todos los procesos involucrados están _bloqueados_.
+
+Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>> y <<compare_and_swap_backoff_c, _CAS_>>.
 
 [[execution_times]]
 ==== Tiempos de ejecución
 
-===== Intel i5 cuatro núcleos
+
+
+.Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
 
-===== Intel AWS m3.large
+.Intel AWS m3.large
 image::optimized-m3-large.png[align="center"]
 
-===== ARMv7 Raspberry 2
+.ARMv7 Raspberry 2
 image::optimized-arm7.png[align="center"]
 
-===== ARMv6 Raspberry 1
+.ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
 
