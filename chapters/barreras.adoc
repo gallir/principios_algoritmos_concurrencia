@@ -86,7 +86,9 @@ counter += local_counter;
 
 Podéis comparar los tiempos en un sistema con al menos dos núcleos y veréis que el que usa variables locales consume menos del 50% de tiempo de CPU.
 
-[TIP]
+[[false_sharing]]
+[NOTE]
+._False sharing_
 ====
 Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegurarse que no compartan líneas de cache, por ejemplo por usar las mismas direcciones o posiciones cercanas en un array. Si es posible es mejor hacerlo con variables _distantes_ (por ejemplo locales de cada hilo) para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes vía el _front side bus_ aunque sean direcciones diferentes.
 ====
