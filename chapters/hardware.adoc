@@ -257,7 +257,7 @@ struct node *pop(struct node **head) {
 <2> _push_: Si la cabecera no fue modificada se hará el cambio y ahora apuntará al nuevo nodo `e`. Si por el contrario `head` fue modificada, el nuevo valor de `head` se copia a `e->next` (ahora apuntará al elemento nuevo que apuntaba `head`) y se volverá a intentar. Cuando se haya podido hacer el _swap_ `head` apuntará correctamente a `e` y `e->next` al elemento que estaba antes.
 <3> _pop_: Se hace una copia de la cabecera.
 <4> _pop_: Si es NULL la pila está vacía y retorna el mismo valor. Recordad que _CAS_ copia el valor anterior de `head` en `orig`, por lo que podría darse el caso que sea NULL, de allí que la comparación esté dentro del bucle `do... while`.
-<5> _pop_: Si por el contrario la cabecera apuntaba a un nodo y ésta no fue modificada se hará el cambio y la cebecera apuntará al siguiente nodo. Si por el contrario fue modificada se hará una copia del último valor a `orig` y se volverá a intentar.
+<5> _pop_: Si por el contrario la cabecera apuntaba a un nodo y ésta no fue modificada se hará el cambio y la cabecera apuntará al siguiente nodo. Si por el contrario fue modificada se hará una copia del último valor a `orig` y se volverá a intentar.
 <6> _pop_: Se retorna el puntero al nodo que antes apuntaba la cabecera.
 
 Este algoritmo funciona sin problemas, de hecho es un algoritmo correcto para gestionar una pila concurrente... solo si es imposible eliminar un nodo y volver a insertar otro nuevo con la misma dirección de memoria. Con _CAS_ es imposible saber si otro proceso ha modificado y vuelto a poner el mismo valor que copiamos (en este caso `orig`). Supongamos que tenemos una pila con tres nodos que comienzan en la direcciones 10, 20 y 30:

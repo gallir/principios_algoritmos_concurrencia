@@ -64,10 +64,10 @@ Cuando un procesador lee de la memoria y carga en cache el estado se marca como 
 
 Este mecanismo asegura la consistencia de cache y no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
 
-[IMPORTANT]
+[NOTE]
 .El problema del acceso a variables compartidas
 ====
-Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesodores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
+Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
 ====
 
 El código de <<counter_local_c>> es similar al contador original <<counter_c>> con la única diferencia que la suma se hace sobre una variable local en cada hilo (i.e. no compartidas) y sólo se incrementa la global al final del bucle.

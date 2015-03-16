@@ -17,7 +17,7 @@ image::times-hardware.png[align="center"]
 
 Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
 
-Se puede obervar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no están los tiempos de la Raspberry 1 y la instancia m3.large porque necesitan mucho tiempo, hasta horas.].
+Se puede observar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no están los tiempos de la Raspberry 1 y la instancia m3.large porque necesitan mucho tiempo, hasta horas.].
 
 En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida por _compareAndSwap_.
 En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]. Es interesante lo bien que se comporta la instancia EC2, y que _CAS_ sea el más eficiente, seguramente influenciado por las características más modernas del procesador.

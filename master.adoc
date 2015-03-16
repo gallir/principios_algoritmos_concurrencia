@@ -41,6 +41,6 @@ include::chapters/mensajes.adoc[]
 
 include::chapters/estructuras.adoc[]
 
-include::chapters/codes.adoc[]
-
 include::chapters/bibliografia.adoc[]
+
+include::chapters/codes.adoc[]
