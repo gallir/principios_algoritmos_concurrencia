@@ -31,6 +31,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Corbet]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
 
+- [[[Corbet2]]] Jonathan Corbet. _TImproving ticket spinlocks_. http://lwn.net/Articles/531254/
+
 // - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 
 

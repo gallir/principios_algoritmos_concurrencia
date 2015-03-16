@@ -290,3 +290,21 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/rw_l
 ----
 include::../code/spinlocks/rw_lock.c[]
 ----
+
+=== Algoritmos equitativos
+
+[[ticket_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/ticket_lock.c[ticket_lock.c]
+[source,c]
+----
+include::../code/spinlocks/ticket_lock.c[]
+----
+
+==== Lectores escritores
+
+[[ticket_rw_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/ticket_rw.c[ticket_rw.c]
+[source,c]
+----
+include::../code/spinlocks/ticket_rw.c[]
+----

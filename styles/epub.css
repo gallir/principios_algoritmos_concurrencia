@@ -125,6 +125,14 @@ div.calloutlist table {
   font-size: 0.9em;
 }
 
+div.calloutlist table tr td {
+    line-height: 1.0;
+}
+
+div.calloutlist p {
+  margin: 0;
+}
+
 /*
 div.calloutlist table {
   margin: 10px 0px !important;
@@ -138,7 +146,6 @@ div.calloutlist table tr, div.calloutlist table tr th, div.calloutlist table tr 
   background: none;
   padding: 0.2em;
 }
-
 
 dt span.term {
   font-style: bold;
@@ -184,7 +191,7 @@ color: navy;
 }
 
 a.simpara {
-text-decoration: none;    
+text-decoration: none;
 }
 
 div.calloutlist p {
