@@ -1,6 +1,6 @@
 [[spinlocks]]
-== _Spinlocks_ eficientes
-Todas las soluciones de exclusión mutua vistas tienen algo en común, un bucle que continuamentefootnote:[Es decir, en espera activa.] verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso solo tiene sentido si se cumple una de las siguientes condiciones:
+== _Spinlocks_
+Todas las soluciones de exclusión mutua vistas tienen algo en común, una espera activa en un bucle que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso solo tiene sentido si se cumple una de las siguientes condiciones:
 
 . El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
 
@@ -8,7 +8,7 @@ Todas las soluciones de exclusión mutua vistas tienen algo en común, un bucle 
 
 El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 4 procesadores (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja), ARM v6 de Raspberry 1 (barra amarilla) y finalmente la de una instancia m3.largefootnote:[Dos núcleos virtuales.] de Amazon EC2.
+Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 2 cores SMP (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja), ARM v6 de Raspberry 1 (barra amarilla) y finalmente la de una instancia m3.large (con dos núcleos virtuales) de Amazon EC2.
 
 [[hardware_times]]
 .Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
@@ -123,21 +123,120 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 
 [[execution_times]]
 ==== Tiempos de ejecución
+A continuación cuatro gráficas que representan los tiempos de ejecución de los diferentes algoritmos. Hay que recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque tienen una sección crítica muy breve lo único que hacen es entrar y salir de ella sin procesamiento adicional lo que significa que la competencia es extremadamente elevada y muy lejos de la inmensa mayoría de casos reales. Pero sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
+También hay que tener en cuenta que los ejemplos fueron programados en C portable usando los macros atómicos de GCC. Éste no siempre genera el mejor código para cada una de las arquitecturas, por ejemplo las de barreras de memoria siempre generan una barrera completa para ARM aunque se especifique que sólo se desea una barrera _release_. En estos casos la única solución es programar estos algoritmos en ensamblador para cada arquitectura diferente, como se hace en el núcleo de los sistemas operativos. Pero de haberlo hecho así me habría generado mucho más trabajo, dificultado la comprensión de lo fundamental y hasta las pruebas que podéis hacer vosotros mismos con los programas.
 
+Lo interesante de las gráficas:
 
-.Intel i5 cuatro núcleos
+- El _compareAndSwap_ es la más ineficiente en Intel i5 y en el Core2 Quad pero la más eficiente en una instancia m3 de Amazon EC2.
+
+- [[core2_vs_i5]]La mayor eficiencia del Intel i5 sobre el Core2 a pesar de que el segundo tiene más núcleos se debe a que el _Front Side Buffer_ del Intel Core2 usa un bus compartido para los mensajes del protocolo de coherencia de cache mientras que el i5 tiene el nuevo sistema <<quickpath, _QuickPath Interconnect_>>.
+
+- Es notable el buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque ellas se emulan con el _LL/SC_. En ambas versions, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
+
+- La unidad de espera elegida para el `backoff` funciona muy bien en la Raspberry 1 aunque en principio no parecía una buena candidata.
+
+- En todas las plataformas con multiprocesadores el `sched_yield` y el `backoff` producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARM v7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cache,footnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el `clock_nanosleep` por un bucle como `for (i = 0; i < limit; i++);` y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.] la causa principal por la que se estudiaron _spinlocks_ escalables.
+
+[NOTE]
+.Cede el procesador
+====
+No te despedirán por poner un `sched_yield` o _backoff_ exponencial en un _spinlock_ con mucha competencia aunque parezca que sobran procesadores o núcleos.
+====
+
+.Intel Core2 cuatro núcleos
+image::optimized-intel-quad.png[align="center"]
+
+.Intel i5 dos núcleos con extensión SMP
 image::optimized-intel.png[align="center"]
 
-.Intel AWS m3.large
+.Intel AWS m3.large dos núcleos
 image::optimized-m3-large.png[align="center"]
 
-.ARMv7 Raspberry 2
+.ARMv7 Raspberry 2 cuatro núcleos
 image::optimized-arm7.png[align="center"]
 
 .ARMv6 Raspberry 1
 image::optimized-arm.png[align="center"]
 
+
+=== Lectores-escritores
+La mayoría de las operaciones que se hacen sobre la memoria, incluida la compartida, son acceso para lectura. En estos casos interesa que las lecturas sean consistentes. En nuestros ejemplos con un único contador entero no existe el problema, las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas de 32 bits o más. Si un proceso  lee ese esa variable siempre obtendrá el último valor escrito. Pero si se trata de estructuras más complejas -incluso el acceso a ficheros o dispositivos externos- hay que imponer restricciones para que la estructura no sea modificada mientras haya procesos que la están accediendo.
+
+Se puede usar exclusión mutua pero ello emplica que se estarían _serializando_ hasta los accesos de sólo lectura, es un mecanismo nada eficiente. Por ello una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita que haya más de un lector en la sección crítica de forma simultánea, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
+
+Las condiciones que deben cumplir son:
+
+- Se permite más de un lector.
+
+- Mientras haya un lector en la sección crítica no puede entrar ningún escritor.
+
+- Los lectores no pueden entrar si hay un escritor en la sección crítica.
+
+- Sólo puede haber un escritor en la sección crítica.
+
+Así como la exclusión mutua tiene un mecanismo de entrada la sección crítica (_lock_) y otro de salida (_unlock_) los de lectores-escritores necesitan distinguir entre ambos con  entradas y salidas diferenciadas (_reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_).
+
+El siguiente algoritmo es uno simple (<<rw_lock_c, código en C>>) que se implementa con las instrucciones _compareAndSwap_ y _getAndAdd_:
+
+.Entrada y salida para lectores
+[source]
+----
+            rw_lock = 0             <1>
+
+def reader_lock():
+    while True:
+        while rw_lock & 0x80000000: <2>
+            pass
+        old = rw_lock & 0x7fffffff  <3>
+        new = old + 1               <4>
+        if CAS(rw_lock, old, new):  <5>
+            return
+
+
+def reader_unlock():
+    getAndAdd(rw_lock, -1)          <6>
+----
+<1> Necesitamos una variable global, en el ejemplo de 32 bits permite hasta 2^31^ lectores simultáneos, el bit más significativo será usado para indicar que hay un escritor.
+<2> Verifica si el bit más significativo es `1`, si es así hay un escritor e itera hasta que sea `0`.
+<3> No hay escritores, obtiene el número de lectores.
+<4> Incrementa el número de lectores.
+<5> Si `rw_lock` no fue modificado el _compareAndSwap_ almacenará el nuevo valor. Si  `rw_lock` fue modificado volverá al inicio del `while` y lo intentará nuevamente.
+<6> Decrementa atómicamente el número de lectores.
+
+.Entrada y salida para escritores
+[source]
+----
+def writer_lock():
+    while True:
+        while rw_lock & 0x80000000:     <1>
+            pass
+        old = rw_lock & 0x7fffffff      <2>
+        new = old | 0x80000000          <3>
+        if CAS(rw_lock, old, new):      <4>
+            while rw_lock & 0x7fffffff: <5>
+                pass
+            return
+
+
+def writer_unlock():
+    rw_lock = 0    <6>
+
+----
+<1> Verifica el bit más significativo e itera hasta que no haya ningún escritor.
+<2> Obtiene el número de lectores actuales.
+<3> Calcula el nuevo valor, será el número de lectores con el bit más significativo en `1` indicando que hay un escritor.
+<4> Si el valor tomado de `rw_lock` no cambió se almacena el nuevo, caso contrario vuelve al principio del `while` para reintentarlo.
+<5> Espera que salgan todos los lectores que ya estaban en la seccción crítica, los siguientes ya no podrán entrar porque el bit más significativo está en `1`.
+<6> Para salir sólo debe poner `rw_lock` en cero ya que no quedan lectores ni escritores en la sección crítica.
+
+
+Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y poder acceder a los últimos valores lo más rápido posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición en los que no tienen prioridad, aunque hay algoritmos complejos que aseguran equidad (<<MCS2>>) los más comunes dan prioridad a uno de ellos.
+
+Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lectores o escritoresfootnote:[Seguramente no lo has mirado todavía, pero este algoritmo da prioridad a los escritores. Cuando un escritor desea entrar a la sección crítica pone en `1` el bit más significativo, independientemente de los lectores que estén dentro, haciendo que los siguientes lectores que lleguen esperen hasta que el escritor haya entrado y salido.].
+
+=== _Spinlocks_ equitativos
 
 
 

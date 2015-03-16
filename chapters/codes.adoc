@@ -280,3 +280,13 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/comp
 ----
 include::../code/spinlocks/compare_and_swap_backoff.c[]
 ----
+
+
+=== Lectores-escritores
+
+[[rw_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/rw_lock.c[rw_lock.c]
+[source,c]
+----
+include::../code/spinlocks/rw_lock.c[]
+----
