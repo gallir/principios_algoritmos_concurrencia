@@ -110,7 +110,8 @@ def unlock():
 
 ----
 
-El <<getAndAdd, código en C>> está implementado con el macro `__atomic_fetch_add` y <<gocounter_get_and_add_go, en Go>> con `atomic.AddUint32`.footnote:[Estrictamente no es _getAndAdd_ sino _addAndGet_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también llamados _Ticket locks_ y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
+[[get_and_add_ticket]]
+El <<getAndAdd, código en C>> está implementado con el macro `__atomic_fetch_add` y <<gocounter_get_and_add_go, en Go>> con `atomic.AddUint32`.footnote:[Estrictamente no es _getAndAdd_ sino _addAndGet_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de `number` llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también <<ticket_lock, llamados _ticket locks_>> y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
 
 
 

@@ -29,6 +29,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[MCS2]]] John M. Mellor-Crummey, Michael L. Scott. _Scalable Reader-Writer Synchronization for Shared-Memory Multiprocessors_. PPOPP '91 Proceedings of the third ACM SIGPLAN symposium on Principles and practice of parallel programming. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.380.1719&rep=rep1&type=pdf
 
+- [[[Corbet]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
+
 // - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 
 

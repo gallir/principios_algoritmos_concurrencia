@@ -125,7 +125,7 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 ==== Tiempos de ejecución
 A continuación cuatro gráficas que representan los tiempos de ejecución de los diferentes algoritmos. Hay que recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque tienen una sección crítica muy breve lo único que hacen es entrar y salir de ella sin procesamiento adicional lo que significa que la competencia es extremadamente elevada y muy lejos de la inmensa mayoría de casos reales. Pero sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos fueron programados en C portable usando los macros atómicos de GCC. Éste no siempre genera el mejor código para cada una de las arquitecturas, por ejemplo las de barreras de memoria siempre generan una barrera completa para ARM aunque se especifique que sólo se desea una barrera _release_. En estos casos la única solución es programar estos algoritmos en ensamblador para cada arquitectura diferente, como se hace en el núcleo de los sistemas operativos. Pero de haberlo hecho así me habría generado mucho más trabajo, dificultado la comprensión de lo fundamental y hasta las pruebas que podéis hacer vosotros mismos con los programas.
+También hay que tener en cuenta que los ejemplos fueron programados en C portable usando los macros atómicos de GCC. Éste no siempre genera el mejor código para cada una de las arquitecturas, por ejemplo las de barreras de memoria siempre generan una barrera completa para ARM (`dmb sy`) aunque se especifique que sólo se desea una barrera _release_. En estos casos la única solución es programar estos algoritmos en ensamblador para cada arquitectura diferente, como se hace en el núcleo de los sistemas operativos. Pero de haberlo hecho así me habría generado mucho más trabajo, dificultado la comprensión de lo fundamental y hasta las pruebas que podéis hacer vosotros mismos con los programas.
 
 Lo interesante de las gráficas:
 
@@ -178,7 +178,9 @@ Las condiciones que deben cumplir son:
 
 Así como la exclusión mutua tiene un mecanismo de entrada la sección crítica (_lock_) y otro de salida (_unlock_) los de lectores-escritores necesitan distinguir entre ambos con  entradas y salidas diferenciadas (_reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_).
 
-El siguiente algoritmo es uno simple (<<rw_lock_c, código en C>>) que se implementa con las instrucciones _compareAndSwap_ y _getAndAdd_:
+El siguiente algoritmo es una relativamente simple (<<rw_lock_c, código en C>>) que necesita las instrucciones _compareAndSwap_ y _getAndAdd_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores pero el bit más significativo indica si un escritor está en la sección crítica, los restantes bits para contar el número de lectores que hay en ella. Si se usa un entero de 32 bits se permiten hasta 2^31 lectoresfootnote:[Se un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencia favorable.].
+
+Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si se pudo hacer el intercambio condicional entran a la sección crítica, caso contrario vuelve a intentar desde el inicio.
 
 .Entrada y salida para lectores
 [source]
@@ -198,12 +200,14 @@ def reader_lock():
 def reader_unlock():
     getAndAdd(rw_lock, -1)          <6>
 ----
-<1> Necesitamos una variable global, en el ejemplo de 32 bits permite hasta 2^31^ lectores simultáneos, el bit más significativo será usado para indicar que hay un escritor.
+<1> La variable global `mutex`, en el ejemplo de 32 bits.
 <2> Verifica si el bit más significativo es `1`, si es así hay un escritor e itera hasta que sea `0`.
 <3> No hay escritores, obtiene el número de lectores.
 <4> Incrementa el número de lectores.
 <5> Si `rw_lock` no fue modificado el _compareAndSwap_ almacenará el nuevo valor. Si  `rw_lock` fue modificado volverá al inicio del `while` y lo intentará nuevamente.
 <6> Decrementa atómicamente el número de lectores.
+
+Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en `1` e intentan el intercambio con _CAS_. Si no se puedo hacer vuelven a intentarlo desde el principio. Si por el contrario fue satisfactorio esperan a que no que queden lectores y entran a la sección crítica.
 
 .Entrada y salida para escritores
 [source]
@@ -228,17 +232,24 @@ def writer_unlock():
 <2> Obtiene el número de lectores actuales.
 <3> Calcula el nuevo valor, será el número de lectores con el bit más significativo en `1` indicando que hay un escritor.
 <4> Si el valor tomado de `rw_lock` no cambió se almacena el nuevo, caso contrario vuelve al principio del `while` para reintentarlo.
-<5> Espera que salgan todos los lectores que ya estaban en la seccción crítica, los siguientes ya no podrán entrar porque el bit más significativo está en `1`.
+<5> Espera que salgan todos los lectores, los siguientes ya no podrán entrar porque el bit más significativo está en `1`.
 <6> Para salir sólo debe poner `rw_lock` en cero ya que no quedan lectores ni escritores en la sección crítica.
 
 
-Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y poder acceder a los últimos valores lo más rápido posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición en los que no tienen prioridad, aunque hay algoritmos complejos que aseguran equidad (<<MCS2>>) los más comunes dan prioridad a uno de ellos.
+Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y poder acceder a los últimos valores lo más pronto posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición en los que no tienen prioridad, aunque hay algoritmos complejos que aseguran equidad (<<MCS2>>) los más comunes dan prioridad a uno de ellos.
 
 Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lectores o escritoresfootnote:[Seguramente no lo has mirado todavía, pero este algoritmo da prioridad a los escritores. Cuando un escritor desea entrar a la sección crítica pone en `1` el bit más significativo, independientemente de los lectores que estén dentro, haciendo que los siguientes lectores que lleguen esperen hasta que el escritor haya entrado y salido.].
 
+[[fairness]]
 === _Spinlocks_ equitativos
 
+El problema de los algoritmos anteriores es que no cumplen uno de los <<em_requisites, requisitos de la exclusión mutua>>, asegurar que no se produce inanición. Aunque estadísticamente no se puede producirfootnote:[En miles centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.] sí que plantea problemas de equidad -un proceso se retrasa mucho más que otros-, por ejemplo en 2008 se derectó este efecto en el núcleo de Linux (<<Corbet>>). Para evitarlo hay que usar algoritmos que aseguren que los procesos entren a la sección crítica en el orden que han llegado (_FIFO_).
 
+[[ticket_lock]]
+Una solución sencilla la hemos _descubierto_ con el uso de la instrucción <<get_and_add_ticket, _getAndAdd_ para asegurar exclusión mutua>>.
+
+
+get_and_add_ticket
 
 [[mcs_queue]]
 ==== MCS Spinlock

@@ -150,11 +150,11 @@ Hay tres requisitos que deben cumplir los algoritmos y primitivas que pretenden 
 ====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
 Libre de interbloqueos (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
-Libre de inanición (_starvation free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito.
+Libre de inanición (_starvation free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
 ====
 
 
-Estas tres condiciones nos servirán para evaluar los algoritmos o mecanismos para asegurar la exclusión mutua. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
+Estas tres condiciones nos servirán para evaluar los algoritmos o mecanismos de exclusión mutua. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
 
 Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<Stallings>> propone seis requisitos *equivalentes* a los anteriores pero que al ser más específicos facilitan el análisis y validación del código.
 
