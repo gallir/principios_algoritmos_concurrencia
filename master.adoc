@@ -10,7 +10,7 @@ Principios de concurrencia
 :numbered!:
 :imagesdir: images
 :caption!:
-:front-cover-image: image:cover.png[Concurrencia Cover,1600,2560]
+:front-cover-image: image:cover.jpg[Concurrencia Cover,1400,2240]
 :hide-uri-scheme:
 //:icons:
 //:source-highlighter: source-highlight

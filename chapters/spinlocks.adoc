@@ -36,7 +36,7 @@ Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas par
 ====
 Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria cache por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria cache_ se mantienen constantes independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS>>, <<Boyd-Wickizer>>).
 
-Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce -como mínimo- un _fallo de cache_ cada vez que un proceso cambia de estado ya que cada actualización genera invalidaciones de cache. El problema se agrava por el <<false_sharing, _false sharing_>>, los registros en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_. Por ello se estudiaron _spinlocks escalables_, el fundamental es el <<mcs_queue>> que vemos más adelante.
+Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce -como mínimo- un _fallo de cache_ cada vez que un proceso cambia de estado ya que cada actualización genera invalidaciones de cache. El problema se agrava por el <<false_sharing, _false sharing_>>, los registros en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>> que veremos al final del capítulo.
 
 ====
 
@@ -133,7 +133,7 @@ Lo interesante de las gráficas:
 
 - [[core2_vs_i5]]La mayor eficiencia del Intel i5 sobre el Core2 a pesar de que el segundo tiene más núcleos se debe a que el _Front Side Buffer_ del Intel Core2 usa un bus compartido para los mensajes del protocolo de coherencia de cache mientras que el i5 tiene el nuevo sistema <<quickpath, _QuickPath Interconnect_>>.
 
-- Es notable el buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque ellas se emulan con el _LL/SC_. En ambas versions, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
+- Es notable el buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque ellas se emulan con el _LL/SC_. En ambas versiones, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
 
 - La unidad de espera elegida para el `backoff` funciona muy bien en la Raspberry 1 aunque en principio no parecía una buena candidata.
 
@@ -267,11 +267,11 @@ struct tickets {
 
 ==== Lectores-escritores
 
-Usando como base el algoritmo de _ticket lock_ se puede implementar un algoritmo de lectores-escritores que asegure la equidad entre ellos (a diferencia de la mayoría que dan prioridad a unos u otros). Para hacerlo se necesita dos variables diferentes para los turnos de cada uno. Se necesita una estructura del siguiente tipo:
+Usando como base el algoritmo de _ticket-lock_ se puede implementar un algoritmo de lectores-escritores que asegure la equidad entre ellos (a diferencia de la mayoría que dan prioridad a unos u otros). Para hacerlo se necesita dos variables diferentes para los turnos de cada uno. Se necesita una estructura del siguiente tipo:
 
 image::ticket_rw.png[width="80%", align="center"]
 
-En C se define de la siguiente forma:
+En <<ticket_rw_lock_c, el código en C>> se define de la siguiente forma:
 
 [source, c]
 ----
@@ -287,7 +287,9 @@ struct ticket_rw {
 };
 ----
 
-El campo `number` es similar al algoritmo _ticket-lock_, `writer_turn` y `reader_turn` indicarán los turnos para los escritores y lectores respectivamente. Se define el campo `combined` que incluye a ambos turnos para poner hacer una asignación atómica a de ambos turnos. Para el desarrollo del algoritmo suponemos una variable global `rw_local` del tipo o clase `ticket_rw`.
+El campo `number` es similar al algoritmo _ticket-lock_, `writer_turn` y `reader_turn` indicarán los turnos para los escritores y lectores respectivamente. Ambas variables tendrán que ser incrementadas para permitir que entren lectores o escritores de forma equitativa. El _truco_ está en el orden en que se hace la suma, un escritor sólo dará el turno a otros lectores o escritores cuando salga de la sección crítica. Un lector dará paso a otros lectores en cuanto haya entrado a la sección crítica, y solo permitirá escritores cuando haya salido.
+
+Se define el campo `combined` que incluye a ambos turnos para poner hacer una asignación atómica a de ambos turnos. Para el desarrollo del algoritmo suponemos una variable global `rw_local` del tipo o clase `ticket_rw`.
 
 
 .Entrada y salida para escritores
@@ -310,17 +312,22 @@ def writer_unlock():
 
 ----
 
+Cuando el escritor sale de la sección crítica debe poder entrar el siguiente lector o escritor por lo tanto incrementa ambas variables.
+
 
 .Entrada y salida para lectores
 [source]
 ----
 def reader_lock:
-    number = getAndAdd(&rw_lock.number, 1)
+    number = getAndAdd(rw_lock.number, 1)
 
     while number != rw_lock.reader_turn:
         pass
     rw_lock.reader_turn++
 ----
+
+El lector obtiene su número y espera el turno de lectores. Cuando entró incrementa el turno de lectores para que puedan entrar el siguiente, si hay otro esperando. Éste hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que este incremento se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que ya tiene el nuevo valor.].
+
 
 [source]
 ----
@@ -328,6 +335,14 @@ def reader_unlock:
     getAndAdd(rw_lock.writer_turn)
 
 ----
+
+El lector al salir incremente el turno de escritor por si al siguiente es uno de ellos. No hace falta incrementar el turno de lectores, ya lo hizo antes al entrar a la sección crítica.
+
+Este algoritmo es equitativo porque todos los procesos entran en el orden en que obtuvieron su número independientemente que sea lector o escritor. AUnque un lector incrementa el turno de lectores inmediatamente si el siguiente proceso es un escritor ningún lector podrá entrar, todos esperarán hasta que entre el escritor que tiene el turno y de nuevo incremente el turno para lectores y escritores.
+
+
+[[scalable_spinlocks]]
+=== _Spinlocks_ escalables
 
 
 [[mcs_queue]]
@@ -351,9 +366,9 @@ image::ticket-mcs-clh.png[align="center"]
 image::ticket-mcs-clh-yield.png[align="center"]
 
 
+
+
 Agradecimientos a Marc Pampols
-
-
 
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
 https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
