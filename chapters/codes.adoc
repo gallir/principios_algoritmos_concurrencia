@@ -309,3 +309,13 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/tick
 ----
 include::../code/spinlocks/ticket_rw_lock.c[]
 ----
+
+==== _Spinlocks_ escalables
+
+===== _Array-lock_
+[[array_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/array_lock.c[array_lock.c]
+[source,c]
+----
+include::../code/spinlocks/array_lock.c[]
+----

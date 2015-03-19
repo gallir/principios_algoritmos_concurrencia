@@ -29,7 +29,7 @@ Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verifica
 
 La presión sobre la memoria cache:: Estos algoritmos no son _escalables_ En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes de sincronización de cache entre los diferentes procesadores.
 
-Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los _spinlocks_ anteriores, al final del capítulo veremos los dos algoritmos escalables más importantes.
+Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los _spinlocks_ anteriores, al final del capítulo estudiaremos los dos algoritmos escalables más importantes.
 
 [NOTE]
 ._Spinlocks_ escalables
@@ -117,7 +117,7 @@ def lock():
         backoff(failures)
 ----
 
-La dificultad del _backoff_ reside en la elección de la unidad de tiempo de espera, no existe un valor ideal y depende de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al `sched_yield` con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ y de allí a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con las CPUs inactivas ya que todos los procesos involucrados están _bloqueados_.
+La dificultad del _backoff_ reside en la elección de la unidad de tiempo de espera, no existe un valor ideal, depende de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al `sched_yield` con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con tiempos CPUs inactivas ya que los procesos involucrados están _bloqueados_.
 
 Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>> y <<compare_and_swap_backoff_c, _CAS_>>.
 
@@ -338,19 +338,69 @@ def reader_unlock:
 
 El lector al salir incremente el turno de escritor por si al siguiente es uno de ellos. No hace falta incrementar el turno de lectores, ya lo hizo antes al entrar a la sección crítica.
 
-Este algoritmo es equitativo porque todos los procesos entran en el orden en que obtuvieron su número independientemente que sea lector o escritor. AUnque un lector incrementa el turno de lectores inmediatamente si el siguiente proceso es un escritor ningún lector podrá entrar, todos esperarán hasta que entre el escritor que tiene el turno y de nuevo incremente el turno para lectores y escritores.
+Este algoritmo es equitativo porque todos los procesos entran en el orden en que obtuvieron su número, independientemente de que sea lector o escritor. Aunque los lectores incrementan el turno de lectores inmediatamente, si el siguiente proceso es un escritor ningún lector podrá entrar, esperarán hasta que entre el escritor que tiene el turno y a su salida incremente el turno dando oportunidad de entrada a un lector o escritor.
 
 
 [[scalable_spinlocks]]
 === _Spinlocks_ escalables
 
+Como comenté en el inicio del capítulo se buscan que los _spinlocks_ sean escalables, es decir que el número de invalidaciones de caché (que generan _fallos de cache_, también llamados _cache bouncing_) se constante respecto al número de procesos o procesadores involucrados. La forma de lograrlo es que cada proceso itere sobre posiciones de memoria diferentes.
+
+==== _Array-lock_
+La respuesta obvia al requerimiento es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero (salvo la primera posición que será `1` para que el primer proceso pueda entrar). Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable `tail` inicializada en cero. Cada proceso obtiene su posición con la operación _getAndAdd_ que al mismo tiempo incrementa `tail` para el siguiente.
+
+La variable que indica si un proceso puede entrar es booleana por lo que se usará un único byte. Para evitar el _false sharing_ es mejor separar cada posición por varios bytes. Podemos definir una estructura de mayor tamaño con un campo de un byte para la verificación, o directamente se define un _padding_.
+
+.Estructura del _Array-lock_
+image::array_lock.png[align="center"]
+
+En la figura anterior `Thread 0` ya entró en la sección crítica, `Thread 1` y `Thread 2` están esperando verificando el estado de sus respectivas posiciones en el array y `tail` apunta a la siguiente posición. Cuando `Thread 0` salga de la sección crítica cambiará el estado de `flag[1]` y podrá entrar `Thread 1`.
+
+La inicialización (en C) es la siguiente:
+
+[source]
+----
+#define PADDING 32
+char flag[NUM_THREADS * PADDING];
+int tail;
+...
+
+    flag[0] = 1;
+----
+
+Si hay cuatro hilos máximo la dimensión del array serà `4 * 32` (128 bytes en total). El cálculo de la posición real (`my_index`) requiere de una multiplicación y módulo, nada demasiado complicado. El algoritmo resumido (<<array_lock_c, código completo en C>>) es el siguiente:
+
+
+[source]
+----
+def lock(my_index):
+    slot = getAndAdd(tail, 1)
+    my_index = (slot % NUM_THREADS) * PADDING
+    while not flag[my_index]:
+        pass
+    flag[my_index] = 1
+
+
+def unlock(my_index):
+    next = (my_index + PADDING) % SIZE
+    flag[next] = 1;
+
+----
+
+Este algoritmo también es equitativo, sólo necesita la instrucción atómica _getAndAdd_ y los procesos entran en el orden en que la ejecutaron. Según le teoría y toda la bibliografía (por ejempo <<Herlihy12>>) aseguran que así se evitar el _false sharing_ y por lo tanto más eficiente que _Ticket-lock_, analizaremos cuánto de hay de verdad y mito <<spinlock_times, un poco más adelante>>.
+
 
 [[mcs_queue]]
-==== MCS Spinlock
+==== MCS _Spinlock_
 
+Lo ideal para evitar la presión en la cache es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de cache y además que éstas son cercanas a otros variables o estructuras de los proceso. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apeelidos los autores.] fue descubierto en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de variantes de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
+
+Para implementarlo hacen falta las operaciones _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local por lo que se evita el _false sharing_.
 
 .Cola MCS
 image::mcs.png[align="center"]
+
+
 
 ==== CLH Spinlock
 
@@ -358,6 +408,8 @@ image::mcs.png[align="center"]
 .Cola CLH
 image::clh.png[align="center"]
 
+[[spinlock_times]]
+=== Análisis de tiempos de ejecución
 
 ===== Ticket vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
