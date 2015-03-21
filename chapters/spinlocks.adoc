@@ -8,19 +8,17 @@ Todas las soluciones de exclusión mutua vistas tienen algo en común, una esper
 
 El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de _reloj_ en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre un Intel i5 con 2 cores SMP (barra azul de la izquierda), ARM v7 de Raspberry Pi 2 con cuatro núcleos (barra naranja), ARM v6 de Raspberry 1 (barra amarilla) y finalmente la de una instancia m3.large (con dos núcleos virtuales) de Amazon EC2.
+Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de CPU en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre diferentes arquitecturas de procesadores: Intel Core2 con 4 núcleos, Intel i5 con 2 núcleos y cuatro _hilos_, Intel Xeon con 2 procesadores independientes de 8 núcleos cada uno (16 en total) y Raspberry 2 con 4 núcleos.
+
 
 [[hardware_times]]
-.Tiempos de ejecución para los diferentes macros e instrucciones de hardware para Intel y ARM v6
+.Tiempos de ejecución para los diferentes macros e instrucciones de hardware
 [caption=""]
 image::times-hardware.png[align="center"]
 
 Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
 
-Se puede observar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para todas las plataformasfootnote:[En _get&add_ no están los tiempos de la Raspberry 1 y la instancia m3.large porque necesitan mucho tiempo, hasta horas.].
-
-En Raspberry 1 la implementación más eficiente es _getAndSet_ seguida por _compareAndSwap_.
-En Raspberry 2 la más eficiente es _compareAndSwap_ (hay que recordar que además de arquitectura más moderna son cuatro procesadores). En Intel la más eficiente es _swap_ y la peor es _compareAndSwap_, un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]. Es interesante lo bien que se comporta la instancia EC2, y que _CAS_ sea el más eficiente, seguramente influenciado por las características más modernas del procesador.
+Se puede observar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para los diferentes procesadores. Para todos los Intel Core2 e i5 la operación más eficiente es la _getAndAdd_. Para el Xeon de 16 núcleos _getAndSet_ (seguido muy de cerca por _TAS_), y en Raspberry 2 (procesador ARM) es casi un empate entre _CAS_ y _getAndAdd_. Puede verse también que con _CAS_ el procesador ARM en tiempo con los de los mucho más potentes de Xeon. Un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.].
 
 === Optimizaciones
 Los _spinlock_ son ineficientes por dos razones:
@@ -40,7 +38,7 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 
 ====
 
-Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndSet_, no pueden ser considerados _escalables_ ya que no reducen la presión sobre la memoria cache.
+Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndSet_, no pueden ser considerados _escalables_ ya que su objetivo no es reducir la presión sobre la memoria cache para mantener constantes los _fallos de cache_, sin embargo las mejoras son muy notables.
 
 ==== Verificación local
 Se trata de reducir la presión sobre el sistema de coherencia de cache y evitar la llamada a la instrucción atómica verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera -la variable `mutex` en los ejemplos-. Si ésta vale `1` ya no se llama a la instrucción atómica. Esta técnica se la conoce como _TAS_ o _TATAS_ cuando se usa con la instrucción _TAS_.
@@ -54,12 +52,12 @@ def lock():
         pass
 ----
 
-La mejora de esta solución depende mucho de la arquitectura y de sus mecanismos de coherencia de cache. En los <<execution_times, tiempos de ejecución>> se observa que esta técnica mejora mucho la eficiencia en las arquitecturas Intel pero son casi despreciables en la arquitectura ARM.
+La mejora de esta solución depende mucho de la arquitectura y de sus mecanismos de coherencia de cache. En los <<execution_times, tiempos de ejecución>> se observa que esta técnica mejora mucho la eficiencia en las  Intel pero son casi despreciables en la arquitectura ARM.
 
 Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
 ==== Ceder el procesador
-La idea es sencilla, si un proceso está forzado a continuar en la espera activa porque no se cumple la condición de salida del bucle es mejor ceder el procesador para que otro lo intente o pueda salir antes de la sección crítica. En el ejemplo usamos la llamada de sistema estándar POSIX `sched_yield` que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos para ejecutar_.
+Si un proceso está forzado a continuar en la espera activa porque no se cumple la condición de salida del bucle es mejor ceder el procesador para que otro lo intente o pueda salir antes de la sección crítica. En el ejemplo usamos la llamada de sistema estándar POSIX `sched_yield` que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos para ejecutar_.
 [source]
 ----
         mutex = 0
@@ -68,7 +66,7 @@ def lock():
     while mutex or TAS(mutex):
         sched_yield()
 ----
-La cesión del procesador <<execution_times, produce reducciones de tiempo importantes>> en todas las arquitecturas salvo excepciones como en _CAS_ sobre la Raspeberry con un único procesadorfootnote:[La causa pueden ser el coste adicional de llamadas de sistemas y cambios de contexto, o el efecto ping-pong de procesos que cambian de estado continuamente.].
+La cesión del procesador <<execution_times, produce reducciones de tiempo importantes>> en todas las arquitecturas.
 
 Código fuente para <<test_and_set_yield_c, _TAS_>>, <<swap_yield_c, _swap_>> y <<compare_and_swap_yield_c, _CAS_>>.
 
@@ -117,33 +115,17 @@ def lock():
         backoff(failures)
 ----
 
-La dificultad del _backoff_ reside en la elección de la unidad de tiempo de espera, no existe un valor ideal, depende de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al `sched_yield` con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con tiempos CPUs inactivas ya que los procesos involucrados están _bloqueados_.
+El problema del _backoff_ reside en la elección de la unidad de tiempo de espera, no existe un valor ideal, depende de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al `sched_yield` con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con tiempos CPUs inactivas ya que los procesos involucrados están _bloqueados_.
+
+A pesar de esta presunta dificultad la mejora de _backoff_ es notable en todos los procesadores probados. En todos ellos además mejora los tiempos con respecto a `sched_yield`, en los procesadores Intel la diferencia es importante, en ARM es casi despreciable. Aún así representa una mejora en todos los procesadoresfootnote:[Lo que resultó una sorpresa para mí, no me esperaba que mejore el _yield_, y menos por el sobrecoste de lo cálculos de backoff más la transición breve por el estado _bloqueado_.].
 
 Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>> y <<compare_and_swap_backoff_c, _CAS_>>.
 
 [[execution_times]]
 ==== Tiempos de ejecución
-A continuación cuatro gráficas que representan los tiempos de ejecución de los diferentes algoritmos. Hay que recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque tienen una sección crítica muy breve lo único que hacen es entrar y salir de ella sin procesamiento adicional lo que significa que la competencia es extremadamente elevada y muy lejos de la inmensa mayoría de casos reales. Pero sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
+A continuación cuatro gráficas que representan los tiempos deCPU de los diferentes algoritmos. Hay que recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque la sección crítica muy breve lo único que hacen es entrar y salir continuamente, sin ejecutar código fuera de ella, lo que significa que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Sólo nos sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos fueron programados en C portable usando los macros atómicos de GCC. Éste no siempre genera el mejor código para cada una de las arquitecturas, por ejemplo las de barreras de memoria siempre generan una barrera completa para ARM (`dmb sy`) aunque se especifique que sólo se desea una barrera _release_. En estos casos la única solución es programar estos algoritmos en ensamblador para cada arquitectura diferente, como se hace en el núcleo de los sistemas operativos. Pero de haberlo hecho así me habría generado mucho más trabajo, dificultado la comprensión de lo fundamental y hasta las pruebas que podéis hacer vosotros mismos con los programas.
-
-Lo interesante de las gráficas:
-
-- El _compareAndSwap_ es la más ineficiente en Intel i5 y en el Core2 Quad pero la más eficiente en una instancia m3 de Amazon EC2.
-
-- [[core2_vs_i5]]La mayor eficiencia del Intel i5 sobre el Core2 a pesar de que el segundo tiene más núcleos se debe a que el _Front Side Buffer_ del Intel Core2 usa un bus compartido para los mensajes del protocolo de coherencia de cache mientras que el i5 tiene el nuevo sistema <<quickpath, _QuickPath Interconnect_>>.
-
-- Es notable el buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque ellas se emulan con el _LL/SC_. En ambas versiones, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
-
-- La unidad de espera elegida para el `backoff` funciona muy bien en la Raspberry 1 aunque en principio no parecía una buena candidata.
-
-- En todas las plataformas con multiprocesadores el `sched_yield` y el `backoff` producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARM v7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cache,footnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el `clock_nanosleep` por un bucle como `for (i = 0; i < limit; i++);` y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.] la causa principal por la que se estudiaron _spinlocks_ escalables.
-
-[NOTE]
-.Cede el procesador
-====
-No te despedirán por poner un `sched_yield` o _backoff_ exponencial en un _spinlock_ con mucha competencia aunque parezca que sobran procesadores o núcleos.
-====
+También hay que tener en cuenta que los ejemplos fueron programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el mejor código para cada una de las arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (`dmb sy`) aunque se especifique que sólo se desea una barrera _release_. En estos casos la única solución es programar estos algoritmos en ensamblador para cada arquitectura diferente, como se hace en el núcleo de los sistemas operativos. Pero de haberlo hecho así me habría generado mucho más trabajo, dificultado la comprensión de lo fundamental y hasta las pruebas que podéis hacer vosotros mismos con los programas.
 
 .Intel Core2 cuatro núcleos
 image::optimized-intel-quad.png[align="center"]
@@ -151,14 +133,46 @@ image::optimized-intel-quad.png[align="center"]
 .Intel i5 dos núcleos con extensión SMP
 image::optimized-intel.png[align="center"]
 
-.Intel AWS m3.large dos núcleos
-image::optimized-m3-large.png[align="center"]
+.Intel Xeon 16 núcleos
+image::optimized-xeon.png[align="center"]
 
 .ARMv7 Raspberry 2 cuatro núcleos
 image::optimized-arm7.png[align="center"]
 
-.ARMv6 Raspberry 1
-image::optimized-arm.png[align="center"]
+
+De los tiempos de las gráficos hay algunos aspectos interesantes que vale la pena destacar:
+
+- La mayor eficiencia del Intel i5 sobre el Core2 a pesar de que el segundo tiene más núcleos se debe a que el _Front Side Buffer_ del Intel Core2 usa un bus compartido para los mensajes del protocolo de coherencia de cache mientras que el i5 tiene el nuevo sistema <<quickpath, _QuickPath Interconnect_>>.
+
+- El Xeon con 16 núcleos tiene peores tiempos que el Core2 e i5, en principio mucho menos potentes. La diferencia es que los 16 núcleos están en dos microprocesadores diferentes por lo que el coste de sincronización de cache es superior a los chips únicos con varios cores.
+
+- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque ellas se emulan con el _LL/SC_. En ambas versiones del procesador, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
+
+- En todas las plataformas con multiprocesadores el `sched_yield` y el `backoff` producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARM v7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cache,footnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el `clock_nanosleep` por un bucle como `for (i = 0; i < limit; i++);` y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.] la causa principal por la que se estudiaron _spinlocks_ escalables.
+
+===== Tiempos de CPU vs tiempos de reloj
+
+En los análisis anteriores usamos tiempos de CPU y no el _tiempo de retorno_, el tiempo de _reloj_ que toman para ejecutar de los hilos. ¿Cuál es más representativo o útil? Es una duda razonable y que hasta yo la tenía al momento de hacer los análisis. El tiempo de CPU es útil para saber efectivamente cuánta CPU necesitan para la ejecuciónfootnote:[Es una medida importante, por ejemplo si analizarás el consumo de batería en móviles.], pero no da suficiente información sobre el _tiempo de reloj_ que han tomado la ejecución. Por ejemplo, con más procesadores se consumen más ciclos de reloj aunque el tiempo de retorno se haya reducido, que es de hecho lo que ocurre.
+
+Cuando se analiza la diferencia entre usar o no `sched_yield` y _backoff_ la duda es aún mayor. Sabemos que que lo más probable es que el consumo de ciclos de CPU se reduzcan en la espera activa, pero también que aumentará el sobrecoste del sistema operativo por los cambios de contexto de los procesos. Sin tener los datos de tiempos de retorno no podemos estar seguro que realmente se ejecuten _más rápido_. Mi intención es evitar la molestia de tantos gráficos, pero valía la pena mostrar también los gráficos de estos tiempos, al menos los más significativos.
+
+En los siguientes dos gráficos se puede oberservar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARM v7 de Raspberry 2.
+
+.Tiempo de retorno en Intel Xeon 16 núcleos
+image::optimized-xeon-real.png[align="center"]
+
+.Tiempo de retorno en ARMv7 de Raspberry 2 cuatro núcleos
+image::optimized-arm7-real.png[align="center"]
+
+Se puede observar que en ambas arquitecturas -cualitativa y cuantitavamente tan diferentes- ceder el procesador representa no solo un ahorro importante de CPU sino también de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Una de las razones es que en el Xeon hay más núcleos que hilos por lo que un _yield_ sólo hace que un proceso abandone el procesador pero posiblemente el _scheduler_ lo lleve inmediatamente a ejeución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. La segunda razón es que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
+
+
+[NOTE]
+.Cede el procesador
+====
+A menos que se trate un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no te despedirán por poner un `sched_yield` o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores, el cuello de botella acaba siendo el sistema de coherencia de cache.
+====
+
 
 
 === Lectores-escritores
@@ -418,6 +432,10 @@ image::ticket-mcs-clh.png[align="center"]
 image::ticket-mcs-clh-yield.png[align="center"]
 
 
+http://www.cs.rice.edu/~vs3/comp422/lecture-notes/comp422-lec19-s08-v1.pdf
+http://www.cs.rochester.edu/~scott/papers/1994_IPPS_mprog.pdf
+
+http://www.cs.rochester.edu/research/synchronization/pseudocode/ss.html
 
 
 Agradecimientos a Marc Pampols
