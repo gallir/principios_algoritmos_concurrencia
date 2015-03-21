@@ -319,3 +319,11 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/arra
 ----
 include::../code/spinlocks/array_lock.c[]
 ----
+
+===== MCS
+[[mcs_spinlock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/mcs_spinlock.c[mcs_spinlock.c]
+[source,c]
+----
+include::../code/spinlocks/mcs_spinlock.c[]
+----

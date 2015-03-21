@@ -2,7 +2,7 @@
 == _Spinlocks_
 Todas las soluciones de exclusión mutua vistas tienen algo en común, una espera activa en un bucle que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso solo tiene sentido si se cumple una de las siguientes condiciones:
 
-. El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activasfootnote:[Los que veremos en los capítules siguientes.].
+. El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activas (que veremos a partir del siguiente capítulo).
 
 . Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
@@ -156,12 +156,12 @@ En los análisis anteriores usamos tiempos de CPU y no el _tiempo de retorno_, e
 
 Cuando se analiza la diferencia entre usar o no `sched_yield` y _backoff_ la duda es aún mayor. Sabemos que que lo más probable es que el consumo de ciclos de CPU se reduzcan en la espera activa, pero también que aumentará el sobrecoste del sistema operativo por los cambios de contexto de los procesos. Sin tener los datos de tiempos de retorno no podemos estar seguro que realmente se ejecuten _más rápido_. Mi intención es evitar la molestia de tantos gráficos, pero valía la pena mostrar también los gráficos de estos tiempos, al menos los más significativos.
 
-En los siguientes dos gráficos se puede oberservar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARM v7 de Raspberry 2.
+En los siguientes dos gráficos se puede observar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARM v7 de Raspberry 2.
 
-.Tiempo de retorno en Intel Xeon 16 núcleos
+.Tiempos de retorno en Intel Xeon 16 núcleos
 image::optimized-xeon-real.png[align="center"]
 
-.Tiempo de retorno en ARMv7 de Raspberry 2 cuatro núcleos
+.Tiempos de retorno en ARMv7 de Raspberry 2 cuatro núcleos
 image::optimized-arm7-real.png[align="center"]
 
 Se puede observar que en ambas arquitecturas -cualitativa y cuantitavamente tan diferentes- ceder el procesador representa no solo un ahorro importante de CPU sino también de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Una de las razones es que en el Xeon hay más núcleos que hilos por lo que un _yield_ sólo hace que un proceso abandone el procesador pero posiblemente el _scheduler_ lo lleve inmediatamente a ejeución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. La segunda razón es que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
@@ -350,7 +350,7 @@ def reader_unlock:
 
 ----
 
-El lector al salir incremente el turno de escritor por si al siguiente es uno de ellos. No hace falta incrementar el turno de lectores, ya lo hizo antes al entrar a la sección crítica.
+El lector al salir incrementa el turno de escritor por si al siguiente es uno de ellos. No hace falta incrementar el turno de lectores, ya lo hizo antes al entrar a la sección crítica.
 
 Este algoritmo es equitativo porque todos los procesos entran en el orden en que obtuvieron su número, independientemente de que sea lector o escritor. Aunque los lectores incrementan el turno de lectores inmediatamente, si el siguiente proceso es un escritor ningún lector podrá entrar, esperarán hasta que entre el escritor que tiene el turno y a su salida incremente el turno dando oportunidad de entrada a un lector o escritor.
 
@@ -401,20 +401,80 @@ def unlock(my_index):
 
 ----
 
-Este algoritmo también es equitativo, sólo necesita la instrucción atómica _getAndAdd_ y los procesos entran en el orden en que la ejecutaron. Según le teoría y toda la bibliografía (por ejempo <<Herlihy12>>) aseguran que así se evitar el _false sharing_ y por lo tanto más eficiente que _Ticket-lock_, analizaremos cuánto de hay de verdad y mito <<spinlock_times, un poco más adelante>>.
+Este algoritmo también es equitativo, sólo necesita la instrucción atómica _getAndAdd_ y los procesos entran en el orden en que la ejecutaron. Según la teoría y toda la bibliografía (por ejempo <<Herlihy12>>) aseguran que así se evitar el _false sharing_ y por lo tanto más eficiente que _Ticket-lock_, analizaremos cuánto de hay de verdad y mito <<spinlock_times, un poco más adelante>>.
 
 
 [[mcs_queue]]
 ==== MCS _Spinlock_
 
-Lo ideal para evitar la presión en la cache es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de cache y además que éstas son cercanas a otros variables o estructuras de los proceso. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apeelidos los autores.] fue descubierto en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de variantes de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
+Lo ideal para evitar la presión en la cache es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de cache y además que éstas son cercanas a otros variables o estructuras de los procesos. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubierto en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de derivados de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
 
-Para implementarlo hacen falta las operaciones _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local por lo que se evita el _false sharing_.
+Para implementarlo hacen falta las operaciones _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
+
+----
+struct mcs_spinlock {
+    struct mcs_spinlock *next;
+    unsigned char locked;
+};
+----
+
+El campo `next` es un puntero que apuntará al nodo del siguiente proceso en la cola para la sección crítica, el campo `locked` es una variable booleana que será `1` si el proceso de ese nodo debe esperar o `0 ` cuando pueda entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el proceso que estaba en la sección crítica la abandona actualizará el campo del siguiente proceso en la lista de espera para entrar.
 
 .Cola MCS
 image::mcs.png[align="center"]
 
+En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica, _Thread 1_ está ahora en la sección crítica, el siguiente es _Thread 2_ y el último esperando es _Thread 3_. Cada uno de los procesos en espera activa verifican el campo `locked` de su nodo local. La variable _tail_ apunta al último proceso en la cola, si no hay ningún proceso será `NULL` (o `0`, `None`, etc.).
 
+El siguiente es el <<mcs_spinlock_c, código en C>> resumido del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
+
+[source]
+----
+void lock(struct mcs_spinlock *node) {
+    struct mcs_spinlock *predecessor;
+
+    node->next = NULL;               <1>
+    node->locked = 1;                <1>
+    predecessor = node;              <2>
+    predecessor = SWAP(&tail, node); <2>
+    if (predecessor != NULL) {       <3>
+        predecessor->next = node;    <3>
+        while (node->locked);        <4>
+    }
+    node->locked = 0;
+}
+----
+<1> Inicialización del nodo, el estado se pone en _locked_.
+<2> Preparación para el _swap_, `predeccesor` apunta inicialmente al nodo actual, cuando se haga el intercambio si había un proceso esperando o en la sección crítica `predecessor` apuntará al nodo de ese proceso, caso contrario será _NULL_.
+<3> Si hay otro proceso hará que su puntero a `next` apunte al nodo actual.
+<4> Espera activa hasta que el predecesor cambie el estado de `locked` a falso.
+
+[source]
+----
+void unlock(struct mcs_spinlock *node) {
+    struct mcs_spinlock *last;
+
+    if (! node->next) {
+        last = node;                     <1>
+        if ( CAS(&tail, &last, NULL) ) { <1>
+            return;                      <2>
+        } else {
+            while (! node->next);        <3>
+        }
+    }
+    node->next->locked = 0;              <4>
+}
+----
+<1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_. Si si se pudo hacer efectivamente erea el último, simplemente retorna.
+<2> Si no se pudo hacer el intercambio se debe a que hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
+<3> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
+
+
+[NOTE]
+.Barreras de hardware
+====
+Por qué usamos las barreras
+__atomic_thread_fence(__ATOMIC_RELEASE);
+====
 
 ==== CLH Spinlock
 
