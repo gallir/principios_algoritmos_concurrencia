@@ -40,7 +40,7 @@ El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones
 
 El acceso a la memoria RAM toma hasta cientos de ciclos de reloj del procesador, para reducir estas diferencias los procesadores usan una jerarquía de hasta tres niveles (L1, L2 y L3) de memoria cache. L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y de menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada uno de los núcleos y L3 es compartido por los demás núcleos en el mismo chip.
 
-Cada cache almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y las siguientes accesos se hacen directamente a la cache gracias al efecto de localidad de los programas. Si un línea de cache fue modificada se marca como tal y luego es copiada a la memoria RAM.
+Cada cache almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y las siguientes accesos se hacen directamente a la cache gracias al efecto de localidad de los programas. Si una línea de cache fue modificada se marca como tal y luego es copiada a la memoria RAM.
 
 [NOTE]
 ====

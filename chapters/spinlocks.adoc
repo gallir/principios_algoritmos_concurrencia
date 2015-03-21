@@ -368,7 +368,7 @@ La variable que indica si un proceso puede entrar es booleana por lo que se usar
 .Estructura del _Array-lock_
 image::array_lock.png[align="center"]
 
-En la figura anterior `Thread 0` ya entró en la sección crítica, `Thread 1` y `Thread 2` están esperando verificando el estado de sus respectivas posiciones en el array y `tail` apunta a la siguiente posición. Cuando `Thread 0` salga de la sección crítica cambiará el estado de `flag[1]` y podrá entrar `Thread 1`.
+En la figura anterior _Thread 0_ ya entró en la sección crítica, _Thread 1_ y _Thread 2_ están esperando verificando el estado de sus respectivas posiciones en el array y `tail` apunta a la siguiente posición. Cuando _Thread 0_ salga de la sección crítica cambiará el estado de `flag[1]` y podrá entrar _Thread 1_.
 
 La inicialización (en C) es la siguiente:
 
@@ -465,15 +465,17 @@ void unlock(struct mcs_spinlock *node) {
 }
 ----
 <1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_. Si si se pudo hacer efectivamente erea el último, simplemente retorna.
-<2> Si no se pudo hacer el intercambio se debe a que hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
-<3> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
+<2> Se puedo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero `tail` habrá quedado con _NULL_.
+<3> Si no se pudo hacer el intercambio se debe a que hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
+<4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
 
 
 [NOTE]
 .Barreras de hardware
 ====
-Por qué usamos las barreras
-__atomic_thread_fence(__ATOMIC_RELEASE);
+Si miráis el código en C completo del algoritmo anterior -y otros- veréis que hay llamadas al macro de barrera de memoria (`__atomic_thread_fence(__ATOMIC_RELEASE)`) que no aparecen en los algoritmos resumidos, tampoco en la bibliografía o los artículos científicos citados. Las razones de su usro son las mismas ya explicadas en <<barriers>>, aunque el sistema de cache sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (los _unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida de la sección crítica. Por supuesto que esto es incorrecto, en los ejemplos
+
+De hecho durante las pruebas y validación del código de ejemplo de este libro he comprobado que pasaba exactamente eso con algunos procesadores, en particular con el ARM v7 de la Raspberry 2. Después de muchas pruebas hemos llegado a la conclusión de que ocurría este fenómeno. Preferí que el código fuente funcionase correctamente en todas las arquitecturas aunque en algunas de ellas -como en Intel- significase una sobrecarga innecesaria, y complicase un poco más la legibilidad de los algoritmos.
 ====
 
 ==== CLH Spinlock
