@@ -212,6 +212,16 @@ div.footnote {
   font-size: 90%;
 }
 
+div.variablelist dd {
+  margin-left: 15px !important;
+}
+
+div.variablelist dd p {
+  margin-top: 4px;
+}
+
+
+
 ol {
   list-style-type: decimal;
 }

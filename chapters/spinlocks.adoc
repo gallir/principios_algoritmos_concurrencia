@@ -363,7 +363,7 @@ Como comenté en el inicio del capítulo se buscan que los _spinlocks_ sean esca
 ==== _Array-lock_
 La respuesta obvia al requerimiento es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero (salvo la primera posición que será `1` para que el primer proceso pueda entrar). Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable `tail` inicializada en cero. Cada proceso obtiene su posición con la operación _getAndAdd_ que al mismo tiempo incrementa `tail` para el siguiente.
 
-La variable que indica si un proceso puede entrar es booleana por lo que se usará un único byte. Para evitar el _false sharing_ es mejor separar cada posición por varios bytes. Podemos definir una estructura de mayor tamaño con un campo de un byte para la verificación, o directamente se define un _padding_.
+La variable que indica si un proceso puede entrar es booleana por lo que se usará un único byte. Para evitar el _false sharing_ es mejor separar cada posición por varios bytes. Para ello se define una estructura de mayor tamaño con un campo de un byte para la verificación, o la alternativa es que directamente se defina un array con posiciones de relleno (_padding_) para separar las posiciones del array que sí se usarán.
 
 .Estructura del _Array-lock_
 image::array_lock.png[align="center"]
@@ -407,7 +407,7 @@ Este algoritmo también es equitativo, sólo necesita la instrucción atómica _
 [[mcs_queue]]
 ==== MCS _Spinlock_
 
-Lo ideal para evitar la presión en la caché es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de caché y además que éstas son cercanas a otros variables o estructuras de los procesos. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda -no soy el único- de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de derivados de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
+Lo ideal para evitar la presión en la caché es que en la espera activa cada hilo verifique en su propia variable local, así se asegura que no se comparten línea de caché y además que éstas son cercanas a otros variables o estructuras de los procesos. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda -no soy el único- de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de derivados de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
 
 Para implementarlo hacen falta las operaciones _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
 
@@ -446,7 +446,7 @@ void lock(struct mcs_spinlock *node) {
 ----
 <1> Inicialización del nodo, el estado se pone en _locked_.
 <2> Preparación para el _swap_, `predeccesor` apunta inicialmente al nodo actual, cuando se haga el intercambio si había un proceso esperando o en la sección crítica `predecessor` apuntará al nodo de ese proceso, caso contrario será _NULL_.
-<3> Si hay otro proceso hará que su puntero a `next` apunte al nodo actual.
+<3> Si hay otro proceso hará que su campo `next` apunte al nodo actual.
 <4> Espera activa hasta que el predecesor cambie el estado de `locked` a falso.
 
 [source, c]
@@ -474,22 +474,21 @@ void unlock(struct mcs_spinlock *node) {
 [NOTE]
 .Barreras de hardware
 ====
-Si miráis el código en C completo del algoritmo anterior -y otros- veréis que hay llamadas al macro de barrera de memoria (`__atomic_thread_fence(__ATOMIC_RELEASE)`), otras veces logramos lo mismo `__atomic_store_n` aprovechando una asignación para hacer que el macro introduzca una barrera de memoria si es que la instrucción ya no lo hace. La necesidad de introducir barreras explñicitas no aparecen en los algoritmos resumidos, tampoco en la bibliografía o los artículos científicos citados. Las razones de su uso son las mismas ya explicadas en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (_unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (`unlock`).
+En el código C de algunos de los algoritmos se usa `__atomic_thread_fence` o `__atomic_store_n` para introducir barreras de memoria explícitas. La necesidad de introducir barreras explícitas no aparecen en los algoritmos resumidos, tampoco en la bibliografía o los artículos científicos citados. Las razones de su uso son las mismas ya explicadas en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (_unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (`unlock`).
 
-De hecho durante las pruebas y validación del código de ejemplo de este libro he comprobado que pasaba exactamente esto con algunos procesadores, en particular con el ARM v7 de la Raspberry 2. Después de muchas pruebas hemos llegado a la conclusión de que ocurría este fenómeno. Preferí mostrar la versión simplificada en estas páginas pero la versión completa y correcta en el listado del código fuente para que funcione correctamente en todas las arquitecturas, aunque en algunas de ellas -como en Intel- significase una sobrecarga innecesaria.
+Durante las pruebas y validación del código de ejemplo de este libro he comprobado que existía esta condición de carrera con algunos procesadores, en particular con el ARM v7 de la Raspberry 2. Preferí mostrar la versión simplificada en estas páginas pero la versión completa y correcta en el listado del código fuente para que funcione correctamente en todas las arquitecturas, aunque en algunas de ellas -como en Intel- significase una sobrecarga innecesaria.
 ====
 
 ==== CLH _Spinlock_
 Una par de años después de la publicación del algoritmo de _MCS_ dos grupos descrubrieron el _CLH_ de forma indpendiente, Travis Craig  de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).
 
-Como el _MCS_, este algoritmo también está basado en una cola pero los punteros son en sentido inverso, no apuntan al siguiente que le toca el turno sino al nodo del proceso predecesor.
+Como el _MCS_, este algoritmo también está basado en una cola y es equitativo pero los punteros son en sentido inverso, no apuntan al siguiente que le toca el turno sino al nodo del proceso predecesor.
 
 [[clh_queue]]
 .Cola CLH
 image::clh.png[align="center"]
 
-
-El algoritmo es algo más complejo, tiene más niveles de indirección (se opera sobre las direcciones de memoria de punteros de memoria) y a diferencia de _MCS_ los procesos verifican el estado de una variable en el nodo predecesor. Pero sus ventajas son:
+El algoritmo es breve pero más complejo, tiene más niveles de indirección (se opera sobre las direcciones de memoria de punteros de memoria) y a diferencia de _MCS_ los procesos verifican el estado de una variable en el nodo predecesor. Pero sus ventajas son:
 
 - Como _MCS_ la espera activa se hace sobre variables independientes aunque no necesariamente localesa cada proceso.
 - Sólo requiere la instrucción atómica _getAndSet_.
@@ -529,7 +528,7 @@ void lock(struct clh_node *node) {
     while (predecessor->locked);         <3>
 }
 ----
-<1> Se almacena al nodo actual como `locked`, este variable será verificada por el proceso que venga a continuación.
+<1> Se almacena al nodo actual como `locked`, este variable será verificada por el siguiente proceso que pretenda entrar a la sección crítica.
 <2> Se obtiene la dirección de `tail` que indica cuál es el predecesor del proceso actual y se almacena en `tail` la dirección del nodo actual. El valor que tenía `tail` se almacena en el campo `prev` (es el puntero al nodo del proceso anterior) y se hace una copia en `predecessor`.
 <3> Se hace la espera activa sobre el campo `locked` del nodo anterior, cuando sea falso este proceso podrá continuar.
 
@@ -552,17 +551,27 @@ void unlock(struct clh_node **node) {
 
 
 [[spinlock_times]]
-=== Análisis de tiempos de ejecución
+==== Análisis de tiempos de ejecución
+En las secciones anteriores hemos visto _ticket-lock_, un algoritmo equitativo muy usado pero que no es _escalable_ debido a que todos los procesos verifican la misma posición de memoria. La respuesta a este problema fue crear un array con un relleno intermedio para evitar el _false sharing_. Algunos autores proponen que el relleno complete el tamaño de una palabra (cuatro u ocho bytes), otros que sean de mayor longitud para que no compartan líneas de caché. Pero ¿cuál es la separación apropiada?, esta depende de la arquitectura y es muy difícil saber cuál es la mejor para cada una, depende de muchos factores, desde el tipo de instrucción a los canales de comunicación para sincronización hasta a cómo se monitorizan los registros de _LL/SC_ en las arquitecturas que lo soportan.
 
-===== _Array-lock_ y _padding_
+Para poder tomar la decisión del _padding_ a usar tuve que hacer pruebas con los diferentes procesadores variando el tamaño del relleno y comparar los resultados. La siguiente figura muestra los tiempos de CPU de cada procesador para diferentes tamaños, el eje horizontal muestra la separación entre las diferentes posiciones (desde 2 a 256 bytes) y el vertical el tiempo de CPU en segundos.
+
+.Diferentes tamaños de relleno
 image::array-paddings.png[align="center"]
 
+En Intel Xeon e i5 los tiempos son constantes mientras que en Raspberry 2 e Intel Core2 se produce un descenso importante a los 16 y 32 bytes. Por esta razón elegí el tamaño de _padding_ para que la separación entre posiciones consecutivas sea de 32 bytes, así se podían comparar los resultados de una forma mínimamente justa.
 
-===== Ticket vs MCS vs CLH
+En las dos imágenes a continuación se muestran los tiempos comparados de CPU y tiempo de reloj respectivamente para los algoritmos equitativos _ticket-lock_, _array-lock_, _MCS_ y _CLH_.
+
+.Ticket-lock vs array-lock vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
 
-===== Ticket vs MCS vs CLH en tiempos de retorno
+.Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
+
+En las arquitecturas más modernas no existe tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en alguna como en Xeon es perjudicial. Además el _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la Panadería), mientras que _ticket-lock_ sólo requiere una palabra.
+
+En general _MCS_ y _CLH_ son los más eficientes, pero tampoco es tan grande la diferencia y también requieren más espacio (un nodo por cada proceso activo). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es que hay mayor libertad para gestionar la memoria, puede hacerse en las propias funciones `lock` y `unlock` de forma transparente a los procesos.
 
 ////
 
