@@ -1,14 +1,16 @@
 [[spinlocks]]
 == _Spinlocks_
-Todas las soluciones de exclusión mutua vistas tienen algo en común, una espera activa en un bucle que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso solo tiene sentido si se cumple una de las siguientes condiciones:
+Las soluciones de exclusión mutua anteriores tienen en común una espera activa en un bucle que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la Panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
 . El código que se ejecuta en la sección crítica es muy breve y por lo tanto la competencia (_contention_) es baja. Esta es una solución empleada desde los inicios de la informática para sincronizar el núcleo de los sistemas operativos e implementar mecanismos de sincronización que evitan las esperas activas (que veremos a partir del siguiente capítulo).
 
-. Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema y/o cambio de estado de procesos. Si hay muchos más procesos en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador por lo que los procesos avanzarían muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
+. Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Estas técnicas permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Si hay más procesos compitiendo en _spinlocks_ que procesadores se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
-El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer una multitud de registros como en el algoritmo de la Panadería. Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura como se suele hacer en el núcleo de los sistemas operativos. Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para el código de demostraciónfootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros _RMW_. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros (como en el algoritmo de la Panadería). Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura, como es habitual en el núcleo de los sistemas operativos. Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
-Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de CPU en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre diferentes arquitecturas de procesadores: Intel Core2 con 4 núcleos, Intel i5 con 2 núcleos y cuatro _hilos_, Intel Xeon con 2 procesadores independientes de 8 núcleos cada uno (16 en total) y Raspberry 2 con 4 núcleos.
+Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de CPU en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre diferentes procesadores: Intel Core2 con 4 núcleos, Intel i5 con 2 núcleos y cuatro _hilos_, Intel Xeon con 2 procesadores independientes de 8 núcleos cada uno (16 en total) y Raspberry 2 con ARM v7 de 4 núcleos.
+
+Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso, solo incrementar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable compartida `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
 
 
 [[hardware_times]]
@@ -16,32 +18,30 @@ Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas 
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo (_ultimate_) es el más eficiente para este caso de sólo sumar un entero usando la instrucción atómica _getAndAdd_ directamente sobre la variable `counter`. Los siguientes hacia la derecha son los algoritmos usando las instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
-
-Se puede observar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para los diferentes procesadores. Para todos los Intel Core2 e i5 la operación más eficiente es la _getAndAdd_. Para el Xeon de 16 núcleos _getAndSet_ (seguido muy de cerca por _TAS_), y en Raspberry 2 (procesador ARM) es casi un empate entre _CAS_ y _getAndAdd_. Puede verse también que con _CAS_ el procesador ARM en tiempo con los de los mucho más potentes de Xeon. Un resultado curioso dado que Intel tiene _CAS_ nativo pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.].
+Se puede observar que todos los algoritmos de exclusión mutua imponen un sobrecoste importante pero que no es uniforme para los diferentes procesadores. Para Intel Core2 e i5 la operación más eficiente es _getAndAdd_. Para el Xeon de 16 núcleos es _getAndSet_ (seguido muy de cerca por _TAS_), y en Raspberry 2 es casi un empate entre _CAS_ y _getAndAdd_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Un resultado curioso dado que Intel tiene _CAS_ nativo (`cmpxhg`) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.].
 
 === Optimizaciones
-Los _spinlock_ son ineficientes por dos razones:
+Las implementaciones de _spinlocks_ anteriores son ineficientes por dos razones:
 
 Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verificando el valor de una variable, si hay más hilos compitiendo que procesadores la mayor parte del tiempo se pierde en el bucle de verificación.
 
-La presión sobre la memoria caché:: Estos algoritmos no son _escalables_ En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes de sincronización de caché entre los diferentes procesadores.
+La presión sobre la memoria caché:: Estos algoritmos no son _escalables_. En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes extras de sincronización de caché.
 
-Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los _spinlocks_ anteriores, al final del capítulo estudiaremos los dos algoritmos escalables más importantes.
+Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los _spinlocks_ básicos anteriores. Al final del capítulo estudiaremos los dos algoritmos escalables más importantes.
 
 [NOTE]
 ._Spinlocks_ escalables
 ====
 Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria caché por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS>>, <<Boyd-Wickizer>>).
 
-Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce -como mínimo- un _fallo de caché_ cada vez que un proceso cambia de estado ya que cada actualización genera invalidaciones de caché. El problema se agrava por el <<false_sharing, _false sharing_>>, los registros en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>> que veremos al final del capítulo.
+Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce -como mínimo- un _fallo de caché_ cada vez que un proceso cambia de estado ya que cada actualización debe propagarse a las caché locales de los otros procesadores. El problema se agrava por el <<false_sharing, _false sharing_>>, los registros en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>> (que vemos al final del capítulo).
 
 ====
 
 Las tres que veremos a continuación, implementados sobre el _spinlock_ con _testAndSet_, no pueden ser considerados _escalables_ ya que su objetivo no es reducir la presión sobre la memoria caché para mantener constantes los _fallos de caché_, sin embargo las mejoras son muy notables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera -la variable `mutex` en los ejemplos-. Si ésta vale `1` ya no se llama a la instrucción atómica. Esta técnica se la conoce como _TAS_ o _TATAS_ cuando se usa con la instrucción _TAS_.
+Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica verificando antes (_corto circuitando_) el valor de la variable sobre la que se itera -`mutex` en los ejemplos-. Si ésta vale `1` ya no se llama a la instrucción atómica. Esta técnica se la conoce como _TAS_ o _TATAS_ cuando se usa con la instrucción _TAS_.
 
 [source]
 ----
@@ -52,7 +52,7 @@ def lock():
         pass
 ----
 
-La mejora de esta solución depende mucho de la arquitectura y de sus mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que esta técnica mejora mucho la eficiencia en las  Intel pero son casi despreciables en la arquitectura ARM.
+Las mejora obtenida depende de la instrucción atómica y de los mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable en procesadores Intel pero es casi despreciable en la arquitectura ARM, tanto en tiempos de CPU como en tiempos de retorno.
 
 Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
@@ -164,21 +164,21 @@ image::optimized-xeon-real.png[align="center"]
 .Tiempos de retorno en ARMv7 de Raspberry 2 cuatro núcleos
 image::optimized-arm7-real.png[align="center"]
 
-Se puede observar que en ambas arquitecturas -cualitativa y cuantitavamente tan diferentes- ceder el procesador representa no solo un ahorro importante de CPU sino también de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Una de las razones es que en el Xeon hay más núcleos que hilos por lo que un _yield_ sólo hace que un proceso abandone el procesador pero posiblemente el _scheduler_ lo lleve inmediatamente a ejeución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. La segunda razón es que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
+Se puede observar que en ambas arquitecturas -cualitativa y cuantitativamente tan diferentes- ceder el procesador representa no solo un ahorro importante de CPU sino también de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Una de las razones es que en el Xeon hay más núcleos que hilos por lo que un _yield_ sólo hace que un proceso abandone el procesador pero posiblemente el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. La segunda razón es que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
 
 
 [NOTE]
 .Cede el procesador
 ====
-A menos que se trate un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no te despedirán por poner un `sched_yield` o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores, el cuello de botella acaba siendo el sistema de coherencia de caché.
+A menos que se trate un gestor de interrupciones, rutinas críticas del núclero del sistema operativo, o un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no te despedirán por poner un `sched_yield` o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores, el cuello de botella acaba siendo el sistema de coherencia de caché.
 ====
 
 
 
 === Lectores-escritores
-La mayoría de las operaciones que se hacen sobre la memoria, incluida la compartida, son acceso para lectura. En estos casos interesa que las lecturas sean consistentes. En nuestros ejemplos con un único contador entero no existe el problema, las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas de 32 bits o más. Si un proceso  lee ese esa variable siempre obtendrá el último valor escrito. Pero si se trata de estructuras más complejas -incluso el acceso a ficheros o dispositivos externos- hay que imponer restricciones para que la estructura no sea modificada mientras haya procesos que la están accediendo.
+La mayoría de las operaciones que se hacen sobre la memoria, incluida la compartida, son acceso para lectura. En estos casos interesa que las lecturas sean consistentes. En nuestros ejemplos, con un único contador entero, no existe el problema. Las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas de 32 bits o más. Si un proceso  lee ese esa variable siempre obtendrá el último valor escrito. Pero si se trata de estructuras más complejas -incluso el acceso a ficheros o dispositivos externos- hay que imponer restricciones para que la estructura no sea modificada mientras haya procesos que la están accediendo.
 
-Se puede usar exclusión mutua pero ello emplica que se estarían _serializando_ hasta los accesos de sólo lectura, es un mecanismo nada eficiente. Por ello una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita que haya más de un lector en la sección crítica de forma simultánea, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
+Se puede usar exclusión mutua pero ello implica que se estarían _serializando_ hasta los accesos de sólo lectura, es un mecanismo nada eficiente. Por ello una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita que haya más de un lector en la sección crítica de forma simultánea, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
 
 Las condiciones que deben cumplir son:
 
@@ -465,7 +465,7 @@ void unlock(struct mcs_spinlock *node) {
     node->next->locked = 0;              <4>
 }
 ----
-<1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_. Si si se pudo hacer efectivamente erea el último, simplemente retorna.
+<1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_. Si si se pudo hacer, efectivamente era el último proceso, simplemente retorna.
 <2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero `tail` habrá quedado con _NULL_.
 <3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
@@ -480,7 +480,7 @@ Durante las pruebas y validación del código de ejemplo de este libro he compro
 ====
 
 ==== CLH _Spinlock_
-Una par de años después de la publicación del algoritmo de _MCS_ dos grupos descrubrieron el _CLH_ de forma indpendiente, Travis Craig  de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).
+Una par de años después de la publicación del algoritmo de _MCS_ dos grupos descubrieron el _CLH_ de forma indpendiente, Travis Craig  de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).
 
 Como el _MCS_, este algoritmo también está basado en una cola y es equitativo pero los punteros son en sentido inverso, no apuntan al siguiente que le toca el turno sino al nodo del proceso predecesor.
 
@@ -545,7 +545,7 @@ void unlock(struct clh_node **node) {
 }
 ----
 <1> Se hace una copia del puntero al nodo del proceso anterior (sobre el que este procesó iteró en el `lock`).
-<2> Se hace una copia temporal para no perder la direccion del nodo actal.
+<2> Se hace una copia temporal para no perder la dirección del nodo actual.
 <3> El puntero que apuntaba al nodo del proceso actual ahora apuntará al del predecesor. Se podría liberar esa memoria pero en estos ejemplos la reciclamos para no hacer `malloc/free` en cada `lock` y `unlock`.
 <4> Se almacena falso en el campo `locked` del nodo actual, el proceso que está a continuación en la cola podrá entrar a la sección crítica.
 
@@ -569,9 +569,9 @@ image::ticket-mcs-clh.png[align="center"]
 .Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
 
-En las arquitecturas más modernas no existe tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en alguna como en Xeon es perjudicial. Además el _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la Panadería), mientras que _ticket-lock_ sólo requiere una palabra.
+En las arquitecturas modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon es perjudicial. Además, _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la Panadería), mientras que _ticket-lock_ sólo requiere una palabra.
 
-En general _MCS_ y _CLH_ son los más eficientes, pero tampoco es tan grande la diferencia y también requieren más espacio (un nodo por cada proceso activo). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es que hay mayor libertad para gestionar la memoria, puede hacerse en las propias funciones `lock` y `unlock` de forma transparente a los procesos.
+En general _MCS_ y _CLH_ son los más eficientes, pero la diferencia no es considerable y como _array-lock_ también requieren más espacio (un nodo por cada proceso activo, aunque la asignación puede ser dinámica y sólo cuando se necesitan). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones `lock` y `unlock` de forma transparente a los procesos.
 
 ////
 
@@ -602,3 +602,16 @@ Improving ticket spinlocks  http://lwn.net/Articles/531254/
 
 http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
 ////
+
+
+=== Recapitulación
+
+Comenzamos con las optimizaciones básicas a _spinlocks_ construidos con las instrucciones de hardware de capítulo anterior. La primera fue agregar un control _local_ a la variable compartida para evitar gastar ciclos de reloj en instrucciones más complejas, esta solución no requiere nada especial ni cambia el estado del proceso. A continuación vimos dos optimizaciones que sí cambian el estado del proceso y que son adecuadas en casos donde se puede permitir que el proceso en el _spinlock_ abandone el procesadorfootnote:[No suele ser el caso en rutinas del núcleo del sistema operativo o gestores de interrupciones.]. La conclusión es que si se puede, ambas soluciones mejoran mucho la eficiencia, tanto en tiempo de CPU como de retorno.
+
+Luego vimos la implementación de lectores-escritores con _spinlocks_. Este algoritmo es muy común y lo veremos también implementado con las técnicas de los capítulos siguientes. Su utilidad se basa en que las actualizaciones de datos son mucho menos frecuentes que los accesos de sólo lectura, por lo que interesa relajar las restricciones de exclusión mutua para permitir que haya más de un lector en la sección crítica mientras se asegure que no hay nngún escritor.
+
+A continuación se introdujo el tema de los _spinlocks_ equitativos o _fair_. En estos se asegura que los procesos entran a la sección crítica en el orden que llegan (FIFO), por lo que además se puede asegurar formalmente que no se produce inanición (_starvation_).
+
+El primer algoritmo fue _ticket-lock_, basado en las mismas ideas del algoritmo de la Panadería donde cada proceso obtiene un _número_ único y creciente que sirve para sincronizar la entrada a la sección crítica mediante una variable de turno que también crece monotónicamente. A continuación extendimos este algoritmo para lectores-escritores, que además tiene la propiedad de ser equitativo y no dar prioridad a lectores o escritores.
+
+Finalmente vimos dos algoritmos fundamentales de concurrencia, _MCS_ y _CLH_. Ambos son equitativos y basados en colas, como permiten que cada proceso itere variables de _locks_ independientes son considerados _escalables_, es decir no incrementan la presión sobre el sistema de cache cuando se incrementa el número de procesos. Estos algoritmos funcionan sobre sistemas de cache coherentes pero hay modificaciones que permiten que sean usados en sistemas no coherentes y en arquitecturas NUMA.
