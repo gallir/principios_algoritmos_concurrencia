@@ -8,7 +8,7 @@
 
 - [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
 
-- [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974 http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
+- [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974, http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
 
 - [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM. 1986.
 
@@ -38,7 +38,9 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 - [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.21.8571&rep=rep1&type=pdf
 
 
-// - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
+////
+ - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 
 
 // Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<
+////

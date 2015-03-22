@@ -257,7 +257,7 @@ Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lect
 [[fairness]]
 === _Spinlocks_ equitativos
 
-El problema de los algoritmos anteriores es que no cumplen uno de los <<em_requisites, requisitos de la exclusión mutua>>, asegurar que no se produce inanición. Aunque estadísticamente no se puede producirfootnote:[En miles centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.] sí que plantea problemas de equidad -un proceso se retrasa mucho más que otros-, por ejemplo en 2008 se derectó este efecto en el núcleo de Linux (<<Corbet>>). Para evitarlo hay que usar algoritmos que aseguren que los procesos entren a la sección crítica en el orden que han llegado (_FIFO_).
+El problema de los algoritmos anteriores es que no cumplen uno de los <<em_requisites, requisitos de la exclusión mutua>>, asegurar que no se produce inanición. Aunque estadísticamente no se puede producirfootnote:[En miles centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.] sí que plantea problemas de equidad -un proceso se retrasa mucho más que otros-, por ejemplo en 2008 se detectó este efecto en el núcleo de Linux (<<Corbet>>). Para evitarlo hay que usar algoritmos que aseguren que los procesos entren a la sección crítica en el orden que han llegado (_FIFO_).
 
 ==== _Ticket-lock_
 [[ticket_lock]]
@@ -401,7 +401,7 @@ def unlock(my_index):
 
 ----
 
-Este algoritmo también es equitativo, sólo necesita la instrucción atómica _getAndAdd_ y los procesos entran en el orden en que la ejecutaron. Según la teoría y toda la bibliografía (por ejempo <<Herlihy12>>) aseguran que así se evitar el _false sharing_ y por lo tanto más eficiente que _Ticket-lock_, analizaremos cuánto de hay de verdad y mito <<spinlock_times, un poco más adelante>>.
+Este algoritmo también es equitativo, sólo necesita la instrucción atómica _getAndAdd_ y los procesos entran en el orden en que la ejecutaron. Según la teoría y toda la bibliografía (por ejemplo <<Herlihy12>>) aseguran que así se evitar el _false sharing_ y por lo tanto más eficiente que _Ticket-lock_, analizaremos cuánto de hay de verdad y mito <<spinlock_times, un poco más adelante>>.
 
 
 [[mcs_queue]]
@@ -577,16 +577,12 @@ Agradecimientos a Marc Pampols
 Reader-writer: https://jfdube.wordpress.com/2014/01/03/implementing-a-recursive-read-write-spinlock/
 https://jfdube.wordpress.com/2014/01/12/optimizing-the-recursive-read-write-spinlock/
 
-
-
 (http://nullprogram.com/blog/2014/09/02/ https://github.com/skeeto/lstack)
 Common Pitfalls in Writing Lock-Free Algorithms http://blog.memsql.com/common-pitfalls-in-writing-lock-free-algorithms/
 
 Toward generic atomic operations/The C11 memory model http://lwn.net/Articles/509102/
 
 Ticket implementation https://github.com/karthick18/ticket_spinlock/blob/master/spinlock.h
-
-
 
 Lightweight Contention Management for
 Efficient Compare-and-Swap Operations http://arxiv.org/pdf/1305.5800.pdf
