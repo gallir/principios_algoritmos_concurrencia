@@ -70,7 +70,7 @@ La cesión del procesador <<execution_times, produce reducciones de tiempo impor
 
 Código fuente para <<test_and_set_yield_c, _TAS_>>, <<swap_yield_c, _swap_>> y <<compare_and_swap_yield_c, _CAS_>>.
 
-
+[[exponential_backoff]]
 ==== Espera exponencial
 La forma de reducir la competencia (_contention_) y evitar que el efecto ping-pong de los procesos es forzar a que permanezcan bloqueados por un tiempo variable dependiendo de las veces que ha _fallado_.
 
@@ -407,10 +407,11 @@ Este algoritmo también es equitativo, sólo necesita la instrucción atómica _
 [[mcs_queue]]
 ==== MCS _Spinlock_
 
-Lo ideal para evitar la presión en la caché es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de caché y además que éstas son cercanas a otros variables o estructuras de los procesos. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubierto en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de derivados de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
+Lo ideal para evitar la presión en la caché es que cada hilo pueda usar variables locales, así se asegura que no se comparten línea de caché y además que éstas son cercanas a otros variables o estructuras de los procesos. El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda -no soy el único- de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS>>). Se le considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006 y el uso de derivados de este algoritmo se usan en los sistemas más variadosfootnote:[Por ejemplo en la implementación de _monitores_ de la máquina virtual de Java.].
 
 Para implementarlo hacen falta las operaciones _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
 
+[source, c]
 ----
 struct mcs_spinlock {
     struct mcs_spinlock *next;
@@ -418,7 +419,7 @@ struct mcs_spinlock {
 };
 ----
 
-El campo `next` es un puntero que apuntará al nodo del siguiente proceso en la cola para la sección crítica, el campo `locked` es una variable booleana que será `1` si el proceso de ese nodo debe esperar o `0 ` cuando pueda entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el proceso que estaba en la sección crítica la abandona actualizará el campo del siguiente proceso en la lista de espera para entrar.
+El campo `next` es un puntero que apuntará al nodo del siguiente proceso en la cola para la sección crítica, el campo `locked` es una variable booleana que será `1` si el proceso de ese nodo debe esperar o `0` cuando pueda entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el proceso que estaba en la sección crítica la abandona actualizará el campo del siguiente proceso en la lista de espera para entrar.
 
 .Cola MCS
 image::mcs.png[align="center"]
@@ -427,7 +428,7 @@ En la figura anterior se representa al hilo _Thread 0_ que ya salió de su secci
 
 El siguiente es el <<mcs_spinlock_c, código en C>> resumido del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
 
-[source]
+[source, c]
 ----
 void lock(struct mcs_spinlock *node) {
     struct mcs_spinlock *predecessor;
@@ -448,7 +449,7 @@ void lock(struct mcs_spinlock *node) {
 <3> Si hay otro proceso hará que su puntero a `next` apunte al nodo actual.
 <4> Espera activa hasta que el predecesor cambie el estado de `locked` a falso.
 
-[source]
+[source, c]
 ----
 void unlock(struct mcs_spinlock *node) {
     struct mcs_spinlock *last;
@@ -465,34 +466,105 @@ void unlock(struct mcs_spinlock *node) {
 }
 ----
 <1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_. Si si se pudo hacer efectivamente erea el último, simplemente retorna.
-<2> Se puedo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero `tail` habrá quedado con _NULL_.
-<3> Si no se pudo hacer el intercambio se debe a que hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
+<2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero `tail` habrá quedado con _NULL_.
+<3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, hay que esperar a que termine de hacerlo.
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
 
 
 [NOTE]
 .Barreras de hardware
 ====
-Si miráis el código en C completo del algoritmo anterior -y otros- veréis que hay llamadas al macro de barrera de memoria (`__atomic_thread_fence(__ATOMIC_RELEASE)`) que no aparecen en los algoritmos resumidos, tampoco en la bibliografía o los artículos científicos citados. Las razones de su usro son las mismas ya explicadas en <<barriers>>, aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (los _unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (`unlock`).
+Si miráis el código en C completo del algoritmo anterior -y otros- veréis que hay llamadas al macro de barrera de memoria (`__atomic_thread_fence(__ATOMIC_RELEASE)`), otras veces logramos lo mismo `__atomic_store_n` aprovechando una asignación para hacer que el macro introduzca una barrera de memoria si es que la instrucción ya no lo hace. La necesidad de introducir barreras explñicitas no aparecen en los algoritmos resumidos, tampoco en la bibliografía o los artículos científicos citados. Las razones de su uso son las mismas ya explicadas en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (_unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (`unlock`).
 
-De hecho durante las pruebas y validación del código de ejemplo de este libro he comprobado que pasaba exactamente esto con algunos procesadores, en particular con el ARM v7 de la Raspberry 2. Después de muchas pruebas hemos llegado a la conclusión de que ocurría este fenómeno. Preferí que el código fuente funcionase correctamente en todas las arquitecturas aunque en algunas de ellas -como en Intel- significase una sobrecarga innecesaria, y complicase un poco más la legibilidad de los algoritmos.
+De hecho durante las pruebas y validación del código de ejemplo de este libro he comprobado que pasaba exactamente esto con algunos procesadores, en particular con el ARM v7 de la Raspberry 2. Después de muchas pruebas hemos llegado a la conclusión de que ocurría este fenómeno. Preferí mostrar la versión simplificada en estas páginas pero la versión completa y correcta en el listado del código fuente para que funcione correctamente en todas las arquitecturas, aunque en algunas de ellas -como en Intel- significase una sobrecarga innecesaria.
 ====
 
-==== CLH Spinlock
+==== CLH _Spinlock_
+Una par de años después de la publicación del algoritmo de _MCS_ dos grupos descrubrieron el _CLH_ de forma indpendiente, Travis Craig  de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).
+
+Como el _MCS_, este algoritmo también está basado en una cola pero los punteros son en sentido inverso, no apuntan al siguiente que le toca el turno sino al nodo del proceso predecesor.
 
 [[clh_queue]]
 .Cola CLH
 image::clh.png[align="center"]
 
+
+El algoritmo es algo más complejo, tiene más niveles de indirección (se opera sobre las direcciones de memoria de punteros de memoria) y a diferencia de _MCS_ los procesos verifican el estado de una variable en el nodo predecesor. Pero sus ventajas son:
+
+- Como _MCS_ la espera activa se hace sobre variables independientes aunque no necesariamente localesa cada proceso.
+- Sólo requiere la instrucción atómica _getAndSet_.
+- La memoria de los nodos puede ser gestionada independientemente por el algoritmo. Los procesos pueden proveer un nodo a una dirección estática o el propio algoritmo puede gestionar la memoria (por ejemplo haciendo `malloc` en el `lock` y `free` del nodo que ya no se usa en el `unlock`).
+- Puede ser adaptado a sistemas sin coherencia de caché.
+
+La estructura de cada nodo es similar a _MCS_:
+
+[source, c]
+----
+struct clh_node {
+    unsigned char locked;
+    struct clh_node *prev;
+};
+----
+
+La diferencia es que se debe comenzar con un nodo _sin propietario_ y la variable `tail` apuntando a dicho nodo. Por ejemplo:
+
+[source, c]
+----
+struct clh_node lock_node;          <1>
+struct clh_node *tail = &lock_node; <2>
+----
+<1> El nodo _sin propietario_.
+<2> `tail` apunta inicialmente a ese nodo.
+
+La versión simplificada del <<clh_spinlock_c, algoritmo en C>> es la siguiente:
+
+[source, c]
+----
+void lock(struct clh_node *node) {
+    struct clh_node *predecessor;
+
+    node->locked = 1;                    <1>
+    node->prev = getAndSet(&tail, node); <2>
+    predecessor = node->prev;            <2>
+    while (predecessor->locked);         <3>
+}
+----
+<1> Se almacena al nodo actual como `locked`, este variable será verificada por el proceso que venga a continuación.
+<2> Se obtiene la dirección de `tail` que indica cuál es el predecesor del proceso actual y se almacena en `tail` la dirección del nodo actual. El valor que tenía `tail` se almacena en el campo `prev` (es el puntero al nodo del proceso anterior) y se hace una copia en `predecessor`.
+<3> Se hace la espera activa sobre el campo `locked` del nodo anterior, cuando sea falso este proceso podrá continuar.
+
+[source, c]
+----
+void unlock(struct clh_node **node) {
+    struct clh_node *pred;
+    struct clh_node *tmp;
+
+    pred = (*node)->prev; <1>
+    tmp = *node;          <2>
+    *node = pred;         <3>
+    tmp->locked = 0;      <4>
+}
+----
+<1> Se hace una copia del puntero al nodo del proceso anterior (sobre el que este procesó iteró en el `lock`).
+<2> Se hace una copia temporal para no perder la direccion del nodo actal.
+<3> El puntero que apuntaba al nodo del proceso actual ahora apuntará al del predecesor. Se podría liberar esa memoria pero en estos ejemplos la reciclamos para no hacer `malloc/free` en cada `lock` y `unlock`.
+<4> Se almacena falso en el campo `locked` del nodo actual, el proceso que está a continuación en la cola podrá entrar a la sección crítica.
+
+
 [[spinlock_times]]
 === Análisis de tiempos de ejecución
+
+===== _Array-lock_ y _padding_
+image::array-paddings.png[align="center"]
+
 
 ===== Ticket vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]
 
-===== Ticket vs MCS vs CLH con sched_yield
-image::ticket-mcs-clh-yield.png[align="center"]
+===== Ticket vs MCS vs CLH en tiempos de retorno
+image::ticket-mcs-clh-real.png[align="center"]
 
+////
 
 http://www.cs.rice.edu/~vs3/comp422/lecture-notes/comp422-lec19-s08-v1.pdf
 http://www.cs.rochester.edu/~scott/papers/1994_IPPS_mprog.pdf
@@ -524,3 +596,4 @@ MCSLocks http://lwn.net/Articles/590243/
 Improving ticket spinlocks  http://lwn.net/Articles/531254/
 
 http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
+////

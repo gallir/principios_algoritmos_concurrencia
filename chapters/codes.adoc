@@ -327,3 +327,11 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/mcs_
 ----
 include::../code/spinlocks/mcs_spinlock.c[]
 ----
+
+===== CLH
+[[clh_spinlock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/clh_spinlock.c[clh_spinlock.c]
+[source,c]
+----
+include::../code/spinlocks/clh_spinlock.c[]
+----
