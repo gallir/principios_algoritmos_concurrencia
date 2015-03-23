@@ -277,7 +277,7 @@ Cuando _P1_ continúe su ejecución _CAS_ hará el cambio ya que la dirección e
 
     head -> ¿20?    [30]
 
-Este caso es muy habitual si usamos `malloc` para cada nuevo nodo que insertamos y luego el `free` cuando lo eliminamos de la listafootnote:[Las implementaciones de `malloc` suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]<<stack_cas_malloc_c, El siguiente programa en C>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
+Este caso es muy habitual si usamos `malloc` para cada nuevo nodo que insertamos y luego el `free` cuando lo eliminamos de la listafootnote:[Las implementaciones de `malloc` suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]El siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
 
 [source, c]
 ----

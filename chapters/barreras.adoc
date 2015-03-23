@@ -24,7 +24,7 @@ No es ningún secreto que los procesadores modernos ya no garantizan que los pro
 Hay tres razones fundamentales que pueden afectar a la violación de la consistencia secuencial:
 
 * Optimizaciones del compilador
-* Cache de RAM en multiprocesadores
+* Caché de RAM en multiprocesadores
 * Ejecución fuera de orden
 
 === Optimizaciones del compilador
@@ -36,7 +36,7 @@ Los compiladores pueden optimizar el código de varias formas, desde cambiar el 
 
 El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con `volatile` los algoritmos no funcionan. La causa del fallo de exclusión mutua es otra.
 
-=== Cache de RAM en multiprocesadores
+=== Caché de RAM en multiprocesadores
 
 El acceso a la memoria RAM toma hasta cientos de ciclos de reloj del procesador, para reducir estas diferencias los procesadores usan una jerarquía de hasta tres niveles (L1, L2 y L3) de memoria caché. L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y de menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada uno de los núcleos y L3 es compartido por los demás núcleos en el mismo chip.
 

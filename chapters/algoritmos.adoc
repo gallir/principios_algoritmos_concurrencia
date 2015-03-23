@@ -305,7 +305,7 @@ La demostración formal se relativamente sencilla. Para que haya dos procesos en
 
 Libre de interbloqueos::
 
-No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro procesofootnoteref:[i_j, Ya debería estar usando `states[j]` para el otro (u otros) y `states[i]` para _yo_ para que os acostumbréis. No volverá a ocurrir.] será falso.
+No se pueden producir porque si existe una condición de carrera en la entrada el valor de `turn` decidira qué proceso podrá continuar y cuál esperar. Si un proceso desea entrar lo hará inmediatamente porque el valor de `states` para el otro proceso será falso.
 
 Libre de inanición::
 
@@ -335,7 +335,7 @@ number[i] = 0
 <1> El tamaño del array debe ser igual al número máximo de procesos que pueden acceder a una sección crítica.
 <2> La función max() retorna el mayor número que encuentra en el array `number`.
 <3> Se recorre todo el array para verificar el número de los demás procesos.
-<4> Esperará en el bucle si el proceso _j_ tiene un número menor al mío (_i_)footnoteref:[i_j].
+<4> Esperará en el bucle si el proceso _j_ tiene un número menor al mío (_i_).
 
 La idea es sencilla. Cada proceso tiene asociado un identificador entero que lo usa acceder al array `number` footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle `for j...` su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
 

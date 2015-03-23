@@ -25,11 +25,11 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
 
-- [[[MCS]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
+- [[[MCS1]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
 
 - [[[MCS2]]] John M. Mellor-Crummey, Michael L. Scott. _Scalable Reader-Writer Synchronization for Shared-Memory Multiprocessors_. PPOPP '91 Proceedings of the third ACM SIGPLAN symposium on Principles and practice of parallel programming. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.380.1719&rep=rep1&type=pdf
 
-- [[[Corbet]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
+- [[[Corbet1]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
 
 - [[[Corbet2]]] Jonathan Corbet. _TImproving ticket spinlocks_. http://lwn.net/Articles/531254/
 
