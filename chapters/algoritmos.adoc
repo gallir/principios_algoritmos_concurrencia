@@ -66,9 +66,7 @@ Como generalización se suele usar `i` para identificar al propio proceso y `j` 
 
 
 ==== Primer intento
-
-
-La idea fundamental es que la variable entera `turn` nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiarmos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar sólo los valores `0` y `1`, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
+La idea fundamental es que la variable entera `turn` nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar sólo los valores `0` y `1`, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
 
 
 ----
@@ -158,7 +156,7 @@ states[0] = False
 
 Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamente el primero que ejecute la asignación a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si P1 está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con P0 y éste podrá entrar y salir varias veces sin interferencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
-El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho el algoritmo genera un _interbloqueo_ si se da la siguiente secuencia de intrucciones:
+El gran problema es que no cumple la regla de _sin esperas infinitas_, de hecho el algoritmo genera un _interbloqueo_ si se da la siguiente secuencia de instrucciones:
 
 
   P0                    P1
@@ -275,7 +273,7 @@ Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 
 En 1981, cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Recordad que ya había soluciones más prácticas para 2 o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y simple de entender.
 
-Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar intrucciones de procesador es mucho más sencillo de comprender:
+Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es mucho más sencillo de comprender:
 
 ----
         states = [False, False]
@@ -429,7 +427,7 @@ La exclusión mutua se cumple.
 
 Libre de interbloqueos::
 
-El peor de los casos es una condición de carrera donde todos los procesos pretendan entrar siumultáneamente seleccionando todos el mismo número. En este caso siempre habrá un único proceso _menor_ que podrá entrar a la sección crítica. Cuando este salga podrá entrar el siguiente con el ID más bajo, y así sucesivamente y en el orden de IDs hasta que entrarán todos.
+El peor de los casos es una condición de carrera donde todos los procesos pretendan entrar simultáneamente seleccionando todos el mismo número. En este caso siempre habrá un único proceso _menor_ que podrá entrar a la sección crítica. Cuando este salga podrá entrar el siguiente con el ID más bajo, y así sucesivamente y en el orden de IDs hasta que entrarán todos.
 
 Libre de inanición::
 
