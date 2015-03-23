@@ -1,3 +1,7 @@
+////
+Agregar el código spinlock.c
+////
+
 [[algorithms]]
 == Algoritmos de exclusión mutua
 
@@ -310,7 +314,7 @@ Libre de inanición::
 El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un proceso que ejecutó entró antes al bucle de comparación es el primero que entrará. Si este mismo sale y vuelve a intentar entrar habiendo otro esperando le cederá el turno. Así se demuestra que cualquier proceso tendrá que esperar como máximo a que el otro salga una vez de la sección crítica, luego le tocará el turno indefectiblemente.
 
 
-
+[[bakery]]
 === Solución para N procesos: algoritmo de la panaderia
 
 Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, no son de extrema utilidad para cualquier sistema informático diseñado en los últimos 50 años. La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panaderíafootnote:[Para que se comprenda mejor la idea quizás en España deberíamos llamarle _de la oficina de Correos_.] sacan un número para saber el orden en que serán atendidos.
@@ -387,11 +391,11 @@ Para evitar que ocurra habrá que poner un mecanismo para impedir que el proceso
         number   = [0, ..., 0]
 
 
-choosing[i] = True <2>
+choosing[i] = True      <2>
 number[i]   = 1 + max(number)
-choosing[i] = False <3>
+choosing[i] = False     <3>
 for j in range(0, N):
-    while choosing[j]: <4>
+    while choosing[j]:  <4>
         pass
     while number[j] > 0
         and (number[j] < number[i] or

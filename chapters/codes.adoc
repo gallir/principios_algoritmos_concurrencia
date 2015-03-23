@@ -320,7 +320,7 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/arra
 include::../code/spinlocks/array_lock.c[]
 ----
 
-===== MCS
+===== MCS Spinlock
 [[mcs_spinlock_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/mcs_spinlock.c[mcs_spinlock.c]
 [source,c]
@@ -328,7 +328,7 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/mcs_
 include::../code/spinlocks/mcs_spinlock.c[]
 ----
 
-===== CLH
+===== CLH Spinlock
 [[clh_spinlock_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/clh_spinlock.c[clh_spinlock.c]
 [source,c]

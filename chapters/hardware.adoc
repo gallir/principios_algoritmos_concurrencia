@@ -33,6 +33,7 @@ Los registros de procesadores modernos que usamos para la implementación de los
 
 2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Por ejemplo, si un _write_ concurrente es el número `0` y otro es el número `1000`, el _get_ retornará `0` o `1000`.
 
+[[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
 Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el número de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la caché, son muy ineficientes. El otro problema hemos visto es que obliga a la especificación manual -no siempre sencilla ni eficiente- para asegurar la consistencia secuencial.
 
@@ -339,7 +340,7 @@ La ejecución del programa dará numerosos errores de de la pila vacía y se har
 
 [[stack_cas_tagged]]
 ===== Compare&Swap etiquetado
-Una solución para el problema ABA es el usar bits adicionales como etiquetas para identificar una _transacción_ (_tagged CAS_). Para ello algunas arquitecturas introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de más de una palabrafootnote:[Los _registros atómicos_ explicados antes.], por ejemplo Intel con las instrucciones `cmpxchg8b` y `cmpxchg16b` dobles que permiten trabajar con estructuras de 64 y 128 bit, en vez de solo registros atómicos de 32 o 64 bits. En nuestro caso necesitamos hacerlo solo para verificar el intercambio de las cabeceras por lo que usaremos la estructura `node_head` para ambas.
+Una solución para el problema ABA es usar bits adicionales como etiquetas para identificar una _transacción_ (_tagged CAS_). Para ello algunas arquitecturas introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de más de una palabrafootnote:[Los _registros atómicos_ explicados antes.], por ejemplo Intel con las instrucciones `cmpxchg8b` y `cmpxchg16b` dobles que permiten trabajar con estructuras de 64 y 128 bit, en vez de solo registros atómicos de 32 o 64 bits. En nuestro caso necesitamos hacerlo solo para verificar el intercambio de las cabeceras por lo que usaremos la estructura `node_head` para ambas.
 
 
 [source, c]
