@@ -37,6 +37,9 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.21.8571&rep=rep1&type=pdf
 
+- [[[Dijkstra35]]] E. W. Dijkstra. _Over de sequentialiteit van procesbeschrijvingen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD35.html
+
+- [[[Dijkstra74]]] E. W. Dijkstra. _Over seinpalen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721

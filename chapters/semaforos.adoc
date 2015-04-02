@@ -1,8 +1,52 @@
 == Semáforos
 
-=== Introducción
+El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéticos de sincronización entre procesos.
 
-=== Semáforos
+=== Definición
+Un semáforo es una construcción definida por una variable entera que puede tomar valores no negativos y dos operaciones, Pfootnote:[De la contracción _Prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_.] y Vfootnote:[Del holandés _Verhoog_ o _verhogen_ que significa _incrementar_.].
+
+P::  Actualmente esta primitiva es más conocida como *_wait_*.
+
+V:: , más conocida como *_signal_*.
+
+Además del entero que define el valor del semáforo, éste mantiene una cola de procesos _bloqueados_ en el semáforo. Así un semáforo tiene una estructura similar a la siguiente:
+
+----
+struct Semaphore {
+    unsigned value;
+    Queue q;
+}
+----
+
+
+Un semáforo puede ser inicializado con un valor, en general:
+
+----
+Semaphore s = 0
+----
+
+Dependiendo del lenguaje de programación las dos operaciones pueden ser invocadas como `wait(s)` y `signal(s)` o `s.wait()` y `s.signal()`, en algunos lenguajes de programación también se usan nombres como `aquire()` y `release()`. El algoritmo de _wait_ es el siguiente:
+
+.wait
+----
+def wait(s):
+    if s.value > 0:
+        s.value -= 1
+    else:
+        add(process, s.queue)
+        block(process)
+----
+
+.signal
+----
+def signal(s):
+    if empty(s.queue):
+        s.value += 1
+    else:
+        process = get(s.queue)
+        sched(process)
+----
+
 
 ==== Binarios
 
@@ -30,5 +74,14 @@
 
 ==== Filósofos cenando
 
+////
+
+https://cs.nyu.edu/~yap/classes/os/resources/EWD74.pdf
+http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
+http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
+
 <<railroad>>
 _It is Texas law that when two trains meet each other at a railroad crossing, each shall come to a full stop, and neither shall proceed until the other has gone._
+
+
+////

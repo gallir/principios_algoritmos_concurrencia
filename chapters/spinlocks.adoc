@@ -609,4 +609,4 @@ El primer algoritmo fue _ticket-lock_, basado en las mismas ideas del algoritmo 
 
 Finalmente vimos dos algoritmos fundamentales de concurrencia, _MCS_ y _CLH_. Ambos son equitativos basados en colas y escalables, no incrementan la presión sobre el sistema de caché cuando se incrementa el número de procesos. Estos algoritmos funcionan sobre sistemas de caché coherentes pero hay modificaciones que permiten que sean usados en sistemas no coherentes y en arquitecturas NUMA.
 
-A partir del siguiente capítulo veremos construcciones y abstracciones de más alto nivel cuyos objetivos son evitar las esperas activas mediante el bloqueo de los procesos como así también facilitar la programación de mecanismos de sincronización más sofisticados y complejos que exclusión mutua.
+A partir del siguiente capítulo veremos construcciones y abstracciones de más alto nivel cuyos objetivos son evitar las esperas activas mediante el bloqueo de los procesos, como así también facilitar la programación de mecanismos de sincronización más sofisticados y complejos que exclusión mutua.
