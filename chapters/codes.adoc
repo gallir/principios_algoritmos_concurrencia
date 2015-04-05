@@ -335,3 +335,30 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/clh_
 ----
 include::../code/spinlocks/clh_spinlock.c[]
 ----
+
+
+=== Semáforos
+
+
+==== Exclusión mutua
+
+[[sem_counter_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/semaphore.c[semaphore.c]
+[source,c]
+----
+include::../code/semaphores/semaphore.c[]
+----
+
+[[sem_counter_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/semaphore.py[semaphore.py]
+[source,python]
+----
+include::../code/semaphores/semaphore.py[]
+----
+
+[[sem_counter_java]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/CounterSemaphore.java[CounterSemaphore.java]
+[source,java]
+----
+include::../code/semaphores/CounterSemaphore.java[]
+----

@@ -1,15 +1,12 @@
 == Semáforos
 
-El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéticos de sincronización entre procesos.
+El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos.
+
+Las soluciones a la exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica _intrínseca_ de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
+
 
 === Definición
-Un semáforo es una construcción definida por una variable entera, el _valor_ del semáforo, que puede tomar valores no negativos y dos operaciones, Pfootnote:[De la contracción _Prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_.] y Vfootnote:[Del holandés _Verhoog_ o _verhogen_ que significa _incrementar_.].
-
-P:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente esta primitiva es más conocida como *_wait_* o *_acquire_*
-
-V:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta primtivia es más conocida como *_signal_*, *_release_* o *_post_*.
-
-Además del entero que define el valor del semáforo, éste mantiene una cola de procesos _bloqueados_ en el semáforo. Su estructura es similar a la siguiente:
+Un semáforo es una construcción definida por una variable entera, el _valor_ del semáforo, que puede tomar valores no negativos y una cola de procesos _bloqueados_ en el semáforo. La estructura es similar a la siguiente:
 
 ----
 struct Semaphore {
@@ -18,51 +15,111 @@ struct Semaphore {
 }
 ----
 
-Un semáforo puede ser inicializado con un valor no negativo, por ejemplo:
+Un semáforo puede ser inicializado con un valor no negativo, por ejemplo la siguiente indica que el valor del semáforo (la variable _value_) será inicializada con `1`:
 
 ----
-Semaphore s = 0
+Semaphore s = 1
 ----
 
-Dependiendo del lenguaje de programación las dos operaciones pueden ser invocadas como `wait()` y `signal()`, o `aquire()` y `release()`. El algoritmo es:
+Sobre la estructura de datos anteriores se definen dos primitivas fundamentalesfootnote:[La mayoría de lenguajes y librerías de concurrencia ofrecen funciones adicionales.]: _P_ y _V_.
 
-.wait
+Pfootnote:[De la contracción _Prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_.]:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como *_wait_* o *_acquire_*
+
+Vfootnote:[Del holandés _Verhoog_ o _verhogen_ que significa _incrementar_.]:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta operación es más conocida como *_signal_*, *_release_* o *_post_*.
+
+El algoritmo de ambas:
+
+._wait_
 ----
 def wait(s):
     if s.value > 0:
-        s.value -= 1
+        s.value -= 1          <1>
     else:
-        add(process, s.queue)
-        block(process)
+        add(process, s.queue) <2>
+        block(process)        <2>
 ----
+<1> Solo se decrementa el valor del semáforo si es mayor que cero.
+<2> Si es cero se bloquea al proceso que llamó a _wait_.
 
 
-.signal
+._signal_
 ----
 def signal(s):
     if empty(s.queue):
-        s.value += 1
+        s.value += 1           <1>
     else:
-        process = get(s.queue)
-        sched(process)
+        process = get(s.queue) <2>
+        sched(process)         <2>
+----
+<1> Si no hay procesos bloqueados en la cola del semáforo (i.e. ésta está vacía) se incrementa su valor.
+<2> Caso contrario se desbloquea a un proceso.
+
+
+==== Exclusión mutua
+El algoritmo de exclusión mutua es muy sencillo:
+
+[source]
+----
+    Semaphore s = 1
+
+...
+wait(s)
+critical_section()
+signal(s)
+...
 ----
 
+Se inicializa el semáforo a `1`, cuando el primer proceso quiera entrar a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar el valor será cero por lo que se bloqueará hasta que el siguiente proceso ejecute el _signal_ y lo desbloquee. La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
-==== Binarios
+Como ya puede intuirse, el valor del semáforo es un indicador del _número de recursos_ disponibles, en algunos lenguajes al valor del semáforo le denominan _permisos_ (_permits_). En el caso de exclusión mutua interesa que sólo haya un proceso en la sección crítica por ello el valor inicial es `1`. Pero se pueden programar casos más complejos de sincronización simplemente modificando el valor inicial del semáforo. Supongamos que tenemos un systema con _N_ procesadores y para evitar cambios de contextos innecesarios queremos que hay hasta _N_ procesos ejecutando una parte del código. En ese caso sólo hay que inicializar el valor del semáforo con _N_. Este tipo de uso de semáforos donde se permiten más de uno y hasta _N_ procesos en la sección crítica se denominan _multiplexes_.
 
-==== Contadores
+==== Semáforos binarios
+La definición anterior de semáforos permite valores cero y positivos, son denominados _semáforos generales_. Si el semáforo permite sólo valores de `0` y `1` se denominan _semáforos binarios_. Los semáforos binarios son equivalentes en el sentido que permiten resolver los mismos problemas, aunque con algunas líneas más de código, por ejemplo el algoritmo de Barz (<<Barz>>). Este algoritmo  emula semáforos contadores que usa un par de semáforos binarios (`mutex` y `gate`) y una variable entera (`value`).
 
-==== Mutexes
+Las funciones `generalWait` y `generalSignal` son las emulaciones genéricas de _wait_ y _signal_ respectivamente,  _k_ es el valor inicial del semáforo. El uso del semáforo `mutex` es obvio, asegura exclusión mutua en las secciones críticas de la implementación, allí donde se modifica y verifica el valor de la variable compartida `value`. El semáforo `gate` se usa para controlar qué procesos deben bloquearse o desbloquearse según el valor que tome `value`.
 
-==== Ejemplos en varios lenguajes
+.Algoritmo de Barz
+----
+        BinarySemaphore mutex = 1
+        BinarySemaphore gate = 1
+        value = k
 
-===== C
+def generalWait():
+    wait(gate)       <1>
+    wait(mutex)
+    value -= 1
+    if value > 0:
+        signal(gate) <2>
+    signal(mutex)
 
-===== Java
+def generalSignal():
+    wait(mutex)
+    value += 1
+    if value == 1:
+        signal(gate) <3>
+    signal(mutex)
+----
+<1> Si no es el primer proceso en entrar a la sección crítica debe esperar a ser _autorizado_ por el proceso anterior.
+<2> Si después de decrementar el valor es todavía mayor que cero permite que entre otro proceso.
+<3> Si después de incrementarlo el valor es igual a uno significa que antes estaba en cero por lo que habilita para que pueda entrar otro proceso.
 
-===== Go
 
-=== Inversión de prioridades
+==== Semáforos _mutex_
+Los _semáforos mutex_ son semáforos binarios optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] que con restricciones adicionales:
+
+. Son inicializados a `1`.
+. Tienen el concepto de _propiedad_, sólo el proceso que hizo el _wait_ puede hacer luego el _signal_.
+
+Los _mutex_ son muy comunes y usados, es lo recomendado si se usa para exclusión mutua y hay lenguajes como el Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex.
+
+
+
+
+==== Semáfores fuertes y débiles
+
+
+
+
 
 === Algoritmos tradicionales
 
@@ -70,9 +127,25 @@ def signal(s):
 
 ==== Lectores-Escritories
 
-=== Deadlocks
+=== Filósofos cenando
 
-==== Filósofos cenando
+==== Deadlocks
+
+=== Inversión de prioridades
+
+=== Optimizaciones
+
+==== Spinlocks más semáforos
+
+==== FUTEXes
+
+=== Semáforos en Unix y Linux
+
+==== Semáforos System V
+
+==== Semáforos POSIX
+
+==== Mutex de POSIX Threads
 
 ////
 
