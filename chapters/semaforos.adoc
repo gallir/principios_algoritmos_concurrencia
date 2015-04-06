@@ -60,7 +60,7 @@ El algoritmo de exclusión mutua es muy sencillo:
 
 [source]
 ----
-    Semaphore s = 1
+        Semaphore s = 1
 
 ...
 wait(s)
@@ -105,25 +105,65 @@ def generalSignal():
 
 
 ==== Semáforos _mutex_
-Los _semáforos mutex_ son semáforos binarios optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] que con restricciones adicionales:
+Los _semáforos mutex_, también llamados _locks_ en algunos lenguajes (como Java o Python), son semáforos binarios optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] con restricciones adicionales:
 
 . Son inicializados a `1`.
-. Tienen el concepto de _propiedad_, sólo el proceso que hizo el _wait_ puede hacer luego el _signal_.
+. Se añade el concepto de propiedad, solo el proceso que hizo el _wait_ puede hacer luego el _signal_. En algunos lenguajes se permite que el mismo hilo haga varios _wait_, si ya es el propietario del _lock_ continúa su ejecución, estos últimos se denominan _reentrantes_.
 
-Los _mutex_ son muy comunes y usados, es lo recomendado si se usa para exclusión mutua y hay lenguajes como el Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex.
+Los _mutex_ son muy comunes y son recomendados para exclusión mutua, hay lenguajes como Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex. De forma similar a cómo se hace con _spilonks_ en estos semáforos a la operación _wait_ se la suele llamar *_lock_* y a _signal_ *_unlock_*. El algoritmo genérico es similar a los semáforos,
+
+[source]
+----
+        Mutex mutex
+
+...
+lock(mutex)
+critical_section()
+unlock(mutex)
+...
+----
+
+En C se pueden usar los semáforos _mutex_ de librerías de POSIX Threads, las primitivas son `pthread_mutex_lock` y `pthread_mutex_unlock` (<<sem_mutex_c, programa en C>>). Go lo ofrece en el módulo `sync`, las primitivas son `Lock` y `Unlock` (<<go_mutex_go, código>>).
+
+En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene una clase similar, `threading.RLock()`, además <<sem_lock_py, de las llamadas tradicionales a `acquire` and `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
+
+[source, python]
+----
+for i in range(MAX_COUNT/THREADS):
+    with mutex:
+        counter += 1
+----
 
 
+==== Semáforos fuertes y débiles
+Cada semáforo tiene asociado una cola con la información de los procesos bloqueados, el sistema de gestión de esta cola es fundamental. Si la cola es una FIFO entonces asegura que los procesos entran en orden a la sección crítica, es decir, aseguran _espera limitada_ y estos semáforos se denominan _semáforos fuertes_. Por el contrario, si los procesos a desbloquear se seleccionan aleatoriamente se denominan _semáforos débiles_ (_weak semaphores_).
 
+[NOTE]
+.Semáforos en Unix y Linux
+====
 
-==== Semáfores fuertes y débiles
+Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Porcess Comunnication_) del UNIX System V fue el estándar de facto durante muchos años y siguen disponibles en las útimas versiones de Linux y Solaris. Desde la definición del estándar POSIX Semaphores de 2001 ha caído mucho en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con `semget()` que retorna un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con `semctl()` y las operaciones de _wait_ y _signal_ se hacen con `semop()`. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no sólo `1` o `-1` y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
+- Operaciones sobre varios semáforos del array son atómicas, facilita la programación de algoritmos complejos que lo requieran.
+- La primitiva adicional esperar por cero o _wait_for_0_. Como se intuye por su nombre bloquea a los procesos si el valor del semáforo es diferente a cero, los desbloquea cuando se hace cero.
+- Deshacer la última operación, `SEM_UNDO`, si el proceso acaba. Es útil como medida de protección, si un proceso está en la sección crítica y el proceso acaba por error el sistema revierte la última operación y los demás procesos pueden continuar.
 
+Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamos en el <<sem_counter_c, primer ejemplo de semáforos en C>>. Es el estándar actual y más usado, aunque carece de la flexibilidad y operaciones adicionales de los System V tiene una interfaz más sencilla y la implementación es más eficiente. Se pueden crear dos tipos, _sin nombre_ (_unnamed_) y _con nombre_ (_named_). El primero es más sencillo de usar cuando los procesos comparten la memoria, como es el caso de los _threads_ creados desde un único proceso, sólo hay que declarar una variable del tipo `sem_t` y luego inicializar el valor del semáforo con `sem_init()`. Cuando se necesitan en procesos que no comparten memoria se los puede crear y/o abrir con la función `sem_open()` usando un nombre similar a ficheros y luego inicialiarlos y usarolos igual que los semáforos _sin nombre_.
 
+Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización entre ellos: _mutex_ y variables de condiciónfootnote:[Las veremos en el capítulo <<monitors>>.].
+
+====
 
 
 
 === Algoritmos tradicionales
 
 ==== Productor-Consumidor
+
+////
+https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ArrayBlockingQueue.html
+http://docs.oracle.com/javase/7/docs/technotes/guides/collections/overview.html
+http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
+////
 
 ==== Lectores-Escritories
 
@@ -139,13 +179,6 @@ Los _mutex_ son muy comunes y usados, es lo recomendado si se usa para exclusió
 
 ==== FUTEXes
 
-=== Semáforos en Unix y Linux
-
-==== Semáforos System V
-
-==== Semáforos POSIX
-
-==== Mutex de POSIX Threads
 
 ////
 
