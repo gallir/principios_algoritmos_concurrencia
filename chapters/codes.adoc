@@ -397,3 +397,17 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/loc
 ----
 include::../code/semaphores/lock_with.py[]
 ----
+
+[[producer_consumer_infinite_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/producer-consumer-infinite.py[producer-consumer-infinite.py]
+[source,python]
+----
+include::../code/semaphores/producer-consumer-infinite.py[]
+----
+
+[[producer_consumer_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/producer-consumer.py[producer-consumer.py]
+[source,python]
+----
+include::../code/semaphores/producer-consumer-infinite.py[]
+----

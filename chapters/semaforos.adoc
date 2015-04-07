@@ -140,7 +140,7 @@ Cada semáforo tiene asociado una cola con la información de los procesos bloqu
 
 [NOTE]
 .Semáforos en Unix y Linux
-====
+****
 
 Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Porcess Comunnication_) del UNIX System V fue el estándar de facto durante muchos años y siguen disponibles en las útimas versiones de Linux y Solaris. Desde la definición del estándar POSIX Semaphores de 2001 ha caído mucho en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con `semget()` que retorna un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con `semctl()` y las operaciones de _wait_ y _signal_ se hacen con `semop()`. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no sólo `1` o `-1` y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
 - Operaciones sobre varios semáforos del array son atómicas, facilita la programación de algoritmos complejos que lo requieran.
@@ -151,21 +151,168 @@ Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamo
 
 Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización entre ellos: _mutex_ y variables de condiciónfootnote:[Las veremos en el capítulo <<monitors>>.].
 
+****
+
+
+
+=== Sincronización de orden de ejecución
+
+La sección crítica es una abstracción -cómoda y sencilla- para resolver el problema de sincronización de varios procesos compitiendo por recursos compartidos. Otro problema común es la coordinación del orden de ejecución de operaciones de diferentes procesos (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota por como _P~i~ < Q~j~_. Para asegurar que se cumpla esta condición hay que asegurar antes de _Q~j~_:
+
+- Continuar la ejecucion si _P~i~_ ya se ejecutó.
+- Bloquear a _Q_ si _P~i~_ todavia no se ejecutó y desbloquearlo una vez que se haya ejecutado _P~i~_.
+
+Para ello se necesita un semáforo (contador o binario) inicializado a cero. Inmediatamente después de _P~i~_ se llama _signal_ sobre dicho semáforo. En el proceso _Q_ se llama a _wait_ inmediatamente antes de _Q~i~_. Los programas serán similares al siguiente ejemplo:
+
+----
+        Semaphore sync = 0
+
+P               Q
+
+...             ...
+Pi              wait(sync)
+signal()        Qj
+...             ...
+----
+
+
+==== Productores-Consumidores
+
+El problema de los productores-consumidores es muy común y es un ejemplo de sincronización de orden de ejecución. Hay dos tipos de procesos incolucrados:
+
+Productores:: Produce un nuevo elemento que será transmitido al o los consumidores.
+Consumidores:: Recibe y consume los elementos transmitidos desde los productores.
+
+Los productores-consumidores son muy habituales en todos los sistemas informáticos, las tuberías entre procesosfootnote:[Como cuando se usa `|` entre dos comandos en el shell.], la E/S a dispositivos, la comunicaciones por red, etc. Hay dos tipos fundamentales de productores-consumidores:
+
+Sincrónicos:: Cuando se produce un elemento debe se consumido inmediatamente antes de que el productor pueda agregar un nuevo elemento.
+
+Asincrónicos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido, estos agregan los elementos a una cola y los consumidores obtienen el primer el primer elemento de ésta.
+
+El segundo caso es el más habitualfootnote:[El sincrónico es similar al asincrónico con tamaño de _buffer_ uno.]. El uso de un _buffer_ permite que productores y consumidores avancen a su propio ritmo pero hay que sincronizarlos para hacer que los consumidores esperen si el _buffer_ está vacío y los productores si el _buffer_ está lleno. El algoritmo genérico para productores y consumidores es el siguiente:
+
+.Productor
+----
+while True:
+    data = produce()
+    buffer.add(data)
+----
+
+.Consumidor
+----
+while True:
+    data = buffer.get()
+    consume(data)
+----
+
+
+
+[NOTE]
+====
+Debido a que el modelo productor-consumidor es muy común la mayoría de lenguajes ya ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<messages>>).
+
+En las siguientes secciones estudiaremos lo relevante: cómo se implementan los algoritmos usando solo semáforos, no como usar los ya implementados de cada lenguaje.
 ====
 
+===== _Buffer_ infinito
+Aunque no existe la memoria infinita y no es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonablesfootnote:[Aunque si lo hará en el ejemplo], es una buen primer paso para la implementación del algoritmo más general.
+
+No debemos preocuparnos de que el _buffer_ se llene, sólo de bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
 
 
-=== Algoritmos tradicionales
+[source]
+----
+    Queue buffer
+    Semaphore mutex = 1
+    Semaphore notEmpty = 0
+----
 
-==== Productor-Consumidor
 
-////
-https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ArrayBlockingQueue.html
-http://docs.oracle.com/javase/7/docs/technotes/guides/collections/overview.html
-http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
-////
+Los siguientes son los algoritmos (en notación de objetos) para los productores y consumidores respectivamente:
 
-==== Lectores-Escritories
+.Productor
+----
+while True:
+    data = produce()
+
+    mutex.wait()
+    buffer.add(data)  <1>
+    mutex.signal()
+
+    notEmpty.signal() <2>
+----
+<1> Agrega un elemento dentro de una sección crítica.
+<2> Señaliza el semáforo, su valor será el número de elementos en el _buffer_.
+
+
+.Consumidor
+----
+while True:
+    notEmpty.wait()     <1>
+
+    mutex.wait()
+    data = buffer.get() <2>
+    mutex.signal()
+
+    consume(data)
+----
+<1> Se bloquea si el _buffer_ está vacío, si no es así decrementa y obtiene el siguiente elemento. Notad que el valor del semáforo contador `notEmtpy` siempre se corresponde con el número de elementos disponibles en el _buffer_.
+<2> Obtiene el elemento de la cola.
+
+En el <<producer_consumer_infinite_py, código en Python>> podéis ver la implementación completa. hay dos clases, `Producer` y `Consumer` que implementa el algoritmo de productores y consumidores respectivamente. Se crean dos productores (variable `PRODUCERS`) y dos consumidores (`CONSUMERS`), los productores producen 1000 elementos (`TO_PRODUCE`) cada uno y acaban. Para el buffer se usa una lista nativa de Python, se agregan elementos con `append()` y se obtiene el primer elemento con `pop(0)`.
+
+===== _Buffer_ finito
+El algoritmo anterior puede ser fácilmente modificado para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_ debería también hacer lo mismo con los producrtores si no quedan _posiciones libres_. Necesitamos otro semáforo contador (`notFull`) cuyo valor indicará el número de posiciones libre y que se inicializará con el tamaño del _buffer_ (`BUFFER_SIZE`).
+
+[source]
+----
+    Queue buffer
+    Semaphore mutex = 1
+    Semaphore notEmpty = 0
+    Semaphore notFull = BUFFER_SIZE
+----
+
+Los siguientes son los algoritmos para cada proceso, solo se añade una línea a cada uno (el <<producer_consumer_py, código en Python>>):
+
+.Productor
+----
+while True:
+    data = produce()
+
+    notFull.wait()    <1>
+
+    mutex.wait()
+    buffer.add(data)
+    mutex.signal()
+
+    notEmpty.signal()
+----
+<1> Se bloqueará si `notFull` vale cero, caso contrario lo decrementará y añadirá un nuevo valor.
+
+.Consumidor
+----
+while True:
+    notEmpty.wait()
+
+    mutex.wait()
+    data = buffer.get()
+    mutex.signal()
+
+    notFull.signal()    <1>
+
+    consume(data)
+----
+<1> Como acaba de quitar un elemento incrementa el semáforo para que un productor pueda añadir otro elemento.
+
+[NOTE]
+.Semáforos partidos
+====
+La técnica de la sincronización con los dos semáforos se denomina _semáforos partidos_ (_split semaphores_). Se llama así cuando se usan dos o más semáforos cuya suma es una constante. En este caso el invariante es:
+
+_notEmpty + notFull = BUFFER_SIZE_
+====
+
+==== Lectores-Escritores
 
 === Filósofos cenando
 
@@ -179,8 +326,10 @@ http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
 
 ==== FUTEXes
 
-
 ////
+https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ArrayBlockingQueue.html
+http://docs.oracle.com/javase/7/docs/technotes/guides/collections/overview.html
+http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
 
 https://cs.nyu.edu/~yap/classes/os/resources/EWD74.pdf
 http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
