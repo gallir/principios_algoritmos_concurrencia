@@ -160,9 +160,10 @@ states[0] = False
 
 Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua, si los dos desean entrar más o menos simultáneamente el primero que ejecute la asignación a `states` será el que pueda entrar. También cumple el requisito de _no interferencia_ y el de _entrada inmediata_, si _P1_ está en el resto del código entonces `states[1]` será falso, por lo que no interfiere con _P0_ y éste podrá entrar y salir varias veces sin interferencia ni esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
+[[first_deadlock]]
 El gran problema es que no cumple la regla de _espera limitada_, de hecho el algoritmo genera un _interbloqueo_ si ocurre la siguiente secuencia de instrucciones:
 
-
+----
   P0                    P1
   states[0] = True
                         states[1] = True
@@ -170,7 +171,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
   ¿states[1]? -> True
   ...
                    DEADLOCK!
-
+----
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del `while` hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 

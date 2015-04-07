@@ -74,3 +74,21 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/pro
 ----
 include::../code/semaphores/producer-consumer-infinite.py[]
 ----
+
+
+=== Filósofos cenando
+[[philosophers_1_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/philosophers_1.py[philosophers_1.py]
+
+[source,python]
+----
+include::../code/semaphores/philosophers_1.py[]
+----
+
+[[philosophers_2_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/philosophers_2.py[philosophers_2.py]
+
+[source,python]
+----
+include::../code/semaphores/philosophers_2.py[]
+----

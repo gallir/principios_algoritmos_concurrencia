@@ -45,6 +45,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Ben-Ari]]] Mordechai Ben-Ari. _Principles of Concurrent and Distributed Programming_. Second edition 2006, Addison-Wesley, ISBN 978-0-321-31283-9.
 
+- [[[Hoare]]] C. A. R. Hoare. _Communicating Sequential Processes_. 1985/2004.http://www.usingcsp.com/cspbook.pdf 
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

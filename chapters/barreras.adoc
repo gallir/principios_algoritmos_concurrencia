@@ -124,7 +124,7 @@ Detecta que la asignación a `c` la puede hacer antes que `b`, o a la de `b` ant
 states[0] = True
 turn = 1
 while states[1] and turn == 1:
-    pass:
+    pass
 ----
 
 El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre `states[0]` y `states[1]`, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
@@ -132,7 +132,7 @@ El procesador no tiene en cuenta que las variables son modificadas por otros pro
 ----
 turn = 1
 while states[1] and turn == 1:
-    pass:
+    pass
 states[0] = True
 
    BOOOM!!!
@@ -170,7 +170,7 @@ states[0] = True
 turn = 1
 BARRIER()
 while states[1] and turn == 1:
-    pass:
+    pass
 ----
 
 Así el código ya funcionará correctamente.

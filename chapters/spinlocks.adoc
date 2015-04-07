@@ -43,7 +43,7 @@ Las tres técnicas de optimización que veremos a continuación no son _escalabl
 ==== Verificación local
 Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuitando_) el valor de la variable sobre la que se itera -`mutex` en los ejemplos-, si vale `1` ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
 
-[source]
+
 ----
         mutex = 0
 
@@ -58,7 +58,7 @@ Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<
 
 ==== Ceder el procesador
 Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _abandona_ el procesador. Se puede usar la llamada de sistema estándar `sched_yield` que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.
-[source]
+
 ----
         mutex = 0
 
@@ -66,6 +66,7 @@ def lock():
     while mutex or TAS(mutex):
         sched_yield()
 ----
+
 Como puede observarse en <<execution_times, los gráficos>> la cesión del procesador produce reducciones de tiempos en todas las arquitecturas (código fuente para <<test_and_set_yield_c, _TAS_>>, <<swap_yield_c, _swap_>> y <<compare_and_swap_yield_c, _CAS_>>).
 
 [[exponential_backoff]]
@@ -194,7 +195,7 @@ El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) imp
 Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si fue posible entran a la sección crítica, caso contrario vuelven a intentar desde el inicio del bucle.
 
 .Entrada y salida para lectores
-[source]
+ 
 ----
             rw_lock = 0             <1>
 
@@ -221,7 +222,7 @@ def reader_unlock():
 Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en `1` e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
 
 .Entrada y salida para escritores
-[source]
+
 ----
 def writer_lock():
     while True:
@@ -303,7 +304,7 @@ Se define el campo `combined` que incluye a ambos turnos para asignar atómicame
 
 
 .Entrada y salida para escritores
-[source]
+
 ----
 def writer_lock():
     number = getAndAdd(rw_lock.number, 1) <1>
@@ -313,7 +314,7 @@ def writer_lock():
 <1> El escritor obtiene su número.
 <2> Espera que sea su turno.
 
-[source]
+
 ----
 def writer_unlock():
     tmp.writer_turn = rw_lock.writer_turn + 1 <1>
@@ -325,7 +326,7 @@ def writer_unlock():
 
 
 .Entrada y salida para lectores
-[source]
+
 ----
 def reader_lock:
     number = getAndAdd(rw_lock.number, 1)  <1>
@@ -339,7 +340,7 @@ def reader_lock:
 <3> Cuando entró incrementa el turno de lectores para que puedan entrar el siguiente lector. Éste hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que la suma se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que haya sido incrementada.].
 
 
-[source]
+
 ----
 def reader_unlock:
     getAndAdd(rw_lock.writer_turn) <1>
@@ -367,7 +368,7 @@ En la figura anterior _Thread 0_ ya entró en la sección crítica, _Thread 1_ y
 
 La inicialización (en C) es la siguiente:
 
-[source]
+
 ----
 #define PADDING 32
 char flag[NUM_THREADS * PADDING];
@@ -380,7 +381,7 @@ int tail;
 Si hay cuatro hilos máximo la dimensión del array serà `4 * 32` (128 bytes en total). El cálculo de la posición real (`my_index`) requiere de una multiplicación y módulo. El algoritmo resumido (<<array_lock_c, código completo en C>>) es el siguiente:
 
 
-[source]
+
 ----
 def lock(my_index):
     slot = getAndAdd(tail, 1)

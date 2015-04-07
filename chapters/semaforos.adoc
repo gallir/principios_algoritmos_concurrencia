@@ -2,7 +2,8 @@
 
 El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos.
 
-Las soluciones a la exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica _intrínseca_ de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
+
+Las soluciones a exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica _intrínseca_ de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
 
 
 === Definición
@@ -58,7 +59,7 @@ def signal(s):
 ==== Exclusión mutua
 El algoritmo de exclusión mutua es muy sencillo:
 
-[source]
+
 ----
         Semaphore s = 1
 
@@ -112,7 +113,7 @@ Los _semáforos mutex_, también llamados _locks_ en algunos lenguajes (como Jav
 
 Los _mutex_ son muy comunes y son recomendados para exclusión mutua, hay lenguajes como Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex. De forma similar a cómo se hace con _spilonks_ en estos semáforos a la operación _wait_ se la suele llamar *_lock_* y a _signal_ *_unlock_*. El algoritmo genérico es similar a los semáforos,
 
-[source]
+
 ----
         Mutex mutex
 
@@ -125,7 +126,7 @@ unlock(mutex)
 
 En C se pueden usar los semáforos _mutex_ de librerías de POSIX Threads, las primitivas son `pthread_mutex_lock` y `pthread_mutex_unlock` (<<sem_mutex_c, programa en C>>). Go lo ofrece en el módulo `sync`, las primitivas son `Lock` y `Unlock` (<<go_mutex_go, código>>).
 
-En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene una clase similar, `threading.RLock()`, además <<sem_lock_py, de las llamadas tradicionales a `acquire` and `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
+En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene clases similares, `threading.Lock()` y `threading.RLock()`, además de las llamadas tradicionales a <<sem_lock_py, `acquire` y `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
 
 [source, python]
 ----
@@ -138,7 +139,7 @@ for i in range(MAX_COUNT/THREADS):
 ==== Semáforos fuertes y débiles
 Cada semáforo tiene asociado una cola con la información de los procesos bloqueados, el sistema de gestión de esta cola es fundamental. Si la cola es una FIFO entonces asegura que los procesos entran en orden a la sección crítica, es decir, aseguran _espera limitada_ y estos semáforos se denominan _semáforos fuertes_. Por el contrario, si los procesos a desbloquear se seleccionan aleatoriamente se denominan _semáforos débiles_ (_weak semaphores_).
 
-[NOTE]
+
 .Semáforos en Unix y Linux
 ****
 
@@ -171,7 +172,7 @@ P               Q
 
 ...             ...
 Pi              wait(sync)
-signal()        Qj
+signal(sync)    Qj
 ...             ...
 ----
 
@@ -209,7 +210,7 @@ while True:
 
 [NOTE]
 ====
-Debido a que el modelo productor-consumidor es muy común la mayoría de lenguajes ya ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<messages>>).
+Debido a que el modelo productor-consumidor es muy común la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<messages>>).
 
 En las siguientes secciones estudiaremos lo relevante: cómo se implementan los algoritmos usando solo semáforos, no como usar los ya implementados de cada lenguaje.
 ====
@@ -220,7 +221,7 @@ Aunque no existe la memoria infinita y no es recomendable confiar en que la velo
 No debemos preocuparnos de que el _buffer_ se llene, sólo de bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
 
 
-[source]
+
 ----
     Queue buffer
     Semaphore mutex = 1
@@ -264,7 +265,7 @@ En el <<producer_consumer_infinite_py, código en Python>> podéis ver la implem
 ==== _Buffer_ finito
 El algoritmo anterior puede ser fácilmente modificado para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_ debería también hacer lo mismo con los producrtores si no quedan _posiciones libres_. Necesitamos otro semáforo contador (`notFull`) cuyo valor indicará el número de posiciones libre y que se inicializará con el tamaño del _buffer_ (`BUFFER_SIZE`).
 
-[source]
+
 ----
     Queue buffer
     Semaphore mutex = 1
@@ -315,16 +316,228 @@ Si la constante es uno la técnica se denomina _semáforos partidos binarios_.
 Para resolver el problema de la sección crítica el par de operaciones _wait_ y _signal_ son ejecutadas por el mismo proceso y en ese orden. Para el algoritmo con _buffer_ limitado se usan dos semáforos y las llamadas a _wait_ y _signal_ se hacen desde diferentes hilos. Los _semáforos partidos_ permiten que los procesos esperen por eventos que se producen en otros.
 
 
-==== Lectores-Escritores
 
+
+=== El problema de los filósofos cenando
+
+Es un problema típico y muy estudiado en el área de la programación concurrente, fue inventado por Dijkstra en 1965 y luego formalizado por Hoare (<<Hoare>>). No es un problema realista pero es lo suficientemente simple pero al mismo tiempo propone desafíos interesantes por lo que es objeto habitual de estudio y discusión.
+
+Se trata de cinco filósofos sentados en una mesa, sobre esta también hay cinco tenedoresfootnote:[Algunos textos dicen que son palillos, por ello se suele decir que los filósofos son chinos pero es contradictorio con la imagen.], uno a cada lado de los filósofos.
 
 [[dining_image]]
 .Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via Wikimedia Commons - https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png]
 image::dining_philosophers.jpg[height=300, align="center"]
 
-=== Filósofos cenando
 
-==== Deadlocks
+Cada filósofo realiza solo dos actividades: pensar o comer. Si cada filósofo es un proceso, al algoritmo general de cada uno de ellos es:
+
+----
+def philosopher():
+    while True:
+        think()
+        preprotocol()  <1>
+        eat()
+        postprotocol() <2>
+----
+<1> Asegurar que puede coger los dos tenedores, el de la izquierda y el de la derecha
+<2> Liberar amnos tenedores.
+
+Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Para que el programa sea correcto se deben verificar las siguientes propiedades:
+
+[[philosophers_requisites]]
+1. Un filósofo solo puede comer si tiene los dos tenedores.
+2. Exclusión mutua, un tenedor solo puede ser usado por un filósofo a la vez.
+3. Se debe asegurar _progreso_, es decir, que no se producen interbloqueos (_deadlocks_).
+4. Se debe asegurar _espera limitada_ (es decir no debe haber _startvation_).
+5. Debe ser eficiente, si no hay competencia por un tenedor éste debe poder ser usado por uno de sus dos filósofos vecinos.
+
+Identificamos a los filósofos y tenedores con un índice de `0` a `4` (es decir, de `0` a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _teneder~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
+
+Un primera solución es asegurar exclusión mutua a toda la mesa, solo un filósofo puede comer a la vez. Para ello sólo necesitamos un semáforo _mutex_ para sincronizar toda la mesa:
+
+----
+    Semaphore table = 1
+
+def philosopher():
+    while True:
+        think()
+        table.wait()
+        eat()
+        table.signal()
+
+----
+
+El problema con esta solución es que es muy ineficiente, aunque hay tenedores para que pueda comer dos filósofos simultáneamente solo uno podrá comer. Una mejor solución es asegurar exclusión mutua por cada tenedor, para ello necesitamos un array de cinco semáforos mutex, uno para cada tenedor. El índice _i_ identifica a cada filósofo, cada intentará intentará coger primero el tenedor de su izquierda (también es _i_) y el de su derecha (corresponde a `(i + 1) % 5`).
+
+Definimos las funciones `pickForks()` y `releaseForks()` que tomarán y soltarán los tenedores respectivamente y por conveniencia la función `right()` que retorna el índice del tenedor de la derecha (recordad que el de la izquierda es simplemente _i_):
+
+----
+    Semaphore forks[5] = [1, 1, 1, 1, 1]
+
+def philosopher(i):
+    while True:
+        think()
+        pickForks(i)
+        eat()
+        releaseForks(i)
+
+def right(i):
+    return (i+1) % 5
+
+def pickForks(i):
+    forks[i].wait()
+    forks[right(i)].wait()
+
+def releaseForks(i):
+    forks[i].signal()
+    forks[right(i)].signal()
+
+----
+
+Antes de comer cada filósofo hará un _wait_ sobre los dos tenedores que le corresponde, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ocupado por otro quedará bloqueado hasta que el filósofo que lo tiene haga el _signal_ al semáforo correspondiente. Pero tiene un problema importantefootnote:[lo podéis probar físicamente con la ayuda de otra persona, no hacen falta cinco, una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno cogerá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
+
+Una secuencia de instrucciones que lleva a este estado pueder ser la siguiente.
+
+Cada filósofo toma el tenedor de su izquierda, la ejecución se intercala o se ejecuta en paralelo (recordad que el problema es equivalente):
+
+----
+fork[0].wait()
+  fork[1].wait()
+    fork[2].wait()
+      fork[3].wait()
+        fork[4].wait()
+----
+
+Ahora cada uno de ellos intenta con el tenedor de su derecha:
+----
+fork[1].wait()
+  fork[2].wait()
+    fork[3].wait()
+      fork[4].wait()
+        fork[0].wait() <1>
+----
+<1> El _filósofo~4~_ es el único que hace el _wait_ en orden decreciente.
+
+Todos quedarán bloqueados porque los semáforos _mutex_ estan todos en cero, es un _interbloqueo_, como <<first_deadlock, vimos>> en el capítulo <<algorithms>>.
+
+
+==== Interbloqueo
+
+Los interbloqueos se pueden producir cuando hay competencias por recursos de cualquier tipo. Dos procesos `P` y `Q` necesitan los recursos `a` y `b` y los solicitan en orden diferente como en el siguiente ejemplo:
+
+----
+P               Q
+
+get(a)          get(b)
+...             ...
+get(b)          get(a)
+----
+
+
+Ambos procesos quedarán esperando que el otro libere uno de los recursos pero el otro no lo hará porque tampoco puede avanzar ya que está esperando otro recurso. Por eso se dice que _no hay progreso_, se produce un bucle en el _grafo de asignación de recursos_. Es lo mismo que está pasando con la solución anterior de los filósofos, se dice que hay una _espera circular_.
+
+.Condiciones necesarias para interbloqueo
+****
+Si no se presentan una o varias de las condiciones siguientes no se puede producir interbloqueo.
+
+1. *Exclusión mutua*: Los recursos solo pueden asignarse a un proceso.
+
+2. *Retención y espera*: Un proceso mantiene los recursos ya asignados mientras espera la asignación de otro.
+
+3. *No apropiación*: No se puede quitar un recurso que está asignado a un proceso, debe ser éste el que lo libere.
+
+4. *Espera circular*: Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
+
+****
+
+Si queremos evitar los _deadlocks_ en la solución de los filósofos el algoritmo debe evitar que se presente algunas de las condiciones necesarias. La exclusión mutua no se puede evitar, un tenedor solo puede tenerlo un filósofo. La retención y espera se podría evitar pero requiere algoritmos de sincronización más complejos que el de exclusión mutua. Se podría hacer que sea apropiativo si se detecta el interbloqueo y se quita el tener a uno de los filósofos incolucrados en la cadena, también requiere un algoritmo más sofisticado.
+
+La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente. El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. El contrario que los demás que solicitan los tenedores en orden ascendente, el , _filósofo~4~_ lo solicita en orden descente, primero el _tenedor~4~_ y luego el _tenedor~0~_.
+
+Para forzar el mismo orden para todos basta cambiar la función `pickForks()` para que siempre haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
+
+----
+def pickForks(i):
+    if i < right(i):
+        forks[i].wait()
+        forks[right(i)].wait()
+    else:
+        forks[right(i)].wait()
+        forks[i].wait()
+----
+
+Con este algoritmo ya no se producen interbloqueos al no haber esperas circulares. Sin embargo no es el algoritmo óptimo, hay situaciones donde podrían estar comiendo dos filósofos pero solo lo hace uno. Si como en el caso anterior todos los filósofos desean comer más o menos simultáneamente puede darse la siguiente secuencia:
+
+----
+fork[0].wait()
+  fork[1].wait()
+    fork[2].wait()
+      fork[3].wait()
+        fork[0].wait() <1>
+
+fork[1].wait()
+  fork[2].wait()
+    fork[3].wait()
+      fork[4].wait()   <2>
+
+----
+<1> El _filósofo~4~_ que ahora hace el _wait_ en orden y se bloquea.
+<2> El _filósofo~3~_, el _tenedor~4~_ está libre y puede continuar comiendo, todos los demás esperarán, cuando _filósofo~3~_ podrá comer el _filósofo~2~_, luego _filósofo~1~_, etc.
+
+
+
+==== Solución óptima
+
+Para obtener la solución óptima hay que cambiar el enfoque, el vez de un problema de exclusión mutua tratarlo como una sincronización del orden de instrucciones. Cuando una filósofo desea comer verifica el estado de sus dos vecinos, si ninguno de los dos está comiendo podrá continuar. Caso contrario tendrá que esperar que los vecinos le _avisen_ cuando han dejado de comer.
+
+Usaremos el array `status` para indicar el estado de cada filósofo: pensando (`THINKING`), que desea empezar a comer (con _hambre_, `HUNGRY`) y comiendo (`EATING`). El array `sync` de semáforos para sincronizar entre los filósofos vecinos, y un semáforo `mutex` para asegurar exclusión mutua cuando se verifica y manipula el array `status`.
+
+----
+    Semaphore status[5] = [THINKING,... , THINKING]
+    Semaphore sync[5] = [0, 0, 0, 0, 0]
+    Semaphore mutex = 1
+----
+
+La función `pickForks()` pondrá el estado del filósofo en `HUNGRY` y llamará a la función `checkNeighbors()` que verificará si ninguno de los vecinos está comiendo. Si no es así le señalizará en su semáforo `sync` correspondiente por lo que el `acquire()` del final no le bloqueará. Si alguno de los vecions está comiendo el filósofo se quedará bloqueado en su semáforo.
+
+----
+def pickForks(i):
+    mutex.acquire()
+    status[i] = HUNGRY
+    checkNeighbors(i)
+    mutex.release()
+    sync[i].acquire()
+----
+
+Si ninguno de los vecinos está comiendo `checkNeighbors()` pone en `EATING` en el estado de _filósofo~i~_ y señaliza en su semáforo. A diferencia del algoritmo anterior, las funciones `left()` y `right()` retornan el índide del filósofo vecino (no del tenedor), _right_ sigue siendo como antes, `(i + 1) % 5`, pero _left_ indica el vecino con un índice menor: `(i - 1) % 5` (el vecino de la izquierda de _filósofo~0~_ es el _filósofo~4~_).
+
+----
+def checkNeighbors(i):
+    if status[i] == HUNGRY
+            and status[left(i)] != EATING
+            and status[right(i)] != EATING:
+        status[i] = EATING
+        sync[i].release()
+----
+
+Cuando un filósofo deja de comer debe verificar si sus vecinos desean comer y estaban esperando por sus tenedores. Para poder indicarles que pueden comer también hay que verificar si sus otros vecinos no están comiendo. Para ello se puede usar la función `checkNeighbors()` que precisamente hace eso, lo que cambiará es el `i` como argumento.
+
+----
+def releaseForks(i):
+    mutex.acquire()
+    status[i] = THINKING
+    checkNeighbors(left(i))  <1>
+    checkNeighbors(right(i)) <1>
+    mutex.release()
+----
+<1> Se reusa la función `checkNeighbors()` para verificar el estado de los _vecinos del vecino_. Si el filósofo que deja los tenedores es el `1` entonces se llamará con el argumento `0` (el filósofo de la izquierda) y luego con el `2` (el filósofo de la derecha).
+
+Hay que tener en cuenta que las llamadas a `checkNeighbors()` se hacen siempre desde dentro de la sección crítica del semáforo `mutex` por lo que no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array `status`.
+
+Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe entre otras cosas a que no existe _retención y espera_, los filósofos que no pueden comer no retienen el tenedor libre. Sin _retención y espera_ tampoco se puede producir la _espera circular_, dado que no se cumplen ninguna de estas dos condiciones necesarias tampoco pueden producirse _interbloqueos_. Cumple con todas las propiedades que <<philosophers_requisites, mencionamos al principio>>.
+
+
+=== Lectores-Escritores
 
 === Inversión de prioridades
 
