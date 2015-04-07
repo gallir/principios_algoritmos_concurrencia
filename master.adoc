@@ -19,6 +19,9 @@ Principios y algoritmos de concurrencia
 --stringparam toc.section.depth 1 --stringparam generate.section.toc.level 1
 ////
 
+////
+<mbp:pagebreak />
+////
 
 
 include::chapters/intro.adoc[]
@@ -43,4 +46,10 @@ include::chapters/estructuras.adoc[]
 
 include::chapters/bibliografia.adoc[]
 
-include::chapters/codes.adoc[]
+include::chapters/code-intro.adoc[]
+
+include::chapters/code-hardware.adoc[]
+
+include::chapters/code-spinlocks.adoc[]
+
+include::chapters/code-semaphores.adoc[]

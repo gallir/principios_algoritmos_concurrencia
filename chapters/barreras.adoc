@@ -55,7 +55,7 @@ Los sistemas de multiprocesadores están conectados por una compleja red de comu
 
 
 [[quickpath]]
-.Arquitectura QuickPath de Intel (imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_)
+.Arquitectura QuickPath de Intelfootnote:[Imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_ http://www.intel.es/content/dam/doc/white-paper/quick-path-interconnect-introduction-paper.pdf]
 image::intel-quickpath.png[height=400, align="center"]
 
 Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. Cada línea tiene uno de esos cuatro estados, cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.

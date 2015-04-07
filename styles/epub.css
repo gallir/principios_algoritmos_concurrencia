@@ -67,11 +67,14 @@ body h3 {
 }
 
 
+div.sidebar {
+    margin: 10px 0 !important;
+}
 
 div.tip, div.note, div.warning, div.caution, div.important {
   margin: 10px 0 !important;
-  border-radius: 5px;
-  font-size: 90%;
+  /*border-radius: 5px;*/
+  /*font-size: 90%;*/
   padding: 10px 8px 20px 8px !important;
   page-break-inside: avoid;
 }
@@ -252,3 +255,5 @@ body {
   /*margin: 0.5em 2% 0.5em 2%;*/
   line-height: 1.2;
 }
+
+div.footnotes { page-break-before: always; }

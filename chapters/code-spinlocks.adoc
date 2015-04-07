@@ -1,0 +1,129 @@
+== Código fuente de _spinlocks_
+
+=== Test&TAS
+[[test_test_and_set_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/test_test_and_set.c[test_test_and_set.c]
+[source,c]
+----
+include::../code/spinlocks/test_test_and_set.c[]
+----
+
+==== Test&swap
+[[test_swap_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/test_swap.c[test_swap.c]
+[source,c]
+----
+include::../code/spinlocks/test_swap.c[]
+----
+
+==== Test&CAS
+[[test_compare_and_swap_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/test_compare_and_swap.c[test_compare_and_swap.c]
+[source,c]
+----
+include::../code/spinlocks/test_compare_and_swap.c[]
+----
+
+==== TAS + yield
+[[test_and_set_yield_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/test_and_set_yield.c[test_and_set_yield.c]
+[source,c]
+----
+include::../code/spinlocks/test_and_set_yield.c[]
+----
+
+==== Swap + yield
+[[swap_yield_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/swap_yield.c[swap_yield.c]
+[source,c]
+----
+include::../code/spinlocks/swap_yield.c[]
+----
+
+==== CAS + yield
+[[compare_and_swap_yield_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/compare_and_swap_yield.c[compare_and_swap_yield.c]
+[source,c]
+----
+include::../code/spinlocks/compare_and_swap_yield.c[]
+----
+
+
+==== TAS + backoff
+[[test_and_set_backoff_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/test_and_set_backoff.c[test_and_set_backoff.c]
+[source,c]
+----
+include::../code/spinlocks/test_and_set_backoff.c[]
+----
+
+==== Swap + backoff
+[[swap_backoff_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/swap_backoff.c[swap_backoff.c]
+[source,c]
+----
+include::../code/spinlocks/swap_backoff.c[]
+----
+
+==== CAS + backoff
+[[compare_and_swap_backoff_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/compare_and_swap_backoff.c[compare_and_swap_backoff.c]
+[source,c]
+----
+include::../code/spinlocks/compare_and_swap_backoff.c[]
+----
+
+
+=== Lectores-escritores
+
+[[rw_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/rw_lock.c[rw_lock.c]
+[source,c]
+----
+include::../code/spinlocks/rw_lock.c[]
+----
+
+=== Algoritmos equitativos
+
+==== _Ticket-lock_
+[[ticket_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/ticket_lock.c[ticket_lock.c]
+[source,c]
+----
+include::../code/spinlocks/ticket_lock.c[]
+----
+
+==== Lectores-escritores
+
+[[ticket_rw_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/ticket_rw_lock.c[ticket_rw_lock.c]
+[source,c]
+----
+include::../code/spinlocks/ticket_rw_lock.c[]
+----
+
+=== _Spinlocks_ escalables
+
+==== _Array-lock_
+[[array_lock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/array_lock.c[array_lock.c]
+[source,c]
+----
+include::../code/spinlocks/array_lock.c[]
+----
+
+==== MCS Spinlock
+[[mcs_spinlock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/mcs_spinlock.c[mcs_spinlock.c]
+[source,c]
+----
+include::../code/spinlocks/mcs_spinlock.c[]
+----
+
+==== CLH Spinlock
+[[clh_spinlock_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/spinlocks/clh_spinlock.c[clh_spinlock.c]
+[source,c]
+----
+include::../code/spinlocks/clh_spinlock.c[]
+----

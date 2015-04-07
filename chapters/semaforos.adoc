@@ -176,7 +176,7 @@ signal()        Qj
 ----
 
 
-==== Productores-Consumidores
+=== Productores-Consumidores
 
 El problema de los productores-consumidores es muy común y es un ejemplo de sincronización de orden de ejecución. Hay dos tipos de procesos incolucrados:
 
@@ -214,7 +214,7 @@ Debido a que el modelo productor-consumidor es muy común la mayoría de lenguaj
 En las siguientes secciones estudiaremos lo relevante: cómo se implementan los algoritmos usando solo semáforos, no como usar los ya implementados de cada lenguaje.
 ====
 
-===== _Buffer_ infinito
+==== _Buffer_ infinito
 Aunque no existe la memoria infinita y no es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonablesfootnote:[Aunque si lo hará en el ejemplo], es una buen primer paso para la implementación del algoritmo más general.
 
 No debemos preocuparnos de que el _buffer_ se llene, sólo de bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
@@ -261,7 +261,7 @@ while True:
 
 En el <<producer_consumer_infinite_py, código en Python>> podéis ver la implementación completa. hay dos clases, `Producer` y `Consumer` que implementa el algoritmo de productores y consumidores respectivamente. Se crean dos productores (variable `PRODUCERS`) y dos consumidores (`CONSUMERS`), los productores producen 1000 elementos (`TO_PRODUCE`) cada uno y acaban. Para el buffer se usa una lista nativa de Python, se agregan elementos con `append()` y se obtiene el primer elemento con `pop(0)`.
 
-===== _Buffer_ finito
+==== _Buffer_ finito
 El algoritmo anterior puede ser fácilmente modificado para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_ debería también hacer lo mismo con los producrtores si no quedan _posiciones libres_. Necesitamos otro semáforo contador (`notFull`) cuyo valor indicará el número de posiciones libre y que se inicializará con el tamaño del _buffer_ (`BUFFER_SIZE`).
 
 [source]
@@ -304,15 +304,23 @@ while True:
 ----
 <1> Como acaba de quitar un elemento incrementa el semáforo para que un productor pueda añadir otro elemento.
 
-[NOTE]
-.Semáforos partidos
-====
-La técnica de la sincronización con los dos semáforos se denomina _semáforos partidos_ (_split semaphores_). Se llama así cuando se usan dos o más semáforos cuya suma es una constante. En este caso el invariante es:
+
+===== Semáforos partidos
+La técnica de la sincronización con los dos semáforos se denomina _semáforos partidos_ (_split semaphores_, <<Ben-Ari>>). Se llama así cuando se usan dos o más semáforos cuya suma es una constante. En este caso el invariante es:
 
 _notEmpty + notFull = BUFFER_SIZE_
-====
+
+Si la constante es uno la técnica se denomina _semáforos partidos binarios_.
+
+Para resolver el problema de la sección crítica el par de operaciones _wait_ y _signal_ son ejecutadas por el mismo proceso y en ese orden. Para el algoritmo con _buffer_ limitado se usan dos semáforos y las llamadas a _wait_ y _signal_ se hacen desde diferentes hilos. Los _semáforos partidos_ permiten que los procesos esperen por eventos que se producen en otros.
+
 
 ==== Lectores-Escritores
+
+
+[[dining_image]]
+.Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via Wikimedia Commons - https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png]
+image::dining_philosophers.jpg[height=300, align="center"]
 
 === Filósofos cenando
 
