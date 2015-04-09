@@ -12,3 +12,7 @@
 ==== Ejemplo en Go
 
 === Otros algoritmos
+
+////
+gofmt  -w -tabs=false -tabwidth=4 
+////

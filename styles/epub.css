@@ -199,6 +199,10 @@ text-decoration: none;
 }
 
 div.calloutlist p {
+  margin-bottom: 10px;
+}
+
+div.calloutlist p {
   margin-top: 4px;
 }
 
@@ -249,12 +253,17 @@ ol, ul {
 }
 */
 
+
+div.chapter, div.footnotes { page-break-before: always; }
+
+/*div.mediaobject img {
+    box-shadow: 4px 4px 12px #ccc;
+}*/
+
 /* keep this body statement last */
-body {
+html body {
   font-family: Georgia, Caecilia, Palatino, serif;
   font-size: medium;
-  /*margin: 0.5em 2% 0.5em 2%;*/
+  margin: 0.5em 2% 0.5em 2%;
   line-height: 1.2;
 }
-
-div.footnotes { page-break-before: always; }

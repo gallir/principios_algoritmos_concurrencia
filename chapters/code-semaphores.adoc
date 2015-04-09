@@ -92,3 +92,10 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/phi
 ----
 include::../code/semaphores/philosophers_2.py[]
 ----
+
+=== Futex
+[[futex_simple_mutex]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/futex_simple_mutex.c[futex_simple_mutex.c]
+[source,c]
+----
+include::../code/semaphores/futex_simple_mutex.c[]

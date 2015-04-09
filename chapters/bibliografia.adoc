@@ -10,7 +10,7 @@
 
 - [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974, http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
 
-- [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM. 1986.
+- [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM, 1986.
 
 - [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_.
 https://www.kernel.org/doc/Documentation/memory-barriers.txt
@@ -45,7 +45,13 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Ben-Ari]]] Mordechai Ben-Ari. _Principles of Concurrent and Distributed Programming_. Second edition 2006, Addison-Wesley, ISBN 978-0-321-31283-9.
 
-- [[[Hoare]]] C. A. R. Hoare. _Communicating Sequential Processes_. 1985/2004.http://www.usingcsp.com/cspbook.pdf 
+- [[[Hoare]]] C. A. R. Hoare. _Communicating Sequential Processes_. 1985/2004. http://www.usingcsp.com/cspbook.pdf
+
+- [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
+
+- [[[Hart]]] Darren Hart. _A futex overview and update_. Linux Weekly News, 2009. http://lwn.net/Articles/360699/
+
+- [[[Drepper]]] Ulrich Drepper. _Futexes Are Tricky_, Red Hat Inc., 2011. http://www.akkadia.org/drepper/futex.pdf
 
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721

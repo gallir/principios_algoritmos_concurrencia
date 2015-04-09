@@ -126,7 +126,7 @@ unlock(mutex)
 
 En C se pueden usar los semáforos _mutex_ de librerías de POSIX Threads, las primitivas son `pthread_mutex_lock` y `pthread_mutex_unlock` (<<sem_mutex_c, programa en C>>). Go lo ofrece en el módulo `sync`, las primitivas son `Lock` y `Unlock` (<<go_mutex_go, código>>).
 
-En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene clases similares, `threading.Lock()` y `threading.RLock()`, además de las llamadas tradicionales a <<sem_lock_py, `acquire` y `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
+En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene clases similares, `threading.Lock()` y `threading.RLock()` footnote:[También incluye primitivas similares en el nuevo paquete `asyncio`.], además de las llamadas tradicionales a <<sem_lock_py, `acquire` y `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
 
 [source, python]
 ----
@@ -158,7 +158,7 @@ Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de s
 
 === Sincronización de orden de ejecución
 
-La sección crítica es una abstracción -cómoda y sencilla- para resolver el problema de sincronización de varios procesos compitiendo por recursos compartidos. Otro problema común es la coordinación del orden de ejecución de operaciones de diferentes procesos (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota por como _P~i~ < Q~j~_. Para asegurar que se cumpla esta condición hay que asegurar antes de _Q~j~_:
+La sección crítica es una abstracción conveniente y sencilla para resolver el problema de sincronización de varios procesos compitiendo por recursos compartidos. Otro problema común es la coordinación del orden de ejecución de operaciones de diferentes procesos (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota por como _P~i~ < Q~j~_. Para asegurar que se cumpla esta condición hay que asegurar antes de _Q~j~_:
 
 - Continuar la ejecucion si _P~i~_ ya se ejecutó.
 - Bloquear a _Q_ si _P~i~_ todavia no se ejecutó y desbloquearlo una vez que se haya ejecutado _P~i~_.
@@ -326,7 +326,7 @@ Se trata de cinco filósofos sentados en una mesa, sobre esta también hay cinco
 
 [[dining_image]]
 .Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via Wikimedia Commons - https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png]
-image::dining_philosophers.jpg[height=300, align="center"]
+image::dining_philosophers.jpg[height="250", align="center"]
 
 
 Cada filósofo realiza solo dos actividades: pensar o comer. Si cada filósofo es un proceso, al algoritmo general de cada uno de ellos es:
@@ -340,7 +340,7 @@ def philosopher():
         postprotocol() <2>
 ----
 <1> Asegurar que puede coger los dos tenedores, el de la izquierda y el de la derecha
-<2> Liberar amnos tenedores.
+<2> Liberar ambos tenedores.
 
 Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Para que el programa sea correcto se deben verificar las siguientes propiedades:
 
@@ -348,10 +348,10 @@ Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Par
 1. Un filósofo solo puede comer si tiene los dos tenedores.
 2. Exclusión mutua, un tenedor solo puede ser usado por un filósofo a la vez.
 3. Se debe asegurar _progreso_, es decir, que no se producen interbloqueos (_deadlocks_).
-4. Se debe asegurar _espera limitada_ (es decir no debe haber _startvation_).
+4. Se debe asegurar _espera limitada_ (es decir no debe haber espera infinita o _starvation_).
 5. Debe ser eficiente, si no hay competencia por un tenedor éste debe poder ser usado por uno de sus dos filósofos vecinos.
 
-Identificamos a los filósofos y tenedores con un índice de `0` a `4` (es decir, de `0` a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _teneder~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
+Identificamos a los filósofos y tenedores con un índice de `0` a `4` (es decir, de `0` a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
 
 Un primera solución es asegurar exclusión mutua a toda la mesa, solo un filósofo puede comer a la vez. Para ello sólo necesitamos un semáforo _mutex_ para sincronizar toda la mesa:
 
@@ -394,7 +394,7 @@ def releaseForks(i):
 
 ----
 
-Antes de comer cada filósofo hará un _wait_ sobre los dos tenedores que le corresponde, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ocupado por otro quedará bloqueado hasta que el filósofo que lo tiene haga el _signal_ al semáforo correspondiente. Pero tiene un problema importantefootnote:[lo podéis probar físicamente con la ayuda de otra persona, no hacen falta cinco, una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno cogerá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
+Antes de comer cada filósofo hará un _wait_ sobre los dos tenedores que le corresponde, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ocupado por otro quedará bloqueado hasta que el filósofo que lo tiene haga el _signal_ al semáforo correspondiente. Pero tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona -no hacen falta cinco- una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno cogerá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
 
 Una secuencia de instrucciones que lleva a este estado pueder ser la siguiente.
 
@@ -452,7 +452,7 @@ Si no se presentan una o varias de las condiciones siguientes no se puede produc
 
 Si queremos evitar los _deadlocks_ en la solución de los filósofos el algoritmo debe evitar que se presente algunas de las condiciones necesarias. La exclusión mutua no se puede evitar, un tenedor solo puede tenerlo un filósofo. La retención y espera se podría evitar pero requiere algoritmos de sincronización más complejos que el de exclusión mutua. Se podría hacer que sea apropiativo si se detecta el interbloqueo y se quita el tener a uno de los filósofos incolucrados en la cadena, también requiere un algoritmo más sofisticado.
 
-La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente. El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. El contrario que los demás que solicitan los tenedores en orden ascendente, el , _filósofo~4~_ lo solicita en orden descente, primero el _tenedor~4~_ y luego el _tenedor~0~_.
+La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente. El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. El contrario que los demás que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los solicita en orden descendente, primero el _tenedor~4~_ y luego el _tenedor~0~_.
 
 Para forzar el mismo orden para todos basta cambiar la función `pickForks()` para que siempre haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
 
@@ -490,15 +490,15 @@ fork[1].wait()
 
 Para obtener la solución óptima hay que cambiar el enfoque, el vez de un problema de exclusión mutua tratarlo como una sincronización del orden de instrucciones. Cuando una filósofo desea comer verifica el estado de sus dos vecinos, si ninguno de los dos está comiendo podrá continuar. Caso contrario tendrá que esperar que los vecinos le _avisen_ cuando han dejado de comer.
 
-Usaremos el array `status` para indicar el estado de cada filósofo: pensando (`THINKING`), que desea empezar a comer (con _hambre_, `HUNGRY`) y comiendo (`EATING`). El array `sync` de semáforos para sincronizar entre los filósofos vecinos, y un semáforo `mutex` para asegurar exclusión mutua cuando se verifica y manipula el array `status`.
+Usaremos el array `status` para indicar el estado de cada filósofo: pensando (`THINKING`), que desea empezar a comer (con _hambre_, `HUNGRY`) y comiendo (`EATING`). El array `sync` de semáforos para sincronizar entre los filósofos y el semáforo `mutex` para asegurar exclusión mutua cuando se verifica y manipula el array `status`.
 
 ----
-    Semaphore status[5] = [THINKING,... , THINKING]
+    Semaphore status[5] = [THINKING,... ,THINKING]
     Semaphore sync[5] = [0, 0, 0, 0, 0]
     Semaphore mutex = 1
 ----
 
-La función `pickForks()` pondrá el estado del filósofo en `HUNGRY` y llamará a la función `checkNeighbors()` que verificará si ninguno de los vecinos está comiendo. Si no es así le señalizará en su semáforo `sync` correspondiente por lo que el `acquire()` del final no le bloqueará. Si alguno de los vecions está comiendo el filósofo se quedará bloqueado en su semáforo.
+La función `pickForks()` asigna `HUNGRY` al estado del filósofo y llama a la función `checkNeighbors()` que verifica si ninguno de los vecinos está comiendo. Si no es así señaliza en su semáforo `sync` correspondiente por lo que no se bloqueará en `acquire()` del final. Si alguno de los vecinos está comiendo el filósofo se quedará bloqueado en su semáforo.
 
 ----
 def pickForks(i):
@@ -509,7 +509,7 @@ def pickForks(i):
     sync[i].acquire()
 ----
 
-Si ninguno de los vecinos está comiendo `checkNeighbors()` pone en `EATING` en el estado de _filósofo~i~_ y señaliza en su semáforo. A diferencia del algoritmo anterior, las funciones `left()` y `right()` retornan el índide del filósofo vecino (no del tenedor), _right_ sigue siendo como antes, `(i + 1) % 5`, pero _left_ indica el vecino con un índice menor: `(i - 1) % 5` (el vecino de la izquierda de _filósofo~0~_ es el _filósofo~4~_).
+Si ninguno de los vecinos está comiendo `checkNeighbors()` asigna `EATING` al estado de _filósofo~i~_ y señaliza en su semáforo. A diferencia del algoritmo anterior, las funciones `left()` y `right()` retornan el índide del filósofo vecino (no del tenedor), _right_ sigue siendo como antes, `(i + 1) % 5`, pero _left_ indica el vecino con un índice menor: `(i - 1) % 5` (el vecino de la izquierda de _filósofo~0~_ es el _filósofo~4~_).
 
 ----
 def checkNeighbors(i):
@@ -541,11 +541,92 @@ Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), a
 
 === Inversión de prioridades
 
-=== Optimizaciones
 
-==== Spinlocks más semáforos
 
-==== FUTEXes
+=== FUTEX
+
+Los semáforos son habitualmente implementados en los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Pero las llamadas de sistema toman un tiempo considerable debido a la interrupción de software y el cambio de contexto a la ejecución del núcleo. Se puede mejorar mucho el rendimiento si se reducen las llamadas de sistema solo a los casos donde hay competencia, si un proceso es el único que desea entrar a la sección crítica puede resolverse sin necesidad de llamar a la sección crítica. Se puede resolver con la ayuda de cualquiera de las instrucciones vistas en el capítulo de <<hardware>>.
+
+Supongamos que tenemos la variable entera `mutex` compartida y la instrucción CAS (_compare&Swap_) el algoritmo para el _wait_ verificará si se pudo hacer el cambio, en este caso no hay competencia y podrá continuar. Caso contrario llamará al sistema operativo que un semáforo asociado al valor de mutex bloqueará al proceso. Algo similar al siguiente algoritmo:
+
+----
+local = 1
+CAS(mutex, local, 0)
+if local != 0:
+    syscall_wait(mutex)
+----
+
+En caso de no haber competencia el proceso podrá entrar a la sección crítica sin ninguna llamada de sistema. Obviamente el algoritmo no puede ser _tan_ sencillo, pero es la idea básica (tampoco es tan complicado).
+
+Esta es la idea de la interfaz FUTEXfootnote:[man 7 futex] (_Fast user-space mutexes_) de Linux. Al contrario de los que dice sun nombre FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización, desde _mutex_ a variables de condición.
+
+FUTEX no está diseñado para ser usada directamente por desarrolladores de aplicaciones sino por de librerías, por ejemplo las _Native POSIX Thread Libraries_ (_NPTL_, las librerías estándares de Posix Threads de Linux y que usamos en todos los ejemplos) o las de semáforos POSIX. No tiende definida siquiera una función, hay que recurrir a `syscall()` y exige conocimientos de las instrucciones atómicas de hardware. Como ya hemos visto cómo usar macros del compilador que generan las operaciones atómicas necesarias, cómo usarlas en diferentes algoritmos y cómo funcionan los semáforos podemos aventurarnos sin demasiado esfuerzo en desarrollar un semáforo _mutex_ con la interfaz FUTEX.
+
+El núcleo de la interfaz (<<Franke>>, <<Hart>>) es una variable entera, el núcleo del sistema operativo usa al dirección física de la variable (a partir de ahora un _futex_) para generar una tabla de _hashing_ para mantener colas de procesos bloqueados para cada _futex_. Para que varios procesos compartan los mecanismos de sincronización basta con que los procesos puedan compartir variables en memoria. Como hemos visto en _threads_ es muy sencillo, basta una variable global, en casos de procesos independientes se puede usar cualquier mecanismo de compartición de memoria. Como se usa la dirección física no se producen conflictos con que cada uno use diferentes direcciones virtuales.
+
+Actualmente hay treces operaciones definidas en `/usr/include/linux/futex.h`, las más importantes son: FUTEX_WAIT, FUTEX_WAKE, FUTEX_FD, FUTEX_CMP_REQUEUE, FUTEX_WAKE_OP, FUTEX_LOCK_PI, FUTEX_UNLOCK_PI, FUTEX_WAIT_BITSET, FUTEX_WAKE_BITSET (las acabadas en PI son por _Priority Inheritance_, con BITSET permiten máscaras para implementar algoritmos como el de lectores-escritores, de forma muy similar a los _spinlocks_ de lectores-escritores del capítulo anterior).
+
+==== _Mutex_ simple
+
+Para implementar el _mutex_ propuesto por <<Drepper>> sólo necesitaremos dos operaciones:
+
+FUTEX_WAIT:: Si el valor del _futex_ es igual al valor de un segundo argumento suspende al proceso y lo agrega a la cola de bloqueados en ese _futex_.
+
+FUTEX_WAKE:: Desbloquea a uno o más procesos, según lo indicado en un segundo argumento, en la cola del _futex_. El número de procesos a despertar se indica en un argumento.
+
+Aunque en el código completo se usa `syscall()` pero a efectos de simplificar el pseudocódigo usaremos `futex_wait(futex, value)` (`value` es el valor a comparar)  y `futex_wake(futex)` respectivamente (como siempre desbloqueamos un proceso no hace falta indicarlo). Las operaciones atómicas que usaremos serán `compareAndSwap`, `swap` (retorna el valor previo) y `fetchAndSub` (como _fetchAndAdd_ pero decrementa).
+
+Las funciones `lock()` y `unlock()` reciben como argumento la dirección de la variable entera _futex_. Esta puede tener tres valores:
+
+- 0: No hay procesos en la sección crítica (_unlocked_).
+- 1: Un proceso en la sección crítica, ninguno bloqueado (_locked, no waiters_).
+- 2: Un proceso en la sección crítica, uno o más bloqueados (_locked, waiters_).
+
+===== _lock_
+El algoritmo tiene tres partes.
+
+1. Con _CAS_ se compara si _futex_ vale cero, si es así se asigna `1` para indicar que hay un proceso en la sección crítica. Si el resultado en `c` es cero la sección crítica estaba libre y la función retorna inmediatamente y el proceso habrá entrado a la sección crítica sin necesidad de hacer ningna llamada de sistema. Se dice que se resolvió en el _espacio de usuario_.
+
+2. No pudo entrar directamente a la sección crítica. Si `c` no es `2` entonces no había ningun proceso bloqueado, hace un _swap_ para asignar `2` porque habrá uno nuevo en espera, el proceso actual. Después del _swap_ el valor de `c` puede variar:
++
+    . Si el proceso no fue interrumpido y ningún proceso salió de la sección crítica entre la primera instrucción del _CAS_ y el _swap_ el valor será `1`.
+    . Si en este breve periodo de tiempo otro proceso salió de la sección crítica el valor será `0`.
++
+
+3. Si `c` es cero el proceso que estaba en la sección crítica ya salió, no se hace nada más y el proceso continúa. Si no es así intenta bloquearse con `futex_wait` haciendo que verifique si el valor de _futex_ es todavía `2`. Si no cambió el proceso quedará bloqueado, pero si otro proceso salió de la sección crítica  `futex_wait` fallará, se hace un nuevo _swap_ y si el valor que tenía era cero entonces saldrá del `while` y podrá entrar a la sección crítica.
++
+Si el proceso fue bloqueado en algún será despertado por el `unlock` de otro proceso, si no hay competencia el valor de `futex` será `0`, por lo que después del `swap` `c` valdrá cero y podrá salir de la sección crítica. Si hay competencia con otro proceso el primero que haya ejecutado el `swap` podrá entrar, el otro quedará bloqueadofootnote:[Como no controla el orden en caso de competencia no asegura espera limitada, es muy simple.].
+
+----
+def lock(futex):
+    c = 0
+
+    # part 1 #
+    compareAndSwap(futex, c, 1)
+    if c = 0:
+        return
+
+    # part 2 #
+    if c != 2:
+        c = swap(futex, 2)
+
+    # part 3 #
+    while c != 0:
+        futex_wait(futex, 2)
+        c = swap(futex, 2)
+----
+
+
+===== _unlock_
+Esta función es más sencilla, el proceso que sale de la sección crítica decrementa futex. Si el valor anterior era `2` entonces hay procesos bloqueados, pone `futex` a cero para que otro pueda entrar y despierta a uno de ellos.
+
+----
+def unlock(futex):
+    if fetchAndSub(futex, 1) != 1:
+        futex = 0
+        futex_wake(futex)
+----
+
 
 ////
 https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ArrayBlockingQueue.html
