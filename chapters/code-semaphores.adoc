@@ -99,3 +99,17 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/fut
 [source,c]
 ----
 include::../code/semaphores/futex_simple_mutex.c[]
+----
+
+[[futex_fair_simple_mutex]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/futex_fair_simple_mutex.c[futex_fair_simple_mutex.c]
+[source,c]
+----
+include::../code/semaphores/futex_fair_simple_mutex.c[]
+----
+
+[[futex_fair_bitset_mutex]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/futex_fair_bitset_mutex.c[futex_fair_bitset_mutex.c]
+[source,c]
+----
+include::../code/semaphores/futex_fair_bitset_mutex.c[]

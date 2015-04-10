@@ -560,72 +560,126 @@ En caso de no haber competencia el proceso podrá entrar a la sección crítica 
 
 Esta es la idea de la interfaz FUTEXfootnote:[man 7 futex] (_Fast user-space mutexes_) de Linux. Al contrario de los que dice sun nombre FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización, desde _mutex_ a variables de condición.
 
-FUTEX no está diseñado para ser usada directamente por desarrolladores de aplicaciones sino por de librerías, por ejemplo las _Native POSIX Thread Libraries_ (_NPTL_, las librerías estándares de Posix Threads de Linux y que usamos en todos los ejemplos) o las de semáforos POSIX. No tiende definida siquiera una función, hay que recurrir a `syscall()` y exige conocimientos de las instrucciones atómicas de hardware. Como ya hemos visto cómo usar macros del compilador que generan las operaciones atómicas necesarias, cómo usarlas en diferentes algoritmos y cómo funcionan los semáforos podemos aventurarnos sin demasiado esfuerzo en desarrollar un semáforo _mutex_ con la interfaz FUTEX.
+FUTEX no está diseñado para ser usada directamente por desarrolladores de aplicaciones sino por de librerías, por ejemplo las _Native POSIX Thread Libraries_ (_NPTL_, las librerías estándares de Posix Threads de Linux y que usamos en todos los ejemplos) o las de semáforos POSIX. No tiene definida siquiera una función, hay que recurrir a `syscall()` y exige conocimientos de las instrucciones atómicas de hardware. Como ya hemos visto cómo usar macros del compilador que generan las operaciones atómicas necesarias, cómo usarlas en diferentes algoritmos y cómo funcionan los semáforos podemos aventurarnos sin demasiado esfuerzo en desarrollar un semáforo _mutex_ con la interfaz FUTEX.
 
-El núcleo de la interfaz (<<Franke>>, <<Hart>>) es una variable entera, el núcleo del sistema operativo usa al dirección física de la variable (a partir de ahora un _futex_) para generar una tabla de _hashing_ para mantener colas de procesos bloqueados para cada _futex_. Para que varios procesos compartan los mecanismos de sincronización basta con que los procesos puedan compartir variables en memoria. Como hemos visto en _threads_ es muy sencillo, basta una variable global, en casos de procesos independientes se puede usar cualquier mecanismo de compartición de memoria. Como se usa la dirección física no se producen conflictos con que cada uno use diferentes direcciones virtuales.
+El núcleo de la interfaz (<<Franke>>, <<Hart>>, <<Drepper>>, <<LockLess1>>) es una variable entera, el núcleo del sistema operativo usa al dirección física de la variable (a partir de ahora un _futex_) para generar una tabla de _hashing_ para mantener colas de procesos bloqueados para cada _futex_. Para que varios procesos compartan los mecanismos de sincronización basta con que los procesos puedan compartir variables en memoria. Como hemos visto en todos los ejemplos con _threads_ es muy sencillo, basta una variable global, en casos de procesos independientes se puede usar cualquier mecanismo de compartición de memoria. Como se usa la dirección física no se producen conflictos con que cada uno use diferentes direcciones virtuales.
 
-Actualmente hay treces operaciones definidas en `/usr/include/linux/futex.h`, las más importantes son: FUTEX_WAIT, FUTEX_WAKE, FUTEX_FD, FUTEX_CMP_REQUEUE, FUTEX_WAKE_OP, FUTEX_LOCK_PI, FUTEX_UNLOCK_PI, FUTEX_WAIT_BITSET, FUTEX_WAKE_BITSET (las acabadas en PI son por _Priority Inheritance_, con BITSET permiten máscaras para implementar algoritmos como el de lectores-escritores, de forma muy similar a los _spinlocks_ de lectores-escritores del capítulo anterior).
+Actualmente hay treces operaciones definidas en `/usr/include/linux/futex.h`, las más importantes son: `FUTEX_WAIT`, `FUTEX_WAKE`, `FUTEX_FD`, `FUTEX_CMP_REQUEUE` y `FUTEX_WAKE_OP` (las otras implementan herencia de prioridades o permiten especificar máscaras para implementar algoritmos como el de lectores-escritores).
 
 ==== _Mutex_ simple
 
-Para implementar el _mutex_ propuesto por <<Drepper>> sólo necesitaremos dos operaciones:
+Para el _mutex_ simple mostrado a continuaciónfootnote:[Lo desarrollé para este libro buscando que sea muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren solo dos operaciones:
 
-FUTEX_WAIT:: Si el valor del _futex_ es igual al valor de un segundo argumento suspende al proceso y lo agrega a la cola de bloqueados en ese _futex_.
+`FUTEX_WAIT`:: Si el valor del _futex_ es igual al valor del segundo argumento suspende al proceso y lo agrega a la cola de bloqueados en ese _futex_. Retorna `0` si fue desbloqueado por el FUTEX_WAKE, `-1` si no pudo bloquear o hubo error.
 
-FUTEX_WAKE:: Desbloquea a uno o más procesos, según lo indicado en un segundo argumento, en la cola del _futex_. El número de procesos a despertar se indica en un argumento.
+`FUTEX_WAKE`:: Desbloquea a uno o más procesos, según lo indicado en un segundo argumento, en la cola del _futex_. El número de procesos a despertar se indica en un argumento, retorna el número de procesos que se desbloquearon.
 
-Aunque en el código completo se usa `syscall()` pero a efectos de simplificar el pseudocódigo usaremos `futex_wait(futex, value)` (`value` es el valor a comparar)  y `futex_wake(futex)` respectivamente (como siempre desbloqueamos un proceso no hace falta indicarlo). Las operaciones atómicas que usaremos serán `compareAndSwap`, `swap` (retorna el valor previo) y `fetchAndSub` (como _fetchAndAdd_ pero decrementa).
+En el <<futex_simple_mutex, código completo en C>> se usa `syscall()` pero simplifico el pseudocódigo con `futex_wait(futex, value)` (`value` es el valor a comparar)  y `futex_wake(futex, value)` respectivamente (en este case `value` es el número de procesos a desbloquear). Las operaciones atómicas que usaremos serán `swap` (retorna el valor previo) y `fetch_and_add`. Las funciones `lock()` y `unlock()` reciben como argumento la dirección de una estructura con dos enteros (en C):
 
-Las funciones `lock()` y `unlock()` reciben como argumento la dirección de la variable entera _futex_. Esta puede tener tres valores:
+----
+struct simple_futex {
+    int locked;
+    int waiters;
+};
+----
 
-- 0: No hay procesos en la sección crítica (_unlocked_).
-- 1: Un proceso en la sección crítica, ninguno bloqueado (_locked, no waiters_).
-- 2: Un proceso en la sección crítica, uno o más bloqueados (_locked, waiters_).
+El campo `locked` será usado como variable binaria, si vale `0` no hay procesos en la sección crítica, `waiters` indicará el número de procesos que están bloqueados en la cola del _futex_ (es decir, que ejecutaron `futex_wait()`).
+
 
 ===== _lock_
-El algoritmo tiene tres partes.
 
-1. Con _CAS_ se compara si _futex_ vale cero, si es así se asigna `1` para indicar que hay un proceso en la sección crítica. Si el resultado en `c` es cero la sección crítica estaba libre y la función retorna inmediatamente y el proceso habrá entrado a la sección crítica sin necesidad de hacer ningna llamada de sistema. Se dice que se resolvió en el _espacio de usuario_.
+Si el resultado del _swap_ del campo `locked` es cero significa que no hay ningún proceso en la sección crítica y podrá entrar directamente sin ninguna llamada de sistema. Caso contrario se agregará a la cola, antes de hacerlo incrementa el contador de procesos en espera, en la `futex_wait` se indica que compare que el valor de `locked` siga siendo `1`. Si no es así el proceso que estaba en en la sección crítica ya salió por lo que debe volver a verificar si puede entrar desde el principio. Antes de volver tiene que decrementar `waiters`.
 
-2. No pudo entrar directamente a la sección crítica. Si `c` no es `2` entonces no había ningun proceso bloqueado, hace un _swap_ para asignar `2` porque habrá uno nuevo en espera, el proceso actual. Después del _swap_ el valor de `c` puede variar:
-+
-    . Si el proceso no fue interrumpido y ningún proceso salió de la sección crítica entre la primera instrucción del _CAS_ y el _swap_ el valor será `1`.
-    . Si en este breve periodo de tiempo otro proceso salió de la sección crítica el valor será `0`.
-+
-
-3. Si `c` es cero el proceso que estaba en la sección crítica ya salió, no se hace nada más y el proceso continúa. Si no es así intenta bloquearse con `futex_wait` haciendo que verifique si el valor de _futex_ es todavía `2`. Si no cambió el proceso quedará bloqueado, pero si otro proceso salió de la sección crítica  `futex_wait` fallará, se hace un nuevo _swap_ y si el valor que tenía era cero entonces saldrá del `while` y podrá entrar a la sección crítica.
-+
-Si el proceso fue bloqueado en algún será despertado por el `unlock` de otro proceso, si no hay competencia el valor de `futex` será `0`, por lo que después del `swap` `c` valdrá cero y podrá salir de la sección crítica. Si hay competencia con otro proceso el primero que haya ejecutado el `swap` podrá entrar, el otro quedará bloqueadofootnote:[Como no controla el orden en caso de competencia no asegura espera limitada, es muy simple.].
+Si el proceso fue bloqueado en el `futex_wait` cuando se despierte decrementará `waiters` y volverá al principio del bucle para verificar si esta vez puede entrar.
 
 ----
 def lock(futex):
-    c = 0
 
-    # part 1 #
-    compareAndSwap(futex, c, 1)
-    if c = 0:
-        return
+    while True:
+        local = swap(futex.locked, 1)
+        if local == 0:                   <1>
+            return
 
-    # part 2 #
-    if c != 2:
-        c = swap(futex, 2)
-
-    # part 3 #
-    while c != 0:
-        futex_wait(futex, 2)
-        c = swap(futex, 2)
+        fetch_and_add(futex.waiters, 1)
+        futex_wait(futex.locked, 1)      <2>
+        fetch_and_add(futex.waiters, -1)
 ----
-
+<1> Si `locked` valía cero ahora vale `1` por lo que el proceso puede entrar a la sección crítica directamente.
+<2> Para que se agregue a la cola de bloqueados se verifica que `locked` siga en `1`.
 
 ===== _unlock_
-Esta función es más sencilla, el proceso que sale de la sección crítica decrementa futex. Si el valor anterior era `2` entonces hay procesos bloqueados, pone `futex` a cero para que otro pueda entrar y despierta a uno de ellos.
+Esta función es muy sencilla, indica que salió de la sección crítica poniendo `0` en `locked` y si hay procesos en espera despierta a uno de ellos.
 
 ----
 def unlock(futex):
-    if fetchAndSub(futex, 1) != 1:
-        futex = 0
-        futex_wake(futex)
+    futex.locked = 0
+    if futex.waiters > 0:
+        futex_wake(futex.locked, 1)
 ----
+
+
+Este algoritmo es muy sencillo pero tiene un problema importante, aunque las colas del sistema operativo son FIFO esta implementación no es _equitativa_, no asegura espera limitada. Si el proceso que sale de la sección crítica inmeditamente vuelve a llamar al `lock` podrá entrar antes que el proceso que se despertó con el `futex_wake`. Como dicho proceso estaba bloqueado y el sistema operativo tiene que hacer el cambio de contexto la probabilidad de que el que acaba de salir ejecute antes el _swap_ es muy elevada.
+
+===== _Mutex_ equitativo
+
+Lo primera idea que viene a la cabeza es implementar un algoritmo equitavivo similar al <<ticket_lock, _ticket-lock_>>. Podéis consultar <<futex_fair_simple_mutex, el código en C>> de este algoritmo con FUTEX, pero es muy ineficiente. Los tiempos de ejecución del _mutex_ simple anterior se ejecuta en menos de un segundo con aproximadamente tres segundos de uso de CPU:
+
+----
+$ time ./futex_simple_mutex
+real	0m0.874s
+user	0m0.373s
+sys	    0m2.664s
+----
+
+Los tiempos del _ticket-lock_ sobre el mismo ordenador:
+----
+$ time ./futex_fair_simple_mutex
+real	0m34.997s
+user	0m8.185s
+sys	    1m22.512s
+----
+
+¡Consume treinta veces más!
+
+Uno de los problemas: los procesos no entran a la cola en el mismo orden de su turno lo que significa que hay que despertar a todos para que verifiquen su turno. Por eso en el código se usa la llamada con un número muy grande, `futex_wake(futex.locked, INT_MAX)`. footnote:[`syscall(__NR_futex, &futex->turn, FUTEX_WAKE, INT_MAX, NULL, 0, 0)`]. Esto provoca una _tormenta_ de procesos que verifican el valor y vuelven a bloquearse.
+
+
+No es posible seleccionar qué proceso despertar desde el `fute_wake()`, pero se _tormenta_ puede aliviar usando la opción `BITSET` tal como lo uso en <<futex_fair_bitset_mutex, el código de ejemplo>>. Esta opción permite definir una máscara de 32 bits, en cada _futex_ se pueden tener hasta 32 colas diferentes y seleccionar en cuál se debe bloquear o despertar indicando en la máscara. En el ejemplo se usar el módulo de 32 del número seleccionado y el `turn` para indicar la cola.
+
+Aún así los tiempos siguen igual de malos:
+
+----
+$ time ./futex_fair_bitset_mutex
+real	0m34.743s
+user	0m6.188s
+sys	    1m22.845s
+----
+
+Casi no hay cambios con el anterior. Lo que más consume CPU y tiempo son los reintentos del `futex_wait()`:
+
+.Entrada del FUTEX con _ticket-lock_
+----
+def lock(futex):
+    number = fetch_and_add(futex.number, 1)
+    turn = futex->turn
+
+    while number != turn:
+        futex_wait(futex.turn, turn) <1>
+        turn = futex->turn
+----
+<1> El valor de `futex.turn` cambia muy rápidamente y ya no es igual al valor que tenía `turn` desde la última asignación.
+
+El valor de `futex.turn` cambia cada vez que un proceso desea entrar, si hay mucha competencia (como ocurren en los ejemplos) su valor cambia muy rápidamente haciendo que la función falle en bloquear y tenga que volver a intentar.
+
+[NOTE]
+.Problemas de un mutex equitativo
+====
+Aunque FUTEX es muy potente es muy complicado y costoso asegurar que sea _equitativo_, por eso el mutex de las librerías POSIX Threads tampoco son equitativos. De hecho su comportamiento es muy similar al del primer ejemplo de _mutex simple_, el proceso que acaba de salir de la sección crítica es el primero en volver a entrar si lo intenta inmediatamente después.
+
+Si lo que se desea son _mutex_ muy eficientes es mejor usar las estrategias explicadas en <<LockLess2>>, incluso una llamda a `sched_yield()` en la salida de la sección crítica puede asegurar una equidad razonable sin pérdida de eficiencia.
+====
+
+
 
 
 ////
@@ -641,4 +695,6 @@ http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 _It is Texas law that when two trains meet each other at a railroad crossing, each shall come to a full stop, and neither shall proceed until the other has gone._
 
 
+http://locklessinc.com/articles/mutex_cv_futex/
+http://locklessinc.com/articles/futex_cheat_sheet/
 ////

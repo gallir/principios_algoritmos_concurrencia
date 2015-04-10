@@ -53,6 +53,10 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Drepper]]] Ulrich Drepper. _Futexes Are Tricky_, Red Hat Inc., 2011. http://www.akkadia.org/drepper/futex.pdf
 
+- [[[LockLess1]]] _Futex Cheat Sheet_. http://locklessinc.com/articles/futex_cheat_sheet/
+
+- [[[LockLess2]]] _Mutexes and Condition Variables using Futexes_. http://locklessinc.com/articles/mutex_cv_futex/
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

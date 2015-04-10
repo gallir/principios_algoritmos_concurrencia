@@ -8,6 +8,35 @@ El código está en <<source_code>>
 
 
 
+////
+
+http://talks.golang.org/2012/waza.slide#6
+Concurrency
+Programming as the composition of independently executing processes.
+(Processes in the general sense, not Linux processes. Famously hard to define.)
+
+Parallelism
+Programming as the simultaneous execution of (possibly related) computations.
+
+Concurrency vs. parallelism
+Concurrency is about dealing with lots of things at once.
+Parallelism is about doing lots of things at once.
+Not the same, but related.
+Concurrency is about structure, parallelism is about execution.
+Concurrency provides a way to structure a solution to solve a problem that may (but not necessarily) be parallelizable.
+
+Conclusion
+Concurrency is powerful.
+Concurrency is not parallelism.
+Concurrency enables parallelism.
+Concurrency makes parallelism (and scaling and everything else) easy.
+
+
+https://existentialtype.wordpress.com/2011/03/17/parallelism-is-not-concurrency/
+The first thing to understand is parallelism has nothing to do with concurrency.  Concurrency is concerned with nondeterministic composition of programs (or their components).  Parallelism is concerned with asymptotic efficiency of programs with deterministic behavior
+
+////
+
 
 
 === Procesos
