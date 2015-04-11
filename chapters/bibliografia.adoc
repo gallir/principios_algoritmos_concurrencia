@@ -57,6 +57,10 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[LockLess2]]] _Mutexes and Condition Variables using Futexes_. http://locklessinc.com/articles/mutex_cv_futex/
 
+- [[[Reeves]]] Glenn E Reeves. _What really happened on Mars?_. http://research.microsoft.com/en-us/um/people/mbj/mars_pathfinder/Authoritative_Account.html
+
+- [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

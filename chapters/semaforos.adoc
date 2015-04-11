@@ -539,9 +539,6 @@ Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), a
 
 === Lectores-Escritores
 
-=== Inversión de prioridades
-
-
 
 === FUTEX
 
@@ -574,7 +571,7 @@ Para el _mutex_ simple mostrado a continuaciónfootnote:[Lo desarrollé para est
 
 `FUTEX_WAKE`:: Desbloquea a uno o más procesos, según lo indicado en un segundo argumento, en la cola del _futex_. El número de procesos a despertar se indica en un argumento, retorna el número de procesos que se desbloquearon.
 
-En el <<futex_simple_mutex, código completo en C>> se usa `syscall()` pero simplifico el pseudocódigo con `futex_wait(futex, value)` (`value` es el valor a comparar)  y `futex_wake(futex, value)` respectivamente (en este case `value` es el número de procesos a desbloquear). Las operaciones atómicas que usaremos serán `swap` (retorna el valor previo) y `fetch_and_add`. Las funciones `lock()` y `unlock()` reciben como argumento la dirección de una estructura con dos enteros (en C):
+En el <<futex_simple_mutex_c, código completo en C>> se usa `syscall()` pero simplifico el pseudocódigo con `futex_wait(futex, value)` (`value` es el valor a comparar)  y `futex_wake(futex, value)` respectivamente (en este case `value` es el número de procesos a desbloquear). Las operaciones atómicas que usaremos serán `swap` (retorna el valor previo) y `fetch_and_add`. Las funciones `lock()` y `unlock()` reciben como argumento la dirección de una estructura con dos enteros (en C):
 
 ----
 struct simple_futex {
@@ -622,7 +619,28 @@ Este algoritmo es muy sencillo pero tiene un problema importante, aunque las col
 
 ===== _Mutex_ equitativo
 
-Lo primera idea que viene a la cabeza es implementar un algoritmo equitavivo similar al <<ticket_lock, _ticket-lock_>>. Podéis consultar <<futex_fair_simple_mutex, el código en C>> de este algoritmo con FUTEX, pero es muy ineficiente. Los tiempos de ejecución del _mutex_ simple anterior se ejecuta en menos de un segundo con aproximadamente tres segundos de uso de CPU:
+Lo idea obvia es implementar un algoritmo equitativo similar al <<ticket_lock, _ticket-lock_>>. El algoritmo es el siguiente ()<<futex_fair_simple_mutex_c, código en C>>):
+
+----
+def lock(futex):
+    number = fetch_and_add(futex.number, 1)
+    turn = futex.turn
+
+    while number != turn:
+        futex_wait(futex.turn, turn)
+        turn = futex.turn
+----
+
+----
+def unlock(futex):
+    current = fetch_and_add(futex.turn)
+    if futex.number >= current:
+        futex_wake(futex.turn, MAXINT) <1>
+
+----
+<1> Como no se puede seleccionar solo al proceso del siguiente turno hay que despertar a todos para que verifiquen el turno. Por ello se especifica un número muy grande, en este caso el máximo entero.
+
+Comparado con el anterior este último es muy ineficiente. El primero se ejecuta en menos de un segundo de tiempo de reloj, con aproximadamente tres segundos de uso de CPU:
 
 ----
 $ time ./futex_simple_mutex
@@ -631,7 +649,7 @@ user	0m0.373s
 sys	    0m2.664s
 ----
 
-Los tiempos del _ticket-lock_ sobre el mismo ordenador:
+Los tiempos del _ticket-lock_ en el mismo ordenador:
 ----
 $ time ./futex_fair_simple_mutex
 real	0m34.997s
@@ -639,46 +657,133 @@ user	0m8.185s
 sys	    1m22.512s
 ----
 
-¡Consume treinta veces más!
-
-Uno de los problemas: los procesos no entran a la cola en el mismo orden de su turno lo que significa que hay que despertar a todos para que verifiquen su turno. Por eso en el código se usa la llamada con un número muy grande, `futex_wake(futex.locked, INT_MAX)`. footnote:[`syscall(__NR_futex, &futex->turn, FUTEX_WAKE, INT_MAX, NULL, 0, 0)`]. Esto provoca una _tormenta_ de procesos que verifican el valor y vuelven a bloquearse.
-
-
-No es posible seleccionar qué proceso despertar desde el `fute_wake()`, pero se _tormenta_ puede aliviar usando la opción `BITSET` tal como lo uso en <<futex_fair_bitset_mutex, el código de ejemplo>>. Esta opción permite definir una máscara de 32 bits, en cada _futex_ se pueden tener hasta 32 colas diferentes y seleccionar en cuál se debe bloquear o despertar indicando en la máscara. En el ejemplo se usar el módulo de 32 del número seleccionado y el `turn` para indicar la cola.
-
-Aún así los tiempos siguen igual de malos:
+La diferencia es enorme. Uno de los problemas, los procesos no entran a la cola en el mismo orden de su turno lo que significa que hay que despertar a todos para que verifiquen su turno, lo que  provoca una _tormenta_ de procesos que se despiertan, verifican el turno y vuelven a bloquearse. Esta _tormenta_ puede aliviarse usando las opciones `BITSET`. Éstas permiten especifica una máscara de 32 bits, se pueden tener hasta 32 colas diferentes en cada _futex_ y seleccionar cuál de ellas usar para el _wait_ o el _wake_ (<<futex_fair_mutex_bitset_c, código completo>>, se usa módulo 32 del número seleccionado y el turno para indicar la cola).
 
 ----
-$ time ./futex_fair_bitset_mutex
-real	0m34.743s
-user	0m6.188s
-sys	    1m22.845s
+$ time ./futex_fair_mutex_bitset
+real	0m28.359s
+user	0m7.006s
+sys	    0m29.680s
 ----
 
-Casi no hay cambios con el anterior. Lo que más consume CPU y tiempo son los reintentos del `futex_wait()`:
+El tiempo se reduce, aún así sigue siendo muy ineficiente, la raíz es que en caso de alta competencia todos los procesos -prácticamente sin excepción- son bloqueados y luego desbloqueados.
+ después.
 
-.Entrada del FUTEX con _ticket-lock_
+
+===== Optimización del _mutex_ equitativo
+
+FUTEX es muy potente es complicado y costoso asegurar que un _mutex_ sea _equitativo_, por eso el _mutex_ de las librerías POSIX Threads tampoco es equitativo. Su comportamiento es muy similar al del primer ejemplo de _mutex simple_, el proceso que acaba de salir de la sección crítica es el primero en volver a entrar si lo intenta inmediatamente. Aunque la solución sea contraintuitiva es posible optimizar considerablemte más el _mutex_ equitativo recurriendo a esperas activas limitadas.
+
+Si hay alta competencia y las secciones críticas son breves conviene más hacer una breve espera activa -en la entrada y salida- para dar oportunidad a que el siguiente proceso pueda obtener el _lock_ sin necesidad se pasar por la cola de bloqueados. El número de iteraciones en espera activa debe estar limitada para evitar convertir al algoritmo en un _spinlock_. En el `lock()` se hace antes de intentar el _wait_ y en el `unlock()` antes del _wake_ (<<futex_fair_mutex_spin_c, código fuente>>).
+
+
 ----
 def lock(futex):
     number = fetch_and_add(futex.number, 1)
-    turn = futex->turn
 
+    tries = 0               <1>
+    while number != futex.turn and tries < 100:
+        tries++;
+
+    turn = futex.turn
     while number != turn:
-        futex_wait(futex.turn, turn) <1>
-        turn = futex->turn
+        futex_wait(futex.turn, turn)
+        turn = futex.turn
+
+    futex.current = number  <2>
 ----
-<1> El valor de `futex.turn` cambia muy rápidamente y ya no es igual al valor que tenía `turn` desde la última asignación.
+<1> Espera activa limitada a 100 iteraciones.
+<2> Campo adicional para indicar el número de turno del proceso en la sección crítica.
 
-El valor de `futex.turn` cambia cada vez que un proceso desea entrar, si hay mucha competencia (como ocurren en los ejemplos) su valor cambia muy rápidamente haciendo que la función falle en bloquear y tenga que volver a intentar.
+----
+def unlock(futex):
+    current = fetch_and_add(futex.turn)
 
-[NOTE]
-.Problemas de un mutex equitativo
-====
-Aunque FUTEX es muy potente es muy complicado y costoso asegurar que sea _equitativo_, por eso el mutex de las librerías POSIX Threads tampoco son equitativos. De hecho su comportamiento es muy similar al del primer ejemplo de _mutex simple_, el proceso que acaba de salir de la sección crítica es el primero en volver a entrar si lo intenta inmediatamente después.
+    tries = 0               <1>
+    while current != futex.current and tries < 100:
+        tries++
 
-Si lo que se desea son _mutex_ muy eficientes es mejor usar las estrategias explicadas en <<LockLess2>>, incluso una llamda a `sched_yield()` en la salida de la sección crítica puede asegurar una equidad razonable sin pérdida de eficiencia.
-====
+    if current > futex.current:
+        futex_wake(futex.turn, MAXINT)
 
+----
+<1> La espera actica antes de intentar el _wake_ también limitada a 100 iteraciones. Se usa el campo `futex.current` para verificar si el proceso al que le corresponde el turno entró a la sección crítica.
+
+El tiempo de ejecución es ahora un poco más del doble que el original no equitativo y casi veinte veces menos que el equitativo sin espera activa.
+
+----
+$ time ./futex_fair_mutex_spin
+real	0m1.702s
+user	0m2.804s
+sys	    0m3.898s
+----
+
+Demuestra las ventajas de evitar cambios de contexto cuando hay alta competencia y las secciones críticas son muy breves (<<LockLess2>>).
+
+==== La implementación de semáforos más simple
+La implementación de semáforos generales con FUTEX es muy sencilla si se toman algunas precauciones:
+
+1. Permitimos que el valor del semáforo, `value`, pueda tomar números negativos (el valor absoluto indica el número de procesos en la cola).
+
+2. Si el _wait_ genera un valor negativo el proceso se siempre se bloqueará y esperará el _wake_ desde el proceso que ejecute el _signal_. Como con la implementación del _mutex simple_ no es eficiente pero simplifica mucho el diseñofootnote:[Queda como ejercicio al lector buscar hacerlo eficiente, no es complicado.].
+
+3. Al ejecutar el _signal_ se asegura que un proceso siempre se despierta.
+
+Si se toman estas precauciones además es posible evitar el bucle de verificación de que el proceso fue bloqueadofootnote:[Recordad que el `futex_wait` verifica que el valor del _futex_ sea igual al segundo argumento.] usamos el campo adicional `futex` que no se modifica, solo la referencia de memoria para el sistema operativo.
+
+La operación _wait_ queda muy sencilla, prácticamente idéntica a la definición _académica canónica_ de semáforos del principio del capítulo.
+
+----
+def wait(sem):
+    value = add_and_fetch(sem.value, 1)
+    if value < 0:
+        futex_wait(sem.futex, sem.futex)    <1>
+----
+<1> Si el valor es `0` el proceso siempre se bloqueará.
+
+_Signal_ también es muy próxima a la definición básica, lo único _adicional_ es el bucle que verifica que efectivamente se desbloqueó a un proceso. Hay que hacer esta comprobación ya que el proceso que decrementó el semáforo y lo dejó negativo pudo no haber ejecutado el `futex_wait` antes que el _signal_ en otro proceso ejecute el `fute_wake` correspondiente.
+
+----
+void signal(futex_sem_t *sem) {
+    value add_and_fetch(sem.value, 1)
+    if value <= 0:
+        while futex_wake(sem.futex, 1) < 1: <1>
+            sched_yield()
+----
+<1> La verificación de desbloqueó a un proceso (el `sched_yield()` no es imprescindible).
+
+
+=== Inversión de prioridades
+
+.Un bug marciano
+****
+El día 4 de julio de 1997 el _Mars Pathfinder_ aterriza en Marte, se despliega la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empieza a enviar las fotos en alta calidad. Hasta ese momento la misión era un éxito.
+
+A los pocos días se detectan reinicios continuos del ordenador al intentar enviar a la tierra datos metereológicos y científicos. Los reinicios los iniciaba la tarea _bc_sched_ responsable de verificar que las demas tareas se ejecutan correctamente.
+
+El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje con interfaz para el acelerómetro, radar de altitud y los instrumentos científicos: el ASI/MET. El hardware del 1553 fue heredado de la sonda Cassini y tenía un modo de funcionamiento simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
+
+El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxWorks, adaptado específicamente al procesador RS600. La arquitectura de software era la siguiente:
+
+- _bc_sched_: La tarea con máxima prioridad, se encargaba de preparar las transacciones para el siguiente ciclo de 0.125 segs sobre el bus 1553.
+
+- _entry+landing_: La tarea con la segunda prioridad, ya inactiva.
+
+- _bc_dist_: La tarea de tercera prioridad, toma datos del 1553 y los copia en un doble buffer circular desde donde extraen información las otras tareas, salvo las ASI/MET.
+
+- Otras tareas de prioridad intermedia.
+
+- _ASI/MET_: La tarea de menor prioridad junto con otras tareas científicas (generación y compresión de imágenes, etc.). A diferencia de las otras ASI/MET toma datos al 1553 a través de un mecanismo de comunicación entre procesos usando el `pipe()` estándar de Unix.
+
+
+Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_, el problema era siempre el mismo, _bc_dist_ no completaba su ejecución en el tiempo previsto. Después 18 horas de simulaciones descubrieron la causa, por la cantidad inesperada de datos que se recogía el sistema el sistema más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a semáforos _mutex_ dentro de las funciones del `pipe()` pero no alcanzaba a salir porque el sistema operativo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_ también hacía un _wait_ al mismo _mutex_ de `pipe()` pero quedaba bloqueado porque _ASI/NET_ estaba en la sección crítica.
+
+Así se legaba al final de su período _bc_dist_ no acababa (y forzaba el reinicio). El problema era la _inversión de prioridades_.
+****
+
+[[dining_image]]
+.Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>]
+image::priority-inversion.png[height="250", align="center"]
 
 
 
