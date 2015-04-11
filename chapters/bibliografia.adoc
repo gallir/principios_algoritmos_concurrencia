@@ -61,6 +61,9 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 
+
+- [[[Lampson]]] Butler W. Lampson, David D. Redell. _Experience with processes and monitors in Mesa_. Communications of the ACM. Volume 23 Issue 2, Feb. 1980. http://dl.acm.org/citation.cfm?id=358824
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

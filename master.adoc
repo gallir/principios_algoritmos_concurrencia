@@ -38,6 +38,8 @@ include::chapters/spinlocks.adoc[]
 
 include::chapters/semaforos.adoc[]
 
+include::chapters/futex.adoc[]
+
 include::chapters/monitores.adoc[]
 
 include::chapters/mensajes.adoc[]
@@ -53,3 +55,5 @@ include::chapters/code-hardware.adoc[]
 include::chapters/code-spinlocks.adoc[]
 
 include::chapters/code-semaphores.adoc[]
+
+include::chapters/code-futex.adoc[]
