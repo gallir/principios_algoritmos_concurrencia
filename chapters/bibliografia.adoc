@@ -74,6 +74,8 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
 
+- [[[Mackintosh]]] Alasdair Mackintosh, Olivier Giroux. _C++ Latches and Barriers_. ISO/IEC JTC1 SC22 WG21 N4204, 2014-08-06. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4204.html
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

@@ -1,5 +1,7 @@
 == Semáforos
 
+
+
 El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos sin esperas activas.
 
 
@@ -22,11 +24,11 @@ Un semáforo puede ser inicializado con un valor no negativo, por ejemplo la sig
 Semaphore s = 1
 ----
 
-Sobre la estructura de datos anteriores se definen dos primitivas fundamentalesfootnote:[La mayoría de lenguajes y librerías de concurrencia ofrecen funciones adicionales.]: _P_ y _V_.
+Sobre la estructura de datos anteriores se definen dos primitivas fundamentales: _P_ (de la contracción _prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_) y _V_ (del holandés _verhoog_ o _verhogen_ que significa _incrementar_).
 
-Pfootnote:[De la contracción _Prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_.]:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como *_wait_* o *_acquire_*
+*_P_*:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como *_wait_* o *_acquire_*
 
-Vfootnote:[Del holandés _Verhoog_ o _verhogen_ que significa _incrementar_.]:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta operación es más conocida como *_signal_*, *_release_* o *_post_*.
+*_V_*:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta operación es más conocida como *_signal_*, *_release_* o *_post_*.
 
 El algoritmo de ambas:
 
@@ -59,7 +61,7 @@ Las implementaciones de semáforos suelen incluir otras operaciones para facilit
 
 - Asignar un valor inicial al semáforo.
 - Obtener el valor del semáforo.
-- Intentar hacer el _wait_ solo si no producirá el bloqueo del proceso (usualmente llamada _try_lock()_).
+- Intentar hacer el _wait_ solo si no produce bloqueo del proceso (usualmente llamada `try_lock`).
 
 ==== Exclusión mutua
 El algoritmo de exclusión mutua es muy sencillo:
@@ -211,11 +213,11 @@ Para sincronizar dos procesos hacen falta dos semáforos binarios:
 
 ===== Barreras para _N_ procesos
 
-Para implementar una barrera genérica para _N_ procesos con semáforos binarios hacen falta dos, `arrivals` and `departures`, y una variable `counter` incrementada atómicamentefootnore:[Por ejemplo con la ya conocida _getAndAdd_ o similares como _addAndGet_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional <<barrier_py, como se hace en el ejemplo en Python>>.
+Para implementar una barrera genérica para _N_ procesos con semáforos binarios hacen falta dos, `arrivals` and `departures`, y una variable `counter` incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _getAndAdd_ o similares como _addAndGet_. En vez de operaciones atomicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional <<barrier_py, como se hace en el ejemplo en Python>>.
 
 [NOTE]
 ====
-En vez de operaciones atomicas puede usarse un semáforo contador si es posible consultar su valor. En este caso, como es de esperar, se reemplaza el incremento por _signal_ y el decremento por _wait_.
+Algunos lenguajes implementan barreras similares en sus librerías de concurrencia, en Java y Ruby la clase `CyclicBarrier`, en Python `threading.Event` puede adptarse fácilmente para el mismo propósito. Se está proponiendo la misma construcción para C++ juntamente con _Latches_ (mecanismo que bloquea a los procesos hasta que se hace cero): <<Mackintosh>>
 ====
 
 
@@ -295,8 +297,6 @@ En las siguientes secciones estudiaremos lo relevante: cómo se implementan los 
 Aunque no existe la memoria infinita y no es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonables, es un buen primer paso para la implementación del algoritmo más general.
 
 Como el _buffer_ no está limitado el algoritmo no debe comprobar que haya espacio suficiente, solo de bloquear a los consumidores si el buffer está vacío y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
-
-
 
 ----
     Queue buffer
