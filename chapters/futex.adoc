@@ -1,4 +1,5 @@
-== Implementación de semáforos con FUTEX
+[[futex]]
+== Interfaz FUTEX
 
 Los semáforos son habitualmente implementados en los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Pero las llamadas de sistema toman un tiempo considerable debido a la interrupción de software y el cambio de contexto a la ejecución del núcleo. Se puede mejorar mucho el rendimiento si se reducen las llamadas de sistema solo a los casos donde hay competencia, si un proceso es el único que desea entrar a la sección crítica puede resolverse sin necesidad de llamar a la sección crítica. Se puede resolver con la ayuda de cualquiera de las instrucciones vistas en el capítulo de <<hardware>>.
 

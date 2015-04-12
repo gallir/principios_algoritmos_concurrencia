@@ -570,23 +570,31 @@ Una vez detectados los reinicios se analizaron los datos de debug generados y en
 Así _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_ (<<Reeves>>).
 ****
 
-La _inversión de prioridades_ era conocido aunque no hubo formalizaciones ni soluciones hasta 1980 (<<Lampson>>), aunque es un tema muy estudiado no hay un consenso sobre cuál es le mejor solución, aunque la más usada es _herencia de prioridades_.
-
-
-La inversión de prioridades es un problema que se pueden presentar en los mecanismos de exclusión mutua si se usan en sistemas de multiprogramación con gestión de proridades.
-
-
-
-Supongamos que A sea el proceso de mayor prioridad, B una de prioridad intermedia y C la de menor prioridad. C entra a una sección crítica, mientras está en ella es “quitada” —preempted— de la CPU para ejecutar el proceso B que tiene mayor prioridad. En ese momento A se ejecuta e intenta entrar en la misma sección crítica que C, como C está en ella A es bloqueado y el planificador del –el scheduler— sistema operativo vuelve a ejecutar el proceso B.
-
-Supongamos que hay tres procesos con diferentes prioridades, _A_ de mayor prioridad, _B_ de prioridad intermedia y _C_ de menor prioridad.
+La inversión de prioridades es un problema que se pueden presentar en los mecanismos de exclusión mutua si se usan en sistemas de multiprogramación con gestión de proridades. Supongamos que hay tres procesos con diferentes prioridades, _H_ de mayor prioridad, _I_ de prioridad intermedia y _L_ de menor prioridad.
 
 [[priority_inversion_image]]
 .Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>]
 image::priority-inversion.png[height="250", align="center"]
 
+_L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo crítica _H_ hace otro _wait_ al mismo semáforo. Antes de que _C_ pueda hacer el _signal_ es quitado del procesador (_preempted_) porque el proceso _I_ de mayor prioridad está listo para ejecutar. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_. Este interbloqueo causado por _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _L_, que a su vez no se ejecuta porque tiene menor proridad que _I_.
 
-_C_ entra en una sección crítica haciendo _wait_ en un semáforo, mientras está en su sección crítica _A_ hace otro _wait_ y queda bloqueado hasta que _C_ ejecute el _signal_. Pero _C_ es quitada del procesador (_preempted_) porque el proceso _B_ está listo para ejecutar y tiene ayor prioridad. _A_ no podrá ejecutarse hasta que _B_ y todos los demás procesos con prioridad mayor que _C_ haya liberado el procesador y permita que _C_ haga el _signal_ al semáforo. Este efecto se llama inversión de prioridades porque aunque _A_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _C_, pero esta última no se ejecuta porque tiene menor proridad que _B_.
+El problema era conocido desde hace tiempo en la comunidad de concurrencia pero no hubo formalizaciones ni soluciones hasta 1980 (<<Lampson>>). Hay varias soluciones al problema:
+
+Herencia de prioridades (_priority inheritance_):: Antes de bloquear un proceso se verifica la prioridad del que está en la sección crítica y se le sube si es menor al proceso que está a punto de ser bloqueado.
+
+Maximización de prioridad (_priority ceiling_):: Se define una prioridad alta por cada semáforo o _mutex_ y se asigna esta prioridad a todos los procesos que operan con él.
+
+Incremento aleatorio (_random boosting_):: El _scheduler_ sube aleatoriamente la prioridad de los proceso que están en la cola de listos, si en una vuelta no alcanzó a ejecutar en la siguiente _ronda_ vuelve a tener la oportunidad. Suena poco creíble, pero es lo que usa Windows (<<Microsoft>>).
+
+
+Aunque la más utilizada es _herencia de prioridades_ no hay un consenso sobre cuál es la mejor solución.
+
+
+
+
+
+
+
 
 
 
