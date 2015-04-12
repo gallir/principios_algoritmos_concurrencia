@@ -1,4 +1,4 @@
-== Bibliografía
+== Referencias
 
 [bibliography]
 
@@ -63,6 +63,16 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 
 - [[[Lampson]]] Butler W. Lampson, David D. Redell. _Experience with processes and monitors in Mesa_. Communications of the ACM. Volume 23 Issue 2, Feb. 1980. http://dl.acm.org/citation.cfm?id=358824
+
+
+- [[[Microsoft]]] _Priority inversion_. https://msdn.microsoft.com/en-us/library/windows/desktop/ms684831%28v=vs.85%29.aspx
+
+
+- [[[Molnar]]] Ingo Molnar. _PI-futex: -V1. Lightweight userspace priority inheritance_. http://lwn.net/Articles/177111/
+
+- [[[Popov]]] Vlad Popov, Oleg Mazonka. _Faster Fair Solution for the Reader-Writer Problem_. 2013. http://arxiv.org/pdf/1309.4507.pdf
+
+- [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
 
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721

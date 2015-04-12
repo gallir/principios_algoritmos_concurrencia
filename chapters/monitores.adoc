@@ -13,3 +13,6 @@
 ==== Algoritmos tradicionales
 
 === Monitores en POSIX Threads
+////
+Poner lectores-escritores
+////

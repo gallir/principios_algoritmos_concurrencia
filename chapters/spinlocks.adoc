@@ -172,7 +172,7 @@ A menos que se trate un gestor de interrupciones, rutinas críticas del núcleo 
 ====
 
 
-
+[[readers_writers]]
 === Lectores-escritores
 La mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo que interesa es que éstas sean consistentes. En los ejemplos -un único contador entero- no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño -o incluso para acceder a ficheros o dispositivos externos- hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
 
@@ -278,7 +278,7 @@ struct tickets {
 
 ==== Lectores-escritores
 
-Con la base el algoritmo _ticket-lock_ se puede implementar un algoritmo de lectores-escritores que asegure la equidad entre ellos (a diferencia de la mayoría que dan prioridad a unos u otros). Se necesitan dos variables diferentes para los turnos individuales, una estructura del siguiente tipo:
+Con la base el algoritmo _ticket-lock_ se puede implementar un algoritmo de lectores-escritores que asegure la equidad entre ellos (a diferencia de los que dan prioridad a unos u otros). Se necesitan dos variables diferentes para los turnos individuales, una estructura del siguiente tipo:
 
 image::ticket_rw.png[width="80%", align="center"]
 

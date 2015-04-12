@@ -1,6 +1,6 @@
 == Semáforos
 
-El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos.
+El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 60 (<<Dijkstra74>>), aunque las primers ideas son de principios de la misma década (<<Dijkstra35>>). La idea y nombre está inspirado de las señales visuales ferroviarias que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos sin esperas activas.
 
 
 Las soluciones a exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica _intrínseca_ de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
@@ -55,6 +55,11 @@ def signal(s):
 <1> Si no hay procesos bloqueados en la cola del semáforo (i.e. ésta está vacía) se incrementa su valor.
 <2> Caso contrario se desbloquea a un proceso.
 
+Las implementaciones de semáforos suelen incluir otras operaciones para facilitar su uso:
+
+- Asignar un valor inicial al semáforo.
+- Obtener el valor del semáforo.
+- Intentar hacer el _wait_ solo si no producirá el bloqueo del proceso (usualmente llamada _try_lock()_).
 
 ==== Exclusión mutua
 El algoritmo de exclusión mutua es muy sencillo:
@@ -64,9 +69,9 @@ El algoritmo de exclusión mutua es muy sencillo:
         Semaphore s = 1
 
 ...
-wait(s)
+s.wait()
 critical_section()
-signal(s)
+s.signal()
 ...
 ----
 
@@ -86,47 +91,48 @@ Las funciones `generalWait` y `generalSignal` son las emulaciones genéricas de 
         value = k
 
 def generalWait():
-    wait(gate)       <1>
-    wait(mutex)
+    gate.wait()       <1>
+    mutex.wait()
     value -= 1
     if value > 0:
-        signal(gate) <2>
-    signal(mutex)
+        gate.signal() <2>
+    mutex.signal()
 
 def generalSignal():
-    wait(mutex)
+    mutex.wait()
     value += 1
     if value == 1:
-        signal(gate) <3>
-    signal(mutex)
+        gate.signal() <3>
+    mutex.signal()
 ----
 <1> Si no es el primer proceso en entrar a la sección crítica debe esperar a ser _autorizado_ por el proceso anterior.
 <2> Si después de decrementar el valor es todavía mayor que cero permite que entre otro proceso.
 <3> Si después de incrementarlo el valor es igual a uno significa que antes estaba en cero por lo que habilita para que pueda entrar otro proceso.
 
 
-==== Semáforos _mutex_
-Los _semáforos mutex_, también llamados _locks_ en algunos lenguajes (como Java o Python), son semáforos binarios optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] con restricciones adicionales:
+==== Semáforos _mutex_ y _locks_
+Los _semáforos mutex_, también llamados _locks_, son semáforos binarios optimizados -o equivalentes- para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] con restricciones y propiedaddes adicionales:
 
 . Son inicializados a `1`.
-. Se añade el concepto de propiedad, solo el proceso que hizo el _wait_ puede hacer luego el _signal_. En algunos lenguajes se permite que el mismo hilo haga varios _wait_, si ya es el propietario del _lock_ continúa su ejecución, estos últimos se denominan _reentrantes_.
+. Se añade el concepto de propiedad, solo el proceso que hizo el _wait_ puede hacer luego el _signal_.
+. Algunos sistemas permiten que el mismo hilo haga varios _wait_, si ya es el propietario del _lock_ continúa su ejecución, estos últimos se denominan _reentrantes_.
 
-Los _mutex_ son muy comunes y son recomendados para exclusión mutua, hay lenguajes como Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex. De forma similar a cómo se hace con _spilonks_ en estos semáforos a la operación _wait_ se la suele llamar *_lock_* y a _signal_ *_unlock_*. El algoritmo genérico es similar a los semáforos,
+Los _mutex_ son muy comunes y son recomendados para exclusión mutua, hay lenguajes como Go que no tienen funciones _nativas_ de semáforos generales, sólo mutex. De forma similar a cómo se hace con _spilonks_ en estos semáforos a la operación _wait_ se la suele llamar *_lock_* y a _signal_ *_unlock_*.
 
 
 ----
         Mutex mutex
 
 ...
-lock(mutex)
+mutex.lock()
 critical_section()
-unlock(mutex)
+mutex.unlock()
 ...
 ----
 
 En C se pueden usar los semáforos _mutex_ de librerías de POSIX Threads, las primitivas son `pthread_mutex_lock` y `pthread_mutex_unlock` (<<sem_mutex_c, programa en C>>). Go lo ofrece en el módulo `sync`, las primitivas son `Lock` y `Unlock` (<<go_mutex_go, código>>).
 
-En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene clases similares, `threading.Lock()` y `threading.RLock()` footnote:[También incluye primitivas similares en el nuevo paquete `asyncio`.], además de las llamadas tradicionales a <<sem_lock_py, `acquire` y `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
+En <<sem_lock_java, Java se puede usar>> la clase `ReentrantLock` de java.util.concurrent.locks. Python tiene clases similares, `threading.Lock()` y `threading.RLock()` footnote:[También incluye primitivas similares en el nuevo paquete `asyncio`. La clase `threading.Lock()`, al contrario que `threading.RLock()`, no tiene control de propiedad, cualquier hilo puede hacer el `release()`.], además de las llamadas tradicionales a <<sem_lock_py, `acquire` y `release`>> se puede usar <<sem_lock_with_py, con la cláusula `with`>>:
 
 [source, python]
 ----
@@ -137,13 +143,13 @@ for i in range(MAX_COUNT/THREADS):
 
 
 ==== Semáforos fuertes y débiles
-Cada semáforo tiene asociado una cola con la información de los procesos bloqueados, el sistema de gestión de esta cola es fundamental. Si la cola es una FIFO entonces asegura que los procesos entran en orden a la sección crítica, es decir, aseguran _espera limitada_ y estos semáforos se denominan _semáforos fuertes_. Por el contrario, si los procesos a desbloquear se seleccionan aleatoriamente se denominan _semáforos débiles_ (_weak semaphores_).
+Cada semáforo tiene asociado una cola con la información de los procesos bloqueados, el sistema de gestión de esta cola es fundamental. Si la cola es FIFO entonces asegura que los procesos entran en orden a la sección crítica, es decir, aseguran _espera limitada_ y estos semáforos se denominan _semáforos fuertes_. Por el contrario, si los procesos a desbloquear se seleccionan aleatoriamente se denominan _semáforos débiles_ (_weak semaphores_).
 
 
 .Semáforos en Unix y Linux
 ****
 
-Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Porcess Comunnication_) del UNIX System V fue el estándar de facto durante muchos años y siguen disponibles en las útimas versiones de Linux y Solaris. Desde la definición del estándar POSIX Semaphores de 2001 ha caído mucho en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con `semget()` que retorna un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con `semctl()` y las operaciones de _wait_ y _signal_ se hacen con `semop()`. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no sólo `1` o `-1` y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
+Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Porcess Comunnication_) del UNIX System V, fue el estándar de facto durante muchos años y siguen disponibles en las útimas versiones de Linux y Solaris. Desde la definición del estándar POSIX Semaphores de 2001 ha caído mucho en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con `semget()` que retorna un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con `semctl()` y las operaciones de _wait_ y _signal_ se hacen con `semop()`. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no sólo `1` o `-1` y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
 - Operaciones sobre varios semáforos del array son atómicas, facilita la programación de algoritmos complejos que lo requieran.
 - La primitiva adicional esperar por cero o _wait_for_0_. Como se intuye por su nombre bloquea a los procesos si el valor del semáforo es diferente a cero, los desbloquea cuando se hace cero.
 - Deshacer la última operación, `SEM_UNDO`, si el proceso acaba. Es útil como medida de protección, si un proceso está en la sección crítica y el proceso acaba por error el sistema revierte la última operación y los demás procesos pueden continuar.
@@ -166,15 +172,85 @@ La sección crítica es una abstracción conveniente y sencilla para resolver el
 Para ello se necesita un semáforo (contador o binario) inicializado a cero. Inmediatamente después de _P~i~_ se llama _signal_ sobre dicho semáforo. En el proceso _Q_ se llama a _wait_ inmediatamente antes de _Q~i~_. Los programas serán similares al siguiente ejemplo:
 
 ----
-        Semaphore sync = 0
+    Semaphore sync = 0
 
 P               Q
 
 ...             ...
-Pi              wait(sync)
-signal(sync)    Qj
+Pi              sync.wait()
+sync.signal()   Qj
 ...             ...
 ----
+
+==== Barreras
+
+A veces es conveniente desarrollar algoritmos concurrentes en fases y hacer que los procesos se sincronicen con los demás para esperar que todos acaben la fase actual ara que todos comiencen sincronizados la siguiente. Esta sincronización se logra de forma muy parecida al ejemplo anterior: poniendo _barreras_ de sincronización al final e inicio de cada fase.
+
+Barrera:: Es un mecanismo de sincronización que obliga a procesos concurrentes (o distribuidos) a esperar a que cada uno haya llegado a un punto determinado. El conjunto de los puntos de sincronización se denomina _barrera_. Solo cuando todos los procesos han llegado a una barrera están autorizados a continuar (<<Taunbenfeld>>).
+
+La implementación de barreras con semáforos es trivial.
+
+===== Barreras binarias
+
+Para sincronizar dos procesos hacen falta dos semáforos binarios:
+
+----
+    Semaphore arrived_p = 0
+    Semaphore arrived_q = 0
+
+    P                   Q
+
+    ...                 ...
+    arrived_p.signal()  arrived_q.signal()
+    arrived_q.wait()    arrived_p.wait()
+    ...                 ...
+    arrived_p.signal()  arrived_q.signal()
+    arrived_q.wait()    arrived_p.wait()
+    ...                 ...
+----
+
+===== Barreras para _N_ procesos
+
+Para implementar una barrera genérica para _N_ procesos con semáforos binarios hacen falta dos, `arrivals` and `departures`, y una variable `counter` incrementada atómicamentefootnore:[Por ejemplo con la ya conocida _getAndAdd_ o similares como _addAndGet_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional <<barrier_py, como se hace en el ejemplo en Python>>.
+
+[NOTE]
+====
+En vez de operaciones atomicas puede usarse un semáforo contador si es posible consultar su valor. En este caso, como es de esperar, se reemplaza el incremento por _signal_ y el decremento por _wait_.
+====
+
+
+----
+    Semaphore arrival = 1
+    Semaphore departure = 0
+    counter = 0
+
+def barrier(n):
+    arrival.wait()
+    get_and_add(counter, 1)
+    if counter < n:
+        arrival.signal()
+    else:
+        departure.signal()
+
+    departure.wait()
+
+    get_and_add(counter, -1)
+    if counter > 0:
+        departure.signal()
+    else:
+        arrival.signal()
+----
+
+Con las barreras de este tipo se pueden implementar sincronizaciones como la siguiente:
+
+----
+    while True:
+        do_phase()
+        barrier(n)
+----
+
+Después de `do_phase()` cada proceso esperará a que los demás hayan llegado al mismo punto, solo así podrán continuar con la siguiente.
+
 
 
 === Productores-Consumidores
@@ -216,9 +292,9 @@ En las siguientes secciones estudiaremos lo relevante: cómo se implementan los 
 ====
 
 ==== _Buffer_ infinito
-Aunque no existe la memoria infinita y no es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonablesfootnote:[Aunque si lo hará en el ejemplo], es una buen primer paso para la implementación del algoritmo más general.
+Aunque no existe la memoria infinita y no es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonables, es un buen primer paso para la implementación del algoritmo más general.
 
-No debemos preocuparnos de que el _buffer_ se llene, sólo de bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
+Como el _buffer_ no está limitado el algoritmo no debe comprobar que haya espacio suficiente, solo de bloquear a los consumidores si el buffer está vacío y desbloquearlos cuando hay nuevos elementos disponibles. Además del buffer compartido necesitaremos dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
 
 
 
@@ -229,7 +305,7 @@ No debemos preocuparnos de que el _buffer_ se llene, sólo de bloquear a los con
 ----
 
 
-Los siguientes son los algoritmos (en notación de objetos) para los productores y consumidores respectivamente:
+Los siguientes son los algoritmos para los productores y consumidores respectivamente:
 
 .Productor
 ----
@@ -316,6 +392,95 @@ Si la constante es uno la técnica se denomina _semáforos partidos binarios_.
 Para resolver el problema de la sección crítica el par de operaciones _wait_ y _signal_ son ejecutadas por el mismo proceso y en ese orden. Para el algoritmo con _buffer_ limitado se usan dos semáforos y las llamadas a _wait_ y _signal_ se hacen desde diferentes hilos. Los _semáforos partidos_ permiten que los procesos esperen por eventos que se producen en otros.
 
 
+=== Lectores-Escritores
+En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un problema también muy comúnfootnote:[Implementado en la clase `ReentrantReadWriteLock` en Java.], relajar las condiciones de la exclusión mutua con las siguientes condiciones:
+
+- Se permite más de un lector en la sección crítica.
+
+- Mientras haya un lector en la sección crítica no puede entrar ningún escritor.
+
+- Los lectores no pueden entrar si hay un escritor en la sección crítica.
+
+- Sólo puede haber un escritor en la sección crítica.
+
+==== La solución clásica
+El siguiente algoritmo se puede implementar con semáforos binarios y también con _mutex_ o _locks_ siempre que permitan que un proceso que no hizo el _wait_ pueda hacer el _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase `threading.Lock` porque permite que cualquier hilo haga el `release()` aunque no haya ejecutado el `acquire()`.
+
+----
+    readers = 0         <1>
+    Semaphore writer = 1 <2>
+    Semaphore mx = 1  <3>
+----
+<1> Contador de lectores en la sección crítica.
+<2> Asegura la exclusión mutua entre escritores y entre escritor y lectores.
+<3> Se usa con dos propósitos, asegurar exclusión mutua para verificar y modificar la variable `readers` y también como barrera, el primer lector bloqueará a los siguientes si hay un escritor en la sección crítica.
+Las entradas y salidas de escritores son idénticas a la de exclusión mutua:
+
+.Entrada y salida de escritores
+----
+def writer_lock():
+    writer.wait()
+
+def writer_unlock():
+    writer.signal()
+----
+
+
+Cuando un lector desea entrar verifica si es el primero, si no es así ya hay otro lector por lo que continúa su ejecución. Si no hay ningún lector primero espera, `writer`, a que no haya ningún escritor. Como lo hace sin hacer el _signal_ del semáforo `mx` todos los demás lectores quedarán bloqueados hasta que el primer lector pueda entrar.
+
+.Entrada de lectores
+----
+def reader_lock():
+    mx.wait()
+    readers += 1
+    if readers == 1:
+        writer.wait()    <1>
+    mx.signal()
+----
+<1> Si es el primer lector espera a que no haya ningún escritor.
+
+
+.Salida de lectores
+----
+def reader_unlock():
+    mx.wait()
+    readers -= 1
+    if readers == 0:
+        writer.signal()  <1>
+    mx.signal()
+----
+<1> Si es el último lector libera _writer_, podrán entrar escritores.
+
+==== Espera limitada
+El algoritmo anterior da prioridad a los lectores y no asegura espera limitada a los escritores. Cuando entró un lector los escritores tendrán que esperar hasta que salga el último pero los lectores podrán seguir entrando. Si siempre hay lectores en la sección crítica los escritores podrían esperar indefinidamente (_starvation_). Para evitarlo hay que asegurar que si un escritor desea entrar los nuevos lectores deben esperar. Se usa un semáforo adicional, `entry`, que bloquerá a los nuevos lectores cuando el primer escritor haga un _wait_ sobre él.
+
+El siguiente es el algoritmo equitativo, la función `reader_unlock()` es la misma cambian las otras tres (<<rw_lock_fair_py, código fuente completo>>).
+
+----
+    ...
+    Semaphore entry = 1
+
+def reader_lock():
+    entry.wait()
+    mx.wait()
+    readers += 1
+    if readers == 1:
+        writer.wait()
+    mx.signal()
+    entry.signal()
+
+...
+
+def writer_lock():
+    entry.wait()
+    writer.wait()
+
+def writer_unlock():
+    writer.signal()
+    entry.signal()
+----
+
+La mayor ineficiente de este algoritmo es que en la entrada de lectores hay que har _wait_ sobre dos semáforos, `entry` y `mx`. En 2013 Vlad Popov y Oleg Mazonka propusieron un algoritmo más eficiente (<<Popov>>), los lectores sólo hacen _wait_ sobre un semáforo: el <<rw_lock_fair_faster_py, código completo en Python>>.
 
 
 === El problema de los filósofos cenando
@@ -537,18 +702,11 @@ Hay que tener en cuenta que las llamadas a `checkNeighbors()` se hacen siempre d
 Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe entre otras cosas a que no existe _retención y espera_, los filósofos que no pueden comer no retienen el tenedor libre. Sin _retención y espera_ tampoco se puede producir la _espera circular_, dado que no se cumplen ninguna de estas dos condiciones necesarias tampoco pueden producirse _interbloqueos_. Cumple con todas las propiedades que <<philosophers_requisites, mencionamos al principio>>.
 
 
-=== Lectores-Escritores
-
-
-
-
 === Inversión de prioridades
 
 .Un bug marciano
 ****
-El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empieza a enviar datos y fotos en alta calidad. Hasta ese momento la misión era un éxito.
-
-A los pocos días se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos metereológicos y científicos. Los reinicios los iniciaba la tarea _bc_sched_ responsable de verificar que las demas tareas se ejecutan correctamente.
+El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empieza a enviar datos y fotos en alta calidad. Hasta ese momento la misión era un éxito, pero a los pocos días se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos metereológicos y científicos. Los reinicios los ordenaba la tarea _bc_sched_ responsable de verificar que las demas tareas se ejecutan correctamente.
 
 El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El 1553 fue heredado de la sonda Cassini y tenía un modo de funcionamiento sincrónico simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
 
@@ -567,13 +725,13 @@ El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxW
 
 Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_, el problema era siempre el mismo, _bc_dist_ no completaba su ejecución en el tiempo previsto. Después 18 horas de simulaciones descubrieron la causa, por la cantidad inesperada de datos que se recogía el sistema el sistema más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a semáforos _mutex_ dentro de las funciones del `pipe()` pero no alcanzaba a salir porque el sistema operativo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_ de mayor prioridad también hacía un _wait_ al mismo _mutex_ de `pipe()` pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
 
-Así _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_ (<<Reeves>>).
+Así _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_.
 ****
 
-La inversión de prioridades es un problema que se pueden presentar en los mecanismos de exclusión mutua si se usan en sistemas de multiprogramación con gestión de proridades. Supongamos que hay tres procesos con diferentes prioridades, _H_ de mayor prioridad, _I_ de prioridad intermedia y _L_ de menor prioridad.
+La inversión de prioridades es un problema que se pueden presentar en los mecanismos de exclusión mutua en sistemas de multiprogramación con prioridades. Supongamos tres procesos con diferentes prioridades, _H_ de mayor prioridad, _I_ de prioridad intermedia y _L_ de menor prioridad.
 
 [[priority_inversion_image]]
-.Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>]
+.Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>.]
 image::priority-inversion.png[height="250", align="center"]
 
 _L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo crítica _H_ hace otro _wait_ al mismo semáforo. Antes de que _C_ pueda hacer el _signal_ es quitado del procesador (_preempted_) porque el proceso _I_ de mayor prioridad está listo para ejecutar. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_. Este interbloqueo causado por _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _L_, que a su vez no se ejecuta porque tiene menor proridad que _I_.
@@ -589,12 +747,17 @@ Incremento aleatorio (_random boosting_):: El _scheduler_ sube aleatoriamente la
 
 Aunque la más utilizada es _herencia de prioridades_ no hay un consenso sobre cuál es la mejor solución.
 
+[quote, Linus Torvalds]
+Friends don't let friends use priority inheritance.
 
 
+Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es de programas erróneos no una cuestión que deba resolver el sistema operativo. En 2006 Ingo Molnar consiguió introducir soporte para herencia de prioridaddes en la interfaz FUTEXfootnote:[La estudiamos en el capítulo <<futex>>.] (<<Molnar>>), usada para implementar los semáforos POSIX y los mecanismos de sincronización de POSIX Threads, las GLibc fueron adaptadas rápidamentefootnote:[El atributo  `PTHREAD_PRIO_INHERIT` en la función `pthread_mutexattr_setprotocol()`, POSIX Threads también soporta _priority ceiling_ con `PTHREAD_PRIO_PROTECT` y la función `pthread_mutexattr_setprioceiling()`.].
 
 
+****
+VxWorks permitía espeficar en una variable global si se habilitaba o no la _herencia de prioridades_ en los semáforos. Los ingenieros de la NASA habían preferido no arriesgar y la dejaron deshabilitada. Después de estudiar y hacer simulaciones en la Tierra para asegurarse que los efectos colaterales no eran negativos se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
 
-
+****
 
 
 
