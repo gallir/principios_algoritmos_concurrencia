@@ -85,6 +85,31 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/pro
 include::../code/semaphores/producer-consumer-infinite.py[]
 ----
 
+=== Lectores-escritores
+
+[[rw_lock_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock.py[rw_lock.py]
+
+[source,python]
+----
+include::../code/semaphores/rw_lock.py[]
+----
+
+[[rw_lock_fair_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock_fair.py[rw_lock_fair.py]
+
+[source,python]
+----
+include::../code/semaphores/rw_lock_fair.py[]
+----
+
+[[rw_lock_fair_faster_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock_fair_faster.py[rw_lock_fair_faster.py]
+
+[source,python]
+----
+include::../code/semaphores/rw_lock_fair_faster.py[]
+----
 
 === Filósofos cenando
 [[philosophers_1_py]]
@@ -101,28 +126,4 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/phi
 [source,python]
 ----
 include::../code/semaphores/philosophers_2.py[]
-----
-
-[[rw_lock_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock.py[rw_lock.py]
-
-[source,python]
-----
-include::../code/semaphores/rw_lock.py[]
-----
-
-[[rw_lock_fair_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock_fair_.py[rw_lock_fair_.py]
-
-[source,python]
-----
-include::../code/semaphores/rw_lock_fair_.py[]
-----
-
-[[rw_lock_fair_faster_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_lock_fair_faster.py[rw_lock_fair_faster.py]
-
-[source,python]
-----
-include::../code/semaphores/rw_lock_fair_faster.py[]
 ----

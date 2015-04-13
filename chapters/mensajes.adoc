@@ -14,5 +14,8 @@
 === Otros algoritmos
 
 ////
-gofmt  -w -tabs=false -tabwidth=4 
+gofmt  -w -tabs=false -tabwidth=4
+
+
+http://www.slideshare.net/dabeaz/an-introduction-to-python-concurrency (para ver lo de mensajes)
 ////
