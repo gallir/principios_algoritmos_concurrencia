@@ -167,7 +167,7 @@ Aunque es correcta y muy eficiente tiene un problema, aunque las colas de FUTEX 
 En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>) Ulrich Drepper propuso un algoritmo de _mutex_ diferente (<<mutex_drepper_c, código en C>>). Tampoco es equitativo y bastante más complejo, sobre todo para explicarlo en pocas líneas. En el _mutex simple_ se usan dos variables, `waiters` y `locked`, en este algoritmo se usa un único entero _futex_ que puede tomar tres valores diferentes:
 
 * 0: libre
-* 1: ocupado, sin proceso bloqueados
+* 1: ocupado, sin procesos bloqueados
 * 2: ocupado, uno o más procesos bloqueados
 
 
