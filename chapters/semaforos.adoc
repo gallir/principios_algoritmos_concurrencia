@@ -63,6 +63,7 @@ Las implementaciones de semáforos suelen incluir otras operaciones para facilit
 - Obtener el valor del semáforo.
 - Intentar hacer el _wait_ solo si no produce bloqueo del proceso (usualmente llamada `try_lock`).
 
+[[sem_mutex]]
 ==== Exclusión mutua
 El algoritmo de exclusión mutua es trivial:
 
@@ -164,8 +165,6 @@ Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de s
 
 ****
 
-
-
 === Sincronización de orden de ejecución
 
 La sección crítica es una abstracción conveniente y sencilla para resolver el problema de sincronización de varios procesos compitiendo por recursos compartidos. Otro problema común es la coordinación del orden de ejecución de operaciones de diferentes procesos (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota por como _P~i~ < Q~j~_. Para asegurar que se cumpla esta condición hay que asegurar antes de _Q~j~_:
@@ -186,6 +185,7 @@ sync.signal()   Qj
 ...             ...
 ----
 
+[[sync_barrier]]
 ==== Barreras
 
 A veces es conveniente desarrollar algoritmos concurrentes en fases y hacer que los procesos se sincronicen  para esperar que todos acaben la fase actual y que comiencen sincronizados la siguiente. Esta sincronización se logra de forma muy parecida al ejemplo anterior: poniendo _barreras de sincronización_ al final e inicio de cada fase.
