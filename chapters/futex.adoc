@@ -155,7 +155,7 @@ Este algoritmo es muy sencillo y mucho más eficiente, de 27 segundos del semáf
 $ time ./simple_mutex
 real	0m0.899s
 user	0m0.398s
-sys	    0m2.725s
+sys     0m2.725s
 ----
 
 
@@ -285,7 +285,7 @@ sys     0m42.622s
 
 Sigue siendo muy ineficiente, incluso peor que el semáforo simple inicial, por dos razones:
 
-- Todos los procesos pasar por la cola de bloqueados al igual que en semáforos.
+- Todos los procesos pasan por la cola de bloqueados al igual que en semáforos.
 - Se añade el coste adicional provocado por el siguiente bucle en el `wait()` que es idéntico a ambas versiones:
 
 ----
