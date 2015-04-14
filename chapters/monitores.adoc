@@ -15,4 +15,6 @@
 === Monitores en POSIX Threads
 ////
 Poner lectores-escritores
+Agregar FUTEX con variables de condición de
+http://locklessinc.com/articles/futex_cheat_sheet/
 ////

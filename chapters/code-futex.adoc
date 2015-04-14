@@ -1,12 +1,31 @@
 
 == Código futex
 
+=== Semáforo
+[[futex_semaphore_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/futex/semaphore.c[semaphore.c]
+[source,c]
+----
+include::../code/futex/semaphore.c[]
+----
+
+=== Mutexes
+
 [[futex_simple_mutex_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/futex/simple_mutex.c[simple_mutex.c]
 [source,c]
 ----
 include::../code/futex/simple_mutex.c[]
 ----
+
+
+[[mutex_drepper_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/futex/mutex_drepper.c[mutex_drepper.c]
+[source,c]
+----
+include::../code/futex/mutex_drepper.c[]
+----
+
 
 [[futex_fair_mutex_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/futex/fair_mutex.c[fair_mutex.c]
@@ -29,9 +48,10 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/futex/fair_mut
 include::../code/futex/fair_mutex_spin.c[]
 ----
 
-[[futex_semaphore_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/semaphore.c[semaphore.c]
+=== Barreras
+[[futex_barrier_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/futex/barrier.c[barrier.c]
 [source,c]
 ----
-include::../code/futex/semaphore.c[]
+include::../code/futex/barrier.c[]
 ----

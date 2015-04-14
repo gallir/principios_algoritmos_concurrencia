@@ -255,7 +255,7 @@ def barrier(n):
 
 
 ****
-Algunos lenguajes implementan barreras similares en sus librerías de concurrencia, en Java y Ruby la clase `CyclicBarrier`, en GO el tipo `WaitGroup` de `sync`, en Python `threading.Event` puede adaptarse fácilmente para el mismo propósito. Hay una propuesta de estandarización de la misma construcción para ISO C++ (<<Mackintosh>>) juntamente con _Latches_ (mecanismo que bloquea a los procesos hasta que se hace cero)
+Algunos lenguajes implementan barreras similares en sus librerías de concurrencia, en Java y Ruby la clase `CyclicBarrier`, en Go el tipo `WaitGroup` de `sync`, en Python `threading.Event` puede adaptarse fácilmente para el mismo propósito. Hay una propuesta de estandarización de la misma construcción para ISO C++ (<<Mackintosh>>) juntamente con _Latches_ (mecanismo que bloquea a los procesos hasta que se hace cero).
 ****
 
 
@@ -381,8 +381,6 @@ while True:
 
 ****
 El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles, la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<messages>>).
-
-En las siguientes secciones estudiaremos cómo se implementan los algoritmos usando solo semáforos, no como usar los ya implementados de cada lenguaje.
 ****
 
 ===== Semáforos partidos
@@ -501,7 +499,7 @@ Es un modelo muy estudiado en el área de la programación concurrente, fue inve
 image::dining_philosophers.jpg[height="250", align="center"]
 
 
-Cada filósofo realiza solo dos actividades: pensar o comer. Cada filósofo es un proceso independiente, el algoritmo general de cada uno de ellos es:
+Cada filósofo realiza solo dos actividades: pensar o comer. Cada uno es un proceso independiente, el algoritmo general de cada uno de ellos es:
 
 ----
 def philosopher():
@@ -714,7 +712,7 @@ Hay que tener en cuenta que las llamadas a `checkNeighbors()` se hacen siempre d
 
 Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe entre otras cosas a que no existe _retención y espera_, los filósofos que no pueden comer no retienen el tenedor libre. Sin _retención y espera_ tampoco se puede producir la _espera circular_. Dado que no se cumplen ninguna de estas dos condiciones necesarias tampoco pueden producirse _interbloqueos_. Cumple con todas las propiedades que <<philosophers_requisites, mencionamos al principio>>.
 
-
+[[priority_inheritance]]
 === Inversión de prioridades
 
 .Un bug marciano
