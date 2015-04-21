@@ -15,9 +15,24 @@ monitor Counter
 
 El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
 
-La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como parte del lenguaje. En el ejemplo 
+=== Monitores en Java
+La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No hay una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ que se puede usar para forzar la exclusión mutua de la ejecución de un bloque de código indicando que es `synchronized` respecto a dicho objeto, como en el siguiente ejemplo ((<<monitors_counter_object_java, código completo>>):
 
-La operación de sumar la variable `counter` se puede hacer espeficando el método como `synchronized`:
+
+[source, java]
+----
+    Object lock = new Object();
+
+...
+
+    for (int i =0; i < max; i++) {
+        synchronized (lock) {
+            counter += 1;
+        }
+    }
+----
+
+Java agrega automáticamente las operaciones de _wait_ y _signal_ sobre mutex asociado al objecto `lock` a la entrada y salida del bloque. La opción más común es definiendo un método `synchronized` como en el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
 
 [source, java]
 ----
@@ -34,18 +49,12 @@ La operación de sumar la variable `counter` se puede hacer espeficando el méto
 
 ----
 
+En este caso el _mutex_ está asociado a la propia instancia, el objeto `this`. La especificación `synchronized` especifica que el hilo debe obtener el _lock_ para ejecutar el método o bloque. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_, también se pueden llamar a otros métodos _synchronized_, la exclusión mutua se asegurará hasta que se haya salido del primero (es decir, es re-entrante).
 
+****
+Una clase cuyos métodos públicos están todos declarados como _synchronized_ de denomina _monitor Java_, aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
+*****
 
-[source, java]
-----
-Object lock = new Object();
-
-for (int i =0; i < max; i++) {
-    synchronized (lock) {
-        counter += 1;
-    }
-}
-----
 
 
 === Variables de condición
