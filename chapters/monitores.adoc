@@ -1,10 +1,41 @@
 [[monitors]]
 == Monitores
 
+Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivel. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notaicón más conocido. La idea fue que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_. Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y que sus datos solo podían ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_ y que sirvió para el desarrollo de varios sistemas operativos experimentales y cuyas ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
+
+En la propuesta original un monitor se declaraba de una forma similar a la siguiente:
+
+----
+monitor Counter
+    integer counter = 0
+
+    procedure increment
+        integer tmp
+        tmp = counter
+        counter = tmp + 1
+----
+
+El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
+
+=== Variables de condición
+
+La exclusión mutua no basta para la sincronización por ello se agregan dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (y opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
+
+1. Sobre unas variables explícitas denominadas _variables de condición_, donde queda a cargo del programa la verificación de condiciones y hacer los _wait_ y _signal_ sobre las variables de condición adecuadas. Estas variables no almacenan ningún valor, solo se usan como _recipientes_ de las dos operaciones. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto.
+
+2. El bloqueo automático sobre expresiones lógicas, queda a cargo de la implementación de monitores el desbloqueo de los procesos cuando la expresión se hace verdadera.
+
+3. Operaciones genéricas _wait_ y _signal_ no ligadas a ninguna variable, por lo que cada proceso bloqueado debe verificar una variable de estado para detectar si le corresponde continuar la ejecución. Como los de primer tipo, si no hay ningún proceso bloqueado por un _wait_ el _signal_ no tiene efecto.
+
+En el primer tipo están los monitores tradicionales (también las variables de condición en POSIX Threads), en el segundo los conocidos como _objetos protegidos_, el tercero es la implementación de monitores en Java (la operación _wait_ es el el método `wait()`, _signal_ es `notify()` y _broadcast_ es `notifyAll`).
+
+
+[[monitors_image]]
+.Monitores
+image::monitors.png[align="center"]
 
 === Declaración y uso genérico
 
-=== Variables de condición
 
 === Prioridades
 

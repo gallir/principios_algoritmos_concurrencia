@@ -45,7 +45,9 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Ben-Ari]]] Mordechai Ben-Ari. _Principles of Concurrent and Distributed Programming_. Second edition 2006, Addison-Wesley, ISBN 978-0-321-31283-9.
 
-- [[[Hoare]]] C. A. R. Hoare. _Communicating Sequential Processes_. 1985/2004. http://www.usingcsp.com/cspbook.pdf
+- [[[Hoare]]] C.A.R. Hoare. _Communicating Sequential Processes_. 1985/2004. http://www.usingcsp.com/cspbook.pdf
+
+- [[[Hoare1]]] C.A.R. Hoare. _Monitors: An Operating System Structuring Concept_. Communications of the ACM,  Vol. 17 Number 10, October 1974. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.73.8853&rep=rep1&type=pdf
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
@@ -75,6 +77,9 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 - [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
 
 - [[[Mackintosh]]] Alasdair Mackintosh, Olivier Giroux. _C++ Latches and Barriers_. ISO/IEC JTC1 SC22 WG21 N4204, 2014-08-06. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4204.html
+
+- [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
+Conference on the History of Programming Languages, Cambridge, MA, April 1993 http://brinch-hansen.net/papers/1993a.pdf
 
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
