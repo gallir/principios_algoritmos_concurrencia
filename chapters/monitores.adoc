@@ -1,7 +1,7 @@
 [[monitors]]
 == Monitores
 
-Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivel. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notaicón más conocido. La idea fue que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_. Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y que sus datos solo podían ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_ y que sirvió para el desarrollo de varios sistemas operativos experimentales y cuyas ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
+Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivel. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notaicón más conocido. La idea fue que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_. Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y que sus datos solo debían poder ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y sus ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
 
 En la propuesta original un monitor se declaraba de una forma similar a la siguiente:
 
@@ -53,13 +53,14 @@ En este caso el _mutex_ está asociado a la propia instancia, el objeto `this`. 
 
 ****
 Una clase cuyos métodos públicos están todos declarados como _synchronized_ de denomina _monitor Java_, aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
-*****
+****
 
+Un error habitual al programar monitores en Java es la confusión sobre el _mutex_ y su objeto relacionado. Un método de instancia `synchronized` solo asegura la exlusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia `synchronized`. Para estos casos hay que definir explícitamente un objeto, o hacerlo desde un método `synchronized` de clase.
 
 
 === Variables de condición
 
-La exclusión mutua no basta para la sincronización por ello se agregan dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (y opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
+La exclusión mutua no basta para la sincronización, se añaden dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (y opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
 
 1. Sobre unas variables explícitas denominadas _variables de condición_, donde queda a cargo del programa la verificación de condiciones y hacer los _wait_ y _signal_ sobre las variables de condición adecuadas. Estas variables no almacenan ningún valor, solo se usan como _recipientes_ de las dos operaciones. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto.
 
@@ -69,17 +70,130 @@ La exclusión mutua no basta para la sincronización por ello se agregan dos ope
 
 En el primer tipo están los monitores tradicionales (también las variables de condición en POSIX Threads), en el segundo los conocidos como _objetos protegidos_, el tercero es la implementación de monitores en Java (la operación _wait_ es el el método `wait()`, _signal_ es `notify()` y _broadcast_ es `notifyAll`).
 
+Un monitor se suele representar gráficamente de la siguiente forma:
 
 [[monitors_image]]
 .Monitores
 image::monitors.png[align="center"]
 
-=== Declaración y uso genérico
 
+Por la exclusión mutua solo un proceso puede estar _dentro_ del monitor. Los métodos del monitor pueden bloquearse en variables de condición, al hacerlo tienen que liberar temporalmente el _lock_ para que otros procesos puedan entrar. Estos procesos se representan en _salas internas_, bloqueados esperando a que otro proceso señalice a su respectiva variable de condición. Cuando un proceso que está dentro del monitor señaliza (_S_, por _signaler_) una variable de condición donde hay varios procesos esperando (_W_ por _waiting_) además de los procesos que están esperando para entrar (_E_ por _entry_), ¿cuál de ellos continúa la ejecución.
 
 === Prioridades
 
-=== Monitores en Java
+Hay varias opciones:
+
+1. El proceso que estaba bloqueado en la variable de condición se de reanudar inmediatamente, a esta condición se la llama _requerimiento de reanudación inmediata_ (o _IRR_ de _Immediate Resumption Requeriment_), es característica de los monitores tradicionales cuya especificación es *_E < S < W_*. Los procesos bloqueados en las variables de condición son los de mayor prioridad, el proceso que señaliza se bloquea inmediatamente para que se ejecute un proceso esperando, los que están esperando en la entrada son los de menor prioridad.
+
+2. El proceso que señaliza sale del monitor, luego el que estaba esperando en la variable de condicón y finalmente los que esperan entrar al monitor. Esta especificación es *_E < W < S_*.
+
+3. Los procesos que están esperando para entrar tienen la misma prioridad que los bloqueados en la dentro del monitor, *_E = W < S_*. Esta es la especificación para monitores en Java, los proceso desbloqueados por el `notify()` o `notifyAll()` van a la misma cola que los procesos en espera para entrar al monitor.
+
+
+[[monitors_java_image]]
+.Monitores en Javafootnote:[Imagen Wikimedia de Theodore Norvell, https://commons.wikimedia.org/wiki/File:Monitor_(synchronization)-Java.png], _E = W < S_
+image::monitor_java.png[height="300", align="center"]
+
+
+
+=== Simulación de semáforos
+
+Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos y que cualquier de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (`value`) y una variable de condición (`notZero`) para bloquear a los procesos en la operación `wait` si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
+
+----
+monitor Semaphore
+    integer value = k
+    condition notZero
+
+    operation wait
+        if value == 0
+            waitC(notZero)
+        value = value - 1
+
+    operation signal
+        value = value + 1
+        signalC(notZero)
+----
+
+Este algoritmo es correcto pero tiene un problema, requiere la _reanudación inmediata_ (es decir _E < S < W_). Cuando un proceso ejecuta el `signal()` el proceso debe ejecutar inmediatamente para evitar que el valor del semáforo se modifique por otro proceso, por ejemplo uno que esté bloqueado esperando a entrar para ejecutar `wait()` (como puede ocurrir en Java ya que la prioridad de ambos es la misma, _E = W_) o el mismo proceso que hizo el `signal()` y luego hace otro `wait()`. En ambos casos habría el valor del semáforo valdría menor que cero.
+
+Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condición se mantiene después de despertarse del `wait()`, en este caso es verificar si el semáforo sigue siendo distinto a cero. En  `wait()` hay que cambiar el `if` por un `while`:
+
+----
+    operation wait
+        while value == 0
+            waitC(notZero)
+        value = value - 1
+----
+
+La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón habitual es usar `while` en vez de `if` para verificar si se cumplen las condiciones para volver a entrar al monitor. Este algoritmo puede ser directamente traducido a Java, se necesita la misma variable entera `value` y los métodos _synchronized_ `wait()` y `signal()` de los semáforos (en este caso reemplazados por `p()` y `v()` para no confundir el _wait_ de semáforos con el del método de bloqueo dentro del monitor de Java):
+
+
+[source, java]
+----
+class Semaphore {
+    int value;
+
+    public Semaphore(int v) {
+        value = v;
+    }
+
+    synchronized void p() {
+        while (value == 0) {
+            wait();
+        }
+        value--;
+    }
+
+    synchronized void v() {
+        value++;
+        notify();
+    }
+}
+----
+
+<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo del contador usando la clase anterior para simular semáforos, muy similar y equivalente al <<sem_counter_java, ejemplo>> usando la clase `Semaphore` de `java.util.concurrent` que vimos en el capítulo <<semaphores>>. Si comparamos los tiempos de CPU de ambas implementaciones vemos que éste con monitores es mucho más eficiente que la implementación de las librerías de concurrencia de Javafootnote:[hay que tener en cuenta que se hacen menos verificaciones, pero la diferencia es enorme.].
+
+----
+$ time java semaphores/CounterSemaphore
+real	0m34.974s
+user	0m23.079s
+sys	    0m21.518s
+
+$ time java monitors/CounterSemaphore
+real	0m2.603s
+user	0m3.325s
+sys     0m1.148s
+----
+
+===== Variables condicionales de POSIX Thread
+
+
+
+[source, c]
+----
+pthread_mutex_t mutex;
+pthread_cond_t notZero;
+int sem_value = 1;
+
+void p() {
+    mutex_lock(&mutex);
+    while (sem_value == 0) {
+        cond_wait(&notZero, &mutex);
+    }
+    sem_value--;
+    mutex_unlock(&mutex);
+}
+
+void v() {
+    mutex_lock(&mutex);
+    sem_value++;
+    cond_signal(&notZero);
+    mutex_unlock(&mutex);
+}
+----
+
+=== Prioridades
 
 ==== Algoritmos tradicionales
 
