@@ -6,31 +6,31 @@
 === Creación de threads
 
 [[threads_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/threads.c[threads.c]
 [source,c]
-.threads.c
 ----
-include::../code/threads.c[]
+include::../code/intro/threads.c[]
 ----
 
 [[threads_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/threads.py[threads.py]
 [source,python]
-.threads.py
 ----
-include::../code/threads.py[]
+include::../code/intro/threads.py[]
 ----
 
 [[gothreads_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/gothreads.go[gothreads.go]
 [source,go]
-.gothreads.go
 ----
-include::../code/gothreads.go[]
+include::../code/intro/gothreads.go[]
 ----
 
 [[threads_java]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/Threads.java[Threads.java]
 [source,java]
-.Threads.java
 ----
-include::../code/Threads.java[]
+include::../code/intro/Threads.java[]
 ----
 
 
@@ -39,38 +39,38 @@ include::../code/Threads.java[]
 === Incrementar un contador con dos hilos
 
 [[counter_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter.c[counter.c]
 [source,c]
-.counter.c
 ----
-include::../code/counter.c[]
+include::../code/intro/counter.c[]
 ----
 
 [[counter_py]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter.py[counter.py]
 [source,python]
-.counter.py
 ----
-include::../code/counter.py[]
+include::../code/intro/counter.py[]
 ----
 
 [[gocounter_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/gocounter.go[gocounter.go]
 [source,go]
-.gocounter.go
 ----
-include::../code/gocounter.go[]
+include::../code/intro/gocounter.go[]
 ----
 
 [[counter_java]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/Counter.java[Counter.java]
 [source,java]
-.Counter.java
 ----
-include::../code/Counter.java[]
+include::../code/intro/Counter.java[]
 ----
 
 [[counter_local_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter_local.c[counter_local.c]
 [source,c]
-.counter_local.c
 ----
-include::../code/counter_local.c[]
+include::../code/intro/counter_local.c[]
 ----
 
 
@@ -78,8 +78,18 @@ include::../code/counter_local.c[]
 === Algoritmo de Peterson con barreras de memoria
 
 [[counter_peterson_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/peterson.c[peterson.c]
 [source,c]
-.counter_peterson.c
 ----
-include::../code/counter_peterson.c[]
+include::../code/intro/peterson.c[]
+----
+
+[[counter_bakery]]
+=== Algoritmo de la panaderia con barreras de memoria
+
+[[counter_bakery_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/bakery.c[bakery.c]
+[source,c]
+----
+include::../code/intro/bakery.c[]
 ----

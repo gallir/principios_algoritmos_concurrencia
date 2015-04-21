@@ -102,25 +102,25 @@ $ time ./counter
 Counter value: 5785131 Expected: 10000000
 real    0m0.010s <1>
 user    0m0.017s
-sys 0m0.000s
+sys     0m0.000s
 
 $ time ./gocounter
 Counter value: 5052927 Expected: 10000000
 real    0m0.021s <1>
 user    0m0.032s
-sys 0m0.008s
+sys     0m0.008s
 
 $ time java Counter
 Counter value: 4406963 Expected: 10000000
 real    0m0.333s <1>
 user    0m0.564s
-sys 0m0.020s
+sys     0m0.020s
 
 $ time python3 counter.py
 Counter value: 7737979 Expected: 10000000
 real    0m5.400s <2>
 user    0m5.365s
-sys 0m0.044s
+sys     0m0.044s
 ----
 <1> El tiempo de _reloj_ es *menor* al tiempo acumulado de CPU.
 <2> El tiempo de _reloj_ es *mayor* al tiempo acumulado de CPU.

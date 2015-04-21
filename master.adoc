@@ -57,3 +57,5 @@ include::chapters/code-spinlocks.adoc[]
 include::chapters/code-semaphores.adoc[]
 
 include::chapters/code-futex.adoc[]
+
+include::chapters/code-monitors.adoc[]

@@ -15,13 +15,16 @@ monitor Counter
 
 El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
 
-La estructura de monitores que encapsula variables y procedimientos es similar a la prorgamación orientada objeto, es una de las razones por la que Java implementa monitores como parte del lenguaje. La operación de sumar la variable `counter` se puede hacer espeficando el método como `synchronized`:
+La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como parte del lenguaje. En el ejemplo 
+
+La operación de sumar la variable `counter` se puede hacer espeficando el método como `synchronized`:
 
 [source, java]
 ----
-synchronized void add() {
-    counter++;
-}
+...
+    synchronized void add() {
+        counter++;
+    }
 
 ...
 
