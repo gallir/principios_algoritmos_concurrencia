@@ -1,9 +1,11 @@
 [[monitors]]
 == Monitores
 
-Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivel. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notaicón más conocido. La idea fue que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_. Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y que sus datos solo debían poder ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y sus ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
+Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivelfootnote:[De hecho le llamaron _monitor_ porque así es como se llamaba en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_.
 
-En la propuesta original un monitor se declaraba de una forma similar a la siguiente:
+Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y sus datos solo debían poder ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y sus ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
+
+En la propuesta original un monitor se declaraba de una forma similar a la siguientefootnote:[La especificación original de Hoare fue en Pascal, en la bibliografía posterior se empezó a usar una notación sin la sobrecarga de tantos `BEGIN` y `END`, es la que respeto a lo largo de este capítulo.]:
 
 ----
 monitor Counter
@@ -16,7 +18,7 @@ monitor Counter
 El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
 
 === Monitores en Java
-La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No hay una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ que se puede usar para forzar la exclusión mutua de la ejecución de un bloque de código indicando que es `synchronized` respecto a dicho objeto, como en el siguiente ejemplo ((<<monitors_counter_object_java, código completo>>):
+La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No hay una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ que se puede usar para forzar la exclusión mutua de la ejecución de un bloque de código indicando que es `synchronized` respecto a dicho objeto, como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
 
 
 [source, java]
@@ -92,13 +94,13 @@ Hay varias opciones:
 
 [[monitors_java_image]]
 .Monitores en Javafootnote:[Imagen Wikimedia de Theodore Norvell, https://commons.wikimedia.org/wiki/File:Monitor_(synchronization)-Java.png], _E = W < S_
-image::monitor_java.png[height="300", align="center"]
+image::monitor_java.png[height="350", align="center"]
 
 
 
 === Simulación de semáforos
 
-Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos y que cualquier de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (`value`) y una variable de condición (`notZero`) para bloquear a los procesos en la operación `wait` si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
+Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos y que cualquier de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (`value`) y una variable de condición (`notZero`) para bloquear a los procesos en la operación `wait()` si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
 
 ----
 monitor Semaphore
@@ -156,48 +158,102 @@ class Semaphore {
 
 ----
 $ time java semaphores/CounterSemaphore
-real	0m34.974s
-user	0m23.079s
-sys	    0m21.518s
+real    0m34.974s
+user    0m23.079s
+sys     0m21.518s
 
 $ time java monitors/CounterSemaphore
-real	0m2.603s
-user	0m3.325s
+real    0m2.603s
+user    0m3.325s
 sys     0m1.148s
 ----
 
-===== Variables condicionales de POSIX Thread
+==== Variables condicionales de POSIX Threads
+Los monitores no son unicamente una construcción sintáctica de lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se se puede asegurar exlcusión mutua entre las funciones que son parte del monitor y se cuenta con variables de condición. Las librerías POSIX Threads proveen ambas, ya hemos visto el uso de _mutex_, también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
+Con POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait`) y _signal_ (`pthread_cond_signal`) y la operación _broadcast_ (`pthread_cond_broadcast`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java). Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
 
 
 [source, c]
 ----
 pthread_mutex_t mutex;
 pthread_cond_t notZero;
-int sem_value = 1;
+int value = 1;
+----
 
+
+Usaremos `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no supere los márgenes del lector no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
+
+[source, c]
+----
 void p() {
     mutex_lock(&mutex);
-    while (sem_value == 0) {
+
+    while (value == 0) {
         cond_wait(&notZero, &mutex);
     }
-    sem_value--;
+    value--;
+
     mutex_unlock(&mutex);
 }
 
 void v() {
     mutex_lock(&mutex);
-    sem_value++;
+
+    value++;
     cond_signal(&notZero);
+
     mutex_unlock(&mutex);
 }
 ----
 
-=== Prioridades
+En la operación _wait_ (`pthread_cond_wait(&notZero, &mutex)`) además de la variable de condición se envía como argumento el mismo `mutex` que se usa para las funciones para cumplir con los requisitos del monitor:
 
-==== Algoritmos tradicionales
+- El _mutex_ es liberado al bloquearse el proceso para que otro pueda entrar monitor.
 
-=== Monitores en POSIX Threads
+- El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ para que se asegure la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función. Además compite en la entrada con los demás procesos que estén en la cola del _mutex_, las prioridades son idénticas a las de Java: _E = W < S_.
+
+=== Algoritmos de sincronización
+
+En el capítulo <<semaphores>> hemos visto los algoritmos de sincronización más estudiados, nadie pretende resolver todos los problemas con dichos algoritmos o que se deban reprogramar cada vez (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar, vale la pena conocer los principios detrás de las librerías de alto nivel y nos proporcionan una mejor perspectiva del porqué se han diseñado de una forma u otra. Por otro lado, es complicado aprender a reconocer y resolver los problemas de concurrencia y sincronización, analizar los soluciones ayudan mucho al proceso de aprendizaje.
+
+Por ello en este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que me ahorraré de repetir la presentación de cada uno de ellos.
+
+==== Barreras
+
+[source, java]
+----
+synchronized void barrier(int n) {
+    arrived++;
+    if (arrived == n) {
+        arrived = 0;
+        notifyAll();
+    } else {
+        wait();
+    }
+}
+----
+
+----
+def barrier(n):
+    with mutex:
+        arrived += 1
+
+        if arrived == n:
+            arrived = 0
+            allArrived.notify_all()
+        else:
+            allArrived.wait()
+----
+
+==== Productores-consumidores
+
+
+==== Lectores-escritores
+
+
+==== Filósofos cenando
+
 ////
 Poner lectores-escritores
 Agregar FUTEX con variables de condición de
