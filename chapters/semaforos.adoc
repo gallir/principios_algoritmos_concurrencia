@@ -227,6 +227,7 @@ Después de `do_phase()` cada proceso esperará a que los demás hayan llegado a
 
 El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, `arrivals` y `departures`, y una variable `counter` incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _getAndAdd_ o similares como _addAndGet_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional <<barrier_py, como se hace en el ejemplo en Python>> para asegurar exclusión mutua en las modificaciones a `counter`.
 
+[[alg_barriers]]
 ----
     Semaphore arrival = 1
     Semaphore departure = 0

@@ -62,7 +62,7 @@ Un error habitual al programar monitores en Java es la confusión sobre el _mute
 
 === Variables de condición
 
-La exclusión mutua no basta para la sincronización, se añaden dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (y opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
+La exclusión mutua no basta para la sincronización, se añaden dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
 
 1. Sobre unas variables explícitas denominadas _variables de condición_, donde queda a cargo del programa la verificación de condiciones y hacer los _wait_ y _signal_ sobre las variables de condición adecuadas. Estas variables no almacenan ningún valor, solo se usan como _recipientes_ de las dos operaciones. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto.
 
@@ -209,7 +209,7 @@ void v() {
 
 En la operación _wait_ (`pthread_cond_wait(&notZero, &mutex)`) además de la variable de condición se envía como argumento el mismo `mutex` que se usa para las funciones para cumplir con los requisitos del monitor:
 
-- El _mutex_ es liberado al bloquearse el proceso para que otro pueda entrar monitor.
+- El _mutex_ es liberado al bloquearse el proceso para que otro pueda entrar al monitor.
 
 - El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ para que se asegure la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función. Además compite en la entrada con los demás procesos que estén en la cola del _mutex_, las prioridades son idénticas a las de Java: _E = W < S_.
 
@@ -221,7 +221,7 @@ Een este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algorit
 
 ==== Barreras
 
-El algoritmo de barreras con monitores es mucho más sencillo que con semáforos. En Java sólo hace falta un contador (`arrived`) inicialmente en cero. Cuando cada proceso ejecuta `barrier()` incremente el contador, si todavía no es el último se bloquea con `wait()`. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con `notifyAll()` (<<monitors_barrier_java, código completo>>).
+El algoritmo de barreras con monitores es mucho más sencillo que con semáforos. En Java sólo hace falta un contador (`arrived`) inicialmente en cero. Cuando cada proceso ejecuta `barrier()` se incrementa el contador, si todavía no es el último se bloquea con `wait()`. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con un _broadcast_: `notifyAll()` (<<monitors_barrier_java, código completo>>).
 
 [source, java]
 ----
@@ -236,9 +236,11 @@ synchronized void barrier(int n) {
 }
 ----
 
-A diferencia del algoritmo con monitores tradicionales, en Java no se usan variables condicionales porque el `wait()` y `notify()` son genéricos para cada instancia, equivalente a tener una única variable de condición implícita para cada una. Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase `Lock` de `java.util.concurrent.locks`. De una instancia de `Lock` se pueden obtener las variables de condición necesarias, por ejemplo: `lock.newCondition()`].
+El proceso que hace el `notifyAll()` es siempre el último proceso que faltaba llegar a la barrera, no hay interferencia ni ningún proceso puede adelantarse. Ningún otro proceso podrá entrar al monitor hasta que el último haya salido, el contador `arrived` ya valdrá cero y comenzará la cuenta para la siguiente fase. Aunque el monitor del lenguaje tenga una prioridad diferente a _E = W < S_, por ejemplo de reanudación inmediata (_E < S < W_), el valor de `arrived` ya es cero porque fue asignado antes del _signal_.
 
-En Python se puede usar un objeto de `threading.Condition` asociado con el _mutex_ que se usa para la exclusión mutua en las funciones. Además del contador `arrived` se usará un `mutex` y la variable de condición `allArrived` sobre la que se señalizará cuando todos los procesos hayan llegado:
+A diferencia del algoritmo con monitores tradicionales, en Java no se usan variables condicionales porque `wait()`, `notify()` y `notifyAll()` son genéricos para cada instancia (equivalente a tener una única variable de condición implícita para cada una). Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase `Lock` de `java.util.concurrent.locks`. De una instancia de `Lock` se pueden obtener las variables de condición necesarias, por ejemplo: `lock.newCondition()`].
+
+En Python se puede usar un objeto de `threading.Condition` asociado con el _mutex_ que se usa para la exclusión mutua en las funciones del monitor. Además del contador `arrived` se usa `mutex` y la variable de condición `allArrived` sobre la que se señalizará cuando todos los procesos hayan llegado:
 
 
 [source, python]
@@ -264,11 +266,13 @@ def barrier(n):
             allArrived.wait()
 ----
 
+La razón fundamental de la simplicidad del algoritmo de barreras es el _broadcast_ que desbloquea a todos los procesos en una única operación. Si no estuviese disponible el algoritmo sería maś complejo, hay que despertar a los procesos individualmente y asegurar que uno que superó la barrera no vuelva a ejecutarla e interfiera y se adelante a los que todavía están por desbloquearse de la fase anterior (tal como se <<alg_barriers, hace con semáforos>>).
 
 ==== Productores-consumidores
 
+El algoritmo de productores-consumidores con _buffer_ finito se puede implementar con dos variables de condición (<<monitors_producer_consumer_py, código completo en Python>>), una para bloquear los productores cuando el _buffer_ está lleno (`notFull`) y otra para bloquear a los consumidores (`notEmpty`) cuando no hay elementos en el _buffer_.
 
-(<<monitors_producer_consumer_py, código completo>>)
+La lógica del productor es sencilla, mientras el _buffer_ está está lleno se bloquea en `notFull`, después de agregar un elemento hace un _signal_ a `notEmpty` para que se despierte un consumidor si es que hay alguno esperando.
 
 [source, python]
 ----
@@ -280,6 +284,8 @@ def append(self, data):
         notEmpty.notify()
 ----
 
+De forma similar el consumidor se bloquea si el _buffer_ está vacío y luego de obtener un elemento señaliza `notFull` por si hay productores bloqueados.
+
 [source, python]
 ----
 def take(self):
@@ -288,11 +294,13 @@ def take(self):
             notEmpty.wait()
         data = buffer.popleft()
         notFull.notify()
-    return data
+        return data
 ----
 
+El algoritmo es correcto porque asegura que el productor no puede avanzar si no hay espacio en el _buffer_ ni los consumidores si no hay elementos: mientras se hace la verificación del estado del _buffer_ ningún otro proceso puede agregar o quitar elementos por la exclusión mutua entre las funciones del monitor.
 
-(<<monitors_producer_consumer_java, código completo>>)
+
+En los monitores nativos de Java no se pueden usar diferentes variables de condición pero el algoritmo es casi idéntico (<<monitors_producer_consumer_java, código completo>>):
 
 
 [source, java]
@@ -308,7 +316,7 @@ synchronized int take() {
 }
 
 synchronized void append(Integer data) {
-    while (buffer.size() == BUFFER_SIZE) {
+    while (buffer.size() == size) {
         wait();
     }
     buffer.add(data);
@@ -316,8 +324,83 @@ synchronized void append(Integer data) {
 }
 ----
 
+Al no poder esperar o señalizar variables independientes los productores y consumidores comparten la misma cola y no de puede discriminar por uno u otro. Por lo tanto ambos deben hacer un `notifyAll()` para que todos los bloqueados verifiquen si pueden continuar. Dado que se verifica la condición la condición dentro de un `while` el algoritmo también es correcto pero es más ineficiente. Cuando un productor o consumidor hace el `notifyAll()` se despiertan todos los productores y consumidores que hayan hecho en _wait_ aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
+
 
 ==== Lectores-escritores
+
+
+(<<monitors_rw_lock_py, código completo>>)
+
+----
+def __init__(self):
+    readers = 0
+    writing = False
+    mutex = threading.Lock()
+    canRead = threading.Condition(mutex)
+    canWrite = threading.Condition(mutex)
+
+
+def reader_lock():
+    with mutex:
+        while writing:
+            canRead.wait()
+        readers += 1
+        canRead.notify()
+
+def reader_unlock():
+    with mutex:
+        readers -= 1
+        if not readers:
+            canWrite.notify()
+
+def writer_lock():
+    with mutex:
+        while writing or readers:
+            canWrite.wait()
+        writing = True
+
+def writer_unlock():
+    with mutex:
+        writing = False
+        canRead.notify()
+        canWrite.notify()
+----
+
+
+
+(<<monitors_rw_java, código completo>>)
+
+----
+synchronized void readerLock() {
+    while (writing) {
+        wait();
+    }
+    readers++;
+    notifyAll();
+}
+
+synchronized void readerUnlock() {
+    readers--;
+    if (readers == 0) {
+        notifyAll();
+    }
+}
+
+synchronized void writerLock() {
+    while (writing || readers != 0) {
+        wait();
+    }
+    writing = true;
+}
+
+synchronized void writerUnlock() {
+    writing = false;
+    notifyAll();
+
+}
+----
+
 
 
 ==== Filósofos cenando
