@@ -215,11 +215,13 @@ En la operación _wait_ (`pthread_cond_wait(&notZero, &mutex)`) además de la va
 
 === Algoritmos de sincronización
 
-En el capítulo <<semaphores>> hemos visto los algoritmos de sincronización más estudiados, nadie pretende resolver todos los problemas con dichos algoritmos o que se deban reprogramar cada vez (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar, vale la pena conocer los principios detrás de las librerías de alto nivel y nos proporcionan una mejor perspectiva del porqué se han diseñado de una forma u otra. Por otro lado, es complicado aprender a reconocer y resolver los problemas de concurrencia y sincronización, analizar los soluciones ayudan mucho al proceso de aprendizaje.
+En el capítulo <<semaphores>> hemos visto los algoritmos de sincronización más estudiados, nadie pretende resolver todos los problemas con dichos algoritmos o que se deban reprogramar cada vez (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar, vale la pena conocer los principios detrás de las librerías de alto nivel y nos proporcionan una mejor perspectiva del porqué se han diseñado de una forma u otra. Es complicado aprender a reconocer y resolver los problemas de concurrencia y sincronización, analizar los soluciones ayudan mucho al proceso.
 
-Por ello en este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que me ahorraré de repetir la presentación de cada uno de ellos.
+Een este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos.
 
 ==== Barreras
+
+El algoritmo de barreras con monitores es mucho más sencillo que con semáforos. En Java sólo hace falta un contador (`arrived`) inicialmente en cero. Cuando cada proceso ejecuta `barrier()` incremente el contador, si todavía no es el último se bloquea con `wait()`. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con `notifyAll()` (<<monitors_barrier_java, código completo>>).
 
 [source, java]
 ----
@@ -234,6 +236,22 @@ synchronized void barrier(int n) {
 }
 ----
 
+A diferencia del algoritmo con monitores tradicionales, en Java no se usan variables condicionales porque el `wait()` y `notify()` son genéricos para cada instancia, equivalente a tener una única variable de condición implícita para cada una. Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase `Lock` de `java.util.concurrent.locks`. De una instancia de `Lock` se pueden obtener las variables de condición necesarias, por ejemplo: `lock.newCondition()`].
+
+En Python se puede usar un objeto de `threading.Condition` asociado con el _mutex_ que se usa para la exclusión mutua en las funciones. Además del contador `arrived` se usará un `mutex` y la variable de condición `allArrived` sobre la que se señalizará cuando todos los procesos hayan llegado:
+
+
+[source, python]
+----
+mutex = threading.Lock()
+allArrived = threading.Condition(mutex)
+arrived = 0
+----
+
+El código simplificado de la función `barrier()` (<<monitors_barrier_py, código completo>>):
+
+
+[source, python]
 ----
 def barrier(n):
     with mutex:
@@ -246,7 +264,57 @@ def barrier(n):
             allArrived.wait()
 ----
 
+
 ==== Productores-consumidores
+
+
+(<<monitors_producer_consumer_py, código completo>>)
+
+[source, python]
+----
+def append(self, data):
+    with mutex:
+        while len(buffer) == buffer.maxlen:
+            notFull.wait()
+        buffer.append(data)
+        notEmpty.notify()
+----
+
+[source, python]
+----
+def take(self):
+    with mutex:
+        while not buffer:
+            notEmpty.wait()
+        data = buffer.popleft()
+        notFull.notify()
+    return data
+----
+
+
+(<<monitors_producer_consumer_java, código completo>>)
+
+
+[source, java]
+----
+synchronized int take() {
+    while (buffer.isEmpty()) {
+        wait();
+    }
+
+    data = buffer.remove();
+    notifyAll();
+    return data;
+}
+
+synchronized void append(Integer data) {
+    while (buffer.size() == BUFFER_SIZE) {
+        wait();
+    }
+    buffer.add(data);
+    notifyAll();
+}
+----
 
 
 ==== Lectores-escritores
