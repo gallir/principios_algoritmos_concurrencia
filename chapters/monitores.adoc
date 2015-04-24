@@ -24,9 +24,7 @@ La estructura de monitores que encapsula variables y procedimientos es similar a
 [source, java]
 ----
     Object lock = new Object();
-
 ...
-
     for (int i =0; i < max; i++) {
         synchronized (lock) {
             counter += 1;
@@ -42,13 +40,10 @@ Java agrega automáticamente las operaciones de _wait_ y _signal_ sobre mutex as
     synchronized void add() {
         counter++;
     }
-
 ...
-
     for (int i =0; i < max; i++) {
         add();
     }
-
 ----
 
 En este caso el _mutex_ está asociado a la propia instancia, el objeto `this`. La especificación `synchronized` especifica que el hilo debe obtener el _lock_ para ejecutar el método o bloque. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_, también se pueden llamar a otros métodos _synchronized_, la exclusión mutua se asegurará hasta que se haya salido del primero (es decir, es re-entrante).
@@ -171,7 +166,7 @@ sys     0m1.148s
 ==== Variables condicionales de POSIX Threads
 Los monitores no son unicamente una construcción sintáctica de lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se se puede asegurar exlcusión mutua entre las funciones que son parte del monitor y se cuenta con variables de condición. Las librerías POSIX Threads proveen ambas, ya hemos visto el uso de _mutex_, también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
-Con POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait`) y _signal_ (`pthread_cond_signal`) y la operación _broadcast_ (`pthread_cond_broadcast`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java). Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
+POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait`) y _signal_ (`pthread_cond_signal`) y una tercera, la operación _broadcast_ (`pthread_cond_broadcast`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java). Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
 
 
 [source, c]
@@ -182,7 +177,7 @@ int value = 1;
 ----
 
 
-Usaremos `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no supere los márgenes del lector no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
+Usaremos `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
 
 [source, c]
 ----
