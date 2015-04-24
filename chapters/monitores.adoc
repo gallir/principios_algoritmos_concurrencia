@@ -154,7 +154,7 @@ class Semaphore {
 }
 ----
 
-<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo del contador usando la clase anterior para simular semáforos, muy similar y equivalente al <<sem_counter_java, ejemplo>> usando la clase `Semaphore` de `java.util.concurrent` que vimos en el capítulo <<semaphores>>. Si comparamos los tiempos de CPU de ambas implementaciones vemos que éste con monitores es mucho más eficiente que la implementación de las librerías de concurrencia de Javafootnote:[hay que tener en cuenta que se hacen menos verificaciones, pero la diferencia es enorme.].
+<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo del contador usando la clase anterior para simular semáforos, muy similar y equivalente al <<sem_counter_java, ejemplo>> usando la clase `Semaphore` de `java.util.concurrent` que vimos en el capítulo <<semaphores>>. Si comparamos los tiempos de CPU de ambas implementaciones vemos que éste con monitores es mucho más eficiente que la implementación de las librerías de concurrencia de Javafootnote:[Hay que tener en cuenta que se hacen menos verificaciones, aún así la diferencia es enorme.].
 
 ----
 $ time java semaphores/CounterSemaphore
