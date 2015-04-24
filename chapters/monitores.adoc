@@ -329,48 +329,79 @@ Al no poder esperar o señalizar variables independientes los productores y cons
 
 ==== Lectores-escritores
 
+Se usan dos variables de condición, `canRead` para notificar a los lectores y `canWrite` para los escritores. Además dos variables, `readers` para llevar la cuenta del número de lectores en la sección crítica y la booleana `writing` para indicar si hay un escritor está en la sección crítica (<<monitors_rw_lock_py, código completo>>).
 
-(<<monitors_rw_lock_py, código completo>>)
+Si hay un escritor en la sección crítica los lectores se esperarán en la variable `canRead` hasta que el escritor le señalize para que vuelvan a comprobar si pueden entrar. Si puden hacerlo incrementan el número de lectores y señalizan a `canRead` para que si hay lectores bloqueados puedan continuar.
 
+[source, python]
 ----
-def __init__(self):
-    readers = 0
-    writing = False
-    mutex = threading.Lock()
-    canRead = threading.Condition(mutex)
-    canWrite = threading.Condition(mutex)
-
-
 def reader_lock():
     with mutex:
         while writing:
-            canRead.wait()
+            canRead.wait()  <1>
         readers += 1
-        canRead.notify()
+        canRead.notify()    <2>
+----
+<1> Espera si hay escritores.
+<2> Para que puedan entrar otros lectores.
 
+A la salida los lectores verifican si ya no quedan otros lectores, si es así señalizan para que puedan entrar los escritores que están bloqueados.
+
+[source, python]
+----
 def reader_unlock():
     with mutex:
         readers -= 1
         if not readers:
-            canWrite.notify()
+            canWrite.notify()   <1>
+----
+<1> Si es el último lector desbloquea a loes escritores que estén esperando.
 
+Los escritores se bloquean en la variable `canWrite` si hay otros lectores o escritor, cuando pueden entrar ponen `writing` en `True` para bloquear a los siguientes lectores y escritores.
+
+[source, python]
+----
 def writer_lock():
     with mutex:
         while writing or readers:
-            canWrite.wait()
+            canWrite.wait()     <1>
         writing = True
+----
+<1> Espera si hay lectores o escritores.
 
+
+Cuando el escritor sale señaliza a lectores o escritores, cualquiera de ellos puede entrar.
+
+[source, python]
+----
 def writer_unlock():
     with mutex:
         writing = False
+        canRead.notify()  <1>
+        canWrite.notify() <1>
+----
+<1> Señaliza a lectores y a escritores.
+
+La última parte -la señalización a ambas variables de condición- puede cambiarse para dar  prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica `canRead`, si tiene proceso bloqueados se señaliza sólo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
+
+Aún con estos cambios este algoritmo puede provocar la inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica, se puede solucionar fácilmente verificando si hay algún escritor bloqueado en `canWrite`:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
+
+[source, python]
+----
+def reader_lock():
+    with mutex:
+        while writing or not empty(canWrite):
+            canRead.wait()
+        readers += 1
         canRead.notify()
-        canWrite.notify()
 ----
 
 
+En Java no podemos usar dos variables de condición por lo que hay que recurrir al `notifyAll()` para desbloquear a lectores y escritores. El código es algo más ineficiente pero el algoritmo queda muy sencillo (<<monitors_rw_java, código completo>>).
 
-(<<monitors_rw_java, código completo>>)
+Solo hacen falta dos variables, el contador de lectores (`readers`) y una booleana que indicará si hay un escritor en la sección crítica (`writing`). Los lectores solo se bloquean si hay un escritor, cuando entran hacen el `notifyAll()` para que puedan entrar otros lectores que se hayan bloqueado en el `wait()` (también despertará a los escritores que volverán a bloquearse inmediatamente).
 
+[source, java]
 ----
 synchronized void readerLock() {
     while (writing) {
@@ -379,21 +410,36 @@ synchronized void readerLock() {
     readers++;
     notifyAll();
 }
+----
 
+Si el lector que sale es el último debe hacer el `notifyAll()` para que puedan entrar los escritores bloqueados.
+
+[source, java]
+----
 synchronized void readerUnlock() {
     readers--;
     if (readers == 0) {
         notifyAll();
     }
 }
+----
 
+Los escritores quedan bloqueados si hay otro escritor o lectores en la sección crítica.
+
+[source, java]
+----
 synchronized void writerLock() {
     while (writing || readers != 0) {
         wait();
     }
     writing = true;
 }
+----
 
+Cuando el escritor señaliza a todos para que puedan entrar los siguientes lectores y escritores.
+
+[source, java]
+----
 synchronized void writerUnlock() {
     writing = false;
     notifyAll();
@@ -401,6 +447,18 @@ synchronized void writerUnlock() {
 }
 ----
 
+No se puede decidir ni conocer a priori si entrarán los lectores o un escritor, depende de quién pueda entrar primero al monitor. Al igual que el anterior este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores que están esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero, por ejemplo:
+
+[source, java]
+----
+synchronized void readerLock() {
+    while (writing || waiting > 0) {
+        wait();
+    }
+    readers++;
+    notifyAll();
+}
+----
 
 
 ==== Filósofos cenando
