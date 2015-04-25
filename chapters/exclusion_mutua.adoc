@@ -1,7 +1,3 @@
-////
-Agregar/editar de "avance" y "espera limitada"
-////
-
 == Exclusión mutua
 
 La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.

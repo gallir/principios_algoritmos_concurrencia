@@ -291,7 +291,7 @@ user	0m6.910s
 sys     0m42.622s
 ----
 
-No ha solucionad nada, sigue siendo muy ineficiente incluso peor que el semáforo simple inicial, por dos razones:
+No ha solucionado nada, sigue siendo muy ineficiente incluso peor que el semáforo simple inicial, por dos razones:
 
 - Todos los procesos pasan por la cola de bloqueados al igual que en semáforos.
 
@@ -310,7 +310,8 @@ Al haber alta competencia `futex.turn` cambia muy frecuentemente obligando a eje
 Si es crítico trabajar con _mutex_ equitativo se puede intentar con otra técnica: esperas activas.
 
 
-==== Optimización con espera activa
+[[spin_then_block]]
+==== Optimización con espera activa (_spin then block_)
 
 Aunque la solución sea contra-intuitiva es posible optimizar considerablemente el _mutex_ equitativo recurriendo a esperas activas limitadas. Si hay alta competencia y las secciones críticas son breves conviene más hacer una breve espera activa -en la entrada y salida- para dar oportunidad a que el siguiente proceso pueda obtener el _lock_ sin necesidad se pasar por la cola de bloqueados. El número de iteraciones de la espera activa debe estar limitada para evitar convertir al algoritmo en un _spinlock_. En `lock()` se hace antes de intentar el _wait_ y en el `unlock()` antes del _wake_ (<<futex_fair_mutex_spin_c, código fuente>>).
 
@@ -358,7 +359,8 @@ user    0m2.804s
 sys     0m3.898s
 ----
 
-En algunas situaciones, como alta competencia y las secciones críticas son muy breves, son preferibles las esperas activas breves a los costosos cambios de contexto (<<LockLess2>>).
+
+En algunas situaciones, como alta competencia y las secciones críticas son muy breves, son preferibles las esperas activas breves a los costosos cambios de contexto (<<LockLess2>>). Esta técnica también es conocida como _spin then block_ y _spin and park_, es muy usada en librerías y soportes _runtime_ de lenguajes de programación. Por ejemplo la máquina virtual de Java lo usa para la implementación de sus <<java_monitor, monitores nativos>>.
 
 
 === Barreras

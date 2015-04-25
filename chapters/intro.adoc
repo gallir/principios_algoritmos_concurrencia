@@ -7,6 +7,7 @@ Hay muchos ejemplos de código, en algunos casos el lenguaje está especificado 
 El código está en <<source_code>>
 
 
+La terminología es fundamental para entender la documentación técnica, me tomé el trabajo de indicar el nombre inglés que se suele usar para las diferentes.
 
 ////
 

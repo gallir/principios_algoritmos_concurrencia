@@ -81,6 +81,11 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 - [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
 Conference on the History of Programming Languages, Cambridge, MA, April 1993 http://brinch-hansen.net/papers/1993a.pdf
 
+- [[[Lea]]] Doug Lea. _The java.util.concurrent Synchronizer Framework_. Science of Computer Programming. Volume 58, Issue 3, December 2005. http://www.sciencedirect.com/science/article/pii/S0167642305000663
+
+- [[[Dice]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the
+Java™ Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
+
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721
 

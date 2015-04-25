@@ -17,6 +17,7 @@ monitor Counter
 
 El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
 
+[[java_monitor]]
 === Monitores en Java
 La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No hay una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ que se puede usar para forzar la exclusión mutua de la ejecución de un bloque de código indicando que es `synchronized` respecto a dicho objeto, como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
 
@@ -255,6 +256,25 @@ void unlock() {
     mutex_unlock(&mutex);
 }
 ----
+
+==== Eficiencia de POSIX Threads vs Java
+
+[[monitor_posix_threads_vs_java]]
+.Tiempos de ejecución de mutex vs monitor
+[caption=""]
+image::mutex-vs-monitor.png[align="center"]
+
+.Implementación de monitor nativo en Java
+****
+La eficiencia de la exclusión mutua de los monitores en Java se debe a una implementación sofisticada basado en técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librías de hilos estándares de casa sistema operativo). La entrada a la sección crítica de método o bloque `synchronized` está gestionado por tres colas diferentes, un hilo está solo en una de ellas:
+
+. Cola de competencia (_contention queue_, `cxq`): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) primero entran a esta cola sin bloqueo usando la instrucción atómica _CAS_, se usa la estrategia <<spin_then_block, _spin/park_>>. La cola tiene varios productores (todos los hilos que desean entrar al monitor) y un único consumidor que los mueve a la siguiente cola.
+
+. _Entry List_: Pasado un tiempo los hilos bloqueados pasan a esta cola de hilos bloqueados. Los hilos en esta cola o en laanterior no pueden entrar al monitor, lo tienen que hacer desde la siqguiente.
+
+. _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor. Un proceso
+
+****
 
 === Algoritmos de sincronización
 
@@ -546,16 +566,7 @@ def release():
 ----
 
 
-==== Eficiencia
 
-$ time java CounterMutex
-real	0m2.085s
-user	0m2.656s
-sys     0m0.712s
-$ time ./mutex
-real	0m9.289s
-user	0m4.432s
-sys     0m19.000s
 
 
 
