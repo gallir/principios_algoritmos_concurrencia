@@ -209,21 +209,17 @@ Se ua `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()
 ----
 void p() {
     mutex_lock(&mutex);
-
     while (value == 0) {
         cond_wait(&notZero, &mutex);
     }
     value--;
-
     mutex_unlock(&mutex);
 }
 
 void v() {
     mutex_lock(&mutex);
-
     value++;
     cond_signal(&notZero);
-
     mutex_unlock(&mutex);
 }
 ----
@@ -263,6 +259,13 @@ void unlock() {
 .Tiempos de ejecución de mutex vs monitor
 [caption=""]
 image::mutex-vs-monitor.png[align="center"]
+
+
+////
+
+http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runtime
+
+////
 
 .Implementación de monitor nativo en Java
 ****
@@ -321,7 +324,6 @@ El código simplificado de la función `barrier()` (<<monitors_barrier_py, códi
 def barrier(n):
     with mutex:
         arrived += 1
-
         if arrived == n:
             arrived = 0
             allArrived.notify_all()
@@ -372,7 +374,6 @@ synchronized int take() {
     while (buffer.isEmpty()) {
         wait();
     }
-
     data = buffer.remove();
     notifyAll();
     return data;

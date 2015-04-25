@@ -99,8 +99,8 @@ Esta implementación es correcta y además es un semáforo fuertefootnote:[El or
 
 ----
 $ time ./semaphore
-real	0m27.587s
-user	0m3.678s
+real    0m27.587s
+user    0m3.678s
 sys     0m31.147s
 ----
 
@@ -134,7 +134,6 @@ Si el proceso fue bloqueado en el `futex_wait()` cuando se despierte decrementar
 
 ----
 def lock(futex):
-
     while True:
         local = swap(futex.locked, 1)
         if local == 0:                   <1>
@@ -161,8 +160,8 @@ Este algoritmo es muy sencillo y mucho más eficiente, de 27 segundos del semáf
 
 ----
 $ time ./simple_mutex
-real	0m0.899s
-user	0m0.398s
+real    0m0.899s
+user    0m0.398s
 sys     0m2.725s
 ----
 
@@ -183,15 +182,11 @@ En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>) Ulrich Drepper pro
 ----
 def lock(futex) {
     c = 0
-
     compare_and_swap(futex, c, 1)
-
     if c == 0:
         return                  <1>
-
     if c != 2:
         c = swap(futex, 2)      <2>
-
     while c != 0:               <3>
         futex_wait(futex, 2)
         c = swap(futex, 2)
@@ -213,8 +208,8 @@ En la comparación de tiempos entre ambos no hay diferencias notables.
 
 ----
 $ time ./mutex_drepper
-real	0m0.826s
-user	0m0.598s
+real    0m0.826s
+user    0m0.598s
 sys     0m2.284s
 ----
 
@@ -228,7 +223,6 @@ Se puede implementar en FUTEX un algoritmo equitativo similar al <<ticket_lock, 
 def lock(futex):
     number = get_and_add(futex.number, 1)   <1>
     turn = futex.turn
-
     while number != turn:                   <2>
         futex_wait(futex.turn, turn)
         turn = futex.turn
@@ -248,8 +242,8 @@ def unlock(futex):
 Comparado con los anteriores este algoritmo es muy ineficiente, sus tiempos en el mismo ordenador:
 ----
 $ time ./fair_mutex
-real	0m32.974s
-user	0m7.609s
+real    0m32.974s
+user    0m7.609s
 sys     1m18.414s
 ----
 
@@ -271,7 +265,6 @@ El pseudocódigo es el siguiente (<<futex_fair_mutex_bitset_c, código completo>
 def lock(futex):
     number = get_and_add(futex.number, 1)
     turn = futex.turn
-
     while number != turn:
         futex_wait_bitset(futex.turn, turn, MASK(number))
         turn = futex.turn
@@ -286,8 +279,8 @@ El tiempo de ejecución del algoritmo:
 
 ----
 $ time ./fair_mutex_bitset
-real	0m38.509s
-user	0m6.910s
+real    0m38.509s
+user    0m6.910s
 sys     0m42.622s
 ----
 
@@ -319,12 +312,10 @@ Aunque la solución sea contra-intuitiva es posible optimizar considerablemente 
 ----
 def lock(futex):
     number = get_and_add(futex.number, 1)
-
     tries = 0               <1>
     while number != futex.turn
             and tries < 100:
         tries++;
-
     turn = futex.turn
     while number != turn:
         futex_wait(futex.turn, turn)
@@ -338,15 +329,12 @@ def lock(futex):
 ----
 def unlock(futex):
     current = get_and_add(futex.turn)
-
     tries = 0               <1>
     while current != futex.current
             and tries < 100:
         tries++
-
     if current > futex.current:
         futex_wake(futex.turn, MAXINT)
-
 ----
 <1> La espera activa antes de intentar el _wake_ también limitada a 100 iteraciones. Se usa el campo `futex.current` para verificar si el proceso al que le corresponde el turno entró a la sección crítica.
 
@@ -397,11 +385,9 @@ El algoritmo es sencillo (<<futex_barrier_c, código completo en C>>):
 void wait(barrier) {
     lock(barrier.lock);                     <1>
     barrier.to_arrive -= 1
-
     if barrier.to_arrive > 0):              <2>
         phase = barrier.phase
         unlock(barrier.lock)
-
         futex_wait(barrier.phase, phase)
         while barrier.phase == phase:
             futex_wait(barrier.phase, phase)
