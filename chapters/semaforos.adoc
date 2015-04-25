@@ -541,7 +541,7 @@ def philosopher():
 
 Esta solución es muy ineficiente, aunque hay tenedores para que puedan comer dos filósofos simultáneamente solo uno podrá comer. Una solución mejor es asegurar exclusión mutua por cada tenedor, para ello necesitamos un array de cinco semáforos mutex, uno para cada tenedor. El índice _i_ identifica a cada filósofo, cada intentará intentará coger primero el tenedor de su izquierda (también es _i_) y el de su derecha (corresponde a `(i + 1) % 5`).
 
-Definimos las funciones `pickForks()` y `releaseForks()` que tomarán y soltarán los tenedores respectivamente y por conveniencia la función `right()` que retorna el índice del tenedor de la derecha (recordad que el de la izquierda es simplemente _i_):
+Definimos las funciones `pick()` y `release()` que tomarán y soltarán los tenedores respectivamente y por conveniencia la función `right()` que retorna el índice del tenedor de la derecha (recordad que el de la izquierda es simplemente _i_):
 
 ----
     Semaphore forks[5] = [1, 1, 1, 1, 1]
@@ -549,18 +549,18 @@ Definimos las funciones `pickForks()` y `releaseForks()` que tomarán y soltará
 def philosopher(i):
     while True:
         think()
-        pickForks(i)
+        pick(i)
         eat()
-        releaseForks(i)
+        release(i)
 
 def right(i):
     return (i+1) % 5
 
-def pickForks(i):
+def pick(i):
     forks[i].wait()
     forks[right(i)].wait()
 
-def releaseForks(i):
+def release(i):
     forks[i].signal()
     forks[right(i)].signal()
 
@@ -632,10 +632,10 @@ Para evitar los _deadlocks_ el algoritmo de los filósofos debe evitar que se pr
 
 4. La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente.
 
-El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario que los demás que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los solicita en orden descendente, primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden para todos basta cambiar la función `pickForks()` para que siempre se haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
+El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario que los demás que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los solicita en orden descendente, primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden para todos basta cambiar la función `pick()` para que siempre se haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
 
 ----
-def pickForks(i):
+def pick(i):
     if i < right(i):
         forks[i].wait()
         forks[right(i)].wait()
@@ -676,10 +676,10 @@ Usamos el array `status` para indicar el estado de cada filósofo: pensando (`TH
     Semaphore mutex = 1
 ----
 
-La función `pickForks()` asigna `HUNGRY` al estado del filósofo y llama a la función `checkNeighbors()` que verifica si ninguno de los vecinos está comiendo. Si no es así señaliza en su semáforo `sync` correspondiente por lo que no se bloqueará en `acquire()` del final. Si alguno de los vecinos está comiendo el filósofo se quedará bloqueado en su semáforo.
+La función `pick()` asigna `HUNGRY` al estado del filósofo y llama a la función `checkNeighbors()` que verifica si ninguno de los vecinos está comiendo. Si no es así señaliza en su semáforo `sync` correspondiente por lo que no se bloqueará en `acquire()` del final. Si alguno de los vecinos está comiendo el filósofo se quedará bloqueado en su semáforo.
 
 ----
-def pickForks(i):
+def pick(i):
     mutex.acquire()
     status[i] = HUNGRY
     checkNeighbors(i)
@@ -701,7 +701,7 @@ def checkNeighbors(i):
 Cuando un filósofo deja de comer debe verificar si sus vecinos están esperando por sus tenedores. Para poder indicarles que pueden comer también hay que verificar si sus otros vecinos no están comiendo. Para ello se puede usar la función `checkNeighbors()` que precisamente hace eso, lo que cambia es el valor de `i`.
 
 ----
-def releaseForks(i):
+def release(i):
     mutex.acquire()
     status[i] = THINKING
     checkNeighbors(left(i))  <1>

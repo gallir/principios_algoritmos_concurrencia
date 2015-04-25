@@ -163,11 +163,36 @@ user    0m3.325s
 sys     0m1.148s
 ----
 
+==== Mutex
+
+La implementación de _mutex_ es aún más sencilla (<<monitors_mutex_java, código completo>>), solo hace falta una variable booleana (`lock`):
+
+[source, java]
+----
+class Mutex {
+    synchronized void lock() {
+        while (lock) {
+            wait();
+        }
+        lock = true;
+    }
+
+    synchronized void unlock() {
+        lock = false;
+        notify();
+    }
+}
+----
+
 ==== Variables condicionales de POSIX Threads
-Los monitores no son unicamente una construcción sintáctica de lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se se puede asegurar exlcusión mutua entre las funciones que son parte del monitor y se cuenta con variables de condición. Las librerías POSIX Threads proveen ambas, ya hemos visto el uso de _mutex_, también ofrecen variables de condición idénticas a las diseñadas para monitores.
+Los monitores no son unicamente una construcción sintáctica de lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se puede asegura exclusión mutua entre las funciones del monitor y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, ya hemos visto el uso de _mutex_, también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
-POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait`) y _signal_ (`pthread_cond_signal`) y una tercera, la operación _broadcast_ (`pthread_cond_broadcast`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java). Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
+POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait()`) y _signal_ (`pthread_cond_signal()`) y una tercera, la operación _broadcast_ (`pthread_cond_broadcast()`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java).
 
+Java exige que `wait()`, `notify()` y `notifyAll()` se llamen desde métodos sincronizados, POSIX Threads únicamente requiere que la función `pthread_cond_wait()` se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan señales.] como segundo argumento. En este caso la funcionalidad es similar a Java, cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
+
+===== Semáforos
+Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
 
 [source, c]
 ----
@@ -177,7 +202,7 @@ int value = 1;
 ----
 
 
-Usaremos `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
+Se ua `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
 
 [source, c]
 ----
@@ -207,6 +232,29 @@ En la operación _wait_ (`pthread_cond_wait(&notZero, &mutex)`) además de la va
 - El _mutex_ es liberado al bloquearse el proceso para que otro pueda entrar al monitor.
 
 - El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ para que se asegure la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función. Además compite en la entrada con los demás procesos que estén en la cola del _mutex_, las prioridades son idénticas a las de Java: _E = W < S_.
+
+===== Mutex
+
+La implementación de un semáforo _mutex_ es igual de sencillo como en Java, el código simplificado (<<monitors_mutex_c, código completo>>):
+
+[source, c]
+----
+void lock() {
+    mutex_lock(&mutex);
+    while (locked) {
+        cond_wait(&unLock, &mutex);
+    }
+    locked = 1;
+    mutex_unlock(&mutex);
+}
+
+void unlock() {
+    mutex_lock(&mutex);
+    locked = 0;
+    cond_signal(&unLock);
+    mutex_unlock(&mutex);
+}
+----
 
 === Algoritmos de sincronización
 
@@ -457,6 +505,59 @@ synchronized void readerLock() {
 
 
 ==== Filósofos cenando
+
+[source, java]
+----
+synchronized void pick(int l, int r) {
+    while (! forks[l] || ! forks[r]) {
+        wait();
+    }
+    forks[l] = false;
+    forks[r] = false;
+}
+
+synchronized void release(int l, int r) {
+    forks[l] = true;
+    forks[r] = true;
+    notifyAll();
+}
+----
+
+
+[source, python]
+----
+def pick():
+    with mutex:
+        while forks[i] != 2:
+            canEat[i].wait()
+
+        forks[left] -= 1
+        forks[right] -= 1
+
+def release():
+    with mutex:
+        forks[left] += 1
+        forks[right] += 1
+
+        if forks[left] == 2:
+            canEat[left].notify()
+        if forks[right] == 2:
+            canEat[right].notify()
+----
+
+
+==== Eficiencia
+
+$ time java CounterMutex
+real	0m2.085s
+user	0m2.656s
+sys     0m0.712s
+$ time ./mutex
+real	0m9.289s
+user	0m4.432s
+sys     0m19.000s
+
+
 
 ////
 Poner lectores-escritores
