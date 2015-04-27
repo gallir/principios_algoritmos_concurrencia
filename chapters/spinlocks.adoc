@@ -463,7 +463,7 @@ void unlock(struct mcs_spinlock *node) {
 ----
 <1> Si `next` del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara `last` para hacer el _compareAndSwap_.
 <2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero `tail` habrá quedado con _NULL_.
-<3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el `lock()` pero todavía no ejecutó la instrucción `predecessor->next = node`, se espera hasta que lo hace.
+<3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el `lock` pero todavía no ejecutó la instrucción `predecessor->next = node`, se espera hasta que lo hace.
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna `0` al campo `locked` de su nodo para que pueda continuar.
 
 

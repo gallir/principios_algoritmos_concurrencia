@@ -55,9 +55,9 @@ while True:
     #
     # resto del código
 ----
-<1> Entrada a sección crítica o pre-protocolo. Habitualmente se usa `lock()`.
+<1> Entrada a sección crítica o pre-protocolo. Habitualmente se usa `lock`.
 <2> La sección crítica, por ejemplo `counter += 1`.
-<3> La salida de la sección crítica, post-protocolo, o `unlock()`.
+<3> La salida de la sección crítica, post-protocolo, o `unlock`.
 
 
 === Solución para dos procesos
@@ -202,7 +202,7 @@ Si ambos procesos entran _simultáneamente_ al bucle de entrada en algún moment
 
 [NOTE]
 ====
-Pensarás que se puede hacer algo entre <1> y <2> para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundosfootnote:[Una idea, _exponential backoff_, lo <<exponential_backoff, vemos más adelante>>.] con un `sleep()` o incluso cediendo el procesadorfootnote:[`sched_yield()` en Linux.]. Una técnica así puede servir para mejorar el rendimiento -si no hubiese otra solución mejorfootnote:[Las hay, a partir del siguiente algoritmo todos son mejores, podéis olvidaros de éste una vez que lo hayáis entendido.]-, pero formalmente son equivalentes. Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- que la probabilidad de que uno de ellos se interrumpa justo después de asignar falso es bastante elevada y por la velocidad de los procesadores ocurriría en pocos nanosegundos.
+Pensarás que se puede hacer algo entre <1> y <2> para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundosfootnote:[Una idea, _exponential backoff_, lo <<exponential_backoff, vemos más adelante>>.] con un `sleep` o incluso cediendo el procesadorfootnote:[`sched_yield` en Linux.]. Una técnica así puede servir para mejorar el rendimiento -si no hubiese otra solución mejorfootnote:[Las hay, a partir del siguiente algoritmo todos son mejores, podéis olvidaros de éste una vez que lo hayáis entendido.]-, pero formalmente son equivalentes. Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- que la probabilidad de que uno de ellos se interrumpa justo después de asignar falso es bastante elevada y por la velocidad de los procesadores ocurriría en pocos nanosegundos.
 ====
 
 Vamos a analizar si cumple los requisitos:
@@ -342,7 +342,7 @@ number[i] = 0
 
 La idea es sencilla. Cada proceso tiene asociado un identificador entero que lo usa acceder al array `number` footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle `for j...` su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
 
-Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando `max()` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta _P1_ y coge el mismo número que P1. El estado del `number` es el siguiente:
+Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando `max` y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en `number[1]`. Inmediatamente se ejecuta _P1_ y coge el mismo número que P1. El estado del `number` es el siguiente:
 
     [1, 1, 0, ..., 0]
 

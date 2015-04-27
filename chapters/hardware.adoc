@@ -72,7 +72,7 @@ A partir de este punto usaremos las primitivas atómicas <<Atomics_C11, de las �
 ==== getAndSet
 Usaremos una variable global `mutex` que estará inicializada a cero que indica que no hay procesos en la sección crítica. En la entrada de la sección crítica se almacena `1` y se verifica si el valor anterior era `0` (es decir, no había ningún proceso en la sección crítica). Si era diferente a cero esperará hasta que lo sea.
 
-La función `lock()` es la entrada a la sección crítica y `unlock()` la salida.
+La función `lock` es la entrada a la sección crítica y `unlock` la salida.
 
 ----
         mutex = 0

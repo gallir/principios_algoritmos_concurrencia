@@ -16,7 +16,7 @@ if local != 0:
 En caso de no haber competencia el proceso podrá entrar a la sección crítica sin necesidad de involucrar al núcleo del sistema operativo. Obviamente el algoritmo no puede ser _tan_ sencillo, pero es la idea básica (tampoco es tan complicado).
 ****
 
-Ofrecer esta posibilidad fue el objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast user-space mutexes_) de Linux. A pesar de su nombre FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización. La interfaz FUTEX no está diseñado para ser usada directamente desde las aplicaciones sino por los programadores de librerías. Ni siquiera exporta ni una función, hay que recurrir a `syscall()` y exige conocimientos de las instrucciones atómicas de hardware.
+Ofrecer esta posibilidad fue el objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast user-space mutexes_) de Linux. A pesar de su nombre FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización. La interfaz FUTEX no está diseñado para ser usada directamente desde las aplicaciones sino por los programadores de librerías. Ni siquiera exporta ni una función, hay que recurrir a `syscall` y exige conocimientos de las instrucciones atómicas de hardware.
 
 En capítulos anteriores hemos aprendido a usar macros del compilador para generar las operaciones atómicas, cómo usarlas en diferentes algoritmos y el funcionamiento de los semáforos. Podemos aventurarnos sin demasiado esfuerzo en desarrollar algunas de esas construcciones de sincronización directamente sobre FUTEX.
 
@@ -31,7 +31,7 @@ El núcleo de la interfaz (<<Franke>>, <<Hart>>, <<Drepper>>, <<LockLess1>>) es 
 Para que varios procesos compartan los mecanismos de sincronización basta con que puedan compartir la variable _futex_. Con _threads_ es muy sencillo, basta una variable global, en casos de procesos independientes se puede usar cualquier mecanismo de compartición de memoria. Al usarse la dirección física no se producen conflictos por los diferentes espacios de direcciones virtuales.
 
 ****
-Las llamadas se hacen con la función `syscall()`, su forma genérica es:
+Las llamadas se hacen con la función `syscall`, su forma genérica es:
 
     syscall(__NR_futex, ptr, FUTEX_OP, val1 , timeout, *ptr2 , val3);
 
@@ -52,7 +52,7 @@ Las operaciones que se pueden especificar en la llamada de sistema de FUTEX son 
 `FUTEX_LOCK_PI`, `FUTEX_UNLOCK_PI`:: Son las extensiones de Ingo Molnar (<<Molnar>>) para herencia de prioridades comentadas en <<priority_inheritance>>. El _lock_ bloquea a un proceso si el valor del _futex_ no es cero y lo inserta en la cola de bloqueados ordenada por prioridad de mayor a menor. Al proceso que está en la sección crítica (es _propietario del lock_) le asigna la mayor prioridad de todos los que esperan.
 
 ****
-La función `syscall()` para `FUTEX_WAIT`:
+La función `syscall` para `FUTEX_WAIT`:
 
     syscall(__NR_futex, &futex, FUTEX_WAIT, value, NULL, 0, 0);
 
@@ -93,9 +93,9 @@ void signal(futex_sem_t *sem) {
         while futex_wake(sem.futex, 1) < 1: <1>
             sched_yield()
 ----
-<1> Se verifica que efectivamente se desbloqueó a un proceso (el `sched_yield()` no es imprescindible).
+<1> Se verifica que efectivamente se desbloqueó a un proceso (el `sched_yield` no es imprescindible).
 
-Esta implementación es correcta y además es un semáforo fuertefootnote:[El orden de desbloqueo está definido por el orden de ejecución de `futex_wait()`.] pero es muy ineficiente si se usa para sincronizar procesos con alta competencia, por ejemplo para asegurar exclusión mutua del bucle que sólo incrementa el contador compartido. Los tiempos de ejecución en estos casos son muy elevados, hasta dos órdenes de magnitud superiores a los tiempos obtenidos en <<spinlocks>> y los semáforos POSIX en <<sem_mutex>>.
+Esta implementación es correcta y además es un semáforo fuertefootnote:[El orden de desbloqueo está definido por el orden de ejecución de `futex_wait`.] pero es muy ineficiente si se usa para sincronizar procesos con alta competencia, por ejemplo para asegurar exclusión mutua del bucle que sólo incrementa el contador compartido. Los tiempos de ejecución en estos casos son muy elevados, hasta dos órdenes de magnitud superiores a los tiempos obtenidos en <<spinlocks>> y los semáforos POSIX en <<sem_mutex>>.
 
 ----
 $ time ./semaphore
@@ -106,7 +106,7 @@ sys     0m31.147s
 
 Cuando el `valor` del semáforo se hace negativo (la situación habitual para un _mutex_ de alta competencia) todos los procesos pasan obligatoriamente por la cola de bloqueados generando cambios de contexto innecesarios. No es sencillo mejorarlo sin un algoritmo bastante más complejo por dos razones:
 
-- La intercalación de instrucciones dentro de las funciones `wait()` y `signal()`.
+- La intercalación de instrucciones dentro de las funciones `wait` y `signal`.
 
 - La operación `FUTEX_WAKE` no tiene efecto si no hay procesos bloqueados.
 
@@ -114,7 +114,7 @@ Es mucho más sencillo implementar semáforos _mutex_ considerablemente más efi
 
 
 === _Mutex_ simple
-Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas (<<futex_simple_mutex_c, código en C>>). Las operaciones atómicas que usaremos serán _swap_ (retorna el valor previo) y _getAndAdd_. Las funciones `lock()` y `unlock()` reciben como argumento la dirección de una estructura con dos enteros:
+Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas (<<futex_simple_mutex_c, código en C>>). Las operaciones atómicas que usaremos serán _swap_ (retorna el valor previo) y _getAndAdd_. Las funciones `lock` y `unlock` reciben como argumento la dirección de una estructura con dos enteros:
 
 ----
 struct simple_futex {
@@ -123,14 +123,14 @@ struct simple_futex {
 };
 ----
 
-El campo `locked` se usa como variable binaria, si vale `0` no hay procesos en la sección crítica, `waiters` indica el número de procesos bloqueados en la cola del _futex_ (es decir, que ejecutaron `futex_wait()`).
+El campo `locked` se usa como variable binaria, si vale `0` no hay procesos en la sección crítica, `waiters` indica el número de procesos bloqueados en la cola del _futex_ (es decir, que ejecutaron `futex_wait`).
 
 
 ==== _lock_
 
-Si el resultado del _swap_ del campo `locked` es cero significa que no hay ningún proceso en la sección crítica y podrá entrar directamente sin intervención del sistema operativo. Caso contrario se incrementa tentativamente el contador de proceso en espera y se llama a `futex_wait()` indicando que compare que el valor de `locked` siga siendo `1`. Si no es así significa que el proceso que estaba en la sección crítica ya salió por lo que debe volver al principio del bucler después de restablecer el valor de `waiters`.
+Si el resultado del _swap_ del campo `locked` es cero significa que no hay ningún proceso en la sección crítica y podrá entrar directamente sin intervención del sistema operativo. Caso contrario se incrementa tentativamente el contador de proceso en espera y se llama a `futex_wait` indicando que compare que el valor de `locked` siga siendo `1`. Si no es así significa que el proceso que estaba en la sección crítica ya salió por lo que debe volver al principio del bucler después de restablecer el valor de `waiters`.
 
-Si el proceso fue bloqueado en el `futex_wait()` cuando se despierte decrementará `waiters` y volverá al principio del bucle para verificar que efectivamente puede entrar (y el ciclo se repite).
+Si el proceso fue bloqueado en el `futex_wait` cuando se despierte decrementará `waiters` y volverá al principio del bucle para verificar que efectivamente puede entrar (y el ciclo se repite).
 
 ----
 def lock(futex):
@@ -166,7 +166,7 @@ sys     0m2.725s
 ----
 
 
-Aunque es correcta y muy eficiente tiene un problema, aunque las colas de FUTEX son FIFO esta implementación no es _equitativa_ (no asegura espera limitada). Si el proceso que sale de la sección crítica inmediatamente vuelve a llamar al `lock()` podrá entrar antes que el proceso que se despertó con el `futex_wake()`. Como dicho proceso estaba bloqueado y el sistema operativo tiene que hacer el cambio de contexto la probabilidad de que el que acaba de salir ejecute antes el _swap_ es muy elevada.
+Aunque es correcta y muy eficiente tiene un problema, aunque las colas de FUTEX son FIFO esta implementación no es _equitativa_ (no asegura espera limitada). Si el proceso que sale de la sección crítica inmediatamente vuelve a llamar al `lock` podrá entrar antes que el proceso que se despertó con el `futex_wake`. Como dicho proceso estaba bloqueado y el sistema operativo tiene que hacer el cambio de contexto la probabilidad de que el que acaba de salir ejecute antes el _swap_ es muy elevada.
 
 
 ==== _Mutex_ de Drepper
@@ -251,7 +251,7 @@ La diferencia es enorme, incluso toma más tiempo que la primera implementación
 
 ===== BITSET
 
-Puede aliviarse usando las operaciones `FUTEX_WAIT_BITSET` y `FUTEX_WAKE_BITSET` para que solo se despierte al proceso al que le corresponde el turno. Para bloquear la máscara se obtiene desde el _número_ que tiene el proceso, para desbloquear a partir del turno. Definimos la función `MASK()` que obtiene la máscara dado un númerofootnote:[Al numero `0` le toca la máscara `0`, al `1` la máscara `2`, al `2` la máscara `4`, etc.]:
+Puede aliviarse usando las operaciones `FUTEX_WAIT_BITSET` y `FUTEX_WAKE_BITSET` para que solo se despierte al proceso al que le corresponde el turno. Para bloquear la máscara se obtiene desde el _número_ que tiene el proceso, para desbloquear a partir del turno. Definimos la función `MASK` que obtiene la máscara dado un númerofootnote:[Al numero `0` le toca la máscara `0`, al `1` la máscara `2`, al `2` la máscara `4`, etc.]:
 
 ----
 def MASK(number):
@@ -288,7 +288,7 @@ No ha solucionado nada, sigue siendo muy ineficiente incluso peor que el semáfo
 
 - Todos los procesos pasan por la cola de bloqueados al igual que en semáforos.
 
-- Se añade el coste adicional provocado por el siguiente bucle en el `wait()` que es idéntico a ambas versiones:
+- Se añade el coste adicional provocado por el siguiente bucle en el `wait` que es idéntico a ambas versiones:
 
 ----
     turn = futex.turn
@@ -298,7 +298,7 @@ No ha solucionado nada, sigue siendo muy ineficiente incluso peor que el semáfo
 <1> La función fallará y hay que repetirla si `futex.turn` cambió desde la asignación a `turn`.
 
 
-Al haber alta competencia `futex.turn` cambia muy frecuentemente obligando a ejecutar `futex_wait()` varias veces. No es sencillo obtener _mutex_ equitativos y eficientes, por eso el _mutex_ de las librerías POSIX Threads ni los semáforos POSIX son equitativos.
+Al haber alta competencia `futex.turn` cambia muy frecuentemente obligando a ejecutar `futex_wait` varias veces. No es sencillo obtener _mutex_ equitativos y eficientes, por eso el _mutex_ de las librerías POSIX Threads ni los semáforos POSIX son equitativos.
 
 Si es crítico trabajar con _mutex_ equitativo se puede intentar con otra técnica: esperas activas.
 
@@ -306,7 +306,7 @@ Si es crítico trabajar con _mutex_ equitativo se puede intentar con otra técni
 [[spin_then_block]]
 ==== Optimización con espera activa (_spin then block_)
 
-Aunque la solución sea contra-intuitiva es posible optimizar considerablemente el _mutex_ equitativo recurriendo a esperas activas limitadas. Si hay alta competencia y las secciones críticas son breves conviene más hacer una breve espera activa -en la entrada y salida- para dar oportunidad a que el siguiente proceso pueda obtener el _lock_ sin necesidad se pasar por la cola de bloqueados. El número de iteraciones de la espera activa debe estar limitada para evitar convertir al algoritmo en un _spinlock_. En `lock()` se hace antes de intentar el _wait_ y en el `unlock()` antes del _wake_ (<<futex_fair_mutex_spin_c, código fuente>>).
+Aunque la solución sea contra-intuitiva es posible optimizar considerablemente el _mutex_ equitativo recurriendo a esperas activas limitadas. Si hay alta competencia y las secciones críticas son breves conviene más hacer una breve espera activa -en la entrada y salida- para dar oportunidad a que el siguiente proceso pueda obtener el _lock_ sin necesidad se pasar por la cola de bloqueados. El número de iteraciones de la espera activa debe estar limitada para evitar convertir al algoritmo en un _spinlock_. En `lock` se hace antes de intentar el _wait_ y en el `unlock` antes del _wake_ (<<futex_fair_mutex_spin_c, código fuente>>).
 
 
 ----
@@ -363,7 +363,7 @@ struct barrier {
 };
 ----
 
-- `lock`: Se usa como _mutex_ para asegurar exclusión mutua _interna_. Se puede usar un entero o un puntero a cualquier estructura necesaria. Es usado por las funciones `lock()` y `unlock` de uno los _mutex_ implementados previamente.
+- `lock`: Se usa como _mutex_ para asegurar exclusión mutua _interna_. Se puede usar un entero o un puntero a cualquier estructura necesaria. Es usado por las funciones `lock` y `unlock` de uno los _mutex_ implementados previamente.
 
 - `phase`: Indicará la fase actual, comenzará desde cero y se irá incrementando.
 
@@ -371,7 +371,7 @@ struct barrier {
 
 - `to_arrive`: El número de procesos que faltan por llegar al fin de la fase actual.
 
-Los campos `processes` y `to_arrive` deben inicializarse con el número de procesos. La función de sincronización es `wait()`, su uso es idéntico a <<sync_barrier>>:
+Los campos `processes` y `to_arrive` deben inicializarse con el número de procesos. La función de sincronización es `wait`, su uso es idéntico a <<sync_barrier>>:
 
 ----
     while True:

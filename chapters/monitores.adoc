@@ -3,7 +3,7 @@
 
 Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Brinch Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos todavía usando lenguajes de alto nivelfootnote:[De hecho le llamaron _monitor_ porque así es como se llamaba en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaban _monitor_ al conjunto de procedimientos y datos que requería cada _scheduler_.
 
-Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y sus datos solo debían poder ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y sus ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait()`, `notify()` y `notifyAll()`.].
+Cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos y sus datos solo debían poder ser accedidos o modificados por estos procedimientos. Per Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ basado en Pascal y con ideas de Modula67, fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y sus ideas se implementaron en otros lenguajes, Modula, Concurrent C, Mesa, ADA... y hasta en Java, que incluye monitores como construcción nativa del lenguajefootnote:[Lo veremos en este capítulo, es la combinación de los métodos y bloques `synchronized` con las funciones `wait`, `notify` y `notifyAll`.].
 
 En la propuesta original un monitor se declaraba de una forma similar a la siguientefootnote:[La especificación original de Hoare fue en Pascal, en la bibliografía posterior se empezó a usar una notación sin la sobrecarga de tantos `BEGIN` y `END`, es la que respeto a lo largo de este capítulo.]:
 
@@ -66,7 +66,7 @@ La exclusión mutua no basta para la sincronización, se añaden dos operaciones
 
 3. Operaciones genéricas _wait_ y _signal_ no ligadas a ninguna variable, por lo que cada proceso bloqueado debe verificar una variable de estado para detectar si le corresponde continuar la ejecución. Como los de primer tipo, si no hay ningún proceso bloqueado por un _wait_ el _signal_ no tiene efecto.
 
-En el primer tipo están los monitores tradicionales (también las variables de condición en POSIX Threads), en el segundo los conocidos como _objetos protegidos_, el tercero es la implementación de monitores en Java (la operación _wait_ es el el método `wait()`, _signal_ es `notify()` y _broadcast_ es `notifyAll`).
+En el primer tipo están los monitores tradicionales (también las variables de condición en POSIX Threads), en el segundo los conocidos como _objetos protegidos_, el tercero es la implementación de monitores en Java (la operación _wait_ es el el método `wait`, _signal_ es `notify` y _broadcast_ es `notifyAll`).
 
 Un monitor se suele representar gráficamente de la siguiente forma:
 
@@ -85,7 +85,7 @@ Hay varias opciones:
 
 2. El proceso que señaliza sale del monitor, luego el que estaba esperando en la variable de condicón y finalmente los que esperan entrar al monitor. Esta especificación es *_E < W < S_*.
 
-3. Los procesos que están esperando para entrar tienen la misma prioridad que los bloqueados en la dentro del monitor, *_E = W < S_*. Esta es la especificación para monitores en Java, los proceso desbloqueados por el `notify()` o `notifyAll()` van a la misma cola que los procesos en espera para entrar al monitor.
+3. Los procesos que están esperando para entrar tienen la misma prioridad que los bloqueados en la dentro del monitor, *_E = W < S_*. Esta es la especificación para monitores en Java, los proceso desbloqueados por el `notify` o `notifyAll` van a la misma cola que los procesos en espera para entrar al monitor.
 
 
 [[monitors_java_image]]
@@ -96,7 +96,7 @@ image::monitor_java.png[height="350", align="center"]
 
 === Simulación de semáforos
 
-Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos y que cualquier de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (`value`) y una variable de condición (`notZero`) para bloquear a los procesos en la operación `wait()` si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
+Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos y que cualquier de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (`value`) y una variable de condición (`notZero`) para bloquear a los procesos en la operación `wait` si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
 
 ----
 monitor Semaphore
@@ -113,9 +113,9 @@ monitor Semaphore
         signalC(notZero)
 ----
 
-Este algoritmo es correcto pero tiene un problema, requiere la _reanudación inmediata_ (es decir _E < S < W_). Cuando un proceso ejecuta el `signal()` el proceso debe ejecutar inmediatamente para evitar que el valor del semáforo se modifique por otro proceso, por ejemplo uno que esté bloqueado esperando a entrar para ejecutar `wait()` (como puede ocurrir en Java ya que la prioridad de ambos es la misma, _E = W_) o el mismo proceso que hizo el `signal()` y luego hace otro `wait()`. En ambos casos habría el valor del semáforo valdría menor que cero.
+Este algoritmo es correcto pero tiene un problema, requiere la _reanudación inmediata_ (es decir _E < S < W_). Cuando un proceso ejecuta el `signal` el proceso debe ejecutar inmediatamente para evitar que el valor del semáforo se modifique por otro proceso, por ejemplo uno que esté bloqueado esperando a entrar para ejecutar `wait` (como puede ocurrir en Java ya que la prioridad de ambos es la misma, _E = W_) o el mismo proceso que hizo el `signal` y luego hace otro `wait`. En ambos casos habría el valor del semáforo valdría menor que cero.
 
-Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condición se mantiene después de despertarse del `wait()`, en este caso es verificar si el semáforo sigue siendo distinto a cero. En  `wait()` hay que cambiar el `if` por un `while`:
+Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condición se mantiene después de despertarse del `wait`, en este caso es verificar si el semáforo sigue siendo distinto a cero. En  `wait` hay que cambiar el `if` por un `while`:
 
 ----
     operation wait
@@ -124,7 +124,7 @@ Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condició
         value = value - 1
 ----
 
-La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón habitual es usar `while` en vez de `if` para verificar si se cumplen las condiciones para volver a entrar al monitor. Este algoritmo puede ser directamente traducido a Java, se necesita la misma variable entera `value` y los métodos _synchronized_ `wait()` y `signal()` de los semáforos (en este caso reemplazados por `p()` y `v()` para no confundir el _wait_ de semáforos con el del método de bloqueo dentro del monitor de Java):
+La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón habitual es usar `while` en vez de `if` para verificar si se cumplen las condiciones para volver a entrar al monitor. Este algoritmo puede ser directamente traducido a Java, se necesita la misma variable entera `value` y los métodos _synchronized_ `wait` y `signal` de los semáforos (en este caso reemplazados por `p` y `v` para no confundir el _wait_ de semáforos con el del método de bloqueo dentro del monitor de Java):
 
 
 [source, java]
@@ -188,9 +188,9 @@ class Mutex {
 ==== Variables condicionales de POSIX Threads
 Los monitores no son unicamente una construcción sintáctica de lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se puede asegura exclusión mutua entre las funciones del monitor y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, ya hemos visto el uso de _mutex_, también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
-POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait()`) y _signal_ (`pthread_cond_signal()`) y una tercera, la operación _broadcast_ (`pthread_cond_broadcast()`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java).
+POSIX Threads ofrece las dos operaciones básicas sobre variables de condición: _wait_ (`pthread_cond_wait`) y _signal_ (`pthread_cond_signal`) y una tercera, la operación _broadcast_ (`pthread_cond_broadcast`) para despertar a todos los procesos bloqueados (similar a `notifyAll` de Java).
 
-Java exige que `wait()`, `notify()` y `notifyAll()` se llamen desde métodos sincronizados, POSIX Threads únicamente requiere que la función `pthread_cond_wait()` se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan señales.] como segundo argumento. En este caso la funcionalidad es similar a Java, cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
+Java exige que `wait`, `notify` y `notifyAll` se llamen desde métodos sincronizados, POSIX Threads únicamente requiere que la función `pthread_cond_wait` se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan señales.] como segundo argumento. En este caso la funcionalidad es similar a Java, cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
 
 ===== Semáforos
 Para implementar semáforos con el _método_ de monitores necesitamos las siguientes variables:
@@ -203,7 +203,7 @@ int value = 1;
 ----
 
 
-Se ua `mutex` para controlar la exclusión mutua entre las dos operaciones (`p()` y `v()`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
+Se ua `mutex` para controlar la exclusión mutua entre las dos operaciones (`p` y `v`), la variable de condición `notZero` y `value` para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ al inicio y fin de cada función respectivamente, el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del `mutex` y `notZero` y abrevié las llamadas `pthread_*`.] (<<monitors_semaphore_c, código completo>>):
 
 [source, c]
 ----
@@ -262,7 +262,7 @@ Een este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algorit
 
 ==== Barreras
 
-El algoritmo de barreras con monitores es mucho más sencillo que con semáforos. En Java sólo hace falta un contador (`arrived`) inicialmente en cero. Cuando cada proceso ejecuta `barrier()` se incrementa el contador, si todavía no es el último se bloquea con `wait()`. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con un _broadcast_: `notifyAll()` (<<monitors_barrier_java, código completo>>).
+El algoritmo de barreras con monitores es mucho más sencillo que con semáforos. En Java sólo hace falta un contador (`arrived`) inicialmente en cero. Cuando cada proceso ejecuta `barrier` se incrementa el contador, si todavía no es el último se bloquea con `wait`. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con un _broadcast_: `notifyAll` (<<monitors_barrier_java, código completo>>).
 
 [source, java]
 ----
@@ -277,9 +277,9 @@ synchronized void barrier(int n) {
 }
 ----
 
-El proceso que hace el `notifyAll()` es siempre el último proceso que faltaba llegar a la barrera, no hay interferencia ni ningún proceso puede adelantarse. Ningún otro proceso podrá entrar al monitor hasta que el último haya salido, el contador `arrived` ya valdrá cero y comenzará la cuenta para la siguiente fase. Aunque el monitor del lenguaje tenga una prioridad diferente a _E = W < S_, por ejemplo de reanudación inmediata (_E < S < W_), el valor de `arrived` ya es cero porque fue asignado antes del _signal_.
+El proceso que hace el `notifyAll` es siempre el último proceso que faltaba llegar a la barrera, no hay interferencia ni ningún proceso puede adelantarse. Ningún otro proceso podrá entrar al monitor hasta que el último haya salido, el contador `arrived` ya valdrá cero y comenzará la cuenta para la siguiente fase. Aunque el monitor del lenguaje tenga una prioridad diferente a _E = W < S_, por ejemplo de reanudación inmediata (_E < S < W_), el valor de `arrived` ya es cero porque fue asignado antes del _signal_.
 
-A diferencia del algoritmo con monitores tradicionales, en Java no se usan variables condicionales porque `wait()`, `notify()` y `notifyAll()` son genéricos para cada instancia (equivalente a tener una única variable de condición implícita para cada una). Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase `Lock` de `java.util.concurrent.locks`. De una instancia de `Lock` se pueden obtener las variables de condición necesarias, por ejemplo: `lock.newCondition()`].
+A diferencia del algoritmo con monitores tradicionales, en Java no se usan variables condicionales porque `wait`, `notify` y `notifyAll` son genéricos para cada instancia (equivalente a tener una única variable de condición implícita para cada una). Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase `Lock` de `java.util.concurrent.locks`. De una instancia de `Lock` se pueden obtener las variables de condición necesarias, por ejemplo: `lock.newCondition()`].
 
 En Python se puede usar un objeto de `threading.Condition` asociado con el _mutex_ que se usa para la exclusión mutua en las funciones del monitor. Además del contador `arrived` se usa `mutex` y la variable de condición `allArrived` sobre la que se señalizará cuando todos los procesos hayan llegado:
 
@@ -291,7 +291,7 @@ allArrived = threading.Condition(mutex)
 arrived = 0
 ----
 
-El código simplificado de la función `barrier()` (<<monitors_barrier_py, código completo>>):
+El código simplificado de la función `barrier` (<<monitors_barrier_py, código completo>>):
 
 
 [source, python]
@@ -363,7 +363,7 @@ synchronized void append(Integer data) {
 }
 ----
 
-Al no poder esperar o señalizar variables independientes los productores y consumidores comparten la misma cola y no de puede discriminar por uno u otro. Por lo tanto ambos deben hacer un `notifyAll()` para que todos los bloqueados verifiquen si pueden continuar. Dado que se verifica la condición la condición dentro de un `while` el algoritmo también es correcto pero es más ineficiente. Cuando un productor o consumidor hace el `notifyAll()` se despiertan todos los productores y consumidores que hayan hecho en _wait_ aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
+Al no poder esperar o señalizar variables independientes los productores y consumidores comparten la misma cola y no de puede discriminar por uno u otro. Por lo tanto ambos deben llamar a `notifyAll` para que todos los bloqueados verifiquen si pueden continuar. Dado que se verifica la condición la condición dentro de un `while` el algoritmo también es correcto pero es más ineficiente. Cuando un productor o consumidor hace el `notifyAll` se despiertan todos los productores y consumidores que hayan hecho en _wait_ aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
 
 
 ==== Lectores-escritores
@@ -436,9 +436,9 @@ def reader_lock():
 ----
 
 
-En Java no podemos usar dos variables de condición por lo que hay que recurrir al `notifyAll()` para desbloquear a lectores y escritores. El código es algo más ineficiente pero el algoritmo queda muy sencillo (<<monitors_rw_java, código completo>>).
+En Java no podemos usar dos variables de condición por lo que hay que recurrir al `notifyAll` para desbloquear a lectores y escritores. El código es algo más ineficiente pero el algoritmo queda muy sencillo (<<monitors_rw_java, código completo>>).
 
-Solo hacen falta dos variables, el contador de lectores (`readers`) y una booleana que indicará si hay un escritor en la sección crítica (`writing`). Los lectores solo se bloquean si hay un escritor, cuando entran hacen el `notifyAll()` para que puedan entrar otros lectores que se hayan bloqueado en el `wait()` (también despertará a los escritores que volverán a bloquearse inmediatamente).
+Solo hacen falta dos variables, el contador de lectores (`readers`) y una booleana que indicará si hay un escritor en la sección crítica (`writing`). Los lectores solo se bloquean si hay un escritor, cuando entran hacen el `notifyAll` para que puedan entrar otros lectores que se hayan bloqueado en el `wait` (también despertará a los escritores que volverán a bloquearse inmediatamente).
 
 [source, java]
 ----
@@ -451,7 +451,7 @@ synchronized void readerLock() {
 }
 ----
 
-Si el lector que sale es el último debe hacer el `notifyAll()` para que puedan entrar los escritores bloqueados.
+Si el lector que sale es el último debe hacer el `notifyAll` para que puedan entrar los escritores bloqueados.
 
 [source, java]
 ----
@@ -529,11 +529,11 @@ class Table {
 }
 ----
 
-El array `forks` mantiene el estado de cada pallilo, `true` si está disponible. Cada filósofo solicita dos tenedores, el de su izquierda y el de su derecha. El método `pick()` es muy simple: si ambos están disponibles los toma poniendo en `false` a ambos, si no llama a `wait()` para bloquearse hasta que pueda tomar ambos. La liberación de ambos tenedores (`release()`) es aún más sencilla, marca como libres a ambos y señaliza a todos los demás filósofos por si hay bloqueados esperando por algunos o ambos que acaba de liberar.
+El array `forks` mantiene el estado de cada pallilo, `true` si está disponible. Cada filósofo solicita dos tenedores, el de su izquierda y el de su derecha. El método `pick` es muy simple: si ambos están disponibles los toma poniendo en `false` a ambos, si no llama a `wait` para bloquearse hasta que pueda tomar ambos. La liberación de ambos tenedores (`release`) es aún más sencilla, marca como libres a ambos y señaliza a todos los demás filósofos por si hay bloqueados esperando por algunos o ambos que acaba de liberar.
 
 El algoritmo es correcto, eficiente y no produce interbloqueos porque no hay _retención y espera_ de los tenedores (si un filósofo no puede comer no toma ninguno de los dos tenedores). La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es notable, otra evidencia de la utilidad de monitores.
 
-A pesar de su simplicidad se puede ver que tiene un problema de eficiencia provocado por el `notifyAll()`. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados en esperando tenedores diferentes. Para minimizar el número de procesos que se despiertan se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Hay que simularlos usando las clases de `Lock` y las variables de condición asociados que se obtienen con `lock.newCondition()`.
+A pesar de su simplicidad se puede ver que tiene un problema de eficiencia provocado por el `notifyAll`. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados en esperando tenedores diferentes. Para minimizar el número de procesos que se despiertan se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Hay que simularlos usando las clases de `Lock` y las variables de condición asociadas que se obtienen con `lock.newCondition()`.
 
 El siguiente es el algoritmo simplificado más eficiente con diferentes variables de condición (<<monitors_philosophers_conditions_java, código en Java>>, <<monitors_philosophers_py, código en Python>>). El array `forks` ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo, inicialmente dos (el de su izquierda y el de su derecha), cuando un filósofo toma sus dos tenedores decrementa los disponibles de sus vecinos (y los incrementa cuando los libera). `canEat` es un array de variables de condición donde se bloqueará cada filósofo que desea comer y no tiene los dos tenedores disponibles.
 
@@ -571,7 +571,7 @@ user	0m4.188s
 sys     0m2.272s
 ----
 
-La última con variables de condición ahorra un 40% de tiempo de CPU totalfootnote:[el tiempo de reloj es similar porque hay esperas temporales en `think()` y `eat()`.], pero para obtener estas diferencias he tenido que ejecutarlo con 500 filósofos (cada uno con un thread), para cinco filósofos la diferencia es inapreciable.
+La última con variables de condición ahorra un 40% de tiempo de CPU totalfootnote:[el tiempo de reloj es similar porque hay esperas temporales en `think` y `eat`.], pero para obtener estas diferencias he tenido que ejecutarlo con 500 filósofos (cada uno con un thread), para cinco filósofos la diferencia es inapreciable.
 
 === Eficiencia de Monitores
 
@@ -614,7 +614,7 @@ La eficiencia de la exclusión mutua de los monitores en Java se debe a una impl
 
 . _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor.
 
-Los hilos bloqueados en el `wait()` del monitor se añaden a la cola _WaitSet_, el `notify()` o `notifyAll()` simplemente transfieren el o los hilos de esta cola a _cxq_ o _EntryList_.
+Los hilos bloqueados en el `wait` del monitor se añaden a la cola _WaitSet_, el `notify` o `notifyAll` simplemente transfieren el o los hilos de esta cola a _cxq_ o _EntryList_.
 
 ****
 
