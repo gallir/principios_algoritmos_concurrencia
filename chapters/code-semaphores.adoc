@@ -62,9 +62,16 @@ include::../code/semaphores/lock_with.py[]
 === Barrera
 [[barrier_py]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/barrier.py[barrier.py]
-[source,python]
+[source, python]
 ----
 include::../code/semaphores/barrier.py[]
+----
+
+[[barrier_java]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/Barrier.java[Barrier.java]
+[source, java]
+----
+include::../code/semaphores/Barrier.java[]
 ----
 
 

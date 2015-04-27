@@ -230,6 +230,7 @@ En la operación _wait_ (`pthread_cond_wait(&notZero, &mutex)`) además de la va
 
 - El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ para que se asegure la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función. Además compite en la entrada con los demás procesos que estén en la cola del _mutex_, las prioridades son idénticas a las de Java: _E = W < S_.
 
+[[monitor_mutex_emulation]]
 ===== Mutex
 
 La implementación de un semáforo _mutex_ es igual de sencillo como en Java, el código simplificado (<<monitors_mutex_c, código completo>>):
@@ -578,9 +579,7 @@ La última con variables de condición ahorra un 40% de tiempo de CPU totalfootn
 Los monitores exigen que las funciones del monitor se ejecuten con exclusión mutua, una restricción y sobre carga que no exigen los semáforos, intuitivamente la simplicidad de la estrctura de los monitores tiene una sobrecarga de procesamiento. No hay muchos lenguajes modernos y en uso con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usados, es muy eficiente en la gestión de hilos y tiene el modelo de memoria bien definido.
 
 ==== Mutex y monitor
-En la siguiente imagen se pueden observar dos comparaciones entre la C y Java. Las barras azules (izquierda) representan el tiempo de reloj que toman ambos para incrementar el contador, en C con el _mutex_ de POSIX Thread, en Java con incrementando el contador como <<java_monitor, el primer ejemplo>>.
-
-==== Eficiencia de POSIX Threads vs Java
+En la siguiente imagen se pueden observar dos comparaciones entre la C y Java.
 
 [[monitor_posix_threads_vs_java]]
 .Tiempos de ejecución de mutex vs emulación con monitor
@@ -588,17 +587,49 @@ En la siguiente imagen se pueden observar dos comparaciones entre la C y Java. L
 image::mutex-vs-monitor.png[align="center"]
 
 
+Las barras azules (izquierda) representan el tiempo de reloj que toman ambos para incrementar el contador, en C con el _mutex_ de POSIX Thread (el código del primer <<sem_mutex, ejemplo en semáforo>>), en Java con incrementando el contador como <<java_monitor, el primer ejemplo>> de este capítulo. El código de _mutex_ con el bloque _synchronized_ en Java es el doble de rápido que el C, un dato sorprendete dado que el primero se ejecuta en una máquina virtual y el segundo es código nativo. La ventaja de Java reside en que la implementación de la exclusión mutua para los monitores (y en general para todos sus mecanismos de _locks_) es muy eficiente.
+
+Las barras rojas (a la derecha) es el tiempo de la emulación de semáforos _mutex_ con estructura de monitores en C y Java respectivamente (vistos en <<monitor_mutex_emulation>>). La emulación de _mutex_ usando variables de condición en C es muy inefieciente, en Java el tiempo es mucho menor (también por lo eficiencia de la MV de Java) pero sigue siendo muy superior a los tiempos con los mecanismos nativos. Es razonable, para emular semáforos _mutex_ estamos asegurando exclusión mutua con los métodos que ya aseguran exclusión mutua. Pero fue un ejercicio para aprender la equivalencia entre monitores y semáforos, en ningún caso tiene sentido práctico hacerlo
+
+
+
+==== _Locks_ vs monitor de Java
+
+La siguiente imagen representa los tiempos tomados por el mismo algoritmo del contador pero para los diferentes mecanismos de exlusión mutua en Java: las clases de la interfaz `Lock`, `Sempahores` y los métodos `synchronized` del monitor nativo de Java.
+
 [[locks_monitor_java]]
 .Tiempos de ejecución de los diferentes mecanismos de _lock_ en Java
 [caption=""]
 image::locks-synchronized.png[align="center"]
 
+Los tiempos son muy similares, no sorprende ya que comparten mucho código e infraestructura con la implementación del _mutex_ y colas del monitor de la máquina virtual de Java. En caso de necesitar unicamente exlcusión mutua cualquiera de los tres mecanismos son igual de eficientes. Los métodos 'synchronized' son sencillos y directos de usar, si es posible utilizarlo (la exclusión utua se asegura sobre la misma instancia o clase con métodos estáticos). Caso contrario los _locks_ son iguales de eficientes.
+
+
+.Implementación de monitor nativo en Java
+****
+La eficiencia de la exclusión mutua de los monitores en Java se debe a una implementación sofisticada basado en técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librías de hilos estándares de casa sistema operativo). La entrada a la sección crítica de método o bloque _synchronized_ está gestionado por tres colas diferentes, un hilo está solo en una de ellas:
+
+. _cxq_ (cola de competencia _contention queue_): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) primero entran a esta cola sin bloqueo usando la instrucción atómica _CAS_, se usa la estrategia <<spin_then_block, _spin/park_>>. La cola tiene varios productores (todos los hilos que desean entrar al monitor) y un único consumidor que los mueve a la siguiente cola.
+
+. _EntryList_: Pasado un tiempo los hilos bloqueados pasan a esta cola de hilos bloqueados. Los hilos en esta cola o en laanterior no pueden entrar al monitor, lo tienen que hacer desde la siqguiente.
+
+. _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor.
+
+Los hilos bloqueados en el `wait()` del monitor se añaden a la cola _WaitSet_, el `notify()` o `notifyAll()` simplemente transfieren el o los hilos de esta cola a _cxq_ o _EntryList_.
+
+****
+
+
+==== Barreras con semáforos vs monitor
+
+Las barreras, como el modelo de filósofos, son un ejemplo más práctic para comparar la eficiencia entre semáforos y monitores, no se trata solo de asegurar exclusión mutua, también incluye sincronización entre procesos. La imagen siguiente muestra (azul, a la izquierda) los tiempos de ejecuciones equivalente con sincronización con semáforos (vistos en <<sync_barrier>>) con las de monitores (rojo, a la derecha) de este capítulo.
 
 [[barriers_monitor_java]]
 .Tiempos de ejecución barreras en C y Java
 [caption=""]
 image::monitors-barriers.png[align="center"]
 
+En ambos casos la implementación con monitores implica una sobrecarga (menor en Java) sobre la programada con semáforos. La simplicidad de los monitores tiene
 
 ////
 
@@ -606,17 +637,6 @@ http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runt
 
 ////
 
-.Implementación de monitor nativo en Java
-****
-La eficiencia de la exclusión mutua de los monitores en Java se debe a una implementación sofisticada basado en técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librías de hilos estándares de casa sistema operativo). La entrada a la sección crítica de método o bloque `synchronized` está gestionado por tres colas diferentes, un hilo está solo en una de ellas:
-
-. Cola de competencia (_contention queue_, `cxq`): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) primero entran a esta cola sin bloqueo usando la instrucción atómica _CAS_, se usa la estrategia <<spin_then_block, _spin/park_>>. La cola tiene varios productores (todos los hilos que desean entrar al monitor) y un único consumidor que los mueve a la siguiente cola.
-
-. _Entry List_: Pasado un tiempo los hilos bloqueados pasan a esta cola de hilos bloqueados. Los hilos en esta cola o en laanterior no pueden entrar al monitor, lo tienen que hacer desde la siqguiente.
-
-. _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor. Un proceso
-
-****
 
 
 
