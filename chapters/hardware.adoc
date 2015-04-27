@@ -297,6 +297,7 @@ if (e) {
 <4> Si no pudo obtener un elemento de la lista es un error y lo indicamos.
 
 Si lo ejecutáis veréis que en todos los casos da el error de la pila vacía y/o de error por intentar liberar dos veces la misma memoria.
+
 ----
 Error, stack empty
 *** Error in `./stack_cas_malloc': free(): invalid pointer: 0x00007fcc700008b0 ***
@@ -461,7 +462,7 @@ pop:
 ----
 <1> Carga _LL_ del primer argumento de la función (_head_), la dirección del primer elemento de la lista punterofootnote:[Recordad que el primer argumento de la función es la _dirección_ del puntero, es decir un _puntero a puntero_.].
 <2> En la línea anterior se compara si es igual a cero, de ser así es porque la cola está vacía, sale del bucle para devolver el puntero `NULL`.
-<3> Carga en `r2` el puntero del siguiente elementofootnote:[Dado que `next` es el primer campo del nodo su dirección coincide con la del nodo, por eso no hay _desplazamieno_ en el código ensamblador cuando leemos o modificamos _next_.] de la lista, la dirección de `e->next` de <<struct_node, la estructura del nodo>>.
+<3> Carga en `r2` el puntero del siguiente elementofootnote:[Dado que `next` es el primer campo del nodo su dirección coincide con la del nodo, por eso no hay _desplazamieno_ en el código ensamblador cuando lee o modifica `next`.] de la lista, la dirección de `e->next` de <<struct_node, la estructura del nodo>>.
 <4> Almacena el siguiente elemento en `head`.
 <5> Copia el contenido de `r1` a `r0`, que es el valor devuelto por la función.
 
@@ -470,7 +471,7 @@ Una vez conocidas las características y posibilidades de _LL/SC_ es relativamen
 Pero si se hace correctamente además de evitar el problema ABA se puede hacer mucho más eficiente. Los siguientes son los tiempos de ejecución de los algoritmos de pilas concurrentes en Raspberry 1 y 2.
 
 [[free_lock_stack_times]]
-.Tiempos de ejecución de pila concurreent en Raspberry
+.Tiempos de ejecución de pila concurrente en Raspberry
 [caption=""]
 image::free_lock_stacks.png[align="center"]
 
