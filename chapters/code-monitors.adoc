@@ -24,12 +24,6 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Count
 include::../code/monitors/CounterSemaphore.java[]
 ----
 
-[[monitors_semaphore_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/semaphore.c[semaphore.c]
-[source,c]
-----
-include::../code/monitors/semaphore.c[]
-----
 
 
 [[monitors_mutex_java]]
@@ -38,6 +32,16 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Count
 ----
 include::../code/monitors/CounterMutex.java[]
 ----
+
+[[monitors_semaphore_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/semaphore.c[semaphore.c]
+[source,c]
+----
+include::../code/monitors/semaphore.c[]
+----
+
+
+
 
 [[monitors_mutex_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/mutex.c[mutex.c]
@@ -100,7 +104,7 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Philo
 include::../code/monitors/Philosopher.java[]
 ----
 
-[[monitors_philosophers_conditions_java]]
+[[monitors_philosophers2_java]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/PhilosopherConditions.java[PhilosopherConditions.java]
 [source,java]
 ----
