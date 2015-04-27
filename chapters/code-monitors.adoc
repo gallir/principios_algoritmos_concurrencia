@@ -100,6 +100,13 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Philo
 include::../code/monitors/Philosopher.java[]
 ----
 
+[[monitors_philosophers_conditions_java]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/PhilosopherConditions.java[PhilosopherConditions.java]
+[source,java]
+----
+include::../code/monitors/PhilosopherConditions.java[]
+----
+
 [[monitors_philosophers_py]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/philosophers.py[philosophers.py]
 [source,python]

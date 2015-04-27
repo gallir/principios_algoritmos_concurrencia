@@ -33,7 +33,7 @@ La estructura de monitores que encapsula variables y procedimientos es similar a
     }
 ----
 
-Java agrega automáticamente las operaciones de _wait_ y _signal_ sobre mutex asociado al objecto `lock` a la entrada y salida del bloque. La opción más común es definiendo un método `synchronized` como en el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
+Java agrega automáticamente las operaciones de _wait_ y _signal_ sobre mutex asociado al objecto `lock` a la entrada y salida del bloque. La opción equivalente es declarar `synchronized` a los métodos que acceden a recursos compartidos, como el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
 
 [source, java]
 ----
@@ -47,20 +47,20 @@ Java agrega automáticamente las operaciones de _wait_ y _signal_ sobre mutex as
     }
 ----
 
-En este caso el _mutex_ está asociado a la propia instancia, el objeto `this`. La especificación `synchronized` especifica que el hilo debe obtener el _lock_ para ejecutar el método o bloque. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_, también se pueden llamar a otros métodos _synchronized_, la exclusión mutua se asegurará hasta que se haya salido del primero (es decir, es re-entrante).
+En este caso el _mutex_ está asociado a la propia instancia, el objeto `this`. La especificación `synchronized` especifica que el hilo debe obtener el _lock_ para ejecutar el método o bloque. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_.
 
 ****
 Una clase cuyos métodos públicos están todos declarados como _synchronized_ de denomina _monitor Java_, aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
 ****
 
-Un error habitual al programar monitores en Java es la confusión sobre el _mutex_ y su objeto relacionado. Un método de instancia `synchronized` solo asegura la exlusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia `synchronized`. Para estos casos hay que definir explícitamente un objeto, o hacerlo desde un método `synchronized` de clase.
+Un error habitual al programar monitores en Java es la confusión sobre el _mutex_ y su objeto relacionado. Un método de instancia `synchronized` solo asegura la exlusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia `synchronized`. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase `synchronized`.
 
 
 === Variables de condición
 
-La exclusión mutua no basta para la sincronización, se añaden dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (opcionalmente _broadcast_ para despertar a todos los procesos). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
+La exclusión mutua no basta para la sincronización, se añaden dos operaciones, _wait_ y _signal_  que como los semáforos permiten bloquear y desbloquear procesos cuando se cumple alguna condición (opcionalmente _broadcast_, similar a _wait_ pero despierta de todas los hilos que estén en la cola). Por ejemplo bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
 
-1. Sobre unas variables explícitas denominadas _variables de condición_, donde queda a cargo del programa la verificación de condiciones y hacer los _wait_ y _signal_ sobre las variables de condición adecuadas. Estas variables no almacenan ningún valor, solo se usan como _recipientes_ de las dos operaciones. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto.
+1. Sobre unas variables explícitas denominadas _variables de condición_, queda a cargo del programa la verificación de condiciones y hacer los _wait_ y _signal_ sobre las variables de condición adecuadas. Estas variables no almacenan ningún valor, solo se usan como _recipientes_ de las dos operaciones. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto.
 
 2. El bloqueo automático sobre expresiones lógicas, queda a cargo de la implementación de monitores el desbloqueo de los procesos cuando la expresión se hace verdadera.
 
@@ -252,32 +252,6 @@ void unlock() {
     mutex_unlock(&mutex);
 }
 ----
-
-==== Eficiencia de POSIX Threads vs Java
-
-[[monitor_posix_threads_vs_java]]
-.Tiempos de ejecución de mutex vs monitor
-[caption=""]
-image::mutex-vs-monitor.png[align="center"]
-
-
-////
-
-http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runtime
-
-////
-
-.Implementación de monitor nativo en Java
-****
-La eficiencia de la exclusión mutua de los monitores en Java se debe a una implementación sofisticada basado en técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librías de hilos estándares de casa sistema operativo). La entrada a la sección crítica de método o bloque `synchronized` está gestionado por tres colas diferentes, un hilo está solo en una de ellas:
-
-. Cola de competencia (_contention queue_, `cxq`): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) primero entran a esta cola sin bloqueo usando la instrucción atómica _CAS_, se usa la estrategia <<spin_then_block, _spin/park_>>. La cola tiene varios productores (todos los hilos que desean entrar al monitor) y un único consumidor que los mueve a la siguiente cola.
-
-. _Entry List_: Pasado un tiempo los hilos bloqueados pasan a esta cola de hilos bloqueados. Los hilos en esta cola o en laanterior no pueden entrar al monitor, lo tienen que hacer desde la siqguiente.
-
-. _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor. Un proceso
-
-****
 
 === Algoritmos de sincronización
 
@@ -527,23 +501,43 @@ synchronized void readerLock() {
 
 ==== Filósofos cenando
 
+En la solución con semáforos del problema de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> que se podían generar con un diseño descuidado. Planteado de forma correcta el algoritmo con monitores es mucho más sencillo y es menos propenso a sufrir los problemas de las soluciones con semáforos, que fue la intención inicial de la construcción de semáforos. Los métodos dentro del monitor se ejecutan asegurando exclusión mutua, hay más _libertad_ para verificar y modificar las variables compartidas sin preocuparnos de generar condiciones de carrera,  inconsistencias o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después después que un hilo ha sido desbloqueado de su _wait_.
+
+El caso de los filósofos es otro ejemplo notable (como el de barreras) de la simplicidad que aportan los monitores, en los algoritmos con semáforos todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición
+
+
+Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (`pick` y `release` respectivamente). El algoritmo simplificado en Java es el siguiente (<<monitors_philosophers_java, código completo>>):
+
 [source, java]
 ----
-synchronized void pick(int l, int r) {
-    while (! forks[l] || ! forks[r]) {
-        wait();
-    }
-    forks[l] = false;
-    forks[r] = false;
-}
+class Table {
+    boolean forks[];
 
-synchronized void release(int l, int r) {
-    forks[l] = true;
-    forks[r] = true;
-    notifyAll();
+    synchronized void pick(int l, int r) {
+        while (! forks[l] || ! forks[r]) {
+            wait();
+        }
+        forks[l] = false;
+        forks[r] = false;
+    }
+
+    synchronized void release(int l, int r) {
+        forks[l] = true;
+        forks[r] = true;
+        notifyAll();
+    }
 }
 ----
 
+El array `forks` mantiene el estado de cada pallilo, `true` si está disponible. Cada filósofo solicita dos tenedores, el de su izquierda y el de su derecha. El método `pick()` es muy simple: si ambos están disponibles los toma poniendo en `false` a ambos, si no llama a `wait()` para bloquearse hasta que pueda tomar ambos. La liberación de ambos tenedores (`release()`) es aún más sencilla, marca como libres a ambos y señaliza a todos los demás filósofos por si hay bloqueados esperando por algunos o ambos que acaba de liberar.
+
+El algoritmo es correcto, eficiente y no produce interbloqueos porque no hay _retención y espera_ de los tenedores (si un filósofo no puede comer no toma ninguno de los dos tenedores). La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es notable, otra evidencia de la utilidad de monitores.
+
+A pesar de su simplicidad se puede ver que tiene un problema de eficiencia provocado por el `notifyAll()`. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados en esperando tenedores diferentes. Para minimizar el número de procesos que se despiertan se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Hay que simularlos usando las clases de `Lock` y las variables de condición asociados que se obtienen con `lock.newCondition()`.
+
+El siguiente es el algoritmo simplificado más eficiente con diferentes variables de condición (<<monitors_philosophers_conditions_java, código en Java>>, <<monitors_philosophers_py, código en Python>>). El array `forks` ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo, inicialmente dos (el de su izquierda y el de su derecha), cuando un filósofo toma sus dos tenedores decrementa los disponibles de sus vecinos (y los incrementa cuando los libera). `canEat` es un array de variables de condición donde se bloqueará cada filósofo que desea comer y no tiene los dos tenedores disponibles.
+
+Las variables `left` y `right` representan a los vecinos de un filósofo, si éste es el 0 su vecino de la izquierda es 4 y de la derecha el 1footnote:[En Python se calcula con _(i - 1) % N_ y _(i + 1) % N_ respectivamente, pero puede dar valores negativos, no hay un acuerdo sobre el módulo de número negativos, Python devuelve _N - 1_ pero Java -1, la forma de asegurar es forzando a que sea positivo con _(i + N - 1) % N_.]. Cada variable de condición del array `canEat` es la cola para cada filósofo, esperan en su cola correspondiente, cuando sueltan los tenedores se señaliza solo los vecinos y solo si tienen los dos tenedores disponibles.
 
 [source, python]
 ----
@@ -551,7 +545,6 @@ def pick():
     with mutex:
         while forks[i] != 2:
             canEat[i].wait()
-
         forks[left] -= 1
         forks[right] -= 1
 
@@ -559,13 +552,71 @@ def release():
     with mutex:
         forks[left] += 1
         forks[right] += 1
-
         if forks[left] == 2:
             canEat[left].notify()
         if forks[right] == 2:
             canEat[right].notify()
 ----
 
+El algoritmo es algo más complejo y no puede usar el monitor nativo de Java. ¿Vale la pena esforzarse en estas optimizaciones? A continuación la comparación de tiempos entre ambas versiones:
+
+----
+$ time java Philosopher
+real	0m21.526s
+user	0m6.312s
+sys     0m4.372s
+$ time java PhilosopherConditions
+real	0m21.181s
+user	0m4.188s
+sys     0m2.272s
+----
+
+La última con variables de condición ahorra un 40% de tiempo de CPU totalfootnote:[el tiempo de reloj es similar porque hay esperas temporales en `think()` y `eat()`.], pero para obtener estas diferencias he tenido que ejecutarlo con 500 filósofos (cada uno con un thread), para cinco filósofos la diferencia es inapreciable.
+
+=== Eficiencia de Monitores
+
+Los monitores exigen que las funciones del monitor se ejecuten con exclusión mutua, una restricción y sobre carga que no exigen los semáforos, intuitivamente la simplicidad de la estrctura de los monitores tiene una sobrecarga de procesamiento. No hay muchos lenguajes modernos y en uso con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usados, es muy eficiente en la gestión de hilos y tiene el modelo de memoria bien definido.
+
+==== Mutex y monitor
+En la siguiente imagen se pueden observar dos comparaciones entre la C y Java. Las barras azules (izquierda) representan el tiempo de reloj que toman ambos para incrementar el contador, en C con el _mutex_ de POSIX Thread, en Java con incrementando el contador como <<java_monitor, el primer ejemplo>>.
+
+==== Eficiencia de POSIX Threads vs Java
+
+[[monitor_posix_threads_vs_java]]
+.Tiempos de ejecución de mutex vs emulación con monitor
+[caption=""]
+image::mutex-vs-monitor.png[align="center"]
+
+
+[[locks_monitor_java]]
+.Tiempos de ejecución de los diferentes mecanismos de _lock_ en Java
+[caption=""]
+image::locks-synchronized.png[align="center"]
+
+
+[[barriers_monitor_java]]
+.Tiempos de ejecución barreras en C y Java
+[caption=""]
+image::monitors-barriers.png[align="center"]
+
+
+////
+
+http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runtime
+
+////
+
+.Implementación de monitor nativo en Java
+****
+La eficiencia de la exclusión mutua de los monitores en Java se debe a una implementación sofisticada basado en técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librías de hilos estándares de casa sistema operativo). La entrada a la sección crítica de método o bloque `synchronized` está gestionado por tres colas diferentes, un hilo está solo en una de ellas:
+
+. Cola de competencia (_contention queue_, `cxq`): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) primero entran a esta cola sin bloqueo usando la instrucción atómica _CAS_, se usa la estrategia <<spin_then_block, _spin/park_>>. La cola tiene varios productores (todos los hilos que desean entrar al monitor) y un único consumidor que los mueve a la siguiente cola.
+
+. _Entry List_: Pasado un tiempo los hilos bloqueados pasan a esta cola de hilos bloqueados. Los hilos en esta cola o en laanterior no pueden entrar al monitor, lo tienen que hacer desde la siqguiente.
+
+. _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor. Un proceso
+
+****
 
 
 
