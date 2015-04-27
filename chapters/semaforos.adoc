@@ -261,7 +261,7 @@ Algunos lenguajes implementan barreras similares en sus librerías de concurrenc
 ****
 
 
-=== Productores-consumidores
+==== Productores-consumidores
 
 El problema de los productores-consumidores es muy común y es un ejemplo de sincronización de orden de ejecución. Hay dos tipos de procesos involucrados:
 
@@ -292,7 +292,7 @@ while True:
 
 
 
-==== _Buffer_ infinito
+===== _Buffer_ infinito
 Aunque no existen las memorias infinitas ni es recomendable confiar en que la velocidad relativas de los productores es tal que el _buffer_ nunca crecerá más de tamaños razonables, es un buen primer paso para la implementación del algoritmo más general.
 
 Como el _buffer_ no está limitado el algoritmo no debe comprobar que haya espacio suficiente, solo de bloquear a los consumidores si el buffer está vacío y desbloquearlos cuando hay nuevos elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: `mutex` para asegurar exclusión mutua mientras se añaden o quitan elementos a la cola y otro semáforo contador de sincronización, `notEmpty`, para bloquear a los consumidores si el _buffer_ está vacío.
@@ -338,7 +338,7 @@ while True:
 En el <<producer_consumer_infinite_py, código en Python>> podéis ver la implementación completa. Hay dos clases, `Producer` y `Consumer`, que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable `PRODUCERS`) y dos consumidores (`CONSUMERS`), los productores producen 1000 elementos (`TO_PRODUCE`) cada uno y acaban. Para el buffer se usa una lista nativa de Python, se agregan elementos con `append()` y se obtiene el primer elemento con `pop(0)`.
 
 
-==== _Buffer_ finito
+===== _Buffer_ finito
 El algoritmo anterior puede ser fácilmente modificado para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_, los productores deben hacer los mismo si no quedan _posiciones libres_. Se necesita un semáforo contador adicional (`notFull`) cuyo valor indicará el número de posiciones libre por lo que se inicializa con el tamaño del _buffer_ (`BUFFER_SIZE`).
 
 
@@ -395,7 +395,7 @@ Si la constante es igual a uno la técnica se denomina _semáforos partidos bina
 Para resolver el problema de la sección crítica el par de operaciones _wait_ y _signal_ son ejecutadas por el mismo proceso y en ese orden. Para el algoritmo con _buffer_ limitado se usan dos semáforos y las llamadas a _wait_ y _signal_ se hacen desde diferentes hilos. Los _semáforos partidos_ permiten que los procesos esperen por eventos que se producen en otros.
 
 
-=== Lectores-Escritores
+==== Lectores-Escritores
 En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un problema también muy habitual, relajar las condiciones de la exclusión mutua con las siguientes condiciones:
 
 - Se permite más de un lector en la sección crítica.
@@ -406,7 +406,7 @@ En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un probl
 
 - Sólo puede haber un escritor en la sección crítica.
 
-==== La solución clásica
+===== La solución clásica
 El siguiente algoritmo se puede implementar con semáforos binarios y también con _mutex_ o _locks_ siempre que permitan que un proceso que no hizo el _wait_ pueda hacer el _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase `threading.Lock` porque permite que cualquier hilo haga el `release()` aunque no haya ejecutado el `acquire()`.
 
 ----
@@ -456,7 +456,7 @@ def reader_unlock():
 ----
 <1> Si es el último lector libera _writer_, podrán entrar escritores.
 
-==== Espera limitada
+===== Espera limitada
 El algoritmo anterior da prioridad a los lectores y no asegura espera limitada a los escritores. Cuando entró un lector los escritores tendrán que esperar hasta que salga el último, pero los lectores podrán seguir entrando sin dejar paso al escritor lo que puede generar esperas infinitas (_starvation_). Para evitarlo hay que asegurar que si un escritor desea entrar los nuevos lectores deben esperar. Se usa un semáforo adicional, `entry`, que bloqueará a los nuevos lectores cuando el primer escritor haga un _wait_.
 
 El siguiente es el algoritmo equitativo, la función `reader_unlock()` es la misma, cambian las otras tres (<<rw_lock_fair_py, código fuente completo>>).
