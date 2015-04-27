@@ -63,10 +63,6 @@ Hay varios tipos de instrucciones que implementan registros _RMW_:
 
 Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar la programación y portabilidad los compiladores proveen macros que generan la secuencias de instrucciones que usan o simulan las operaciones en cada arquitectura. Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*` que en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos que están más cercanos al modelo de memoria del C11 y C++11>>.
 
-[NOTE]
-====
-A partir de este punto usaremos las primitivas atómicas <<Atomics_C11, de las últimas versiones de GCC>>. Para probar los ejemplos en C aseguraros de tener versiones nuevas del GCC, estos ejemplos fueron probados con las versiones 4.8 y 4.9.
-====
 
 
 ==== getAndSet
@@ -146,7 +142,7 @@ def unlock():
 
 
 ==== Swap
-Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es XCHG para enteros de 32 bits.]. El algoritmo de la instrucción es tan sencillo como parece:
+Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es `XCHG` para enteros de 32 bits.]. El algoritmo de la instrucción es tan sencillo como parece:
 
 ----
 def swap(register1, register2):
@@ -220,7 +216,8 @@ func lock() {
 ===== El problema ABA
 _CAS_ tiene un problema conocido, el _problema ABA_. Aunque no se presenta en casos sencillos como el de exclusión mutua sino en casos de intercalados donde un proceso lee el valor _A_ y cede la CPU a otro proceso, otro modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que el primero se vuelva a ejecutar. Éste ejecutará la instrucción _CAS_ sin haber _notado_ el cambio.
 
-Un caso práctico: tenemos implementada una pila de estructuras _node_, es simplemente un puntero al siguiente elemento (_next_) y una estructura que guarda los datos (o _payload_, su estructura interna nos es irrelevante):
+[[free_lock_stack]]
+Un caso práctico con implementación de _pilas concurrentes sin bloqueo_ (_free-lock stacks_). La estructura   `node` tiene un puntero al siguiente elemento (_next_) y a una estructura que guarda los datos (o `payload`, su estructura interna nos es irrelevante):
 
 [[struct_node]]
 [source, c]
@@ -231,7 +228,7 @@ struct node {
 };
 ----
 
-Las funciones _push_ y _pop_ agregan y quitan elementos de la pila. _Push_ recibe como argumentos el puntero a la variable cabecera de la pila y el puntero al nodo a añadir. _Pop_ solo recibe el puntero a la cabeza de la pila y devuelve el puntero al primer elemento de la pila o NULL si está vacía. A continuación el código en C _simplificado_ de ambas funciones.
+Las funciones `push` y `pop` agregan y quitan elementos de la pila, `push` recibe como argumentos el puntero a la variable cabecera de la pila y el puntero al nodo a añadir, `pop` el puntero a la cabeza de la pila y devuelve el puntero al primer elemento de la pila o `NULL` si está vacía. A continuación el código en C simplificado de ambas funciones.
 
 
 [source, c]
@@ -357,7 +354,7 @@ struct node_head free_nodes;
 <2> Será usada como etiqueta, un contador que se incrementará en cada _transacción_. Es un entero del mismo tamaño que los punteros (32 o 64 bits según la arquitectura),
 <3> Los punteros a las pilas no serán un simple puntero sino la estructura con el puntero y la etiqueta.
 
-El código completo en C está en <<stack_cas_tagged_c, stack_cas_tagged.c>>, pero analicemos el funcionamiento de _push_.
+El código completo en C está en <<stack_cas_tagged_c, stack_cas_tagged.c>>, analicemos el funcionamiento de `push`.
 
 [source, c]
 ----
@@ -435,17 +432,16 @@ Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootn
 
 
 ===== _LL/SC_ y ABA
-Las implementaciones en hardware de las instrucciones _LL/SC_ tiene algunos problemas que afectan a la eficiencia. El resultado del _store condicional_ puede retornar errorfootnote:[No implica que falle el algoritmo implementado, solo que fuerza que se haga otro bucle de lectura y escritura.] _espurio_ por cambios de contexto, emisiones _broadcast_ en el bus de caché, actualizaciones en la misma línea de caché o incluso otras operaciones de lectura o escritura no relacionadas entre el _load_ y el _store_. Por eso la recomendación general es que el fragmento de código dentro de una sección exclusiva sea breve y que se minimicen los almacenamientos a memoria.
+Las implementaciones en hardware de las instrucciones _LL/SC_ tiene algunos problemas que afectan a la eficiencia. El resultado del _store condicional_ puede retornar erroresfootnote:[No implica que falle el algoritmo implementado, solo que fuerza que se haga otro bucle de lectura y escritura.] _espurios_ por cambios de contexto, emisiones _broadcast_ en el bus de caché, actualizaciones en la misma línea de caché o incluso otras operaciones de lectura o escritura no relacionadas entre el _load_ y el _store_. Por eso la recomendación general es que el fragmento de código dentro de una sección exclusiva sea breve y que se minimicen los almacenamientos a memoria.
 
 La mayor ventaja de las instrucciones _LL/SC_ es que no sufren del problema ABA, el primer cambio ya invalidaría el _store_ condicional posterior. Cuando analizamos el problema ABA vimos cómo se puede reproducir el problema <<cas_double_stack, con un par de colas>>, una para los nodos y la otra para los que quedan libres. El algoritmo usa el macro atómico para _compareAndSwap_ y cuando se traduce a ensamblador para arquitecturas como ARM se traduce a código que emula el _compareAndSwap_. En una arquitectura con _LL/SC_ es mejor implementarlo directamente con esas instrucciones, pero a menos que lo hagas con los compiladores de los fabricantes no contamos con los macros adecuadosfootnote:[Al menos no en GCC.], por lo que debemos recurrir a ensamblador para hacerlo.
 
-Vamos a ello.
 
 [[llsc]]
 ===== _LL/SC_ en ensamblador nativo
-Dividimos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones _pop()_ y _push()_. Éstas están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con <<safe_register, la misma estructura de pila anterior>>.
+Dividimos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones `pop` y `push`. Éstas están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con <<safe_register, la misma estructura de pila anterior>>.
 
-El código es bastante sencillo de entender, vamos a ver analizar en detalle la función _pop()_ que es la más breve de ambas:
+El código es bastante sencillo de entender, vamos a ver analizar en detalle la función `pop` que es la más breve de ambas:
 
 .pop()
 ----
@@ -464,45 +460,32 @@ pop:
     pop     {ip, pc}
 ----
 <1> Carga _LL_ del primer argumento de la función (_head_), la dirección del primer elemento de la lista punterofootnote:[Recordad que el primer argumento de la función es la _dirección_ del puntero, es decir un _puntero a puntero_.].
-<2> En la línea anterior se compara si es igual a cero, de ser así es porque la cola está vacía, sale del bucle para devolver el puntero _NULL_.
-<3> Carga en `r2` el puntero del siguiente elementofootnote:[Dado que _next_ es el primer campo del nodo su dirección coincide con la del nodo, por eso no hay _desplazamieno_ en el código ensamblador cuando leemos o modificamos _next_.] de la lista, la dirección de _e->next_ de <<struct_node, la estructura del nodo>>.
-<4> Almacena el siguiente elemento en _head_.
+<2> En la línea anterior se compara si es igual a cero, de ser así es porque la cola está vacía, sale del bucle para devolver el puntero `NULL`.
+<3> Carga en `r2` el puntero del siguiente elementofootnote:[Dado que `next` es el primer campo del nodo su dirección coincide con la del nodo, por eso no hay _desplazamieno_ en el código ensamblador cuando leemos o modificamos _next_.] de la lista, la dirección de `e->next` de <<struct_node, la estructura del nodo>>.
+<4> Almacena el siguiente elemento en `head`.
 <5> Copia el contenido de `r1` a `r0`, que es el valor devuelto por la función.
 
 Una vez conocidas las características y posibilidades de _LL/SC_ es relativamente sencillo simular las otras operaciones atómicas y quizás aún más sencillo implementar el algoritmo directamente basado en _LL/SC_. La dificultad es que no es habitual contar con macros genéricos debido a que en arquitecturas sin _LL/SC_ es muy complicado simular estas operaciones con instrucciones _CAS_, por lo que habrá que recurrir a ensamblador y además con una versión para cada plataforma que lo implemente.
 
-Pero si se hace correctamente además de evitar el problema ABA se puede hacer mucho más eficiente. Los siguientes son los tiempos de ejecución de los últimos algoritmos vistos en una Raspberry 1.
+Pero si se hace correctamente además de evitar el problema ABA se puede hacer mucho más eficiente. Los siguientes son los tiempos de ejecución de los algoritmos de pilas concurrentes en Raspberry 1 y 2.
+
+[[free_lock_stack_times]]
+.Tiempos de ejecución de pila concurreent en Raspberry
+[caption=""]
+image::free_lock_stacks.png[align="center"]
 
 
-.Comparación de tiempos en Raspberry 1
-|===
-|Programa |Tiempo de reloj
-
-|<<stack_cas_malloc,Pila con malloc>>, CAS (problema ABA)
-|8.6 seg
-
-|<<cas_double_stack,Doble pila>>, CAS (problema ABA)
-|4.9 seg
-
-|<<stack_cas_tagged,Doble pila CAS etiquetado>> (sin ABA)
-|10.0 seg
-
-|<<llsc, Doble pila con LL/SC>> (ensamblador, sin ABA)
-|2.3 seg
-|===
-
-
-La implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente más rápido, que sufre del problema ABAfootnote:[Y por lo tanto incorrecto.] y más de cuatro veces más rápido que la simulación de _CAS etiquetado_.
+Con un único procesador del ARM6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente más rápido, que sufre del problema ABAfootnote:[Y por lo tanto incorrecto.] y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARM7l con varios núcleos el _CAS con malloc_ es el más rápido (pero erróneo), la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
 
 === Recapitulación
 
-En este capítulo hemos visto las instrucciones por hardware esenciales, tanto para sistemas operativos como lenguajes, para construir primitivas de sincronización de más alto nivel. Las técnicas que usan estas primitivas -directa o indirectamente- son llamados _spinlocks_. Las hemos analizado desde las más básicas hasta las más potentes como _CAS_ y _LL/SC_. Aunque comenzamos solo con el objetivo de resolver el problema fundamental de sincronización entre procesos -exclusión mutua- hemos introducido el uso de las mismas para problemas más sofisticados, como el _CAS etiquetado_ y el uso de _LL/SC_ para gestión de pilas concurrentes.
+En este capítulo hemos visto las instrucciones por hardware esenciales, tanto para sistemas operativos como lenguajes, para construir primitivas de sincronización de más alto nivel. Las técnicas que usan estas primitivas -directa o indirectamente- son llamados _spinlocks_. Las hemos analizado desde las más básicas hasta las más potentes como _CAS_ y _LL/SC_. Aunque comenzamos solo con el objetivo de resolver el problema fundamental de sincronización entre procesos -exclusión mutua- hemos introducido el uso de las mismas para problemas más sofisticados, como el _CAS etiquetado_ y el uso de _LL/SC_ para gestión de pilas concurrentes sin bloqueo.
 
-No hay instrucciones de hardware unificadas para todas las arquitecturas, tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_ que luego son convertidos a  funciones más complejas que simulan a las instrucciones o registros _RMW_ definidos por el macro. Lo vimos claramente con la arquitectura ARM, todas las operaciones se simulan con _LL/SC_. La inversa es más complicada -sino imposible- por lo que habitualmente no se cuentan con esos macrosfootnote:[Salvo los compiladores de los propios fabricantes que los incluyen en sus compiladores propietarios, en ARM se llaman _intrinsics_] y hay que recurrir al ensamblador para poder aprovechar las capacidades de nativas de cada procesador, muy habitual en los sistemas operativosfootnote:[Por ejemplo en Linux se usa el ensamblador _inline_, _ASM()_.].
+No hay instrucciones de hardware unificadas para todas las arquitecturas, tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_ que luego son convertidos a  funciones más complejas que simulan a las instrucciones o registros _RMW_ definidos por el macro. Lo vimos claramente con la arquitectura ARM, todas las operaciones se simulan con _LL/SC_. La inversa es más complicada -sino imposible- por lo que habitualmente no se cuentan con esos macrosfootnote:[Salvo los compiladores de los propios fabricantes que los incluyen en sus compiladores propietarios, en ARM se llaman _intrinsics_] y hay que recurrir al ensamblador para poder aprovechar las capacidades de nativas de cada procesador, muy habitual en los sistemas operativosfootnote:[Por ejemplo en Linux se usa el ensamblador `inline`, `ASM()`.].
 
 De todas maneras los _spinlocks_ basados en instrucciones por hardware son fundamentales y se requieren algoritmos muy eficientes sobre todo para multiprocesadores o núcleos. Además de solucionar problemas la exclusión mutua interesa gestionar estructuras concurrentes habituales (pilas, listas, lectores-escritores, etc.) que minimicen el impacto sobre el sistema de caché. Este será el tema del siguiente capítulo.
 
-==== Hay que decirlo, por las dudas
+==== Por las dudas
 
 En todos los ejemplos de exclusión mutua vistos hasta ahora la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una instrucción y operación aritmética que en apariencia son tan simples también son víctimas del acceso concurrente desorganizado. Pero espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para hacerlo correctamente, hay instrucciones de hardware que lo hacen de forma eficiente, como el _getAndAdd_ o _addAndGet_. Por ejemplo en  C:
 
