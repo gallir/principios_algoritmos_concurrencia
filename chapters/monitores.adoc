@@ -15,7 +15,7 @@ monitor Counter
         counter = counter + 1
 ----
 
-El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua entre llamadas a procedimiento lo que automáticamente resuelve el problema de la exclusión mutua para las variables del monitor.
+El monitor tiene una variable `counter` y el procedimiento `increment`, la variable es accesible sólo por este procedimiento. Ningún procedimiento se ejecutará si otro del mismo monitor se está ejecutando, es decir, se asegura exclusión mutua en la ejecución de sus funciones lo que automáticamente resuelve el problema de la sección crítica para las variables del monitor.
 
 [[java_monitor]]
 === Monitores en Java
@@ -482,7 +482,6 @@ Cuando el escritor señaliza a todos para que puedan entrar los siguientes lecto
 synchronized void writerUnlock() {
     writing = false;
     notifyAll();
-
 }
 ----
 
@@ -622,14 +621,14 @@ Los hilos bloqueados en el `wait()` del monitor se añaden a la cola _WaitSet_, 
 
 ==== Barreras con semáforos vs monitor
 
-Las barreras, como el modelo de filósofos, son un ejemplo más práctic para comparar la eficiencia entre semáforos y monitores, no se trata solo de asegurar exclusión mutua, también incluye sincronización entre procesos. La imagen siguiente muestra (azul, a la izquierda) los tiempos de ejecuciones equivalente con sincronización con semáforos (vistos en <<sync_barrier>>) con las de monitores (rojo, a la derecha) de este capítulo.
+Las barreras, como el modelo de filósofos, son un ejemplo más práctico para comparar la eficiencia entre semáforos y monitores, no se trata solo de asegurar exclusión mutua, también incluye sincronización entre procesos. La imagen siguiente muestra (azul, a la izquierda) los tiempos de ejecuciones equivalente con sincronización con semáforos (vistos en <<sync_barrier>>) con las de monitores (rojo, a la derecha) de este capítulo.
 
 [[barriers_monitor_java]]
 .Tiempos de ejecución barreras en C y Java
 [caption=""]
 image::monitors-barriers.png[align="center"]
 
-En ambos casos la implementación con monitores implica una sobrecarga (menor en Java) sobre la programada con semáforos. La simplicidad de los monitores tiene
+En ambos casos la implementación con monitores implica una sobrecarga (menor en Java) sobre la programada con semáforos. La simplicidad de los monitores no es gratuita, en general introduce un coste adicional al forzar la exclusión mutua en los métodos.
 
 ////
 
