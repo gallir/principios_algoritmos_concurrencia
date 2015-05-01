@@ -93,3 +93,13 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/intro/bakery.c
 ----
 include::../code/intro/bakery.c[]
 ----
+
+[[counter_fast]]
+=== Algoritmo rápido de Lamport
+
+[[counter_fast_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/intro/fast.c[fast.c]
+[source,c]
+----
+include::../code/intro/fast.c[]
+----

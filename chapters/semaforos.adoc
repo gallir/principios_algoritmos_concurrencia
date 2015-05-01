@@ -614,11 +614,11 @@ Si no se presentan una o varias de las condiciones siguientes no se puede produc
 
 1. *Exclusión mutua*: Los recursos solo pueden asignarse a un proceso.
 
-2. *Retención y espera*: Un proceso mantiene los recursos ya asignados mientras espera la asignación de otro.
+2. *Retención y espera* (_hold and wait_): Un proceso mantiene los recursos ya asignados mientras espera la asignación de otro.
 
-3. *No apropiación*: No se puede quitar un recurso que está asignado a un proceso, debe ser éste el que lo libere.
+3. *No apropiación* (_no preemption_): No se puede quitar un recurso que está asignado a un proceso, debe ser éste el que lo libere.
 
-4. *Espera circular*: Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
+4. *Espera circular* (_circular wait_): Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
 
 ****
 
@@ -632,7 +632,7 @@ Para evitar los _deadlocks_ el algoritmo de los filósofos debe evitar que se pr
 
 4. La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente.
 
-El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario que los demás que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los solicita en orden descendente, primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden para todos basta cambiar la función `pick` para que siempre se haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
+El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario que los demás que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los solicita en orden descendente, primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden para todos se puede cambiar la función `pick` para que siempre se haga el primer _wait_ sobre el menor índice y luego sobre el mayor (<<philosophers_1_py, código en Python>>):
 
 ----
 def pick(i):
@@ -644,7 +644,7 @@ def pick(i):
         forks[i].wait()
 ----
 
-Ya no se producen interbloqueos al no haber esperas circulares. Sin embargo no es óptimo, hay situaciones donde podrían estar comiendo dos filósofos pero solo lo hace uno. Si como en el caso anterior todos los filósofos desean comer más o menos simultáneamente puede darse la siguiente secuencia:
+Este algoritmo suele denominarse _LR_ porque hay dos tipos de filósofos, los que toman primero el tenedor de la izquiera (_L_) y los que lo hacen con el de la derecha (_R_). No produce interbloqueos al no haber esperas circulares. Sin embargo no es óptimo, hay situaciones donde podrían estar comiendo dos filósofos pero solo lo hace uno. Si como en el caso anterior todos los filósofos desean comer más o menos simultáneamente puede darse la siguiente secuencia:
 
 ----
 fork[0].wait()
@@ -661,6 +661,8 @@ fork[1].wait()
 ----
 <1> El _filósofo~4~_ que ahora hace el _wait_ en orden decreciente y se bloquea.
 <2> El _filósofo~3~_, el _tenedor~4~_ está libre y puede continuar comiendo, todos los demás esperarán, cuando _filósofo~3~_ podrá comer el _filósofo~2~_, luego _filósofo~1~_, etc.
+
+Con cinco filósofos pueden comer hasta dos, el algoritmo que lo resuelva correctamente es _concurrente-[n/3]_ (donde _[]_ es _redondeo por arriba_, _concurrente-2_). Sin embargo con la secuencia anterior hemos demostrado que hay casos donde el algoritmo no cumple con el mínimo, su nivel es _concurrente-[n/4]_.
 
 
 [[dining_philosophers_semaphores]]

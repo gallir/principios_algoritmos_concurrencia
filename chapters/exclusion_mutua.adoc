@@ -150,7 +150,7 @@ Hay tres requisitos que deben cumplir los algoritmos y primitivas que pretenden 
 ====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
 Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
-Espera limitada o _libre de inanición_ (_starvation free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
+Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
 ====
 
 
@@ -162,7 +162,7 @@ Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<S
 .Seis requisitos para exclusión mutua
 . Asegurar *exclusión mutua*.
 . Un proceso que se interrumpe en su sección no crítica (o _resto del código_) *no debe interferir* a los demás procesos.
-. No debe permitir *esperas infinitas* en la _entrada de la sección crítica_. Es decir, libre de interbloqueo e inanición.
+. Espera limitada, no debe permitir *esperas infinitas* en la _entrada de la sección crítica_. Es decir, libre de interbloqueo e inanición.
 . Debe permitir la *entrada inmediata* a la sección crítica si no hay ningún proceso en ella.
 . No se deben hacer *suposiciones de la velocidad relativa* de los procesos ni del número de procesadores.
 . Un proceso permanece en su sección crítica por tiempo finito. Dado que nuestro interés es desarrollar los algoritmos de entrada y salida a la sección crítica, damos por cierta la validez de esta reglafootnote:[Pero sí se debe tomar en cuenta cuando se desarrollan los programas que *implementan* la sección crítica.].

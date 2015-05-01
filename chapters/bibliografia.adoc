@@ -2,32 +2,23 @@
 
 [bibliography]
 
-- [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
-
-- [[[railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
-
-- [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
-
-- [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974, http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
-
-- [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM, 1986.
-
-- [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_.
-https://www.kernel.org/doc/Documentation/memory-barriers.txt
-
-- [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
 - [[[Atomics_C11]]] Built-in functions for memory model aware atomic operations. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
 
-- [[[Herlihy12]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
+- [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
-- [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
+- [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_.
+
+- [[[Barz]]] Hans W. Barz. _Implementing semaphores by binary semaphores_. ACM SIGPLAN, Volume 18 Issue 2, February 1983
+
+- [[[Ben-Ari]]] Mordechai Ben-Ari. _Principles of Concurrent and Distributed Programming_. Second edition 2006, Addison-Wesley, ISBN 978-0-321-31283-9.
 
 - [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
 
-- [[[MCS1]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
+- [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
 
-- [[[MCS2]]] John M. Mellor-Crummey, Michael L. Scott. _Scalable Reader-Writer Synchronization for Shared-Memory Multiprocessors_. PPOPP '91 Proceedings of the third ACM SIGPLAN symposium on Principles and practice of parallel programming. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.380.1719&rep=rep1&type=pdf
+- [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.21.8571&rep=rep1&type=pdf
+Conference on the History of Programming Languages, Cambridge, MA, April 1993 http://brinch-hansen.net/papers/1993a.pdf
 
 - [[[Corbet1]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
 
@@ -35,56 +26,68 @@ https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Craig]]] Travis S. Craig. _Building FIFO and Priority-Queuing Spin Locks from Atomic Swap_. Technical Report 93-02-02, University of Washington, 1993. ftp://ftp.cs.washington.edu/tr/1993/02/UW-CSE-93-02-02.pdf
 
-- [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.21.8571&rep=rep1&type=pdf
+- [[[Dice]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the
 
 - [[[Dijkstra35]]] E. W. Dijkstra. _Over de sequentialiteit van procesbeschrijvingen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD35.html
 
 - [[[Dijkstra74]]] E. W. Dijkstra. _Over seinpalen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 
-- [[[Barz]]] Hans W. Barz. _Implementing semaphores by binary semaphores_. ACM SIGPLAN, Volume 18 Issue 2, February 1983
-
-- [[[Ben-Ari]]] Mordechai Ben-Ari. _Principles of Concurrent and Distributed Programming_. Second edition 2006, Addison-Wesley, ISBN 978-0-321-31283-9.
-
-- [[[Hoare]]] C.A.R. Hoare. _Communicating Sequential Processes_. 1985/2004. http://www.usingcsp.com/cspbook.pdf
-
-- [[[Hoare1]]] C.A.R. Hoare. _Monitors: An Operating System Structuring Concept_. Communications of the ACM,  Vol. 17 Number 10, October 1974. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.73.8853&rep=rep1&type=pdf
+- [[[Drepper]]] Ulrich Drepper. _Futexes Are Tricky_, Red Hat Inc., 2011. http://www.akkadia.org/drepper/futex.pdf
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
 - [[[Hart]]] Darren Hart. _A futex overview and update_. Linux Weekly News, 2009. http://lwn.net/Articles/360699/
 
-- [[[Drepper]]] Ulrich Drepper. _Futexes Are Tricky_, Red Hat Inc., 2011. http://www.akkadia.org/drepper/futex.pdf
+- [[[Herlihy12]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
+
+- [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
+
+- [[[Hoare1]]] C.A.R. Hoare. _Monitors: An Operating System Structuring Concept_. Communications of the ACM,  Vol. 17 Number 10, October 1974. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.73.8853&rep=rep1&type=pdf
+
+- [[[Hoare]]] C.A.R. Hoare. _Communicating Sequential Processes_. 1985/2004. http://www.usingcsp.com/cspbook.pdf
+https://www.kernel.org/doc/Documentation/memory-barriers.txt
+Java™ Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
+
+- [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM, 1986.
+
+- [[[Lamport3]]] Leslie Lamport. _A Fast Mutual Exclusion Algorithm_. ACM Transactions on Computer Systems, Vol. 5, February 1987. http://research.microsoft.com/en-us/um/people/lamport/pubs/fast-mutex.ps
+
+- [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974, http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
+
+- [[[Lampson]]] Butler W. Lampson, David D. Redell. _Experience with processes and monitors in Mesa_. Communications of the ACM. Volume 23 Issue 2, Feb. 1980. http://dl.acm.org/citation.cfm?id=358824
+
+- [[[Lea]]] Doug Lea. _The java.util.concurrent Synchronizer Framework_. Science of Computer Programming. Volume 58, Issue 3, December 2005. http://www.sciencedirect.com/science/article/pii/S0167642305000663
 
 - [[[LockLess1]]] _Futex Cheat Sheet_. http://locklessinc.com/articles/futex_cheat_sheet/
 
 - [[[LockLess2]]] _Mutexes and Condition Variables using Futexes_. http://locklessinc.com/articles/mutex_cv_futex/
 
+- [[[Mackintosh]]] Alasdair Mackintosh, Olivier Giroux. _C++ Latches and Barriers_. ISO/IEC JTC1 SC22 WG21 N4204, 2014-08-06. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4204.html
+
+- [[[MCS1]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
+
+- [[[MCS2]]] John M. Mellor-Crummey, Michael L. Scott. _Scalable Reader-Writer Synchronization for Shared-Memory Multiprocessors_. PPOPP '91 Proceedings of the third ACM SIGPLAN symposium on Principles and practice of parallel programming. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.380.1719&rep=rep1&type=pdf
+
+- [[[Microsoft]]] _Priority inversion_. https://msdn.microsoft.com/en-us/library/windows/desktop/ms684831%28v=vs.85%29.aspx
+
+- [[[Molnar]]] Ingo Molnar. _PI-futex: -V1. Lightweight userspace priority inheritance_. http://lwn.net/Articles/177111/
+
+- [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
+
+- [[[Popov]]] Vlad Popov, Oleg Mazonka. _Faster Fair Solution for the Reader-Writer Problem_. 2013. http://arxiv.org/pdf/1309.4507.pdf
+
+- [[[railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
+
 - [[[Reeves]]] Glenn E Reeves. _What really happened on Mars?_. http://research.microsoft.com/en-us/um/people/mbj/mars_pathfinder/Authoritative_Account.html
 
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 
-
-- [[[Lampson]]] Butler W. Lampson, David D. Redell. _Experience with processes and monitors in Mesa_. Communications of the ACM. Volume 23 Issue 2, Feb. 1980. http://dl.acm.org/citation.cfm?id=358824
-
-
-- [[[Microsoft]]] _Priority inversion_. https://msdn.microsoft.com/en-us/library/windows/desktop/ms684831%28v=vs.85%29.aspx
-
-
-- [[[Molnar]]] Ingo Molnar. _PI-futex: -V1. Lightweight userspace priority inheritance_. http://lwn.net/Articles/177111/
-
-- [[[Popov]]] Vlad Popov, Oleg Mazonka. _Faster Fair Solution for the Reader-Writer Problem_. 2013. http://arxiv.org/pdf/1309.4507.pdf
+- [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
 
 - [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
 
-- [[[Mackintosh]]] Alasdair Mackintosh, Olivier Giroux. _C++ Latches and Barriers_. ISO/IEC JTC1 SC22 WG21 N4204, 2014-08-06. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4204.html
 
-- [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
-Conference on the History of Programming Languages, Cambridge, MA, April 1993 http://brinch-hansen.net/papers/1993a.pdf
 
-- [[[Lea]]] Doug Lea. _The java.util.concurrent Synchronizer Framework_. Science of Computer Programming. Volume 58, Issue 3, December 2005. http://www.sciencedirect.com/science/article/pii/S0167642305000663
-
-- [[[Dice]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the
-Java™ Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
 
 ////
  - [[[Kragen15]]] https://twitter.com/kragen/status/559853014450974721

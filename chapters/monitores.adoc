@@ -494,7 +494,7 @@ synchronized void readerLock() {
 
 Con la solución con semáforos del problema de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> que se podían generar con un diseño descuidado. Planteado de forma correcta el algoritmo con monitores es mucho más sencillo y menos propenso a sufrir los problemas de las soluciones con semáforosfootnote:[La intención inicial de la construcción de semáforos.]. Debido a la exclusión mutua entre métodos del monitor hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de generar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después después de que un hilo ha sido desbloqueado de su _wait_.
 
-El caso de los filósofos es otro ejemplo notable (como el de barreras) de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (`pick` y `release` respectivamente).
+El caso de los filósofos es otro ejemplo notable (como el de barreras) de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_) que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (`pick` y `release` respectivamente).
 
 El algoritmo simplificado en Java es el siguiente (<<monitors_philosophers_java, código completo>>):
 
@@ -567,7 +567,7 @@ La última con variables de condición ahorra un 40% de tiempo de CPU totalfootn
 [[monitor_times]]
 === Eficiencia de Monitores
 
-Los monitores exigen que las funciones del monitor se ejecuten con exclusión mutua, una restricción y sobrecarga que no tienen los semáforos. No hay muchos lenguajes modernos mayoritarios con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usados, es muy eficiente en la gestión de hilos y tiene el modelo de memoria bien definido.
+Los monitores aseguran la ejecución atómica de sus procedimientos -los _serializan_-, una restricción que no rquieren los semáforos y que impide implementaciones más eficientes en sistemas con múltiples procesadores. No hay muchos lenguajes modernos mayoritarios con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usados, es muy eficiente en la gestión de hilos y tiene el modelo de memoria bien definido.
 
 ==== Mutex y monitor
 En la siguiente imagen se pueden observar dos comparaciones entre la C y Java.
@@ -634,7 +634,7 @@ http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runt
 
 Los semáforos no proveen una construcción estructura que encapsule métodos y variables modificadas concurrentemente. Los _monitores_ se diseñaron para eliminar esa carencia, es una abstracción más estructurada y que facilita el diseño de algoritmos de sincronización. No todos los lenguajes implementan la definición original de Hoare pero prácticamente todos ofrecen los mecanismos para implementarlos metodológicamente: _mutex_ y variables de condición.
 
-En este capítulo hemos visto cómo diseñar algoritmos de sincronización basados en monitores implementados a nivel sintáctico en el lenguaje (como en Java) como construidos en el programa. Aunque son relativamente más ineficientes tienen ventajas considerables por su estructura, claridad y facilidad para implementar algoritmos complejos.
+En este capítulo hemos visto cómo diseñar algoritmos de sincronización basados tanto en monitores implementados a nivel sintáctico en el lenguaje (como en Java) como construidos en el programa. La serialización de la ejecución de sus métodos hace que sean más ineficientes pero como contrapartida aporta ventajas por su estructura más clara y mayor facilidad para implementar algoritmos complejos.
 
 Pero los monitores todavía carecen de una característica deseable en concurrencia además de la sincronización: la comunicación entre procesos. Este problema lo resuelven los _mensajes_ o _canales_, el tema del próximo capítulo.
 

@@ -2,7 +2,7 @@
 == _Spinlocks_
 Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
-. El código en la sección crítica es muy breve y la competencia (_contention_) es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- e implementar otros mecanismos de sincronización sin esperas activas (que veremos a partir del siguiente capítulo).
+. El código en la sección crítica es muy breve y la competencia es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- e implementar otros mecanismos de sincronización sin esperas activas (que veremos a partir del siguiente capítulo).
 
 . Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
@@ -34,7 +34,7 @@ Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas par
 ====
 Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria caché por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS1>>, <<Boyd-Wickizer>>).
 
-Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce -como mínimo- un _fallo de caché_ cada vez que un proceso cambia su valor, la actualización debe propagarse a las caché locales de los otros procesadores. El problema se agrava por el <<false_sharing, _false sharing_>>, los datos que se modifican en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_, cada modificación de esas variables supone un coste adicional de sincronización. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>>.
+Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce como mínimo un _fallo de caché_ cada vez que un proceso cambia su valor, la actualización debe propagarse a las caché locales de los otros procesadores. El problema se agrava por el <<false_sharing, _false sharing_>>, los datos que se modifican en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_, cada modificación de esas variables supone un coste adicional de sincronización. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>>.
 
 ====
 
@@ -604,7 +604,7 @@ Comenzamos con las optimizaciones básicas a _spinlocks_ construidos con las ins
 
 Luego vimos la implementación de lectores-escritores con _spinlocks_. Este algoritmo es muy común y lo veremos también implementado con las técnicas de capítulos posteriores. Su utilidad se basa en que las actualizaciones de datos son menos frecuentes que las lecturas, interesa relajar las restricciones de exclusión mutua para permitir que haya más de un lector en la sección crítica mientras no haya ningún escritor.
 
-A continuación se introdujo el tema de los _spinlocks_ equitativos o _fair_. En estos se asegura que los procesos entran a la sección crítica en el orden que llegan (FIFO), se puede asegurar y demostrar formalmente que no se produce inanición (_starvation_).
+A continuación se introdujo el tema de los _spinlocks_ equitativos (_fair_). Estos aseguran que los procesos entran a la sección crítica en el orden que llegan (FIFO), se puede demostrar formalmente que no se produce inanición (_starvation_).
 
 El primer algoritmo fue _ticket-lock_, basado en las mismas ideas del algoritmo de la panadería. Cada proceso obtiene un _número_ único y creciente que sirve para sincronizar la entrada a la sección crítica mediante una variable de turno que también crece monotónicamente. A continuación extendimos este algoritmo para lectores-escritores que además tiene la propiedad de ser equitativo, no da prioridad a lectores ni escritores.
 
