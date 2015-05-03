@@ -382,7 +382,7 @@ while True:
 <1> Incrementa el semáforo para que un productor pueda añadir otro elemento.
 
 ****
-El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles, la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<messages>>).
+El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles, la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase `ArrayBlockingQueue` en Java, `Queue` en Python (`queue` partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<channels>>).
 ****
 
 ===== Semáforos partidos
@@ -494,7 +494,7 @@ POSIX Threads ofrece lectores-escritores con las funciones `pthread_rwlock_*`, e
 [[dining_philosophers]]
 === El problema de los filósofos cenando
 
-Es un modelo muy estudiado en el área de la programación concurrente, fue inventado por Dijkstra en 1965 y luego formalizado por Hoare (<<Hoare>>). No es un problema realista pero es lo suficientemente simple pero al mismo tiempo propone desafíos interesantes por lo que es objeto habitual de estudio y discusión. Se trata de cinco filósofos sentados en una mesa, sobre esta también hay cinco tenedoresfootnote:[Algunos textos dicen que son palillos, por ello se suele decir que los filósofos son chinos pero es contradictorio con la imagen.], uno a cada lado de los filósofos.
+Es un modelo muy estudiado en el área de la programación concurrente, fue inventado como ejercicio por Dijkstra en 1965 y luego formalizado por Hoare. No es un problema cuya solución tenga un uso práctico directo pero es lo suficientemente simple pero al mismo tiempo propone desafíos interesantes por lo que es objeto habitual de estudio y comparación entre las diferentes mecanismos de sincronización concurrente. Se trata de cinco filósofos sentados en una mesa, sobre esta también hay cinco tenedoresfootnote:[Algunos textos dicen que son palillos, por ello se suele decir que los filósofos son chinos pero es contradictorio con la imagen.], uno a cada lado de los filósofos.
 
 [[dining_image]]
 .Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via Wikimedia Commons - https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png]
@@ -794,7 +794,7 @@ https://cs.nyu.edu/~yap/classes/os/resources/EWD74.pdf
 http://docs.oracle.com/cd/E19683-01/806-6867/sync-27385/index.html
 http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 
-<<railroad>>
+<<Railroad>>
 _It is Texas law that when two trains meet each other at a railroad crossing, each shall come to a full stop, and neither shall proceed until the other has gone._
 
 

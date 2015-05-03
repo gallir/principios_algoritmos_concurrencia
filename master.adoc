@@ -42,7 +42,7 @@ include::chapters/futex.adoc[]
 
 include::chapters/monitores.adoc[]
 
-include::chapters/mensajes.adoc[]
+include::chapters/canales.adoc[]
 
 include::chapters/estructuras.adoc[]
 
@@ -59,3 +59,5 @@ include::chapters/code-semaphores.adoc[]
 include::chapters/code-futex.adoc[]
 
 include::chapters/code-monitors.adoc[]
+
+include::chapters/code-channels.adoc[]
