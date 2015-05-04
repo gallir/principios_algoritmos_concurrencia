@@ -175,7 +175,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del `while` hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 
-Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
+Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
 [quote]
 Cuando dos trenes se encuentran en un cruce de vías cada uno deberá detenerse completamente y ninguno deberá continuar hasta que el otro se haya ido.

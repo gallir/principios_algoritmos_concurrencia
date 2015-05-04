@@ -1,7 +1,21 @@
 [[channels]]
 == Canales
 
-Las construcciones de programación concurrente vistas hasta ahora (algoritmos, _spinlocks_, semáforos y monitores) rquieren memoria compartida, ahora veremos otro tipo de construcción donde no se comparte memoria sino que se pasa la información mediante _mensajes_.
+Las construcciones de programación concurrente estudiadas hasta ahora (algoritmos, _spinlocks_, semáforos y monitores) requieren memoria compartida, ahora veremos otro donde no se comparte memoria sino que se pasa la información mediante _mensajes_. Los mensajes se envían atómicamente a través de canales, estos requieren de al menos un proceso remitente y un receptor.
+
+Hay dos tipos de comunicaciones:
+
+Comunicación sincrónica:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea hasta que el receptor esté listo para recibir. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
+
+Comunicación asincrónica:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. Este tipo de comunicación requiere que el canal tenga un _buffer_ para almacenar los mensajes (frecuentemente llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal de comunicación, si no hay receptores o estos consumen mensajes a menor ritmo con el tiempo el _buffer_ se llenará y hará que los remitentes se bloqueen.
+
+Hay dos tipos de especificar el destinatario (_addressing_):
+
+- Indentificando explícitamente al proceso receptor como en Erlang, se indica el _PID_ del receptor.
+
+- Indentificando al canal, como en Go. El canal puede admitir operaciones de uno o varios procesos en cada extremo.
+
+Además los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, como es el caso de canales en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_).
 
 El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su muy influyente artículo _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada-salida. Definió dos operadores, `?` para indicar la entrada de un proceso y `!` para la salida.
 
@@ -16,23 +30,17 @@ Enviar el contenido de _x_ e _y_ al proceso _DIV_:
     DIV!(x, y)
 
 
-El primer lenguaje que se desarrolló con este modelo fue Occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes que com este modelo Erlang (Armstrong, 1986), Newsqueak (Pike, 1988), Concurrent ML (Reppy, 1993),  Alef (Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
+El primer lenguaje que se desarrolló con este modelo fue Occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes que com este modelo Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
 .Erlang
 ****
-Erlang fue diseñado en Ericcson para sus sistemas con alta disponibilidad y concurrencia. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con los mensajes como única forma de comunicación. A diferencia de _CSP_, Erlang usa mensajes asincrónicos que se almacenan en _buffers_ denonimados _buzones_ (_mailboxes_) desde donde son recogidos por la espeficifación de patrones en el receptor (similar a los _guard commands_ de Dijkstra también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_.
+Erlang fue diseñado en Ericcson para sus sistemas con alta disponibilidad y concurrencia. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con mensajes como única forma de comunicación. A diferencia de _CSP_, Erlang usa mensajes asincrónicos que se almacenan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
 ****
 
 
-Al igual que _CSP_ implementa el intercambio de mensajes sincrónicos
+En 2010 Google publicó la primera versión estable del lenguaje Go, diseñado por Robert Griesemer, Rob Pike, y Ken Thompson.
 
-
-En 2010 Google publicó la primera versión estable del lenguaje Go,
-
-
-
-CSP/Dijkstra guarded commands
-
+[source, erlang]
 ----
 Pid = spawn(fun() ->
           receive Val ->
@@ -42,7 +50,7 @@ Pid = spawn(fun() ->
 Pid ! "Hello".
 ----
 
-
+[source, go]
 ----
 c := make(chan string)
 go func() {
@@ -50,6 +58,10 @@ go func() {
 }();
 c <- "Hello"
 ----
+
+////
+π calculus
+////
 
 === Tipos
 

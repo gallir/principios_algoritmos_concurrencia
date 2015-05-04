@@ -2,12 +2,13 @@
 
 [bibliography]
 
+- [[[Agha]]] Gul Agha, Carl Hewitt. _Concurrent Programming Using Actors: Exploiting Large-Scale Parallelism_. A. I. Memo No. 865. October 1985. ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-865.pdf
 
 - [[[Atomics_C11]]] Built-in functions for memory model aware atomic operations. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
 
 - [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
-- [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_.
+- [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_. https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Barz]]] Hans W. Barz. _Implementing semaphores by binary semaphores_. ACM SIGPLAN, Volume 18 Issue 2, February 1983
 
