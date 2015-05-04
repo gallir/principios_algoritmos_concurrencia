@@ -35,7 +35,7 @@ Las llamadas se hacen con la función +syscall+, su forma genérica es:
 
     syscall(__NR_futex, ptr, FUTEX_OP, val1 , timeout, *ptr2 , val3);
 
-(+__NR_futex+ es el identificador de llamada de sistema de FUTEXfootnote:[Definido en +/usr/include/asm-generic/unistd.h+.], +ptr+ es la dirección del _futex_, +FUTEX_OP+ es una de las operaciones explicados a continuación y los siguientes son parámetros adicionales que dependen de la operación.)
+(+\__NR_futex+ es el identificador de llamada de sistema de FUTEXfootnote:[Definido en +/usr/include/asm-generic/unistd.h+.], +ptr+ es la dirección del _futex_, +FUTEX_OP+ es una de las operaciones explicados a continuación y los siguientes son parámetros adicionales que dependen de la operación.)
 ****
 
 ==== Operaciones
