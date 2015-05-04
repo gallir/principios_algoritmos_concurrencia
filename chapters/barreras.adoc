@@ -29,12 +29,12 @@ Hay tres razones fundamentales que pueden afectar a la violación de la consiste
 
 === Optimizaciones del compilador
 
-Los compiladores pueden optimizar el código de varias formas, desde cambiar el orden de ejecución hasta usar registros como almacenamientos temporales (_buffer_) antes de copiar registros a memoria RAM. Para evitar que se cambie el orden de ejecución de lecturas y escrituras de variables compartidas en Cfootnote:[Tiene una semántica similar en C++ y Java, en este último es para evitar que se mantengan copias no sincronizadas en objetos usados en diferentes hilos] se puede usar la palabra clave `volatile` en su declaración, por ejemplo:
+Los compiladores pueden optimizar el código de varias formas, desde cambiar el orden de ejecución hasta usar registros como almacenamientos temporales (_buffer_) antes de copiar registros a memoria RAM. Para evitar que se cambie el orden de ejecución de lecturas y escrituras de variables compartidas en Cfootnote:[Tiene una semántica similar en C++ y Java, en este último es para evitar que se mantengan copias no sincronizadas en objetos usados en diferentes hilos] se puede usar la palabra clave +volatile+ en su declaración, por ejemplo:
 
     volatile int counter = 0;
 
 
-El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con `volatile` los algoritmos no funcionan. La causa del fallo de exclusión mutua es otra.
+El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con +volatile+ los algoritmos no funcionan. La causa del fallo de exclusión mutua es otra.
 
 === Caché de RAM en multiprocesadores
 
@@ -118,7 +118,7 @@ o
     c = a * 2
 
 
-Detecta que la asignación a `c` la puede hacer antes que `b`, o a la de `b` antes que a `a` porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcta más sencillo, <<peterson>>, cuya entrada a la sección crítica es:
+Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcta más sencillo, <<peterson>>, cuya entrada a la sección crítica es:
 
 ----
 states[0] = True
@@ -127,7 +127,7 @@ while states[1] and turn == 1:
     pass
 ----
 
-El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre `states[0]` y `states[1]`, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
+El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre +states[0]+ y +states[1]+, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
 
 ----
 turn = 1
@@ -149,21 +149,21 @@ Para hacer que el algoritmo funcione correctamente debemos especificar _barreras
 
 . Ninguna operación de lectura o escritura posterior a la barrera deben ejecutarse antes que ésta.
 
-Aunque en el código de ejemplo no hay dependencias detectables entre ellas, supongamos que deseamos que la asignación de `c` sea siempre posterior a la asignación de `a`y `b`. Debemos insertar una barrera entre ellas:
+Aunque en el código de ejemplo no hay dependencias detectables entre ellas, supongamos que deseamos que la asignación de +c+ sea siempre posterior a la asignación de +a+y +b+. Debemos insertar una barrera entre ellas:
 
     a = x
     b = y
     BARRIER()
     c = a * 2
 
-Esto forzará a que ambas asignaciones y lecturas de `x` e `y` se ejecuten antes de la asignación a `c` lo que sólo permitirá la siguiente alternativa además de la secuencia original:
+Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes de la asignación a +c+ lo que sólo permitirá la siguiente alternativa además de la secuencia original:
 
     b = y
     a = x
     BARRIER()
     c = a * 2
 
-Para hacer que el algoritmo de Peterson funcione debemos insertar una barrera entre la asignación de `states` y `turn` y el while que verifica el turno y el estado del otro proceso:
+Para hacer que el algoritmo de Peterson funcione debemos insertar una barrera entre la asignación de +states+ y +turn+ y el while que verifica el turno y el estado del otro proceso:
 
 ----
 states[0] = True
@@ -185,7 +185,7 @@ También hay variaciones, como las _acquire_ y _release_. Si estáis interesados
 ==== Uso de barreras
 Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de 1990 (con la introducción del procesador Power1) por la complejidad que significaba en el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras, por lo que no existen instrucciones estándares y mucho menos instrucciones específicas en los lenguajes de programación de alto nivel.
 
-Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: `__atomic_thread_fence` footnote:[Este macro es <<Atomics, para las versiones más modernas de GCC>>, en las antiguas versiones es `__sync_synchronize`, se recomienda al menos la versión 4.8 del GCC.].
+Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: +__atomic_thread_fence+ footnote:[Este macro es <<Atomics, para las versiones más modernas de GCC>>, en las antiguas versiones es +__sync_synchronize+, se recomienda al menos la versión 4.8 del GCC.].
 
 Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del <<counter_peterson_c, código completo en C>>:
 

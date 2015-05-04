@@ -261,6 +261,7 @@ div.chapter, div.footnotes { page-break-before: always; }
 html body {
   font-family: Georgia, Caecilia, Palatino, serif;
   font-size: medium;
+  max-width: 40em;
   margin: 0.5em 2% 0.5em 2%;
   line-height: 1.2;
 }

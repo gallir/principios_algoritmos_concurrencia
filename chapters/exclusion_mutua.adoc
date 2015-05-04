@@ -15,7 +15,7 @@ Este capítulo describe el problema de la exclusión mutua, en qué casos se pre
 
 === Intercalado de instrucciones
 
-La mayoría de los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa con las variable `a` y `b` inicializadas a `0`
+La mayoría de los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa con las variable +a+ y +b+ inicializadas a +0+
 
 ----
 a = a + 1
@@ -23,9 +23,9 @@ b = b + a
 print "a, b:", a, b
 ----
 
-Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será `1 1`. Si las dos asignaciones se repiten el resultado será `a, b: 2 3`, el siguiente `a, b: 3 6`, etc.
+Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será +1 1+. Si las dos asignaciones se repiten el resultado será +a, b: 2 3+, el siguiente +a, b: 3 6+, etc.
 
-Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (`P` y `Q`) sobre un sistema con un único procesador y que tanto `a` como `b` con *variables compartidas*. Se puede producir la siguiente intercalación de las instrucciones del programa:
+Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ con *variables compartidas*. Se puede producir la siguiente intercalación de las instrucciones del programa:
 
 
 ----
@@ -52,7 +52,7 @@ a, b: 2 4
 
 Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa el resultado podría ser diferente, éste depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
-Esas dos líneas (o tres si contamos con el `print` de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de `b` depende de `a`. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas:
+Esas dos líneas (o tres si contamos con el +print+ de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas:
 
     counter += 1
 
@@ -64,7 +64,7 @@ addl  $1, %eax
 movl  %eax, counter(%rip)
 ----
 
-Si se ejecuta dos veces el valor de `counter` será `2`, es factible que se presente la siguiente condición de carrera ente dos procesos:
+Si se ejecuta dos veces el valor de +counter+ será +2+, es factible que se presente la siguiente condición de carrera ente dos procesos:
 
 ----
 movl counter(%rip), %eax <1>
@@ -76,9 +76,9 @@ movl %eax, counter(%rip)
 ----
 
 <1> Se almacena 0 en el registro eax.
-<2> Aunque la variable ya tiene almacenado el valor `1`, el registro %eax sigue siendo 0.
+<2> Aunque la variable ya tiene almacenado el valor +1+, el registro %eax sigue siendo 0.
 
-En este caso el valor será `1`, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
+En este caso el valor será +1+, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
 
 ----
 LOAD_GLOBAL   0 (counter)
@@ -89,7 +89,7 @@ STORE_GLOBAL  0 (counter)
 
 ==== Ejemplos en diferentes lenguajes
 
-En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocounter_go>>) Java (<<counter_java>>) y Python (<<counter_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (`counter`) la mitad de veces del total (`10 000 000`). El resultado de la ejecución es la siguiente:
+En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocounter_go>>) Java (<<counter_java>>) y Python (<<counter_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (+counter+) la mitad de veces del total (+10 000 000+). El resultado de la ejecución es la siguiente:
 
 [[counter_times]]
 .Resultados y tiempos de CPU
