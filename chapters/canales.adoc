@@ -182,7 +182,7 @@ type Barrier struct {
 }
 ----
 
-Y una función constructora que inicializará ambos canales y el valor de +n+.
+Y una función constructora que inicializará ambos canales y el valor de +n+:
 
 [source,go]
 ----
@@ -269,8 +269,117 @@ Si el buffer del canal está lleno los productores se bloquearan hasta que los p
 Este tipo de sincronización es muy útil y muy usada. Mientras que en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre los diferentes procesos.
 
 
-=== Simulación de semáforos
+=== Mutex
 
+La implementación de un _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a los usados por los monitores en la máquina virtual de Java.] también es muy sencilla (<<channel_mutex_go, código>>), inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
+
+[source,go]
+----
+    m := make(Mutex, 1)
+    m <- Empty{}
+----
+
+Para entrar a la sección crítica se lee del canal, como hay un mensaje en el _buffer_ podrá continuar inmediatamente, el siguiente proceso se bloqueará al no tener mensaje que recibir. El proceso que sale de la sección crítica deposita nuevamente un mensaje vacío que permitirá que entre otro o desbloqueará al primer proceso bloqueado.
+
+[source,go]
+----
+func Lock() {
+    <-m
+}
+
+func Unlock() {
+    m <- Empty{}
+}
+----
+
+
+Los canales también bloquean si se intenta enviar un mensaje y el _buffer_ está lleno. El algoritmo de exclusión mutua puede ser implementado a la inversa, un mensaje representaba a un _permiso_ pero se puede hacer que éste se represente por espacio libre en el _buffer_. En este caso no hace falta depositar un mensaje en la inicialización, en el _lock_ se envía un mensaje y en el _unlock_ se recibe.
+
+
+[source,go]
+----
+    m := make(Mutex, 1)
+
+func Lock() {
+    m <- Empty{}
+}
+
+func Unlock() {
+    <-m
+}
+----
+
+=== Semáforos
+
+Para semáforos generales se puede usar la misma idea que con la primera versión del _mutex_ (<<channel_semaphore_go, código>>), cada mensaje representa un permiso. Solo hace falta una cola a la que hay que iniciar con tantos mensajes como el valor inicial del semáforo:
+
+[source,go]
+----
+func NewSem(value int) Sem {
+    s := make(Sem, 256)
+    for i := 0; i < value; i++ {
+        s <- Empty{}
+    }
+    return s
+}
+----
+
+La operación _wait_ simplemente lee un mensaje y _signal_ envía uno vacío:
+
+[source, go]
+----
+func (s Sem) Wait() {
+    <-s
+}
+
+func (s Sem) Signal() {
+    s <- Empty{}
+}
+----
+
+El problema con la solución anterior es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo, es decir el valor máximo de su valor, caso contrario las operación de _signal_ también se bloquearían si se llena. Si no se requieren valores elevados es una solución razonable, si no hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
+
+Una solución de este tipo requeriría, como en el caso de la barrera genérica o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación de un <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal sincrónico +queue+ para mantener a la cola de bloqueados.
+
+La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
+
+[source, go]
+----
+type Sem struct {
+    value chan int
+    queue chan Empty
+}
+
+func NewSem(value int) Sem {
+    var s Sem
+    s.value = make(chan int, 1)
+    s.queue = make(chan Empty)
+    s.value <- value            <1>
+    return s
+}
+----
+<1> El canal +value+ se inicializa con un mensaje que almacena el valor del semáforo.
+
+[source, go]
+----
+func (s Sem) Wait() {
+    v := <-s.value
+    v--
+    s.value <- v
+    if v < 0 {
+        <-s.queue
+    }
+}
+
+func (s Sem) Signal() {
+    v := <-s.value
+    v++
+    if v <= 0 {
+        s.queue <- Empty{}
+    }
+    s.value <- v
+}
+----
 
 
 

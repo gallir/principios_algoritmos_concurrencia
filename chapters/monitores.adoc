@@ -100,7 +100,7 @@ Hay tres alternativas habituales:
 image::monitor_java.png[height="350", align="center"]
 
 
-
+[[monitors_semaphores]]
 === Simulación de semáforos
 
 Hoare demostró en <<Hoare1>> que los monitores son equivalentes a los semáforos, cualquiera de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo del uso de estos últimos. Se necesita una variable entera para el valor del semáforo (+value+) y una variable de condición (+notZero+) para bloquear a los procesos en la operación +wait+ si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:

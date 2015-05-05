@@ -63,6 +63,7 @@ y para +FUTEX_WAKE+:
 Para simplificar el pseudocódigo usaremos +futex_wait(futex, value)+ (+value+ es el valor que se compara con +futex+) y +futex_wake(futex, processes)+ (+processes+ es el número de procesos a desbloquear) respectivamente.
 ****
 
+[[futex_semaphore]]
 === Semáforo simple
 La implementación de semáforos generales con FUTEX es trivial (<<futex_semaphore_c, código en C>>) si se toman algunas precauciones para evitar condiciones de carrera:
 

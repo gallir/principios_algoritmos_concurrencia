@@ -33,3 +33,27 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/produ
 ----
 include::../code/channels/producer_consumer.go[]
 ----
+
+=== Mutex
+[[channel_mutex_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/mutex.go[mutex.go]
+[source,go]
+----
+include::../code/channels/mutex.go[]
+----
+
+
+=== Semáforos
+[[channel_semaphore_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/semaphore.go[semaphore.go]
+[source,go]
+----
+include::../code/channels/semaphore.go[]
+----
+
+[[channel_semaphore2_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/semaphore2.go[semaphore2.go]
+[source,go]
+----
+include::../code/channels/semaphore2.go[]
+----
