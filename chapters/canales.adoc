@@ -19,7 +19,7 @@ Además los canales pueden ser de tipo estático (como en Go) o de tipos dinámi
 
 === CSP
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su muy influyente artículo _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada-salida. Definió dos operadores, +?+ para indicar la entrada de un proceso y +!+ para la salida.
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su muy influyente artículo _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada/salida. Definió dos operadores, +?+ para indicar la entrada de un proceso y +!+ para la salida.
 
 Ejemplos:
 
@@ -32,21 +32,21 @@ Enviar el contenido de _x_ e _y_ al proceso _DIV_:
     DIV!(x, y)
 
 
-El primer lenguaje que se desarrolló con este modelo fue Occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes que com este modelo Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
+El primer lenguaje que se desarrolló con este modelo fue Occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes siguiendo este modelo: Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
 .Erlang
 ****
 Erlang fue diseñado en Ericcson para sus sistemas con alta disponibilidad y concurrencia. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con mensajes como única forma de comunicación. A diferencia de _CSP_, Erlang usa mensajes asincrónicos que se almacenan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
 ****
 
-=== Go
+=== Canales en Go
 
 En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores,
 
 Hilos ligeros o _goroutines_:: Las llamadas a funciones precedidos por la instrucción +go+ hacen que éstas se ejecuten de forma asincrónica, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para sacar provecho a los diferentes procesadores. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
-Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ e incluso en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos definiendo un _buffer_ de tamaño mayor que cero (por defecto es cero). Los canales sin de tipo estático, se define el tipo cuando se crean, pueden ser tipos nativos o cualquier estrutura o tipo definido por el programador. La operación de envío o recepción es mensajes es siempre del tipo +_recipiente_ *<-* _origen_+, donde _recipiente_ y _origen_ pueden ser canales o variables.
+Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ e incluso en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos definiendo un _buffer_ de tamaño mayor que cero (por defecto es cero). Los canales sin de tipo estático, se define el tipo cuando se crean, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes es siempre del tipo +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
 
 La siguiente línea crea un canal de tipo entero:
 
@@ -58,7 +58,7 @@ El canal +ch+ tiene _buffer_ cero por lo que será un canal sincrónico, si se d
 
 Enviar el contenido de una variable a un canal:
 
-    ch <- var
+    ch <- message
 
 Leer un mensaje de un canal y almacenarlo en la variable +message+:
 
@@ -68,7 +68,7 @@ Leer un mensaje de un canal y descartar su valor:
 
     <- ch
 
-El anterior es el patrón de sincronización en los ejemplos en Go de capítulos anteriores con el canal +\1+ para hacer que el programa principal espere por la la finalización de las _goroutines_:
+El anterior es el patrón de sincronización en los ejemplos en Go de capítulos anteriores con el canal +done+ para hacer que el programa principal espere por la la finalización de las _goroutines_:
 
 [source, go]
 ----
@@ -76,7 +76,7 @@ func run(done chan bool) {
     ...
     done <- true
 }
-...
+
 func main() {
     done := make()
     go run(done)
@@ -86,19 +86,19 @@ func main() {
 
 Dado que ambos implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go, pero ambos derivan de ramas históricas diferentes de _CSP_ y tienen algunas diferencias claves:
 
-- En Erlang hay que especificar al proceso receptor, en Go solo al canal. Cualquier proceso o número de estos puede recibir o enviar del mismo canal.
+- En Erlang como en el _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa atractiva (sic) aunque equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor, en Go al canal. Cualquier proceso o número de estos puede recibir o enviar del mismo canal.
 
-- En Erlang se puede enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un _buzón_ y son recogidos según las reglas especificadas ( _guard commands_) en el receptor. En Go no se especifica el proceso receptor sino el canal, los canales tienen tipos estáticos y la entrega de mensajes es siempre en orden FIFO.
+- En Erlang se puede enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un _buzón_ y son recogidos según las reglas especificadas ( _guard commands_) en el receptor. Los canales en Go son de tipos estático y la entrega de mensajes es siempre en orden FIFO.
 
-- Erlang tiene un modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
+- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
 
-El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo _hilo ligero_ con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símobolo `!` como en _CSP_ original de Hoare):
+El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo _hilo ligero_ con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
 
 [source, erlang]
 ----
 Pid = spawn(fun() ->
-          receive Val ->
-            io:format("Message: ~s", [Val])
+          receive Message ->
+            io:format("Message: ~s", [Message])
           end
       end).
 
@@ -109,15 +109,168 @@ El siguiente es el programa equivalente en Go.
 
 [source, go]
 ----
-c := make(chan string)
+channel := make(chan string)
 go func() {
-    fmt.Println("Message:", <- c)
+    fmt.Println("Message:", <-channel)
 }()
 
-c <- "Hello"
+channel <- "Hello"
 ----
 
-La diferencia fundamental es cómo se especifica el destinario del mensaje. En Erlang se hace al proceso sin necesidad de crear explícitamente un canal, en Go hay que crear el canal y especificarlo tanto en el envío como en la recepción.
+Los algoritmos son equivalentes, como lo son ambos lenguajes, la diferencias fundamentales son la especificación del destinario del mensaje y que en Erlang no hay que crear explícitamente el canal, cada proceso tiene un _buzón_ en el que reciben todos los mensajes.
+
+=== Barreras
+
+Las <<sync_barrier, barreras de sincronización>> nos servirán como ejemplo perfecto para aprender a usar los canales como mecanismos de sincronización.
+
+==== Barreras binarias
+Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, A y B, deben coordinarse. A no debe pasar de un punto hasta que B haya llegado, y viceversa. Con semáforos usamos dos para hacerlo, con camales es muy similar, necesitamos dos. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y luego esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
+
+[source,go]
+----
+    ch_a = make(chan bool)
+    ch_b = make(chan bool)
+
+A                   B
+
+...                 ...
+ch_a <- true        cha_b <- true
+<-ch_b              <-ch_a
+...                 ...
+----
+
+El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales no tomar en cuenta que ambos canales son sincrónicos por lo que tanto +A+ como +B+ al intentar enviar el mensaje quedan bloqueados hasta que el otro pueda recibirlo. Pero <<railroad_quote, ninguno de ellos podrá continuar>> hasta que el otro haya recibido el mensaje.
+
+El interbloqueo se produce por una razón muy similar a la que <<deadlock_philosophers, vimos con filósofos>>, se produce una espera circular. Para evitarla hay que hacer que las ejecuciones sean asimétricas, que uno de ellos reciba primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
+
+[source,go]
+----
+A                   B
+
+ch_a <- true        <-ch_a
+<-ch_b              cha_b <- true
+----
+
+Para evitar las soluciones asimétricas hay que recurrir a canales asincrónicos para evitar que un proceso quede bloqueado cuando envíe el mensaje. Por defecto los canales tienen _buffer_ 0, por lo tanto son sincrónicos. Pero se puede especificar el tamaño del _buffer_, en ese caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+
+[source,go]
+----
+    ch_a = make(chan bool, 1)
+    ch_b = make(chan bool, 1)
+
+A                   B
+
+ch_a <- true        ch_b <- true
+<-ch_b              <-ch_a
+----
+
+Como ambos canales ahora son asincrónicos y con _buffer_ de un elemento los procesos no se bloquearán si al enviar no hay ningún elemento. Desde el punto de vista de sincronización la idea es similar al valor de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_, pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejmplos de sincronización de este capítulo y en aplicaciones reales se recurre mucho a usar sincrónicos o asincrónicos con _buffer_ de tamaño uno.
+
+==== Barreras generales
+
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usábamos dos de ellos para llevar la cuenta de los procesos que faltaba por llegar a la meta y los que ya habían salido para comenzar la segunda fase. Usaremos también dos canales con el mismo objetivo pero no usaremos variables compartidas, el contador estará almacenado en un mensaje que se irá pasando entre los procesos, cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+
+Usaremos dos canales de tipo entero, +arrival+ y +departure+ y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán en con la barrera. Definimos la estructura +Barrier+ esos campos:
+
+
+[source,go]
+----
+type Barrier struct {
+    arrival   chan int
+    departure chan int
+    n         int
+}
+----
+
+Y una función constructora que inicializará ambos canales y el valor de +n+.
+
+[source,go]
+----
+func NewBarrier(value int) *Barrier {
+    b := new(Barrier)
+    b.arrival = make(chan int, 1)
+    b.departure = make(chan int, 1)
+    b.n = value
+
+    b.arrival <- value  <1>
+    return b
+}
+----
+<1> Se deja un mensaje en el canal con el número de procesos que faltan por llegar.
+
+Los dos canales tienen un _buffer_ de tamaño uno pero sólo uno de ellos, +arrival+, contiene un mensaje con el número de proceso que deben llegar, inicialmente el número de proceso que se sincronizarán. La función +Barrier+ tiene dos partes:
+
+1. Llegadas: Se usa el canal +arrival+, inicialmente con un mensaje con el total de procesos que faltan por llegar. Cuando un proceso llega lee el mensaje, verifica el valor, si quedan procesos por llegar lo decrementa y vuelve a enviar el mensaje al mismo canal. Si es el último en llegar no depositará el mensaje en +arrival+ sino en +departure+ con el total de procesos que se sincronizan en la barrera.
+
+2. Salidas: Los procesos que llegan intentan leer un mensaje de +departure+ y quedarán bloqueados hasta que llegue el último. Cuando éste deposite un mensaje podrá desbloquearse uno, verificará el valor, si quedan procesos por salir decrementará su valor y depositará nuevamente el mensaje +departure+ para que puedan continuar los demás. El último en salir enviará un mensaje a +arrival+ para que el ciclo vuelva a comenzar.
+
+
+[source,go]
+----
+func (b *Barrier) Barrier() {
+    var v int
+
+    // part 1
+    v = <-b.arrival         <1>
+    if v > 1 {
+        v--
+        b.arrival <- v      <2>
+    } else {
+        b.departure <- b.n  <3>
+    }
+
+    // part 2
+    v = <-b.departure       <4>
+    if v > 1 {
+        v--
+        b.departure <- v    <5>
+    } else {
+        b.arrival <- b.n    <6>
+    }
+}
+----
+<1> Se bloquea hasta que puede leer un mensaje desde +arrival+, el mensaje contiene el número de procesos que quedan por llegar.
+<2> Si todavía quedan procesos por llegar decrementa el contador y vuelve a poner el mensaje en +arrival+.
+<3> Si llegaron todos deposita un mensaje en +departure+ para que los procesos puedan empezar a continuar la siguiente fase.
+<4> Quedan bloqueados hasta que el último que llegue envíe un mensaje al canal.
+<5> Si todavía quedan procesos por salir (bloqueados en +departure+) decrementa el contador y vuelve a poner el mensaje.
+<6> Si llegaron todos pone el mensaje con el número inicial de procesos en el canal de llegada.
+
+Como las de recepción y envío son atómicas no hace falta recurrir a ningún método de exclusión mutua. Además como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal.
+
+=== Productores-consumidores
+
+Los canales son inherentemente productores-consumidores, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempe quedan bloqueados hasta que un consumidor reciba un mensaje. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
+
+La interacción es así de sencilla (<<producer_consumer_go, código>>):
+
+[source,go]
+----
+    buffer := make(chan string, BUFFER_SIZE)
+
+
+func consumer() {
+    for {
+        element := <-buffer
+        ...
+    }
+}
+
+func producer() {
+    for {
+        element := produce()
+        buffer <- element
+    }
+}
+----
+
+Si el buffer del canal está lleno los productores se bloquearan hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos.
+
+Este tipo de sincronización es muy útil y muy usada. Mientras que en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre los diferentes procesos.
+
+
+=== Simulación de semáforos
+
 
 
 
@@ -125,17 +278,6 @@ La diferencia fundamental es cómo se especifica el destinario del mensaje. En E
 π calculus
 ////
 
-=== Tipos
-
-=== Sincronización
-
-==== Con y sin buffer
-
-=== Exclusión mutua con mensajes
-
-==== Ejemplo en Go
-
-=== Otros algoritmos
 
 ////
 gofmt  -w -tabs=false -tabwidth=4

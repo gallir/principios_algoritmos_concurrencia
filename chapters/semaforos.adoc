@@ -543,6 +543,7 @@ Esta solución es muy ineficiente, aunque hay tenedores para que puedan comer do
 
 Definimos las funciones +pick+ y +release+ que tomarán y soltarán los tenedores respectivamente y por conveniencia la función +right+ que retorna el índice del tenedor de la derecha (recordad que el de la izquierda es simplemente _i_):
 
+[[deadlock_philosophers]]
 ----
     Semaphore forks[5] = [1, 1, 1, 1, 1]
 

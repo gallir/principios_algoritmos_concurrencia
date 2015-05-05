@@ -22,7 +22,7 @@
 
 - [[[Corbet1]]] Jonathan Corbet. _Ticket spinlocks_. http://lwn.net/Articles/267968/
 
-- [[[Corbet2]]] Jonathan Corbet. _TImproving ticket spinlocks_. http://lwn.net/Articles/531254/
+- [[[Corbet2]]] Jonathan Corbet. _Improving ticket spinlocks_. http://lwn.net/Articles/531254/
 
 - [[[Craig]]] Travis S. Craig. _Building FIFO and Priority-Queuing Spin Locks from Atomic Swap_. Technical Report 93-02-02, University of Washington, 1993. ftp://ftp.cs.washington.edu/tr/1993/02/UW-CSE-93-02-02.pdf
 

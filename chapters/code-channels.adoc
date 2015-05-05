@@ -1,0 +1,35 @@
+== Código fuente de Canales
+
+=== Barreras
+
+==== Barrera dos procesos canales sincrónicos
+[[barrier_2p_sync_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/barrier_2p_sync.go[barrier_2p_sync.go]
+[source,go]
+----
+include::../code/channels/barrier_2p_sync.go[]
+----
+
+==== Barrera dos procesos canales asincrónicos
+[[barrier_2p_async_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/barrier_2p_async.go[barrier_2p_async.go]
+[source,go]
+----
+include::../code/channels/barrier_2p_async.go[]
+----
+
+==== Barrera genérica
+[[barrier_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/barrier.go[barrier.go]
+[source,go]
+----
+include::../code/channels/barrier.go[]
+----
+
+=== Productores-consumidores
+[[producer_consumer_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/producer_consumer.go[producer_consumer.go]
+[source,go]
+----
+include::../code/channels/producer_consumer.go[]
+----

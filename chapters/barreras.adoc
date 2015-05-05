@@ -149,7 +149,7 @@ Para hacer que el algoritmo funcione correctamente debemos especificar _barreras
 
 . Ninguna operación de lectura o escritura posterior a la barrera deben ejecutarse antes que ésta.
 
-Aunque en el código de ejemplo no hay dependencias detectables entre ellas, supongamos que deseamos que la asignación de +c+ sea siempre posterior a la asignación de +a+y +b+. Debemos insertar una barrera entre ellas:
+Aunque en el código de ejemplo no hay dependencias detectables entre ellas, supongamos que deseamos que la asignación de +c+ sea siempre posterior a la asignación de +a+ y +b+. Debemos insertar una barrera entre ellas:
 
     a = x
     b = y

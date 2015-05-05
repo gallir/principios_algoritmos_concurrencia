@@ -160,7 +160,6 @@ dt span.term {
 */
 
 div.chapter>div.titlepage {
-  width: 100%;
   padding: 15px 20px 20px 20px;
   background-color: #000;
   color: #fff;
@@ -261,7 +260,7 @@ div.chapter, div.footnotes { page-break-before: always; }
 html body {
   font-family: Georgia, Caecilia, Palatino, serif;
   font-size: medium;
-  max-width: 40em;
+  max-width: 35em;
   margin: 0.5em 2% 0.5em 2%;
   line-height: 1.2;
 }

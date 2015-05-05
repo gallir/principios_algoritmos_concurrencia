@@ -8,6 +8,8 @@ RESOURCES=--resource styles/docbook-xsl.css --resource styles/asciidoctor-defaul
 A2XOPTIONS=-v $(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
 
 
+html: $(OUTDIR)/$(BASE).html
+
 epub: $(OUTDIR)/$(BASE).epub
 
 redo: clean epub
@@ -15,9 +17,6 @@ redo: clean epub
 all: clean epub mobi
 
 mobi: $(OUTDIR)/$(BASE).mobi
-
-
-html: $(OUTDIR)/$(BASE).html
 
 validate: 
 	asciidoctor-epub3 -D $(OUTDIR) -a ebook-validate $(MAIN)
