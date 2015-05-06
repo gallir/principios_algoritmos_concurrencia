@@ -565,30 +565,75 @@ func canEat(i int) {
 
 === Multiplicación de matrices en paralelo
 
+
+Hay que multiplicar en paralelo las dos matrices de la imagen (y obtener el resultado de la derecha):
+
 [[matrix_multiplication]]
-image::matrix_multiplication.png[width="400", align="center"]
+image::matrix_multiplication.png[width="360", align="center"]
 
+Cada elemento de la matriz resultante puede ser calculado independientemente, por ejemplo elemento central de la matriz (25) se calcula de la siguiente forma:
+
+[[element_multiplication]]
+image::element_multiplication.png[width="400", align="center"]
+
+El cálculo se puede descomponer fácilmente en diferentes procesos comunicados por canales:  hacen la multiplicación de un elemento de cada matriz, lo suman con el resultado de obtenido recibido de otro proceso y envían el resultado al siguiente. Para las matriz del ejemplo, de 3x3, se necesitan tres procesos. Cada uno se inicia con los valores de una fila de la primer matriz ([4, 5, 6]), del canal norte (_north_) reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
+
+[[col_row_multiplication]]
+image::col_row_multiplication.png[width="440", align="center"]
+
+Para obtener el resultado final a la izquierda (_oeste_, o _west_) cada proceso (_multiplicador_) multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ (_east_) y lo envía hacia el _oeste_. El proceso _zero_ de la derecha unicamente envia ceros para iniciar la suma parcial así el algoritmo de cada multiplicador es idéntico:
 
 [source, go]
 ----
-for i := range row {
-    south <- row[i]
-}
+second := <-north
+sum := east
+west <- sum + first*second
 ----
 
-[source, go]
-----
-for i := 0; i < Dim; i++ {
-    second := <-north
-    south <- second
-    west <- <-east + first*second
-}
-----
+Como describió Tony Hoare en <<Hoare>> y lo hacían los procesadores Transputer, se puede generalizar para toda la matriz con nueve _multiplicadores_ (en el centro de la imagen). Los procesadores superiores (del _norte_) envían los datos, uno a uno, de las filas de la segunda matriz y los resultados lo obtienen los procesos del _oeste_ (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (los procesos _sink_ al final solo sirven para que el algoritmo de los multiplicadores sea el mismo para todos).
+
 
 [[parallel_multiplication]]
 .Array de procesos para multiplicación de matrices
-image::parallel_multiplication.png[width="500", align="center"]
+image::parallel_multiplication.png[width="440", align="center"]
 
+El algoritmo de cada uno de los cuatro tipos de procesos de la _matriz de procesos_ es el siguiente (<<parallel_matrix_multiplication_go, código completo>>):
+
+[source, go]
+----
+func multiplier(first int) {
+    for {
+        second := <-north
+        south <- second
+        sum := <-east
+        west <- sum + first*second
+    }
+}
+
+func result(rowNum int) {
+    for i := 0; i < Dim; i++ {
+        row[i] := <-east
+    }
+}
+
+func source(row Row) {
+    for i := range row {
+        south <- row[i]
+    }
+}
+
+func zero(west chan int) {
+    for {
+        west <- 0
+    }
+}
+
+func sink() {
+    for {
+        <-north
+    }
+}
+----
 
 ////
 

@@ -87,3 +87,13 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/philo
 ----
 include::../code/channels/philosophers_provider.go[]
 ----
+
+
+=== Multiplicacion de matrices en paralelo
+
+[[parallel_matrix_multiplication_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/parallel_matrix_multiplication.go[parallel_matrix_multiplication.go]
+[source,go]
+----
+include::../code/channels/parallel_matrix_multiplication.go[]
+----
