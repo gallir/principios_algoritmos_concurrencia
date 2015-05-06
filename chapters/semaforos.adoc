@@ -8,7 +8,7 @@ El concepto de semáforos lo inventó Edsger W. Dijkstra a finales de los años 
 
 Las soluciones a exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica _intrínseca_ de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
 
-
+[[semaphore_definition]]
 === Definición
 Un semáforo es una construcción definida por una variable entera, el _valor_ del semáforo, que puede tomar valores no negativos y una cola de procesos _bloqueados_ en el semáforo. La estructura es similar a la siguiente:
 

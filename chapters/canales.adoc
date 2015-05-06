@@ -17,9 +17,9 @@ Hay dos tipos de especificar el destinatario (_addressing_):
 
 Además los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, como es el caso de canales en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_).
 
-=== CSP
+=== _CSP_
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su muy influyente artículo _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada/salida. Definió dos operadores, +?+ para indicar la entrada de un proceso y +!+ para la salida.
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ que más me impactó. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada/salida. Definió dos operadores, +?+ para indicar la entrada de un proceso y +!+ para la salida.
 
 Ejemplos:
 
@@ -236,17 +236,17 @@ func (b *Barrier) Barrier() {
 <5> Si todavía quedan procesos por salir (bloqueados en +departure+) decrementa el contador y vuelve a poner el mensaje.
 <6> Si llegaron todos pone el mensaje con el número inicial de procesos en el canal de llegada.
 
-Como las de recepción y envío son atómicas no hace falta recurrir a ningún método de exclusión mutua. Además como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal.
+Como la recepción y envío son operaciones atómicas no hace falta recurrir a ningún método de exclusión mutua. Además como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal.
 
 === Productores-consumidores
 
-Los canales son inherentemente productores-consumidores, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempe quedan bloqueados hasta que un consumidor reciba un mensaje. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
+Los canales son inherentemente productores-consumidores, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
 
 La interacción es así de sencilla (<<producer_consumer_go, código>>):
 
 [source,go]
 ----
-    buffer := make(chan string, BUFFER_SIZE)
+    buffer := make(chan string, BufferSize)
 
 
 func consumer() {
@@ -268,7 +268,7 @@ Si el buffer del canal está lleno los productores se bloquearan hasta que los p
 
 Este tipo de sincronización es muy útil y muy usada. Mientras que en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre los diferentes procesos.
 
-
+[[channels_mutex]]
 === Mutex
 
 La implementación de un _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a los usados por los monitores en la máquina virtual de Java.] también es muy sencilla (<<channel_mutex_go, código>>), inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
@@ -339,7 +339,7 @@ func (s Sem) Signal() {
 
 El problema con la solución anterior es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo, es decir el valor máximo de su valor, caso contrario las operación de _signal_ también se bloquearían si se llena. Si no se requieren valores elevados es una solución razonable, si no hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
 
-Una solución de este tipo requeriría, como en el caso de la barrera genérica o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación de un <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal sincrónico +queue+ para mantener a la cola de bloqueados.
+Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación de un <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener a la cola de bloqueados.
 
 La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
 
@@ -360,6 +360,10 @@ func NewSem(value int) Sem {
 ----
 <1> El canal +value+ se inicializa con un mensaje que almacena el valor del semáforo.
 
+Los algoritmos de las operaciones _wait_ y _signal_ eson prácticamente idénticos a la <<semaphore_definition, definición de semáforos>>. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
+
+La función +Wait+ es lee el mensaje con el valor del semáforo, lo decrementa y vuelve a depositar el mensaje en el canal. Si el valor del semáforo es menor que cero se bloqueará en el canal +queue+ hasta que otro proceso haga un _signal_.
+
 [source, go]
 ----
 func (s Sem) Wait() {
@@ -370,14 +374,174 @@ func (s Sem) Wait() {
         <-s.queue
     }
 }
+----
 
++Signal+ es la inversa, incrementa el valor del semáforo, si el resultado es menor o igual que cero hay procesos esperando un mensaje en el canal +queue+ por lo que enviará un mensaje para que se despierte el siguiente.
+
+[source, go]
+----
 func (s Sem) Signal() {
     v := <-s.value
     v++
+    s.value <- v
     if v <= 0 {
         s.queue <- Empty{}
     }
-    s.value <- v
+}
+----
+
+Puede parecer que aparecerán _condiciones de carrera_ porque el envío y recepción en +queue+ se hacen luego de enviar el mensaje pero si la variable local +v+ es menor que cero el proceso debe esperar un mensaje en +queue+. El proceso que hace el _signal_ espera que se haga así y enviará siempre el mensaje correspondiente.
+
+Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}` porque el canal es sincrónico y no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
+
+
+=== Filósofos cenando
+La solución natural con canales asincrónicos es definir un array de tantos canales como tenedores (<<channel_philosophers_go, código>>), en la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
+
+[source, go]
+----
+var forks [PHILOSOPHERS]chan Empty
+
+for i := range forks {
+    forks[i] = make(chan Empty, 1)
+    forks[i] <- Empty{}
+}
+----
+
+Para tomar los tenedores cada filósofo lee de sus canales correspondientes. Si el tenedor está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que sea liberado. Para evitar el interbloqueo (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador:
+
+
+[source,go]
+----
+func pick(id int) {
+    if id < right(id) {
+        <-forks[id]
+        <-forks[right(id)]
+    } else {
+        <-forks[right(id)]
+        <-forks[id]
+    }
+}
+----
+
+Para liberar los tenedores es suficiente con enviar un mensaje a sus canales. Si hay otros filósofos esperando por ello se desbloquearán, si no quedarán almacenados en el _buffer_.
+
+[source, go]
+----
+func release(id int) {
+    forks[id] <- Empty{}
+    forks[right(id)] <- Empty{}
+}
+----
+
+==== Con canales sincrónicos
+
+El algoritmo anterior solo funciona con canales asincrónicos, de no ser así ni la inicialización funcionaría porque se bloquearía al ejecutar el primer `forks[i] <- Empty{}` . En el modelo _CSP_ (<<Hoare>>) los canales son sincrónicos y Hoare propuso una soluciónfootnote:[Aunque produce interbloqueo, lo avisa en el mismo artículo.].
+
+[[philosophers_hoare]]
+.Filósofos en _CSP_
+image::hoare_philosophers.png[height="180", align="center"]
+
+La solución es en realidad muy sencilla (<<channel_philosophers_sync_go, código>>), hay que hacer como propone el modelo _CSP_, crear un proceso adicional para cada tenedor (+fork+). Los filósofos no requieren de ningún cambio en su algoritmo. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por el canal correspondiente a su tenedor:
+
+.Proceso para el tenedor _i_
+[source,go]
+----
+func fork(i int) {
+    for {
+        forks[i] <- Empty{}
+        <-forks[i]
+    }
+}
+----
+
+[NOTE]
+====
+Al tratarse de canales sincrónicos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos enviarán un mensaje y al soltarlos reciben uno. El proceso +fork+ debe invertir también sus operaciones:
+
+    for {
+        forks[i] <- Empty{}
+        <-forks[i]
+    }
+
+De esta forma -es equivalente- el programa queda idéntico a la solucion propuesta por Hoare con CSP (<<philosophers_hoare>>).
+====
+
+Los procesos comunicados por canales asincrónicos pueden ser convertidos, tal como acabamos de hacer, a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con buffer. En el caso de los filósofos fue añadir un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_, tal como propone el modelo _CSP_.
+
+Todos los algoritmos de este capítulo que requieren de canales con _buffer_ pueden ser adaptados para funcionar con sincrónicos. Por ejemplo, para el <<channel_mutex_go, código>> de simulación de _mutex_ se requieren muy pocos cambios. La función [pseudo] constructora del +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
+
+
+[source,go]
+----
+func NewMutex() Mutex {
+    m := make(Mutex, 1)
+    m <- Empty{}
+    return m
+}
+----
+
+Dado que no podemos hacerlo con canales sincrónicos se requiere otro proceso que actúe de forma similar al +fork+ de los filósofos. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>):footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]
+
+[source,go]
+----
+func NewMutex() Mutex {
+    m := make(Mutex)
+    go func() {         <1>
+        for {
+            m <- Empty{}
+            <-m
+        }
+    }()
+    return m
+}
+----
+<1> Se lanza una _goroutine_, la función es anónima y aprovecha de la clausura para hacer referencia al mismo canal +m+.
+
+==== Solución óptima
+
+
+----
+type Request struct {
+    c      chan Empty
+    id     int
+    status int
+}
+----
+
+
+----
+provider <- Request{id: i, c: myCh, status: Hungry}
+<-myChan
+----
+
+----
+provider <- Request{id: i, c: myCh, status: Thinking}
+----
+
+----
+for {
+    m := <-provider
+    philo[m.id] = m
+    if m.status == Hungry {
+        canEat(m.id)
+    } else {
+        canEat(left(m.id))
+        canEat(right(m.id))
+    }
+}
+----
+
+----
+func canEat(i int) {
+    r := right(i)
+    l := left(i)
+    if philo[i].status == Hungry &&
+        philo[l].status != Eating &&
+        philo[r].status != Eating {
+        philo[i].status = Eating
+        philo[i].c <- Empty{}
+    }
 }
 ----
 

@@ -42,6 +42,14 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/mutex
 include::../code/channels/mutex.go[]
 ----
 
+==== Mutex con canales sincrónicos
+[[channel_mutex_sync_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/mutex_sync.go[mutex_sync.go]
+[source,go]
+----
+include::../code/channels/mutex_sync.go[]
+----
+
 
 === Semáforos
 [[channel_semaphore_go]]
@@ -56,4 +64,19 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/semap
 [source,go]
 ----
 include::../code/channels/semaphore2.go[]
+----
+
+=== Filósofos cenando
+[[channel_philosophers_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/philosophers.go[philosophers.go]
+[source,go]
+----
+include::../code/channels/philosophers.go[]
+----
+
+[[channel_philosophers_sync_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/philosophers_sync.go[philosophers_sync.go]
+[source,go]
+----
+include::../code/channels/philosophers_sync.go[]
 ----
