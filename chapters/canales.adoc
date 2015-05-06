@@ -568,6 +568,23 @@ func canEat(i int) {
 [[matrix_multiplication]]
 image::matrix_multiplication.png[width="400", align="center"]
 
+
+[source, go]
+----
+for i := range row {
+    south <- row[i]
+}
+----
+
+[source, go]
+----
+for i := 0; i < Dim; i++ {
+    second := <-north
+    south <- second
+    west <- <-east + first*second
+}
+----
+
 [[parallel_multiplication]]
 .Array de procesos para multiplicación de matrices
 image::parallel_multiplication.png[width="500", align="center"]
