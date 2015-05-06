@@ -679,21 +679,21 @@ Usamos el array +status+ para indicar el estado de cada filósofo: pensando (+TH
     Semaphore mutex = 1
 ----
 
-La función +pick+ asigna +HUNGRY+ al estado del filósofo y llama a la función +checkNeighbors+ que verifica si ninguno de los vecinos está comiendo. Si no es así señaliza en su semáforo +sync+ correspondiente por lo que no se bloqueará en +acquire+ del final. Si alguno de los vecinos está comiendo el filósofo se quedará bloqueado en su semáforo.
+La función +pick+ asigna +HUNGRY+ al estado del filósofo y llama a la función +canEat+ que verifica si ninguno de los vecinos está comiendo. Si no es así señaliza en su semáforo +sync+ correspondiente por lo que no se bloqueará en +acquire+ del final. Si alguno de los vecinos está comiendo el filósofo se quedará bloqueado en su semáforo.
 
 ----
 def pick(i):
     mutex.acquire()
     status[i] = HUNGRY
-    checkNeighbors(i)
+    canEat(i)
     mutex.release()
     sync[i].acquire()
 ----
 
-Si ninguno de los vecinos está comiendo +checkNeighbors+ asigna +EATING+ al estado de _filósofo~i~_ y señaliza en su semáforo. A diferencia del algoritmo anterior las funciones +left+ y +right+ retornan el índice del filósofo vecino (no del tenedor), _right_ sigue siendo como antes, `(i + 1) % 5`, pero _left_ indica el vecino con un índice menor: `(i - 1) % 5` (el vecino de la izquierda de _filósofo~0~_ es el _filósofo~4~_).
+Si ninguno de los vecinos está comiendo +canEat+ asigna +EATING+ al estado de _filósofo~i~_ y señaliza en su semáforo. A diferencia del algoritmo anterior las funciones +left+ y +right+ retornan el índice del filósofo vecino (no del tenedor), _right_ sigue siendo como antes, `(i + 1) % 5`, pero _left_ indica el vecino con un índice menor: `(i - 1) % 5` (el vecino de la izquierda de _filósofo~0~_ es el _filósofo~4~_).
 
 ----
-def checkNeighbors(i):
+def canEat(i):
     if status[i] == HUNGRY
             and status[left(i)] != EATING
             and status[right(i)] != EATING:
@@ -701,19 +701,19 @@ def checkNeighbors(i):
         sync[i].release()
 ----
 
-Cuando un filósofo deja de comer debe verificar si sus vecinos están esperando por sus tenedores. Para poder indicarles que pueden comer también hay que verificar si sus otros vecinos no están comiendo. Para ello se puede usar la función +checkNeighbors+ que precisamente hace eso, lo que cambia es el valor de +i+.
+Cuando un filósofo deja de comer debe verificar si sus vecinos están esperando por sus tenedores. Para poder indicarles que pueden comer también hay que verificar si sus otros vecinos no están comiendo. Para ello se puede usar la función +canEat+ que precisamente hace eso, lo que cambia es el valor de +i+.
 
 ----
 def release(i):
     mutex.acquire()
     status[i] = THINKING
-    checkNeighbors(left(i))  <1>
-    checkNeighbors(right(i)) <1>
+    canEat(left(i))  <1>
+    canEat(right(i)) <1>
     mutex.release()
 ----
-<1> Se reusa la función +checkNeighbors+ para verificar el estado de los _vecinos del vecino_. Si el filósofo que deja los tenedores es el +1+ entonces se llamará con el argumento +0+ (el filósofo de la izquierda) y luego con el +2+ (el filósofo de la derecha).
+<1> Se reusa la función +canEat+ para verificar el estado de los _vecinos del vecino_. Si el filósofo que deja los tenedores es el +1+ entonces se llamará con el argumento +0+ (el filósofo de la izquierda) y luego con el +2+ (el filósofo de la derecha).
 
-Hay que tener en cuenta que las llamadas a +checkNeighbors+ se hacen siempre desde dentro de la sección crítica del semáforo +mutex+ por lo que no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array +status+.
+Hay que tener en cuenta que las llamadas a +canEat+ se hacen siempre desde dentro de la sección crítica del semáforo +mutex+ por lo que no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array +status+.
 
 Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe entre otras cosas a que no existe _retención y espera_, los filósofos que no pueden comer no retienen el tenedor libre. Sin _retención y espera_ tampoco se puede producir la _espera circular_. Dado que no se cumplen ninguna de estas dos condiciones necesarias tampoco pueden producirse _interbloqueos_. Cumple con todas las propiedades que <<philosophers_requisites, mencionamos al principio>>.
 

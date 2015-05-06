@@ -400,7 +400,7 @@ La solución natural con canales asincrónicos es definir un array de tantos can
 
 [source, go]
 ----
-var forks [PHILOSOPHERS]chan Empty
+var forks [Philosophers]chan Empty
 
 for i := range forks {
     forks[i] = make(chan Empty, 1)
@@ -499,39 +499,57 @@ func NewMutex() Mutex {
 <1> Se lanza una _goroutine_, la función es anónima y aprovecha de la clausura para hacer referencia al mismo canal +m+.
 
 ==== Solución óptima
+La solución anterior (ya la analizamos <<dining_philosophers_semaphores, con semáforos>>) no asegura que puedan comer todos los filósofos que podrían hacerlo. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
 
+En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso tendrá un único canal (sincrónico) para recibir los mensajes de todos los filósofos. Estos le enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos palillos están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo no le responderá inmediatamente sino cuando sus vecinos hayan dejado de comer.
 
+El mensaje de filósofos al proveedor será una estructura que indicará el índice el filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los palillos) y el canal individual del filósofo (también sincrónico) para recibir la respuesta del proveedorfootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa el proveedor en el mensaje.].
+
+[source, go]
 ----
 type Request struct {
-    c      chan Empty
     id     int
     status int
+    c      chan Empty
 }
 ----
 
+Cuando un filósofo desea comer envía un mensaje al canal del proveedor con su identificación (+i+), su propio canal (+myCh+) y el estado +Hungry+. A continuación espera la respuesta del proveedor en su canal.
 
+[source, go]
 ----
 provider <- Request{id: i, c: myCh, status: Hungry}
-<-myChan
+
+<-myCh
 ----
 
+Cuando libera los palillos envía otro mensaje similar pero con el estado +Thinking+.
+
+[source, go]
 ----
 provider <- Request{id: i, c: myCh, status: Thinking}
 ----
 
+El proveedor mantiene un array que mantiene el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ que recibió en el mensaje. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+. Cuando recibe un mensaje lo copia al array de estado y verifica el estado, si es +Hungry+ llama a la función +canEat+, esta función responderá con un mensaje al canal del filósofo si puede comer. Si el estado es +Thinking+ significa que deja los tenedores por lo que se llama a la función +canEat+, una vez para cada vecino por si querían comer y están esperando.
+
+[source, go]
 ----
 for {
     m := <-provider
     philo[m.id] = m
-    if m.status == Hungry {
+    switch m.status {
+    case Hungry:
         canEat(m.id)
-    } else {
+    case Thinking:
         canEat(left(m.id))
         canEat(right(m.id))
     }
 }
 ----
 
+La función +canEat+ es idéntica a la de la solución óptima con semáforosfootnote:[De nuevo aparecen las similitudes de sincronización entre semáforos y canales.] (<<philosophers_2_py, código Python>>) sólo que en vez de señalizar un semáforo responde con un mensaje al canal del filósofo. La función verifica el estado de los vecinos a izquierda y derecha del filósofo indicado en el argumento (+i+), si ninguno de los vecinos está comiendo entonces le permite continuar enviando un mensaje al canal correspondiente.
+
+[source, go]
 ----
 func canEat(i int) {
     r := right(i)

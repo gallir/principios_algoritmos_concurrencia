@@ -80,3 +80,10 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/philo
 ----
 include::../code/channels/philosophers_sync.go[]
 ----
+
+[[channel_philosophers_provider_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/philosophers_provider.go[philosophers_provider.go]
+[source,go]
+----
+include::../code/channels/philosophers_provider.go[]
+----
