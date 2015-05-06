@@ -121,7 +121,7 @@ Los algoritmos son equivalentes, como lo son ambos lenguajes, la diferencias fun
 
 === Barreras
 
-Las <<sync_barrier, barreras de sincronización>> nos servirán como ejemplo perfecto para aprender a usar los canales como mecanismos de sincronización.
+Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para aprender a usar los canales como mecanismos de sincronización.
 
 ==== Barreras binarias
 Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, A y B, deben coordinarse. A no debe pasar de un punto hasta que B haya llegado, y viceversa. Con semáforos usamos dos para hacerlo, con camales es muy similar, necesitamos dos. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y luego esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
@@ -139,9 +139,9 @@ ch_a <- true        cha_b <- true
 ...                 ...
 ----
 
-El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales no tomar en cuenta que ambos canales son sincrónicos por lo que tanto +A+ como +B+ al intentar enviar el mensaje quedan bloqueados hasta que el otro pueda recibirlo. Pero <<railroad_quote, ninguno de ellos podrá continuar>> hasta que el otro haya recibido el mensaje.
+El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales no tomar en cuenta que ambos canales son sincrónicos por lo que tanto +A+ como +B+ se bloquean al intentar enviar el mensaje. Pero ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
-El interbloqueo se produce por una razón muy similar a la que <<deadlock_philosophers, vimos con filósofos>>, se produce una espera circular. Para evitarla hay que hacer que las ejecuciones sean asimétricas, que uno de ellos reciba primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
+El interbloqueo se produce la espera circular, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Para evitarla hay que hacer que las ejecuciones sean asimétricas, que uno de ellos reciba primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
 
 [source,go]
 ----
@@ -339,7 +339,7 @@ func (s Sem) Signal() {
 
 El problema con la solución anterior es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo, es decir el valor máximo de su valor, caso contrario las operación de _signal_ también se bloquearían si se llena. Si no se requieren valores elevados es una solución razonable, si no hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
 
-Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación de un <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener a la cola de bloqueados.
+Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener a la cola de bloqueados.
 
 La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
 
@@ -360,7 +360,7 @@ func NewSem(value int) Sem {
 ----
 <1> El canal +value+ se inicializa con un mensaje que almacena el valor del semáforo.
 
-Los algoritmos de las operaciones _wait_ y _signal_ eson prácticamente idénticos a la <<semaphore_definition, definición de semáforos>>. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
+Los algoritmos de las operaciones _wait_ y _signal_ eson prácticamente idénticos a la <<semaphore_definition, definición>> de semáforos. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
 
 La función +Wait+ es lee el mensaje con el valor del semáforo, lo decrementa y vuelve a depositar el mensaje en el canal. Si el valor del semáforo es menor que cero se bloqueará en el canal +queue+ hasta que otro proceso haga un _signal_.
 
@@ -547,7 +547,7 @@ for {
 }
 ----
 
-La función +canEat+ es idéntica a la de la solución óptima con semáforosfootnote:[De nuevo aparecen las similitudes de sincronización entre semáforos y canales.] (<<philosophers_2_py, código Python>>) sólo que en vez de señalizar un semáforo responde con un mensaje al canal del filósofo. La función verifica el estado de los vecinos a izquierda y derecha del filósofo indicado en el argumento (+i+), si ninguno de los vecinos está comiendo entonces le permite continuar enviando un mensaje al canal correspondiente.
+La función +canEat+ es idéntica a la homónima de la solución óptima con semáforosfootnote:[De nuevo aparecen las similitudes de sincronización entre semáforos y canales.] (<<philosophers_2_py, código Python>>), solo que en vez de señalizar un semáforo se responde con un mensaje al canal del filósofo. La función verifica el estado de los vecinos a izquierda y derecha del filósofo indicado en el argumento (+i+), si ninguno de los vecinos está comiendo entonces permite continuar enviando un mensaje al canal correspondiente.
 
 [source, go]
 ----
@@ -563,15 +563,17 @@ func canEat(i int) {
 }
 ----
 
+=== Multiplicación de matrices en paralelo
+
+[[matrix_multiplication]]
+image::matrix_multiplication.png[width="400", align="center"]
+
+[[parallel_multiplication]]
+.Array de procesos para multiplicación de matrices
+image::parallel_multiplication.png[width="500", align="center"]
 
 
 ////
-π calculus
-////
-
-
-////
-gofmt  -w -tabs=false -tabwidth=4
 
 
 http://www.slideshare.net/dabeaz/an-introduction-to-python-concurrency (para ver lo de mensajes)

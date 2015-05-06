@@ -178,6 +178,7 @@ _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la secc
 Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
 [[railroad_quote]]
+.Ley de Kansas
 [quote]
 Cuando dos trenes se encuentran en un cruce de vías cada uno deberá detenerse completamente y ninguno deberá continuar hasta que el otro se haya ido.
 
