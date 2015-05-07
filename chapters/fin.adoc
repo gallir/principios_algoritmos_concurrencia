@@ -1,4 +1,4 @@
-== Otros temas importantes
+== Temas no tratados
 
 === Estructuras concurrentes no bloqueantes
 

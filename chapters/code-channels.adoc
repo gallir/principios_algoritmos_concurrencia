@@ -97,3 +97,29 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/channels/paral
 ----
 include::../code/channels/parallel_matrix_multiplication.go[]
 ----
+
+=== Exclusión mutua distribuida
+
+==== Ricart-Agrawala
+[[distributed_me1_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/distributed/mutex_ricart_agrawala.go[mutex_ricart_agrawala.go]
+[source,go]
+----
+include::../code/channels/distributed/mutex_ricart_agrawala.go[]
+----
+
+==== _Token-passing_ de Ricart-Agrawala
+[[distributed_me2_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/distributed/mutex_token_passing.go[mutex_token_passing.go]
+[source,go]
+----
+include::../code/channels/distributed/mutex_token_passing.go[]
+----
+
+==== _Token-passing_ de Neilsen-Mizuno
+[[distributed_me3_go]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/channels/distributed/mutex_token_passing_neilsen_mizuno.go[mutex_token_passing_neilsen_mizuno.go]
+[source,go]
+----
+include::../code/channels/distributed/mutex_token_passing_neilsen_mizuno.go[]
+----

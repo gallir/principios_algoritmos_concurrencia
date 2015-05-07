@@ -273,7 +273,7 @@ Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que i
 
 [[channels_mutex]]
 === Mutex
-La implementación de un _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a los usados por los monitores en la máquina virtual de Java.] también es muy sencilla (<<channel_mutex_go, código>>), inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
+La implementación de _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a los usados por los monitores en la máquina virtual de Java.] también es sencilla (<<channel_mutex_go, código>>), inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
 
 [source,go]
 ----
@@ -281,7 +281,7 @@ La implementación de un _mutex_ con mensajesfootnote:[El paquete +sync+ de Go t
     m <- Empty{}
 ----
 
-Para entrar a la sección crítica se lee del canal, como hay un mensaje en el _buffer_ podrá continuar inmediatamente, el siguiente proceso se bloqueará al no tener mensaje que recibir. El proceso que sale de la sección crítica deposita nuevamente un mensaje vacío que permitirá que entre otro o desbloqueará al primer proceso bloqueado.
+En la entrada de la sección crítica se lee del canal, como hay un mensaje en el _buffer_ podrá continuar inmediatamente, el siguiente proceso se bloqueará al no tener mensaje que recibir. El proceso que sale de la sección crítica deposita nuevamente un mensaje vacío que permitirá que entre otro o desbloqueará al primer proceso bloqueado.
 
 [source,go]
 ----
@@ -313,7 +313,7 @@ func Unlock() {
 
 === Semáforos
 
-Para semáforos generales se puede usar la misma idea que con la primera versión del _mutex_ (<<channel_semaphore_go, código>>), cada mensaje representa un permiso. Solo hace falta una cola a la que hay que iniciar con tantos mensajes como el valor inicial del semáforo:
+Para semáforos generales se puede usar la misma idea que con la primera versión anterior de _mutex_ (<<channel_semaphore_go, código>>), cada mensaje representa un permiso. Solo hace falta una cola a la que hay que iniciar con tantos mensajes como el valor inicial del semáforo:
 
 [source,go]
 ----
@@ -326,7 +326,7 @@ func NewSem(value int) Sem {
 }
 ----
 
-La operación _wait_ simplemente lee un mensaje y _signal_ envía uno vacío:
+La operación _wait_ lee un mensaje y _signal_ envía uno vacío:
 
 [source, go]
 ----
@@ -339,9 +339,9 @@ func (s Sem) Signal() {
 }
 ----
 
-El problema con la solución anterior es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo, es decir el valor máximo de su valor, caso contrario las operación de _signal_ también se bloquearían si se llena. Si no se requieren valores elevados es una solución razonable, si no hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
+El problema de esta solución es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo (el valor máximo de su valor), de lo contrario las operaciones _signal_ también se bloquearán si está lleno. Si no se requieren valores elevados es una solución razonable, si no es así hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
 
-Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo simple con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener a la cola de bloqueados.
+Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener la cola de bloqueados.
 
 La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
 
@@ -362,9 +362,9 @@ func NewSem(value int) Sem {
 ----
 <1> El canal +value+ se inicializa con un mensaje que almacena el valor del semáforo.
 
-Los algoritmos de las operaciones _wait_ y _signal_ eson prácticamente idénticos a la <<semaphore_definition, definición>> de semáforos. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
+Los algoritmos de las operaciones _wait_ y _signal_ son prácticamente idénticos a la <<semaphore_definition, definición>> de semáforos. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
 
-La función +Wait+ es lee el mensaje con el valor del semáforo, lo decrementa y vuelve a depositar el mensaje en el canal. Si el valor del semáforo es menor que cero se bloqueará en el canal +queue+ hasta que otro proceso haga un _signal_.
+La función +Wait+ lee el mensaje con el valor del semáforo, lo decrementa y vuelve a depositar el mensaje en el canal. Si el valor del semáforo es menor que cero se bloqueará en el canal +queue+ hasta que otro proceso haga un _signal_.
 
 [source, go]
 ----
@@ -392,9 +392,9 @@ func (s Sem) Signal() {
 }
 ----
 
-Puede parecer que aparecerán _condiciones de carrera_ porque el envío y recepción en +queue+ se hacen luego de enviar el mensaje pero si la variable local +v+ es menor que cero el proceso debe esperar un mensaje en +queue+. El proceso que hace el _signal_ espera que se haga así y enviará siempre el mensaje correspondiente.
+Puede parecer que aparecerán _condiciones de carrera_ porque el envío y recepción en +queue+ se hacen luego de enviar el mensaje pero no existe ese problema. Si al llamar al _wait_ la variable local +v+ es menor que cero el proceso obligatoriamente debe esperar un mensaje (en +queue+). El de _signal_ espera que se haga así y enviará siempre el mensaje correspondiente.
 
-Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}` porque el canal es sincrónico y no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
+Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}`, el canal es sincrónico y no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty, 1)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
 
 
 === Filósofos cenando
@@ -410,7 +410,7 @@ for i := range forks {
 }
 ----
 
-Para tomar los tenedores cada filósofo lee de sus canales correspondientes. Si el tenedor está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que sea liberado. Para evitar el interbloqueo (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador:
+Para tomar los tenedores cada filósofo lee de sus canales correspondientes. Si el tenedor está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que sea liberado. Para evitar el interbloqueo (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador y luego el de mayor:
 
 
 [source,go]
@@ -426,7 +426,7 @@ func pick(id int) {
 }
 ----
 
-Para liberar los tenedores es suficiente con enviar un mensaje a sus canales. Si hay otros filósofos esperando por ello se desbloquearán, si no quedarán almacenados en el _buffer_.
+Para liberar los tenedores es suficiente con enviar un mensaje a sus canales correspondientes. Si otros filósofos están esperando se desbloquearán, si no quedarán almacenados en el _buffer_.
 
 [source, go]
 ----
@@ -438,13 +438,13 @@ func release(id int) {
 
 ==== Con canales sincrónicos
 
-El algoritmo anterior solo funciona con canales asincrónicos, de no ser así ni la inicialización funcionaría porque se bloquearía al ejecutar el primer `forks[i] <- Empty{}` . En el modelo _CSP_ (<<Hoare>>) los canales son sincrónicos y Hoare propuso una soluciónfootnote:[Aunque produce interbloqueo, lo avisa en el mismo artículo.].
+El algoritmo anterior solo funciona con canales asincrónicos, de no ser así ni siquiera la inicialización funcionaría porque se bloquearía al ejecutar el primer `forks[i] <- Empty{}` . En el modelo _CSP_ los canales son sincrónicos y Hoare propuso una solución correctafootnote:[Aunque produce interbloqueo, lo avisa en el mismo artículo.].
 
 [[philosophers_hoare]]
 .Filósofos en _CSP_
 image::hoare_philosophers.png[height="180", align="center"]
 
-La solución es en realidad muy sencilla (<<channel_philosophers_sync_go, código>>), hay que hacer como propone el modelo _CSP_, crear un proceso adicional para cada tenedor (+fork+). Los filósofos no requieren de ningún cambio en su algoritmo. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por el canal correspondiente a su tenedor:
+La solución es más sencilla de lo que parece (<<channel_philosophers_sync_go, código>>), hay que hacer como se propone en el modelo _CSP_, crear un proceso adicional para cada tenedor (+fork+), los filósofos no requieren de ningún cambio en su algoritmo. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por el canal correspondiente a su tenedor:
 
 .Proceso para el tenedor _i_
 [source,go]
@@ -459,19 +459,19 @@ func fork(i int) {
 
 [NOTE]
 ====
-Al tratarse de canales sincrónicos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos enviarán un mensaje y al soltarlos reciben uno. El proceso +fork+ debe invertir también sus operaciones:
+Al tratarse de canales sincrónicos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos envín un mensaje y al soltarlos reciben uno. En este caso el proceso +fork+ debe invertir también sus operaciones:
 
     for {
         forks[i] <- Empty{}
         <-forks[i]
     }
 
-De esta forma -es equivalente- el programa queda idéntico a la solucion propuesta por Hoare con CSP (<<philosophers_hoare>>).
+De esta forma -es equivalente- el programa queda idéntico a la solucion propuesta por Hoare con _CSP_.
 ====
 
-Los procesos comunicados por canales asincrónicos pueden ser convertidos, tal como acabamos de hacer, a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con buffer. En el caso de los filósofos fue añadir un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_, tal como propone el modelo _CSP_.
+Los procesos comunicados por canales asincrónicos pueden ser convertidos -tal como acabamos de hacer- a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_.
 
-Todos los algoritmos de este capítulo que requieren de canales con _buffer_ pueden ser adaptados para funcionar con sincrónicos. Por ejemplo, para el <<channel_mutex_go, código>> de simulación de _mutex_ se requieren muy pocos cambios. La función [pseudo] constructora del +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
+Todos los algoritmos de este capítulo que requieren de canales con _buffer_ pueden ser adaptados para funcionar con sincrónicos. Por ejemplo, para el <<channel_mutex_go, código>> de simulación de _mutex_ se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
 
 
 [source,go]
@@ -483,7 +483,7 @@ func NewMutex() Mutex {
 }
 ----
 
-Dado que no podemos hacerlo con canales sincrónicos se requiere otro proceso que actúe de forma similar al +fork+ de los filósofos. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>):footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]
+Dado que no podemos hacerlo con canales sincrónicos se requiere otro proceso que actúe de forma similar al +fork+ de los filósofos. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>)footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]:
 
 [source,go]
 ----
@@ -503,9 +503,9 @@ func NewMutex() Mutex {
 ==== Solución óptima
 La solución anterior (ya la analizamos <<dining_philosophers_semaphores, con semáforos>>) no asegura que puedan comer todos los filósofos que podrían hacerlo. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
 
-En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso tendrá un único canal (sincrónico) para recibir los mensajes de todos los filósofos. Estos le enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos palillos están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo no le responderá inmediatamente sino cuando sus vecinos hayan dejado de comer.
+En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal sincrónico para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos palillos están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo no le responderá inmediatamente sino cuando sus vecinos hayan dejado de comer.
 
-El mensaje de filósofos al proveedor será una estructura que indicará el índice el filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los palillos) y el canal individual del filósofo (también sincrónico) para recibir la respuesta del proveedorfootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa el proveedor en el mensaje.].
+El mensaje de filósofos al proveedor será una estructura que indicará el índice el filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los palillos) y el canal individual del filósofo (también sincrónico) para recibir la respuesta del proveedorfootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa el proveedor en el mensaje.]:
 
 [source, go]
 ----
@@ -516,7 +516,7 @@ type Request struct {
 }
 ----
 
-Cuando un filósofo desea comer envía un mensaje al canal del proveedor con su identificación (+i+), su propio canal (+myCh+) y el estado +Hungry+. A continuación espera la respuesta del proveedor en su canal.
+Cuando un filósofo desea comer envía un mensaje al canal del proveedor con su identificación (+i+), su propio canal (+myCh+) y el estado +Hungry+. A continuación espera la respuesta del proveedor:
 
 [source, go]
 ----
@@ -525,14 +525,18 @@ provider <- Request{id: i, c: myCh, status: Hungry}
 <-myCh
 ----
 
-Cuando libera los palillos envía otro mensaje similar pero con el estado +Thinking+.
+Cuando libera los palillos envía otro mensaje similar pero con el estado +Thinking+:
 
 [source, go]
 ----
 provider <- Request{id: i, c: myCh, status: Thinking}
 ----
 
-El proveedor mantiene un array que mantiene el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ que recibió en el mensaje. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+. Cuando recibe un mensaje lo copia al array de estado y verifica el estado, si es +Hungry+ llama a la función +canEat+, esta función responderá con un mensaje al canal del filósofo si puede comer. Si el estado es +Thinking+ significa que deja los tenedores por lo que se llama a la función +canEat+, una vez para cada vecino por si querían comer y están esperando.
+El proveedor mantiene un array que con el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ que recibe en el mensaje. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+. Cuando recibe un mensaje lo copia al array de estado y verifica el estado:
+
+1. Si es +Hungry+ llama a la función +canEat+, esta función responderá con un mensaje al canal del filósofo si puede comer.
+
+2. Si el estado es +Thinking+ significa que deja los tenedores por lo que se llama a la función +canEat+, una vez para cada vecino por si querían comer y están esperando.
 
 [source, go]
 ----
@@ -549,7 +553,7 @@ for {
 }
 ----
 
-La función +canEat+ es idéntica a la homónima de la solución óptima con semáforosfootnote:[De nuevo aparecen las similitudes de sincronización entre semáforos y canales.] (<<philosophers_2_py, código Python>>), solo que en vez de señalizar un semáforo se responde con un mensaje al canal del filósofo. La función verifica el estado de los vecinos a izquierda y derecha del filósofo indicado en el argumento (+i+), si ninguno de los vecinos está comiendo entonces permite continuar enviando un mensaje al canal correspondiente.
+La función +canEat+ es idéntica a la homónima de la solución óptima con semáforosfootnote:[Nuevamente aparecen las similitudes de sincronización entre semáforos y canales.] (<<philosophers_2_py, código Python>>), solo que en vez de señalizar un semáforo se responde con un mensaje. La función verifica el estado de los vecinos a izquierda y derecha del filósofo indicado en el argumento (+i+), si ninguno de los vecinos está comiendo entonces permite continuar enviando un mensaje al canal correspondiente.
 
 [source, go]
 ----
@@ -566,20 +570,19 @@ func canEat(i int) {
 ----
 
 === Paralelismo
-
-En 1979, poco después de la publicación del artículo del modelo _CSP_ la empresa británica INMOfootnote:[Actualmente STMicroelectronics, http://www.st.com/.] pidió colaboración a Hoare para crear el lenguaje occam para su nueva arquitectura de procesamiento en paralelo _Transputer_. A principios de la década de 1980 se pensaba que se había llegado al límite de la capacidad de los procesadoresfootnote:[Podían poner más transistores en un chip pero no sabían qué hacer con ellos, luego surgieron las arquitecturas _superescalares_ que permitieron aumentar la potencia de cálculo, lo que también significó la decadencia de _Transputer_.] por lo que diseñaron una arquitectura basada en el modelo _CSP_, _Transputer_. Consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesasores con canales sincrónicosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
+En 1979, poco después de la publicación del artículo del modelo _CSP_ la empresa británica INMOfootnote:[Actualmente STMicroelectronics, http://www.st.com/.] pidió colaboración a Hoare para crear el lenguaje occam para su nueva arquitectura de multiprocesamiento masivo _Transputer_. A principios de la década de 1980 se pensaba que se había llegado al límite de la capacidad de los procesadoresfootnote:[Podían poner más transistores en un chip pero no sabían qué hacer con ellos, luego surgieron las arquitecturas _superescalares_ que permitieron aumentar la potencia de cálculo, lo que también significó la decadencia de _Transputer_.] por lo que diseñaron una arquitectura basada en el modelo _CSP_. Consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesasores con canales sincrónicosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
 
 
 [[BOO42]]
 .Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
 image::B0042.jpg[width="300", align="center"]
 
-Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales desapareció posiblemente por la aparición de microprocesadores más potentes (especialmente a partir de Pentium) y económicos. Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
+Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron y portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales desapareció posiblemente por la aparición de microprocesadores más potentes (especialmente a partir de Pentium) y económicos. Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
 
 
 ==== Multiplicación de matrices en paralelo
 
-Uno de los ejemplos que muestran la potencia del modelo _CSP_ en arquitectura con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analicemos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
+Una muestra de la potencia del modelo _CSP_ en arquitecturas con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analicemos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
 
 [[matrix_multiplication]]
 image::matrix_multiplication.png[width="360", align="center"]
@@ -589,12 +592,12 @@ Cada elemento de la matriz resultante puede ser calculado independientemente, po
 [[element_multiplication]]
 image::element_multiplication.png[width="400", align="center"]
 
-El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplica un elemento de cada matriz, lo suma con el resultado de obtenido recibido de otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
+El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplican un elemento de cada matriz, lo suman al resultado recibido de otro proceso (otra suma parcial) y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
 image::col_row_multiplication.png[width="480", align="center"]
 
-Para obtener el resultado final a la izquierda (_oeste_, o _west_) cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ (_east_) y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial, así el algoritmo de cada multiplicador es idéntico:
+Para obtener el resultado final a la izquierda (_oeste_) cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial, así el algoritmo de cada multiplicador es idéntico:
 
 [source, go]
 ----
@@ -603,7 +606,7 @@ sum := <-east
 west <- sum + first*second
 ----
 
-Tal como ya había descrito Tony Hoare en su artículo (<<Hoare>>), se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior (_norte_) envían los datos, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos del _oeste_ (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
+Tal como ya había descrito Hoare, se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior (_norte_) envían los datos, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda. (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
 
 
 [[parallel_multiplication]]
@@ -647,6 +650,64 @@ func sink() {
     }
 }
 ----
+
+=== Algoritmos distribuidos
+
+No es el tema de este libro, se necesitaría de otro específico y aún así sería incompleto dado el avance y cantidad de sistemas y protocolos que se desarrollaron en los últimos años. Pero no podía dejar de mencionarlo, los canales de comunicación son el elemento fundamental y el concepto de _procesos comunicados_ son la espina dorsal de las sistemas distribuidos. Cuando se habla de sistemas distribuidos se agrega un elemento nuevo a _canales_ y procesos: _nodos_. Estos son ordenadores independientes conectados solo por un canal de comunicaciónfootnote:[De características diferentes fundamentalmente si son fiables y entregan los mensajes en el mismo orden en que lo reciben] (_debilmente acoplados_) y pueden ejecutar más de un proceso.
+
+Los programas diseñados según los principios de _CSP_ y cuyo único mecanismo de comunicación y compartición de datos son los mensajes pueden ser fácilmente portados a sistemas distribuidos cambiando las primitivas de canales locales por sistemas de gestión de _colas de mensajes_ (como Beanstalkd o RabbitMQ). Por el mismo principio, algoritmos diseñados para ser distribuidos pueden ser fácilmente implementados en el modelo _CSP_.
+
+Hay otros problemas que hay que tener en cuenta en los sistemas distribuidos que no preocupan en procesos locales:
+
+- los canales y nodos pueden fallar sin notificar a los demás procesos por lo que hay que considerar tiempos y expiración,
+
+- el grafo o estructura de la red que conecta a los diferentes nodos puede ser variable,  muy compleja y no permitir la conexión de cada nodo con todos los demás,
+
+- no se pueden tomar decisiones suponiendo un número fijo de nodos o procesos y que cada uno de ellos recibió cada mensaje, se requieren más pasos de sincronización y verificación,
+
+- la operación que más tiempo toma es la copia de mensajes de un nodo a otro por lo que la prioridad es reducir el tamaño y número de mensajes que hacen falta intercambiar.
+
+Los procesos distribuidos deben responder a mensajes de sincronización que llegan desde otros nodos y que necesitan de respuesta inmediata se suele implemenar al menos un hilo auxiliar independiente que es el responsable de recibir los mensajes de la red y responder adecuadamente lo antes posible. Así un proceso que se ejecuta en un nodo (_Process_) consiste de un hilo principal (_Main_) y un auxiliar (_Receiver_) que comparten memoria y se sincronizan entre ellos con cualquiera de los mecanismos de memoria compartida vistos en este libro.
+
+[[distributed_process]]
+image::distributed_process.png[width="240", align="center"]
+
+
+
+
+----
+func node(aChannel chan Struct) {
+    myNumber := 0
+    mutex := new(sync.Mutex)
+
+    receiver := func() {
+        for {
+            request := <-aChannel
+            ...
+            aChannel <- response()
+            }
+        }
+    }
+    go receiver()
+    mainProcessing()
+}
+----
+
+==== Exclusión mutua
+Como breve introducción a cómo se desarrollan los algoritmos distribuidos analizaremos tres algoritmos diferentes para resolver el problema de la exclusión mutua distribuida:
+
+1. Exclusión mutua de Ricart-Agrawala inspirado en el algoritmo de la panadería (<<distributed_me1_go, código>>),
+
+2. _token-passing_ de los mismos autores que reduce el número de mensajes (<<distributed_me2_go, código>>),
+
+3. _token-passing_ de Neilsen-Mizuno que reduce el número el tamaño de los datos que requiere el anterior de Ricard-Agrawala (<<distributed_me3_go, código>>).
+
+
+
+
+
+
+
 
 ////
 
