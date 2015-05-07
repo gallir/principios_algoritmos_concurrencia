@@ -32,7 +32,7 @@ Enviar el contenido de _x_ e _y_ al proceso _DIV_:
     DIV!(x, y)
 
 
-El primer lenguaje que se desarrolló con este modelo fue Occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes siguiendo este modelo: Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
+El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes siguiendo este modelo: Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
 .Erlang
 ****
@@ -565,32 +565,41 @@ func canEat(i int) {
 
 === Multiplicación de matrices en paralelo
 
+En 1979, poco después de la publicación del artículo del modelo _CSP_ la empresa británica INMOfootnote:[Actualmente STMicroelectronics, http://www.st.com/.] pidió colaboración a Hoare para crear el lenguaje occam para su nueva arquitectura de procesamiento en paralelo _Transputer_. A principios de la década de 1980 se pensaba que se había llegado al límite de la capacidad de los procesadoresfootnote:[Podían poner más transistores en un chip pero no sabían qué hacer con ellos, luego surgieron las arquitecturas _superescalares_ que permitieron aumentar la potencia de cálculo, lo que también significó la decadencia de _Transputer_.] por lo que diseñaron una arquitectura basada en el modelo _CSP_, _Transputer_. Consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesasores con canales sincrónicosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
 
-Hay que multiplicar en paralelo las dos matrices de la imagen (y obtener el resultado de la derecha):
+
+[[BOO42]]
+.Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
+image::B0042.jpg[width="300", align="center"]
+
+Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas de satélites desapareció por la aparición de microprocesadores más potentes (especialmente a partir de Pentium). Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
+
+
+Uno de los ejemplos que muestran la potencia del modelo _CSP_ en una arquitectura que lo soporte es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientados a matrices de grandes dimensiones. Desarrollaremos los algoritmos para multiplicar en paralelo dos matrices de 3x3, tomemos las dos matrices  de la imagen:
 
 [[matrix_multiplication]]
 image::matrix_multiplication.png[width="360", align="center"]
 
-Cada elemento de la matriz resultante puede ser calculado independientemente, por ejemplo elemento central de la matriz (25) se calcula de la siguiente forma:
+Cada elemento de la matriz resultante puede ser calculado independientemente, por ejemplo el elemento central de la matriz (25) se calcula de la siguiente forma:
 
 [[element_multiplication]]
 image::element_multiplication.png[width="400", align="center"]
 
-El cálculo se puede descomponer fácilmente en diferentes procesos comunicados por canales:  hacen la multiplicación de un elemento de cada matriz, lo suman con el resultado de obtenido recibido de otro proceso y envían el resultado al siguiente. Para las matriz del ejemplo, de 3x3, se necesitan tres procesos. Cada uno se inicia con los valores de una fila de la primer matriz ([4, 5, 6]), del canal norte (_north_) reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
+El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplica un elemento de cada matriz, lo suma con el resultado de obtenido recibido de otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
 image::col_row_multiplication.png[width="440", align="center"]
 
-Para obtener el resultado final a la izquierda (_oeste_, o _west_) cada proceso (_multiplicador_) multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ (_east_) y lo envía hacia el _oeste_. El proceso _zero_ de la derecha unicamente envia ceros para iniciar la suma parcial así el algoritmo de cada multiplicador es idéntico:
+Para obtener el resultado final a la izquierda (_oeste_, o _west_) cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ (_east_) y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial, así el algoritmo de cada multiplicador es idéntico:
 
 [source, go]
 ----
 second := <-north
-sum := east
+sum := <-east
 west <- sum + first*second
 ----
 
-Como describió Tony Hoare en <<Hoare>> y lo hacían los procesadores Transputer, se puede generalizar para toda la matriz con nueve _multiplicadores_ (en el centro de la imagen). Los procesadores superiores (del _norte_) envían los datos, uno a uno, de las filas de la segunda matriz y los resultados lo obtienen los procesos del _oeste_ (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (los procesos _sink_ al final solo sirven para que el algoritmo de los multiplicadores sea el mismo para todos).
+Tal como ya había descrito Tony Hoare en su artículo (<<Hoare>>), se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior (_norte_) envían los datos, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos del _oeste_ (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
 
 
 [[parallel_multiplication]]
