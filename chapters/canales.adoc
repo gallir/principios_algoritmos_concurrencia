@@ -588,7 +588,7 @@ image::element_multiplication.png[width="400", align="center"]
 El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplica un elemento de cada matriz, lo suma con el resultado de obtenido recibido de otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
-image::col_row_multiplication.png[width="440", align="center"]
+image::col_row_multiplication.png[width="480", align="center"]
 
 Para obtener el resultado final a la izquierda (_oeste_, o _west_) cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ (_east_) y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial, así el algoritmo de cada multiplicador es idéntico:
 
@@ -604,7 +604,7 @@ Tal como ya había descrito Tony Hoare en su artículo (<<Hoare>>), se puede gen
 
 [[parallel_multiplication]]
 .Array de procesos para multiplicación de matrices
-image::parallel_multiplication.png[width="440", align="center"]
+image::parallel_multiplication.png[width="480", align="center"]
 
 El algoritmo de cada uno de los cuatro tipos de procesos de la _matriz de procesos_ es el siguiente (<<parallel_matrix_multiplication_go, código completo>>):
 
