@@ -1,0 +1,19 @@
+== Otros temas importantes
+
+=== Estructuras concurrentes no bloqueantes
+
+==== Pilas
+
+==== Listas
+
+==== Hashing
+
+=== Memoria transaccional
+
+==== Software
+
+==== Hardware
+
+=== Patrones de programación
+
+=== Algoritmos distribuidos

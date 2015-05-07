@@ -44,7 +44,7 @@ include::chapters/monitores.adoc[]
 
 include::chapters/canales.adoc[]
 
-include::chapters/estructuras.adoc[]
+include::chapters/fin.adoc[]
 
 include::chapters/bibliografia.adoc[]
 

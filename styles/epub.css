@@ -252,9 +252,13 @@ ol, ul {
 
 div.chapter, div.footnotes { page-break-before: always; }
 
-/*div.mediaobject img {
-    box-shadow: 4px 4px 12px #ccc;
-}*/
+div.figure p.title {
+    margin-bottom: 0;
+}
+
+div.mediaobject img {
+    margin: 0.8em 0 0.8em 0;
+}
 
 /* keep this body statement last */
 html body {

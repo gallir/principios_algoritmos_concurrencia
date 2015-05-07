@@ -1,29 +1,29 @@
 [[channels]]
 == Canales
 
-Las construcciones de programación concurrente estudiadas hasta ahora (algoritmos, _spinlocks_, semáforos y monitores) requieren memoria compartida, ahora veremos otro donde no se comparte memoria sino que se pasa la información mediante _mensajes_. Los mensajes se envían atómicamente a través de canales, estos requieren de al menos un proceso remitente y un receptor.
+Todas las construcciones de programación concurrente de capítulos anteriores -algoritmos, _spinlocks_, semáforos y monitores- requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen este requisito, además de sincronización sirven para comunicación entre procesos mediante el intercambio de _mensajes_. Estos se envían a través de las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
 
-Hay dos tipos de comunicaciones:
+Según el comportamiento de las operaciones _send_ y _receive_ se definen dos tipos de comunicaciones:
 
-Comunicación sincrónica:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea hasta que el receptor esté listo para recibir. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
+Comunicación sincrónica:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea en el _send_ hasta que el receptor esté listo para recibir. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
 
-Comunicación asincrónica:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asincrónica requiere que el canal tenga un _buffer_ para almacenar los mensajes (frecuentemente llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal de comunicación, si no hay receptores o estos consumen mensajes a menor ritmo con el tiempo el _buffer_ se llenará y hará que los remitentes se bloqueen.
+Comunicación asincrónica:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asincrónica requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal de comunicación, si no hay receptores o estos consumen mensajes a menor ritmo el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
 
-Hay dos tipos de especificar el destinatario (_addressing_):
+Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en general los mensajes tienen destinatarios, hay dos formas básicas de especificar a los receptores (_addressing_):
 
-- Indentificando explícitamente al proceso receptor como en Erlang, se indica el _PID_ del receptor.
+- Indentificando explícitamente al proceso receptor, como en Erlang donde se indica el _PID_ del receptor.
 
-- Indentificando al canal, como en Go. El canal puede admitir operaciones de uno o varios procesos en cada extremo.
+- Indentificando al canal. En estos casos el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix) o no poner restricciones al número de procesos en cada extremo (como en Go).
 
-Además los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, como es el caso de canales en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_).
+Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, lo habitual en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_) por errores de transmisión.
 
 === _CSP_
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ que más me impactó. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un lenguaje formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el paso _mensajes_ a través de canales (_puertos_ en el original). La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan en paralelo pero se sincronizarán en la entrada/salida. Definió dos operadores, +?+ para indicar la entrada de un proceso y +!+ para la salida.
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelos formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el intercambio de _mensajes_. La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan asoncrónicamente y posiblemente en paralelo pero se sincronizarán en la entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
 Ejemplos:
 
-Leer desde el proceso _XY_ y almacenarlo en el par de variables _x, y_:
+Leer desde el proceso _XY_ y almacenar el contenido en las variables _x, y_:
 
     XY?(x, y)
 
@@ -36,17 +36,21 @@ El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David 
 
 .Erlang
 ****
-Erlang fue diseñado en Ericcson para sus sistemas con alta disponibilidad y concurrencia. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con mensajes como única forma de comunicación. A diferencia de _CSP_, Erlang usa mensajes asincrónicos que se almacenan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
+Erlang fue diseñado en Ericcson para sus sistemas concurrentes de alta disponibilidad. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con mensajes como única forma de comunicación. La comunicación en Erlang es asincrónica, los mensajes se depositan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
 ****
 
 === Canales en Go
-
 En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores,
 
-Hilos ligeros o _goroutines_:: Las llamadas a funciones precedidos por la instrucción +go+ hacen que éstas se ejecuten de forma asincrónica, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para sacar provecho a los diferentes procesadores. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
+[NOTE]
+====
+Go es un lenguaje libre, moderno, implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Ademas permite la ejecución en paralelo especificando cuántos hilos nativos del sistema operativo (_threads_) pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos que estudiaremos en este capítulo, por ello todos los ejemplos están en Go.
+====
+
+Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidos por la instrucción +go+ -llamadas _goroutines_- hacen que éstas se ejecuten de forma asincrónica, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
-Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ e incluso en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos definiendo un _buffer_ de tamaño mayor que cero (por defecto es cero). Los canales sin de tipo estático, se define el tipo cuando se crean, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes es siempre del tipo +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
+Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos si se les especifica un tamaño de _buffer_ mayor que cero. Los canales son de tipo estático definidos al momento de su creación, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes es siempre de la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
 
 La siguiente línea crea un canal de tipo entero:
 
@@ -62,13 +66,13 @@ Enviar el contenido de una variable a un canal:
 
 Leer un mensaje de un canal y almacenarlo en la variable +message+:
 
-    message = <- ch
+    message = <-ch
 
 Leer un mensaje de un canal y descartar su valor:
 
-    <- ch
+    <-ch
 
-El anterior es el patrón de sincronización en los ejemplos en Go de capítulos anteriores con el canal +done+ para hacer que el programa principal espere por la la finalización de las _goroutines_:
+En los ejemplos en Go de capítulos anteriores se usó el patron anterior con el canal +done+ para hacer que el programa principal espere por la finalización de las _goroutines_:
 
 [source, go]
 ----
@@ -84,15 +88,15 @@ func main() {
 }
 ----
 
-Dado que ambos implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go, pero ambos derivan de ramas históricas diferentes de _CSP_ y tienen algunas diferencias claves:
+Dado que ambos implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
 
-- En Erlang como en el _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa atractiva (sic) aunque equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor, en Go al canal. Cualquier proceso o número de estos puede recibir o enviar del mismo canal.
+- En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa atractiva (sic) aunque equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor, en Go al canal. Cualquier proceso o número de estos puede recibir o enviar del mismo canal.
 
-- En Erlang se puede enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un _buzón_ y son recogidos según las reglas especificadas ( _guard commands_) en el receptor. Los canales en Go son de tipos estático y la entrega de mensajes es siempre en orden FIFO.
+- En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estático y la entrega de mensajes es siempre en orden FIFO.
 
 - Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
 
-El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo _hilo ligero_ con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
+El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo hilo ligero con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
 
 [source, erlang]
 ----
@@ -117,14 +121,14 @@ go func() {
 channel <- "Hello"
 ----
 
-Los algoritmos son equivalentes, como lo son ambos lenguajes, la diferencias fundamentales son la especificación del destinario del mensaje y que en Erlang no hay que crear explícitamente el canal, cada proceso tiene un _buzón_ en el que reciben todos los mensajes.
+Los programas son equivalentes y muy similares, las diferencias fundamentales son la especificación del destinario del mensaje y que en Erlang no hace falta la creación explícita del canal.
 
 === Barreras
 
-Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para aprender a usar los canales como mecanismos de sincronización.
+Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
 
 ==== Barreras binarias
-Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, A y B, deben coordinarse. A no debe pasar de un punto hasta que B haya llegado, y viceversa. Con semáforos usamos dos para hacerlo, con camales es muy similar, necesitamos dos. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y luego esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
+Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa. Con semáforos usamos dos para hacerlo, con canales es similar, necesitamos dos. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y luego esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
 
 [source,go]
 ----
@@ -139,9 +143,9 @@ ch_a <- true        cha_b <- true
 ...                 ...
 ----
 
-El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales no tomar en cuenta que ambos canales son sincrónicos por lo que tanto +A+ como +B+ se bloquean al intentar enviar el mensaje. Pero ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
+El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tomar en cuenta que ambos canales son sincrónicos por lo que tanto _A_ como _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
-El interbloqueo se produce la espera circular, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Para evitarla hay que hacer que las ejecuciones sean asimétricas, que uno de ellos reciba primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
+El interbloqueo se produce la espera circular, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
 
 [source,go]
 ----
@@ -151,7 +155,7 @@ ch_a <- true        <-ch_a
 <-ch_b              cha_b <- true
 ----
 
-Para evitar las soluciones asimétricas hay que recurrir a canales asincrónicos para evitar que un proceso quede bloqueado cuando envíe el mensaje. Por defecto los canales tienen _buffer_ 0, por lo tanto son sincrónicos. Pero se puede especificar el tamaño del _buffer_, en ese caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+Para evitar las soluciones asimétricas hay que recurrir a canales asincrónicos. Por defecto los canales tienen _buffer_ 0, por lo tanto son sincrónicos. Pero se puede especificar el tamaño del _buffer_, en ese caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
 
 [source,go]
 ----
@@ -164,13 +168,13 @@ ch_a <- true        ch_b <- true
 <-ch_b              <-ch_a
 ----
 
-Como ambos canales ahora son asincrónicos y con _buffer_ de un elemento los procesos no se bloquearán si al enviar no hay ningún elemento. Desde el punto de vista de sincronización la idea es similar al valor de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_, pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejmplos de sincronización de este capítulo y en aplicaciones reales se recurre mucho a usar sincrónicos o asincrónicos con _buffer_ de tamaño uno.
+Como ambos canales ahora son asincrónicos y con _buffer_ de un elemento los procesos no se bloquearán si al enviar no hay ningún elemento. Desde el punto de vista de sincronización la idea es similar al valor o _número de permisos_ de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_, pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejemplos de sincronización de este capítulo -y en aplicaciones reales- es habitual recurrir a canales sincrónicos o asincrónicos con _buffer_ de tamaño uno.
 
 ==== Barreras generales
 
-Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usábamos dos de ellos para llevar la cuenta de los procesos que faltaba por llegar a la meta y los que ya habían salido para comenzar la segunda fase. Usaremos también dos canales con el mismo objetivo pero no usaremos variables compartidas, el contador estará almacenado en un mensaje que se irá pasando entre los procesos, cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usábamos dos de ellos para contabilizar los procesos que faltan por llegar a la meta y los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo pero en vez de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se irá copiando entre procesos, cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
 
-Usaremos dos canales de tipo entero, +arrival+ y +departure+ y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán en con la barrera. Definimos la estructura +Barrier+ esos campos:
+Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán en con la barrera. Definimos la estructura +Barrier+ con estos tres components:
 
 
 [source,go]
@@ -198,11 +202,11 @@ func NewBarrier(value int) *Barrier {
 ----
 <1> Se deja un mensaje en el canal con el número de procesos que faltan por llegar.
 
-Los dos canales tienen un _buffer_ de tamaño uno pero sólo uno de ellos, +arrival+, contiene un mensaje con el número de proceso que deben llegar, inicialmente el número de proceso que se sincronizarán. La función +Barrier+ tiene dos partes:
+Los dos canales tienen _buffer_ de tamaño uno pero sólo uno de ellos, +arrival+, contiene un mensaje con el número de procesos que deben sincronizarse. La función de sincronización +Barrier+ tiene dos partes bien diferenciadas:
 
-1. Llegadas: Se usa el canal +arrival+, inicialmente con un mensaje con el total de procesos que faltan por llegar. Cuando un proceso llega lee el mensaje, verifica el valor, si quedan procesos por llegar lo decrementa y vuelve a enviar el mensaje al mismo canal. Si es el último en llegar no depositará el mensaje en +arrival+ sino en +departure+ con el total de procesos que se sincronizan en la barrera.
+1. Llegadas: Se opera sobre el canal +arrival+, inicialmente con un mensaje con el total de procesos que faltan por llegar. Cuando un proceso llega recibe el mensaje, verifica el valor, si quedan procesos por llegar lo decrementa y vuelve a enviar el mensaje al mismo canal. Si es el último en llegar no depositará el mensaje en +arrival+ sino en +departure+ con el total de procesos que se sincronizan en la barrera.
 
-2. Salidas: Los procesos que llegan intentan leer un mensaje de +departure+ y quedarán bloqueados hasta que llegue el último. Cuando éste deposite un mensaje podrá desbloquearse uno, verificará el valor, si quedan procesos por salir decrementará su valor y depositará nuevamente el mensaje +departure+ para que puedan continuar los demás. El último en salir enviará un mensaje a +arrival+ para que el ciclo vuelva a comenzar.
+2. Salidas: Los procesos que llegan intentan leer un mensaje de +departure+ y quedarán bloqueados hasta que llegue el último. Cuando éste deposite un mensaje se despertará uno de los bloqueados y verificará el valor, si quedan procesos por salir decrementará su valor y depositará nuevamente el mensaje +departure+ para que puedan continuar los demás. El último en salir enviará un mensaje a +arrival+ para que el ciclo vuelva a comenzar.
 
 
 [source,go]
@@ -236,18 +240,17 @@ func (b *Barrier) Barrier() {
 <5> Si todavía quedan procesos por salir (bloqueados en +departure+) decrementa el contador y vuelve a poner el mensaje.
 <6> Si llegaron todos pone el mensaje con el número inicial de procesos en el canal de llegada.
 
-Como la recepción y envío son operaciones atómicas no hace falta recurrir a ningún método de exclusión mutua. Además como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal.
+Como la recepción y envío son operaciones atómicas no hace falta recurrir a ningún método de exclusión mutua. Además, como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal lo que asegura  que no se produzcan condiciones de carrera como ocurre con variables compartidas (hace falta asegurar exclusión mutua explícitamente).
 
 === Productores-consumidores
 
-Los canales son inherentemente productores-consumidores, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
+Los canales son productores-consumidores por diseño, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
 
 La interacción es así de sencilla (<<producer_consumer_go, código>>):
 
 [source,go]
 ----
     buffer := make(chan string, BufferSize)
-
 
 func consumer() {
     for {
@@ -266,11 +269,10 @@ func producer() {
 
 Si el buffer del canal está lleno los productores se bloquearan hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos.
 
-Este tipo de sincronización es muy útil y muy usada. Mientras que en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre los diferentes procesos.
+Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores, en los lenguajes basados en _CSP_ es una forma natural de interacción entre procesos.
 
 [[channels_mutex]]
 === Mutex
-
 La implementación de un _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a los usados por los monitores en la máquina virtual de Java.] también es muy sencilla (<<channel_mutex_go, código>>), inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
 
 [source,go]
@@ -563,7 +565,7 @@ func canEat(i int) {
 }
 ----
 
-=== Multiplicación de matrices en paralelo
+=== Paralelismo
 
 En 1979, poco después de la publicación del artículo del modelo _CSP_ la empresa británica INMOfootnote:[Actualmente STMicroelectronics, http://www.st.com/.] pidió colaboración a Hoare para crear el lenguaje occam para su nueva arquitectura de procesamiento en paralelo _Transputer_. A principios de la década de 1980 se pensaba que se había llegado al límite de la capacidad de los procesadoresfootnote:[Podían poner más transistores en un chip pero no sabían qué hacer con ellos, luego surgieron las arquitecturas _superescalares_ que permitieron aumentar la potencia de cálculo, lo que también significó la decadencia de _Transputer_.] por lo que diseñaron una arquitectura basada en el modelo _CSP_, _Transputer_. Consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesasores con canales sincrónicosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
 
@@ -572,10 +574,12 @@ En 1979, poco después de la publicación del artículo del modelo _CSP_ la empr
 .Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
 image::B0042.jpg[width="300", align="center"]
 
-Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas de satélites desapareció por la aparición de microprocesadores más potentes (especialmente a partir de Pentium). Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
+Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales desapareció posiblemente por la aparición de microprocesadores más potentes (especialmente a partir de Pentium) y económicos. Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
 
 
-Uno de los ejemplos que muestran la potencia del modelo _CSP_ en una arquitectura que lo soporte es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientados a matrices de grandes dimensiones. Desarrollaremos los algoritmos para multiplicar en paralelo dos matrices de 3x3, tomemos las dos matrices  de la imagen:
+==== Multiplicación de matrices en paralelo
+
+Uno de los ejemplos que muestran la potencia del modelo _CSP_ en arquitectura con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analicemos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
 
 [[matrix_multiplication]]
 image::matrix_multiplication.png[width="360", align="center"]
