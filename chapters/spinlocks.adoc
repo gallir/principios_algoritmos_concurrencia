@@ -547,7 +547,7 @@ void unlock(struct clh_node **node) {
 
 
 [[spinlock_times]]
-==== Análisis de tiempos de ejecución
+=== Análisis de tiempos de ejecución
 _Ticket-lock_ es un algoritmo equitativo muy utilizado pero no es _escalable_, los procesos verifican la misma posición de memoria. La respuesta es usar un array con posiciones de relleno para evitar el _false sharing_. Algunos autores proponen que el relleno complete el tamaño de una palabra (cuatro u ocho bytes), otros que sean de mayor longitud para que no compartan líneas de caché. Pero ¿cuál es la separación apropiada?, ésta depende de la arquitectura y es difícil saber a priori cuál es la mejor para cada una. Depende de muchos factores, el tipo de instrucción, los canales de comunicación para sincronización o el mecanismo de monitorización de los registros de _LL/SC_ (en las arquitecturas que lo implementan).
 
 Para tomar una decisión informada del _padding_ a usar hice pruebas con los diferentes procesadores variando el tamaño del relleno. La siguiente figura muestra los tiempos de CPU de cada procesador para diferentes tamaños, el eje horizontal muestra la separación entre las diferentes posiciones del array (desde 2 a 256 bytes) y el vertical el tiempo de CPU en segundos.

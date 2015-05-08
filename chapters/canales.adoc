@@ -1,25 +1,23 @@
 [[channels]]
 == Canales
 
-Todas las construcciones de programación concurrente de capítulos anteriores -algoritmos, _spinlocks_, semáforos y monitores- requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen este requisito, además de sincronización sirven para comunicación entre procesos mediante el intercambio de _mensajes_. Estos se envían a través de las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
+Las construcciones de programación concurrente de capítulos anteriores -algoritmos, _spinlocks_, semáforos y monitores- requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción, además de sus capacidad de sincronización equivalente sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_). Según el comportamiento de las operaciones las dos operaciones se definen dos tipos de comunicaciones:
 
-Según el comportamiento de las operaciones _send_ y _receive_ se definen dos tipos de comunicaciones:
+Comunicación sincrónica:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea en el _send_ hasta que el receptor ejecute el _receive_. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
 
-Comunicación sincrónica:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea en el _send_ hasta que el receptor esté listo para recibir. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
+Comunicación asincrónica:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asincrónica requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal, si no hay receptores o estos consumen mensajes a menor ritmo el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
 
-Comunicación asincrónica:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asincrónica requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal de comunicación, si no hay receptores o estos consumen mensajes a menor ritmo el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
-
-Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en general los mensajes tienen destinatarios, hay dos formas básicas de especificar a los receptores (_addressing_):
+Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en general los mensajes tienen destinatarios, hay dos formas básicas de especificarlos (_addressing_):
 
 - Indentificando explícitamente al proceso receptor, como en Erlang donde se indica el _PID_ del receptor.
 
-- Indentificando al canal. En estos casos el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix) o no poner restricciones al número de procesos en cada extremo (como en Go).
+- Indentificando al canal. En estos casos el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix) o no poner restricciones al número de procesos que pueden enviar o recibir (como en Go).
 
 Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, lo habitual en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_) por errores de transmisión.
 
 === _CSP_
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelos formal, _CSP_, para describir la interacción entre procesos genéricos independientes -no comparten memoria- cuya única forma de comunicación y sincronización en el intercambio de _mensajes_. La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan asoncrónicamente y posiblemente en paralelo pero se sincronizarán en la entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización en el intercambio de _mensajes_. La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan asoncrónicamente y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
 Ejemplos:
 
@@ -32,31 +30,30 @@ Enviar el contenido de _x_ e _y_ al proceso _DIV_:
     DIV!(x, y)
 
 
-El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para INMOS, los fabricantes de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes siguiendo este modelo: Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el que más éxito ha tenido y sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
+El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para la empresa británica INMOS, diseñadora de los procesadores _Transputer_. Con el tiempo de diseñaron una rama de lenguajes siguiendo este modelo: Erlang (Armstrong, Virding y Williams, 1986), Newsqueak (Rob Pike, 1988), Concurrent ML (John Reppy, 1993),  Alef (Phil Winterbottom, 1995) y Limbo (Dorward, Pike y Winterbottom, 1996). Erlang es el más exitoso de todos ellos, sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje, si no es una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
 .Erlang
 ****
-Erlang fue diseñado en Ericcson para sus sistemas concurrentes de alta disponibilidad. No comparte estado entre los diferentes hilos de ejecución, como _CSP_ implementa canales con mensajes como única forma de comunicación. La comunicación en Erlang es asincrónica, los mensajes se depositan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
+Erlang fue diseñado en Ericcson para sus sistemas concurrentes de alta disponibilidad. No comparte estado entre los diferentes hilos de ejecución. Los canales, como en _CSP_, son la única forma de comunicación y sincronización. La comunicación es asincrónica, los mensajes se depositan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
 ****
 
 === Canales en Go
-En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores,
+En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Ademas permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
 
-[NOTE]
-====
-Go es un lenguaje libre, moderno, implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Ademas permite la ejecución en paralelo especificando cuántos hilos nativos del sistema operativo (_threads_) pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos que estudiaremos en este capítulo, por ello todos los ejemplos están en Go.
-====
+
+Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores:
+
 
 Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidos por la instrucción +go+ -llamadas _goroutines_- hacen que éstas se ejecuten de forma asincrónica, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
-Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos si se les especifica un tamaño de _buffer_ mayor que cero. Los canales son de tipo estático definidos al momento de su creación, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes es siempre de la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
+Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son sincrónicos como en _CSP_ pero también pueden ser asincrónicos si se especifica el tamaño de _buffer_ al momento de la inicialización (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
 
 La siguiente línea crea un canal de tipo entero:
 
     ch := make(chan int)
 
-El canal +ch+ tiene _buffer_ cero por lo que será un canal sincrónico, si se desea un canal asincrónico solo hay que especificar el tamaño del _buffer_ en el segundo argumento de +make+:
+El canal +ch+ tiene _buffer_ cero por lo que será un canal sincrónico, si se desea un canal asincrónico hay que especificar el tamaño del _buffer_ en el segundo argumento de +make+:
 
     ch := make(chan int, 256)
 
@@ -88,13 +85,13 @@ func main() {
 }
 ----
 
-Dado que ambos implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
+Dado que implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
 
-- En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa atractiva (sic) aunque equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor, en Go al canal. Cualquier proceso o número de estos puede recibir o enviar del mismo canal.
+- En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa _atractiva_ (sic) equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor. En Go se especifica el canal, cualquier número de estos puede recibir o enviar al mismo canal.
 
-- En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estático y la entrega de mensajes es siempre en orden FIFO.
+- En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estáticos y la entrega de mensajes es en orden FIFO.
 
-- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
+- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes, es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
 
 El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo hilo ligero con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
 
@@ -845,7 +842,7 @@ Como curiosidad, los tiempos de ejecución (de reloj) en el mismo ordenador del 
 image::distributed_comparison.png[align="center"]
 
 
-La sobrecarga por la número de mensajes que se envían en el algoritmo de _autorización_ de Ricart-Agrawala es enorme. En cambio los algoritmos de _token passing_ se comportan muy bien considerando que se crean el doble de hilos (ligeros), su lógica es más compleja y que toda la información se copia por mensajesfootnote:[También indica que la implementación de mensajes y el _scheduling_ del _runtime_ de Go es muy eficiente.]
+La sobrecarga por la número de mensajes que se envían en el algoritmo de _autorización_ de Ricart-Agrawala es enorme. Los algoritmos de _token passing_ se comportan muy bien considerando que se crean el doble de hilos (ligeros), su lógica es más compleja y que toda la información se copia por mensajesfootnote:[También indica que la implementación de mensajes y el _scheduling_ del _runtime_ de Go es muy eficiente.]
 
 
 
