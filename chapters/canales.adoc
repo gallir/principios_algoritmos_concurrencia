@@ -125,7 +125,7 @@ Los programas son equivalentes y muy similares, las diferencias fundamentales so
 Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
 
 ==== Barreras binarias
-Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa. Con semáforos usamos dos para hacerlo, con canales es similar, necesitamos dos. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y luego esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
+Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa. La solución con semáforos requería dos, con canales es similar, la primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y a continuación esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
 
 [source,go]
 ----
@@ -140,9 +140,9 @@ ch_a <- true        cha_b <- true
 ...                 ...
 ----
 
-El código anterior es erróneo, produce un interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tomar en cuenta que ambos canales son sincrónicos por lo que tanto _A_ como _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
+El código anterior es erróneo, produce interbloqueo, el _runtime_ de Go interrumpirá el programa completo y avisará del _deadlock_. Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tomar en cuenta que ambos canales son sincrónicos por lo que tanto _A_ como _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
-El interbloqueo se produce la espera circular, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
+El interbloqueo se produce por una _espera circular_, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envíe el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
 
 [source,go]
 ----
@@ -152,7 +152,7 @@ ch_a <- true        <-ch_a
 <-ch_b              cha_b <- true
 ----
 
-Para evitar las soluciones asimétricas hay que recurrir a canales asincrónicos. Por defecto los canales tienen _buffer_ 0, por lo tanto son sincrónicos. Pero se puede especificar el tamaño del _buffer_, en ese caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+Para evitar las soluciones asimétricas hay que recurrir a canales asincrónicos. Por defecto los canales tienen _buffer_ 0, por lo tanto son sincrónicos. Pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
 
 [source,go]
 ----
@@ -165,11 +165,11 @@ ch_a <- true        ch_b <- true
 <-ch_b              <-ch_a
 ----
 
-Como ambos canales ahora son asincrónicos y con _buffer_ de un elemento los procesos no se bloquearán si al enviar no hay ningún elemento. Desde el punto de vista de sincronización la idea es similar al valor o _número de permisos_ de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_, pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejemplos de sincronización de este capítulo -y en aplicaciones reales- es habitual recurrir a canales sincrónicos o asincrónicos con _buffer_ de tamaño uno.
+Como ambos canales ahora tienen _buffer_ los procesos no se bloquearán si al enviar no hay ningún proceso ya esperando a recibir. Desde el punto de vista de sincronización la idea es similar al valor o _número de permisos_ de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_ pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejemplos de sincronización de este capítulo -y en aplicaciones reales- es habitual recurrir a canales sincrónicos o asincrónicos con _buffer_ de tamaño uno.
 
 ==== Barreras generales
 
-Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usábamos dos de ellos para contabilizar los procesos que faltan por llegar a la meta y los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo pero en vez de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se irá copiando entre procesos, cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo pero en vez de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se irá copiando entre procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
 
 Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán en con la barrera. Definimos la estructura +Barrier+ con estos tres components:
 
@@ -199,11 +199,11 @@ func NewBarrier(value int) *Barrier {
 ----
 <1> Se deja un mensaje en el canal con el número de procesos que faltan por llegar.
 
-Los dos canales tienen _buffer_ de tamaño uno pero sólo uno de ellos, +arrival+, contiene un mensaje con el número de procesos que deben sincronizarse. La función de sincronización +Barrier+ tiene dos partes bien diferenciadas:
+Los dos canales tienen _buffer_ de tamaño uno pero sólo uno de ellos (+arrival+) contiene inicialmente un mensaje con el número de procesos que deben sincronizarse. La función de sincronización +Barrier+ tiene dos partes bien diferenciadas:
 
 1. Llegadas: Se opera sobre el canal +arrival+, inicialmente con un mensaje con el total de procesos que faltan por llegar. Cuando un proceso llega recibe el mensaje, verifica el valor, si quedan procesos por llegar lo decrementa y vuelve a enviar el mensaje al mismo canal. Si es el último en llegar no depositará el mensaje en +arrival+ sino en +departure+ con el total de procesos que se sincronizan en la barrera.
 
-2. Salidas: Los procesos que llegan intentan leer un mensaje de +departure+ y quedarán bloqueados hasta que llegue el último. Cuando éste deposite un mensaje se despertará uno de los bloqueados y verificará el valor, si quedan procesos por salir decrementará su valor y depositará nuevamente el mensaje +departure+ para que puedan continuar los demás. El último en salir enviará un mensaje a +arrival+ para que el ciclo vuelva a comenzar.
+2. Salidas: Los procesos que ya llegaron al final de la fase intentan leer un mensaje de +departure+ y quedarán bloqueados hasta que llegue el último. Cuando éste deposite un mensaje se despertará uno de los bloqueados y verificará el valor, si quedan procesos por salir decrementará su valor y depositará nuevamente el mensaje +departure+ para que puedan continuar los demás. El último en salir enviará un mensaje a +arrival+ para que el ciclo vuelva a comenzar.
 
 
 [source,go]
@@ -211,7 +211,7 @@ Los dos canales tienen _buffer_ de tamaño uno pero sólo uno de ellos, +arrival
 func (b *Barrier) Barrier() {
     var v int
 
-    // part 1
+    // Part 1
     v = <-b.arrival         <1>
     if v > 1 {
         v--
@@ -220,7 +220,7 @@ func (b *Barrier) Barrier() {
         b.departure <- b.n  <3>
     }
 
-    // part 2
+    // Part 2
     v = <-b.departure       <4>
     if v > 1 {
         v--
@@ -232,16 +232,16 @@ func (b *Barrier) Barrier() {
 ----
 <1> Se bloquea hasta que puede leer un mensaje desde +arrival+, el mensaje contiene el número de procesos que quedan por llegar.
 <2> Si todavía quedan procesos por llegar decrementa el contador y vuelve a poner el mensaje en +arrival+.
-<3> Si llegaron todos deposita un mensaje en +departure+ para que los procesos puedan empezar a continuar la siguiente fase.
+<3> Si llegaron todos deposita un mensaje en +departure+ para que los procesos puedan empezar la siguiente fase.
 <4> Quedan bloqueados hasta que el último que llegue envíe un mensaje al canal.
 <5> Si todavía quedan procesos por salir (bloqueados en +departure+) decrementa el contador y vuelve a poner el mensaje.
 <6> Si llegaron todos pone el mensaje con el número inicial de procesos en el canal de llegada.
 
-Como la recepción y envío son operaciones atómicas no hace falta recurrir a ningún método de exclusión mutua. Además, como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal lo que asegura  que no se produzcan condiciones de carrera como ocurre con variables compartidas (hace falta asegurar exclusión mutua explícitamente).
+Como la recepción y envío son operaciones atómicas no hace falta recurrir a ningún método de exclusión mutua. Además, como es un único mensaje los siguientes procesos quedarán bloqueados hasta que el anterior vuelva a depositar un mensaje en el canal lo que asegura  que no se producen condiciones de carrera como ocurre con variables compartidas (hace falta asegurar exclusión mutua explícitamente).
 
 === Productores-consumidores
 
-Los canales son productores-consumidores por diseño, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_, éste está definido por el _buffer_ asignado al canal. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un buffer funciona exactamente como el modelo de productores-consumidores que resolvimos con semáforos o monitores.
+Los canales son productores-consumidores por diseño, no hay que hacer nada especial. Los mensajes son los elementos que se añaden o quitan del _buffer_. Si el canal no tiene _buffer_ la comunicación es sincrónica, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un _buffer_ funciona exactamente como el modelo de productores-consumidores con _buffer limitado_ que resolvimos con semáforos o monitores.
 
 La interacción es así de sencilla (<<producer_consumer_go, código>>):
 
@@ -264,9 +264,7 @@ func producer() {
 }
 ----
 
-Si el buffer del canal está lleno los productores se bloquearan hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos.
-
-Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores, en los lenguajes basados en _CSP_ es una forma natural de interacción entre procesos.
+Si el buffer del canal está lleno los productores se bloquearan hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos. Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre procesos.
 
 [[channels_mutex]]
 === Mutex
@@ -292,7 +290,7 @@ func Unlock() {
 ----
 
 
-Los canales también bloquean si se intenta enviar un mensaje y el _buffer_ está lleno. El algoritmo de exclusión mutua puede ser implementado a la inversa, un mensaje representaba a un _permiso_ pero se puede hacer que éste se represente por espacio libre en el _buffer_. En este caso no hace falta depositar un mensaje en la inicialización, en el _lock_ se envía un mensaje y en el _unlock_ se recibe.
+Los canales también bloquean si se intenta enviar un mensaje y el _buffer_ está lleno, por lo que el _mutex_ puede ser implementado a la inversa. Un mensaje representaba a un _permiso_ pero se puede hacer que éste se represente por espacio libre en el _buffer_. En este caso no hace falta depositar un mensaje en la inicialización, en el _lock_ se envía un mensaje y en el _unlock_ se recibe.
 
 
 [source,go]
@@ -338,7 +336,7 @@ func (s Sem) Signal() {
 
 El problema de esta solución es la dimensión del _buffer_ del canal, su tamaño debe ser igual al número máximo de permisos del semáforo (el valor máximo de su valor), de lo contrario las operaciones _signal_ también se bloquearán si está lleno. Si no se requieren valores elevados es una solución razonable, si no es así hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
 
-Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usaremos el canal +queue+ para mantener la cola de bloqueados.
+Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usamos el canal +queue+ para mantener la cola de bloqueados.
 
 La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
 
@@ -391,11 +389,11 @@ func (s Sem) Signal() {
 
 Puede parecer que aparecerán _condiciones de carrera_ porque el envío y recepción en +queue+ se hacen luego de enviar el mensaje pero no existe ese problema. Si al llamar al _wait_ la variable local +v+ es menor que cero el proceso obligatoriamente debe esperar un mensaje (en +queue+). El de _signal_ espera que se haga así y enviará siempre el mensaje correspondiente.
 
-Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}`, el canal es sincrónico y no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty, 1)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
+Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}`, como canal es sincrónico no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty, 1)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
 
 
 === Filósofos cenando
-La solución natural con canales asincrónicos es definir un array de tantos canales como tenedores (<<channel_philosophers_go, código>>), en la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
+La solución natural con canales asincrónicos es definir un array de tantos canales como tenedores (<<channel_philosophers_go, código>>), durante la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
 
 [source, go]
 ----
@@ -407,7 +405,7 @@ for i := range forks {
 }
 ----
 
-Para tomar los tenedores cada filósofo lee de sus canales correspondientes. Si el tenedor está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que sea liberado. Para evitar el interbloqueo (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador y luego el de mayor:
+Para tomar los tenedores cada filósofo lee de los canales correspondientes de cada teneder. Si está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que el tenedor sea liberado. Para evitar interbloqueos (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador y luego el de mayor:
 
 
 [source,go]
@@ -423,7 +421,7 @@ func pick(id int) {
 }
 ----
 
-Para liberar los tenedores es suficiente con enviar un mensaje a sus canales correspondientes. Si otros filósofos están esperando se desbloquearán, si no quedarán almacenados en el _buffer_.
+Para liberar los tenedores es suficiente con enviar un mensaje a sus canales correspondientes. Si otros filósofos están esperando se desbloquearán inmediatamente.
 
 [source, go]
 ----
@@ -456,7 +454,7 @@ func fork(i int) {
 
 [NOTE]
 ====
-Al tratarse de canales sincrónicos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos envín un mensaje y al soltarlos reciben uno. En este caso el proceso +fork+ debe invertir también sus operaciones:
+Al tratarse de canales sincrónicos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos envían un mensaje y al soltarlos reciben uno. En este caso el proceso +fork+ debe invertir también sus operaciones:
 
     for {
         forks[i] <- Empty{}
@@ -466,9 +464,7 @@ Al tratarse de canales sincrónicos se puede invertir el orden de envío y recep
 De esta forma -es equivalente- el programa queda idéntico a la solucion propuesta por Hoare con _CSP_.
 ====
 
-Los procesos comunicados por canales asincrónicos pueden ser convertidos -tal como acabamos de hacer- a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_.
-
-Todos los algoritmos de este capítulo que requieren de canales con _buffer_ pueden ser adaptados para funcionar con sincrónicos. Por ejemplo, para el <<channel_mutex_go, código>> de simulación de _mutex_ se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
+Los procesos comunicados por canales asincrónicos pueden ser convertidos -tal como acabamos de hacer- a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_. Para el <<channel_mutex_go, código>> de simulación de _mutex_, por ejemplo, se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
 
 
 [source,go]
@@ -480,7 +476,7 @@ func NewMutex() Mutex {
 }
 ----
 
-Dado que no podemos hacerlo con canales sincrónicos se requiere otro proceso que actúe de forma similar al +fork+ de los filósofos. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>)footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]:
+Dado que no podemos hacerlo con canales sincrónicos se requiere otro proceso que actúe de como el proceso +fork+ de los filósofos. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>)footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]:
 
 [source,go]
 ----
@@ -500,9 +496,9 @@ func NewMutex() Mutex {
 ==== Solución óptima
 La solución anterior (ya la analizamos <<dining_philosophers_semaphores, con semáforos>>) no asegura que puedan comer todos los filósofos que podrían hacerlo. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
 
-En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal sincrónico para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos palillos están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo no le responderá inmediatamente sino cuando sus vecinos hayan dejado de comer.
+En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal sincrónico para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos tenedores están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo no le responderá inmediatamente sino cuando sus vecinos hayan dejado de comer.
 
-El mensaje de filósofos al proveedor será una estructura que indicará el índice el filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los palillos) y el canal individual del filósofo (también sincrónico) para recibir la respuesta del proveedorfootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa el proveedor en el mensaje.]:
+El mensaje de filósofos al proveedor será una estructura que indicará el índice el filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los tenedores) y el canal individual del filósofo (también sincrónico) para recibir la respuesta del proveedorfootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa el proveedor en el mensaje.]:
 
 [source, go]
 ----
@@ -513,7 +509,7 @@ type Request struct {
 }
 ----
 
-Cuando un filósofo desea comer envía un mensaje al canal del proveedor con su identificación (+i+), su propio canal (+myCh+) y el estado +Hungry+. A continuación espera la respuesta del proveedor:
+Cuando un filósofo desea comer envía un mensaje al canal del proveedor con su identificación (+i+), su canal (+myCh+) y el estado +Hungry+. A continuación espera la respuesta del proveedor:
 
 [source, go]
 ----
@@ -522,14 +518,14 @@ provider <- Request{id: i, c: myCh, status: Hungry}
 <-myCh
 ----
 
-Cuando libera los palillos envía otro mensaje similar pero con el estado +Thinking+:
+Cuando libera los tenedores envía otro mensaje similar pero con el estado +Thinking+:
 
 [source, go]
 ----
 provider <- Request{id: i, c: myCh, status: Thinking}
 ----
 
-El proveedor mantiene un array que con el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ que recibe en el mensaje. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+. Cuando recibe un mensaje lo copia al array de estado y verifica el estado:
+El proveedor mantiene un array que con el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ de los mensajes. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+, cuando recibe uno lo copia al array de estado y verifica el estado:
 
 1. Si es +Hungry+ llama a la función +canEat+, esta función responderá con un mensaje al canal del filósofo si puede comer.
 
@@ -574,12 +570,12 @@ En 1979, poco después de la publicación del artículo del modelo _CSP_ la empr
 .Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
 image::B0042.jpg[width="300", align="center"]
 
-Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron y portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales desapareció posiblemente por la aparición de microprocesadores más potentes (especialmente a partir de Pentium) y económicos. Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
+Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran, también se desarrollaron y portaron varios sistemas operativos como Minix, Paros y Trollius. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales desapareció posiblemente por la aparición de microprocesadores más potentes y económicos, o por el desconocimiento general de concurrencia de los programadores de la época. Aunque ya no existe su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
 
 
 ==== Multiplicación de matrices en paralelo
 
-Una muestra de la potencia del modelo _CSP_ en arquitecturas con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso está orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analicemos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
+Una muestra de la potencia del modelo _CSP_ en arquitecturas con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso estaba orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analizaremos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
 
 [[matrix_multiplication]]
 image::matrix_multiplication.png[width="360", align="center"]
@@ -589,12 +585,12 @@ Cada elemento de la matriz resultante puede ser calculado independientemente, po
 [[element_multiplication]]
 image::element_multiplication.png[width="400", align="center"]
 
-El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplican un elemento de cada matriz, lo suman al resultado recibido de otro proceso (otra suma parcial) y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
+El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplican un elemento de cada matriz, lo añaden a la suma parcial recibida desde otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
 image::col_row_multiplication.png[width="480", align="center"]
 
-Para obtener el resultado final a la izquierda (_oeste_) cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial, así el algoritmo de cada multiplicador es idéntico:
+Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial para que los algoritmos de cada multiplicador sean idénticos:
 
 [source, go]
 ----
@@ -603,7 +599,7 @@ sum := <-east
 west <- sum + first*second
 ----
 
-Tal como ya había descrito Hoare, se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior (_norte_) envían los datos, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda. (_result_). Además cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
+Tal como ya había descrito Hoare se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior envían los valores, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda. (_result_). Cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
 
 
 [[parallel_multiplication]]
@@ -843,6 +839,12 @@ image::distributed_comparison.png[align="center"]
 
 
 La sobrecarga por la número de mensajes que se envían en el algoritmo de _autorización_ de Ricart-Agrawala es enorme. Los algoritmos de _token passing_ se comportan muy bien considerando que se crean el doble de hilos (ligeros), su lógica es más compleja y que toda la información se copia por mensajesfootnote:[También indica que la implementación de mensajes y el _scheduling_ del _runtime_ de Go es muy eficiente.]
+
+=== Recapitulación
+
+La popularización de ordenadores con número masivo de procesadores, servicios en la _nube_, _microservicios_, plataformas para programación distribuida y tolerante fallos, y hasta nuevos lenguajes de programación que lo incluyen como construcción sintáctica hace que el modelo de sincronización y comunicación con canales esté de moda. Pero pocos desarrolladores conocen sus orígenes (el modelo _CSP_) y los mecanismos básicos de sincronización sobre el que se construyen algoritmos y técnicas más complejas. El objetivo de este capítulo fue llenar este hueco de conocimiento y poner en contexto la historia y equivalencia de canales con los demás mecanismos de sincronización de procesos.
+
+Hemos visto como con canales se pueden resolver los mismos problemas de concurrencia que resolvimos con semáforos y monitores. En general los tres son equivalente como mecanismos de sincronización en sistemas de memoria compartido, si se tiene uno se pueden implementar los otros (con mayor o menor dificultad). A diferencia de los semáforos y monitores los canales tienen la capacidad adicional de servir para la comunicación entre procesos, también pueden ser usados para procesos independientes sin memoria compartida. Esto implica que también son útiles para procesos distribuidos en diferentes nodos, la brevísima introducción a algoritmos distribuidos sirvió como muestra esta capacidad.
 
 
 
