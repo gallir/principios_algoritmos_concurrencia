@@ -782,7 +782,7 @@ for {
 }
 ----
 <1> Actualiza +highestNum+ si el número recibido de otro proceso es mayor.
-<2> La comparación es similar al del <<bakery, algoritmo de la panadería>>.
+<2> La comparación es similar a la del <<bakery, algoritmo de la panadería>>.
 <3> Si el proceso no desea entrar a la sección crítica o el número del otro proceso es menor envía la respuesta inmediatamente.
 <4> Si no, agrega el proceso a los _retrasados_ para que se envíe la respuesta después de salir de la sección crítica.
 
