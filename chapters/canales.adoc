@@ -9,15 +9,15 @@ Comunicación asincrónica:: Alternativamente se puede permitir que el remitente
 
 Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en general los mensajes tienen destinatarios, hay dos formas básicas de especificarlos (_addressing_):
 
-- Indentificando explícitamente al proceso receptor, como en Erlang donde se indica el _PID_ del receptor.
+- Identificando explícitamente al proceso receptor, como en Erlang donde se indica el _PID_ del receptor.
 
-- Indentificando al canal. En estos casos el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix) o no poner restricciones al número de procesos que pueden enviar o recibir (como en Go).
+- Identificando al canal. En estos casos el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix) o no poner restricciones al número de procesos que pueden enviar o recibir (como en Go).
 
 Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, lo habitual en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_) por errores de transmisión.
 
 === _CSP_
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización en el intercambio de _mensajes_. La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan asoncrónicamente y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización en el intercambio de _mensajes_. La entrada de un proceso es la salida de otro proceso, ambos procesos se ejecutan asincrónicamente y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
 Ejemplos:
 
@@ -38,7 +38,7 @@ Erlang fue diseñado en Ericcson para sus sistemas concurrentes de alta disponib
 ****
 
 === Canales en Go
-En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Ademas permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
+En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
 
 
 Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores:
@@ -69,7 +69,7 @@ Leer un mensaje de un canal y descartar su valor:
 
     <-ch
 
-En los ejemplos en Go de capítulos anteriores se usó el patron anterior con el canal +done+ para hacer que el programa principal espere por la finalización de las _goroutines_:
+En los ejemplos en Go de capítulos anteriores se usó el patrón anterior con el canal +done+ para hacer que el programa principal espere por la finalización de las _goroutines_:
 
 [source, go]
 ----
@@ -85,13 +85,13 @@ func main() {
 }
 ----
 
-Dado que implementan variantes del model _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
+Dado que implementan variantes del modelo _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
 
 - En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa _atractiva_ (sic) equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor. En Go se especifica el canal, cualquier número de estos puede recibir o enviar al mismo canal.
 
 - En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estáticos y la entrega de mensajes es en orden FIFO.
 
-- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes, es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítuloes anteriores) o incluso pasando punteros en los mensajes.
+- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes, es posible compartir datos vía variables globales (como hemos visto en los ejemplo de capítulos anteriores) o incluso pasando punteros en los mensajes.
 
 El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime. El programa crea un nuevo hilo ligero con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
 
@@ -118,14 +118,14 @@ go func() {
 channel <- "Hello"
 ----
 
-Los programas son equivalentes y muy similares, las diferencias fundamentales son la especificación del destinario del mensaje y que en Erlang no hace falta la creación explícita del canal.
+Los programas son equivalentes y muy similares, las diferencias fundamentales son la especificación del destinatario del mensaje y que en Erlang no hace falta la creación explícita del canal.
 
 === Barreras
 
 Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
 
 ==== Barreras binarias
-Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa. La solución con semáforos requería dos, con canales es similar, la primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de suncronización y a continuación esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
+Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa. La solución con semáforos requería dos, con canales es similar, la primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de sincronización y a continuación esperar por la recepción de un mensaje del canal del otro proceso. Por ejemplo:
 
 [source,go]
 ----
@@ -405,7 +405,7 @@ for i := range forks {
 }
 ----
 
-Para tomar los tenedores cada filósofo lee de los canales correspondientes de cada teneder. Si está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que el tenedor sea liberado. Para evitar interbloqueos (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador y luego el de mayor:
+Para tomar los tenedores cada filósofo lee de los canales correspondientes de cada tenedor. Si está disponible habrá un mensaje y podrá continuar, caso contrario se quedará bloqueado hasta que el tenedor sea liberado. Para evitar interbloqueos (ya analizados en la <<dining_philosophers, solución con semáforos>>) evitamos la espera circular haciendo que siempre se tome primero el tenedor con el menor identificador y luego el de mayor:
 
 
 [source,go]
@@ -461,7 +461,7 @@ Al tratarse de canales sincrónicos se puede invertir el orden de envío y recep
         <-forks[i]
     }
 
-De esta forma -es equivalente- el programa queda idéntico a la solucion propuesta por Hoare con _CSP_.
+De esta forma -es equivalente- el programa queda idéntico a la solución propuesta por Hoare con _CSP_.
 ====
 
 Los procesos comunicados por canales asincrónicos pueden ser convertidos -tal como acabamos de hacer- a uno equivalente con canales sincrónicos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_. Para el <<channel_mutex_go, código>> de simulación de _mutex_, por ejemplo, se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asincrónicos crea un canal con _buffer_ 1 y deposita un mensaje:
@@ -590,7 +590,7 @@ El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comuni
 [[col_row_multiplication]]
 image::col_row_multiplication.png[width="480", align="center"]
 
-Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha unicamente envia ceros para iniciar la suma parcial para que los algoritmos de cada multiplicador sean idénticos:
+Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial para que los algoritmos de cada multiplicador sean idénticos:
 
 [source, go]
 ----
@@ -646,7 +646,7 @@ func sink() {
 
 === Algoritmos distribuidos
 
-No es el objetivo de este libro, se necesitaría uno específico y bastante extenso dado el avance y cantidad de sistemas y protocolos que se desarrollaron en los últimos años. Pero no podía dejar de mencionarlo, los canales de comunicación y el modelo de _procesos comunicados_ son elementos fundamentales de los sistemas distribuidos. A estos se le añade  un tercer elemento: los _nodos_, ordenadores independientes conectados solo por un canal de comunicaciónfootnote:[De diferentes características, fundamentalmente si son fiables y entregan los mensajes en el mismo orden en que lo reciben.] (_debilmente acoplados_) y pueden ejecutar más de un proceso.
+No es el objetivo de este libro, se necesitaría uno específico y bastante extenso dado el avance y cantidad de sistemas y protocolos que se desarrollaron en los últimos años. Pero no podía dejar de mencionarlo, los canales de comunicación y el modelo de _procesos comunicados_ son elementos fundamentales de los sistemas distribuidos. A estos se le añade  un tercer elemento: los _nodos_, ordenadores independientes conectados solo por un canal de comunicaciónfootnote:[De diferentes características, fundamentalmente si son fiables y entregan los mensajes en el mismo orden en que lo reciben.] (_débilmente acoplados_) y pueden ejecutar más de un proceso.
 
 
 En sistemas distribuidos hay que tener en cuenta otros requerimientos y problemas que no existen en procesos concurrentes en memoria compartida:
@@ -788,7 +788,7 @@ for {
 
 ===== Algoritmos basados en paso de testigo
 
-El algoritmo anterior no es el único ni el más eficiente, se desarrollaron otros que minimizan la cantidad de mensajes. Dos de los más estudiados son el de paso de testigos (_token-passing_) de Ricart-Agrawala (<<Agrawala>>, <<Carvalho>>) y el Neilsen-Mizuno (<<Neilsen>>). Los algoritmos de paso de testigo requieren +n+ mensajes cada vez que se solicita el testigo, es una reducción importante y si el proceso que desea entrar ya tiene el testigo no hace falta que vuelva a solicitarlo. No solo decrementa elnúmero de mensajes, también reduce notablemente las demoras en la entrada.
+El algoritmo anterior no es el único ni el más eficiente, se desarrollaron otros que minimizan la cantidad de mensajes. Dos de los más estudiados son el de paso de testigos (_token-passing_) de Ricart-Agrawala (<<Agrawala>>, <<Carvalho>>) y el Neilsen-Mizuno (<<Neilsen>>). Los algoritmos de paso de testigo requieren +n+ mensajes cada vez que se solicita el testigo, es una reducción importante y si el proceso que desea entrar ya tiene el testigo no hace falta que vuelva a solicitarlo. No solo decrementa el número de mensajes, también reduce notablemente las demoras en la entrada.
 
 
 ====== _Token-passing_ de Ricart-Agrawala (1983)
