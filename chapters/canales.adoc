@@ -171,7 +171,7 @@ Como ambos canales ahora tienen _buffer_ los procesos no se bloquearán si al en
 
 Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo pero en vez de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se irá copiando entre procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
 
-Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán en con la barrera. Definimos la estructura +Barrier+ con estos tres components:
+Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán con la barrera. Definimos la estructura +Barrier+ con estos tres components:
 
 
 [source,go]
@@ -264,7 +264,7 @@ func producer() {
 }
 ----
 
-Si el buffer del canal está lleno los productores se bloquearan hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos. Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre procesos.
+Si el buffer del canal está lleno los productores se bloquearán hasta que los productores eliminen mensajes. Si el canal está vacío los consumidores quedarán bloqueados hasta que los productores añadan nuevos elementos. Este tipo de sincronización es muy útil. Mientras en otros lenguajes hay que implementar mecanismos basados en semáforos o monitores en los lenguajes basados en _CSP_ es una forma natural de interacción entre procesos.
 
 [[channels_mutex]]
 === Mutex
@@ -704,7 +704,7 @@ no tiene sentido ni es posible en un sistema distribuido real pero nos sirve par
 
 ===== Algoritmo de Ricart-Agrawala (1981)
 
-Es uno de los algoritmos distribuidos más sencillos de interpretar, el proceso que desea entrar a la sección crítica debe recibir la autorización de todos los demás. Para ello envía un mensaje a los demás y espera la respuesta de todos (cada entrada requiere +2(n-1)+ mensajes). Estos solo responderán si no hay competencia y no están en la sección crítica o el número del remitente es menor. Como en el algoritmo de la panadería, el turno de entrada se asigna por un número creciente.
+Es uno de los algoritmos distribuidos más sencillos de interpretar, el proceso que desea entrar a la sección crítica debe recibir la autorización de todos los demás (<<distributed_me1_go, código fuente>>). Para ello envía un mensaje a los demás y espera la respuesta de todos (cada entrada requiere +2(n-1)+ mensajes). Estos solo responderán si no hay competencia y no están en la sección crítica o el número del remitente es menor. Como en el algoritmo de la panadería, el turno de entrada se asigna por un número creciente.
 
 Cada proceso almacena el máximo número que recibió desde la red (+highestNum+), el número que selecciona cuando desea entrar a la sección crítica (+myNumber+), una cola de las respuestas pendientes a otros procesos que desean entrar (+deferred+), una variable booleana para indicar que el proceso está esperando para entrar a la sección crítica (+requestCS+), y un _mutex_ para la sincronización entre el proceso principal y +receiver+.
 
