@@ -4,9 +4,11 @@
 
 - [[[Agha]]] Gul Agha, Carl Hewitt. _Concurrent Programming Using Actors: Exploiting Large-Scale Parallelism_. A. I. Memo No. 865. October 1985. ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-865.pdf
 
-- [[[Atomics_C11]]] Built-in functions for memory model aware atomic operations. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
+- [[[Agrawala]]] Glenn Ricart, Ashok A. Agrawala. _Author's Response to ''On Mutual Exclusion in Computer Networks by Carvalho and Roucairol''_. Communications of the ACM, 26(2), 1983.
 
-- [[[Atomics]]] GCC Built-in functions for atomic memory access. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
+- [[[Atomics_C11]]] _Built-in functions for memory model aware atomic operations_. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
+
+- [[[Atomics]]] _GCC Built-in functions for atomic memory access_. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
 - [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_. https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
@@ -17,6 +19,8 @@
 - [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
 
 - [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
+
+- [[[Carvalho]]] O.S.F Carvalho, Tracy Camp. _On mutual exclusion in computer networks_. Communications of the ACM, 26(2), 1983.
 
 - [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171.
 
@@ -70,6 +74,8 @@
 
 - [[[Molnar]]] Ingo Molnar. _PI-futex: -V1. Lightweight userspace priority inheritance_. http://lwn.net/Articles/177111/
 
+- [[[Neilsen]]] Mitchell L. Neilsen , Masaaki Mizuno. _A Dag-Based Algorithm for Distributed Mutual Exclusion_. IEEE 11th International Conference on Distributed Computing Systems, 1991. http://www.it.iitb.ac.in/~deepak/deepak/courses/seminar/00148689.pdf
+
 - [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
 
 - [[[Popov]]] Vlad Popov, Oleg Mazonka. _Faster Fair Solution for the Reader-Writer Problem_. 2013. http://arxiv.org/pdf/1309.4507.pdf
@@ -77,6 +83,8 @@
 - [[[Railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
 
 - [[[Reeves]]] Glenn E Reeves. _What really happened on Mars?_. http://research.microsoft.com/en-us/um/people/mbj/mars_pathfinder/Authoritative_Account.html
+
+- [[[Ricart]]] Glenn Ricart, Ashok A. Agrawala. _An Optimal Algorithm for Mutual Exclusion in Computer Networks_. Communications of the ACM CACM Volume 24 Issue 1, Jan. 1981. http://cs.hbg.psu.edu/comp512.papers/RicartAgrawala-81.pdf
 
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 

@@ -26,7 +26,33 @@ color: #980000;
 
 h3, h4, h5, h6 {
   line-height: 1.1 !important;
-  font-size: 1.0em;
+}
+
+
+body h1 {
+  font-size: 1.4em;
+  margin-top: 0.7em;
+}
+
+body h2 {
+  font-size: 1.25em;
+}
+
+
+body h3 {
+    font-size: 1.18em;
+}
+
+body h4 {
+    font-size: 1.12em;
+}
+
+body h5 {
+    font-size: 1.05em;
+}
+
+body h6 {
+    font-size: 1.0em;
 }
 
 div.toc p:first-child,
@@ -51,20 +77,6 @@ div.informaltable tbody {
 }
 
 
-
-
-body h1 {
-  font-size: 1.5em;
-  margin-top: 0.7em;
-}
-
-body h2 {
-  font-size: 1.2em;
-}
-
-body h3 {
-  font-size: 1.0em;
-}
 
 
 div.sidebar {

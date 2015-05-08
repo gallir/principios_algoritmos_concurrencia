@@ -653,37 +653,37 @@ func sink() {
 
 === Algoritmos distribuidos
 
-No es el tema de este libro, se necesitaría de otro específico y aún así sería incompleto dado el avance y cantidad de sistemas y protocolos que se desarrollaron en los últimos años. Pero no podía dejar de mencionarlo, los canales de comunicación son el elemento fundamental y el concepto de _procesos comunicados_ son la espina dorsal de las sistemas distribuidos. Cuando se habla de sistemas distribuidos se agrega un elemento nuevo a _canales_ y procesos: _nodos_. Estos son ordenadores independientes conectados solo por un canal de comunicaciónfootnote:[De características diferentes fundamentalmente si son fiables y entregan los mensajes en el mismo orden en que lo reciben] (_debilmente acoplados_) y pueden ejecutar más de un proceso.
+No es el tema de este libro, se necesitaría de otro específico y aún así sería incompleto dado el avance y cantidad de sistemas y protocolos que se desarrollaron en los últimos años. Pero no podía dejar de mencionarlo, los canales de comunicación son el elemento fundamental de los sistemas distribuidos y el concepto de _procesos comunicados_ es la espina dorsal. Cuando se habla de sistemas distribuidos se agrega un elemento nuevo a los  _canales_ y _procesos_: _nodos_. Estos son ordenadores independientes conectados solo por un canal de comunicaciónfootnote:[De características diferentes fundamentalmente si son fiables y entregan los mensajes en el mismo orden en que lo reciben] (_debilmente acoplados_) y pueden ejecutar más de un proceso.
 
 Los programas diseñados según los principios de _CSP_ y cuyo único mecanismo de comunicación y compartición de datos son los mensajes pueden ser fácilmente portados a sistemas distribuidos cambiando las primitivas de canales locales por sistemas de gestión de _colas de mensajes_ (como Beanstalkd o RabbitMQ). Por el mismo principio, algoritmos diseñados para ser distribuidos pueden ser fácilmente implementados en el modelo _CSP_.
 
 Hay otros problemas que hay que tener en cuenta en los sistemas distribuidos que no preocupan en procesos locales:
 
-- los canales y nodos pueden fallar sin notificar a los demás procesos por lo que hay que considerar tiempos y expiración,
+- Los canales y nodos pueden fallar sin notificar a los demás procesos por lo que hay que considerar tiempos y expiración.
 
-- el grafo o estructura de la red que conecta a los diferentes nodos puede ser variable,  muy compleja y no permitir la conexión de cada nodo con todos los demás,
+- El grafo o estructura de la red que conecta a los diferentes nodos puede ser variable,  muy compleja y no permitir la conexión de cada nodo con todos los demás.
 
-- no se pueden tomar decisiones suponiendo un número fijo de nodos o procesos y que cada uno de ellos recibió cada mensaje, se requieren más pasos de sincronización y verificación,
+- No se pueden tomar decisiones suponiendo un número fijo de nodos o procesos y que cada uno de ellos recibió cada mensaje, se requieren más pasos de sincronización y verificación.
 
-- la operación que más tiempo toma es la copia de mensajes de un nodo a otro por lo que la prioridad es reducir el tamaño y número de mensajes que hacen falta intercambiar.
+- La operación que más tiempo toma es la copia de mensajes de un nodo a otro por lo que la prioridad es reducir el tamaño y número de mensajes que hacen falta intercambiar.
 
 Los procesos distribuidos deben responder a mensajes de sincronización que llegan desde otros nodos y que necesitan de respuesta inmediata se suele implemenar al menos un hilo auxiliar independiente que es el responsable de recibir los mensajes de la red y responder adecuadamente lo antes posible. Así un proceso que se ejecuta en un nodo (_Process_) consiste de un hilo principal (_Main_) y un auxiliar (_Receiver_) que comparten memoria y se sincronizan entre ellos con cualquiera de los mecanismos de memoria compartida vistos en este libro.
 
 [[distributed_process]]
 image::distributed_process.png[width="240", align="center"]
 
-
-
+==== Simulación en Go
+Los siguientes ejemplos de exclusión mutua simulan un sistema distribuido respetan la estructura de la imagen. Cada nodo es una _goroutine_ que a su vez pone en marcha otra _goroutine_ y con la que comparte memoria. El patrón de los programas es el siguiente:
 
 ----
 func node(aChannel chan Struct) {
-    myNumber := 0
+    number := 0
     mutex := new(sync.Mutex)
 
     receiver := func() {
         for {
             request := <-aChannel
-            ...
+            // ...
             aChannel <- response()
             }
         }
@@ -691,24 +691,157 @@ func node(aChannel chan Struct) {
     go receiver()
     mainProcessing()
 }
+
+func main() {
+    //...
+    go node(aChannel)
+}
 ----
 
-==== Exclusión mutua
-Como breve introducción a cómo se desarrollan los algoritmos distribuidos analizaremos tres algoritmos diferentes para resolver el problema de la exclusión mutua distribuida:
-
-1. Exclusión mutua de Ricart-Agrawala inspirado en el algoritmo de la panadería (<<distributed_me1_go, código>>),
-
-2. _token-passing_ de los mismos autores que reduce el número de mensajes (<<distributed_me2_go, código>>),
-
-3. _token-passing_ de Neilsen-Mizuno que reduce el número el tamaño de los datos que requiere el anterior de Ricard-Agrawala (<<distributed_me3_go, código>>).
+Desde el programa principal se pone en marcha un _nodo_ llamando a la función +node+, ésta es el proceso principal y que hace el _trabajo real_. En ella se definen las variables compartidas necesarias y pone en marcha el hilo de sincronización +receiver+. En Go es una clausura, las variables definidas en +node+ son accesibles desde la función anónima de +receiver+.
 
 
+==== Exclusión mutua distribuida
+Como breve introducción a cómo se desarrollan los algoritmos distribuidos analizaremos uno de los algoritmos más conocidos, el de exclusión mutua distribuida por _autorización_ de Ricart-Agrawala (<<Ricart>>, 1981) basado en el conocido algoritmo de la panadería.
+
+Al tratarse de exclusión mutua usamos las funciones +Lock+ y +Unlock+, éstas son las que deben sincronizarse para asegurar la exclusión mutua entre los diferentes nodos. No tiene sentido en un sistema distribuido pero nos sirve para probar el funcionamiento correcto: como en todos los ejemplos precios, el programa incrementa la variable compartida +counter+. Tampoco es usual que se requieran secciones críticas globales en un sistema distribuido, pero la relativa simplicidad del modelo y los algoritmos son muy útiles para una rápida introducción a la _sensación_ de diseñar algoritmos distribuidosfootnote:[Por otro lado, un área apasionante.].
+
+===== Algoritmo de Ricart-Agrawala (1981)
+
+Es uno de los algoritmos distribuidos más sencillos de interpretar, para entrar a la sección crítica hay que recibir la autorización de todos los procesos. El proceso que desea entrar a la sección crítica envía un mensaje a los demás y espera la respuesta de todos. Estos solo responderán si no hay competencia, no están en la sección crítica o el número del remitente es menor. Como en el algoritmo de la panadería, el turno de entrada se asigna por el número escogido por cada proceso.
+
+Cada proceso almacena el mayor número que recibió desde la red (+highestNum+), el número que selecciona cuando desea entrar a la sección crítica (+myNumber+), una cola de las respuestas pendientes a otros procesos que desean entrar (+deferred+, usamos un canal), una variable booleana para indicar que el proceso está esperando para entrar a la sección crítica (+requestCS+) y un _mutex_ que se usa para sincronizar entre el proceso principal y +receiver+.
+
+.Variables
+[source, go]
+----
+highestNum := 0
+myNumber := 0
+deferred := make(chan int, Nodes)
+requestCS := false
+mutex := new(sync.Mutex)
+----
+
+Para la entrada a la sección crítica se indica que se quiere entrar a la sección crítica (lo necesita el hilo +receiver+), se selecciona el número igual al más alto visto más uno y se envía un mensaje a todos los demás procesos con el identificador y número seleccionado. Luego se espera a recibir la respuesta de todos, cuando lleguen todas podrá entrar a la sección crítica.
+
+.Lock
+[source, go]
+----
+mutex.Lock()            <1>
+requestCS = true
+myNumber = highestNum + 1
+mutex.Unlock()          <1>
+
+for i := range requests {
+    if i == id {
+        continue
+    }
+    requests[i] <- Message{source: id, number: myNumber}
+}
+
+for i := 0; i < Nodes-1; i++ {
+    <-replies[id]
+}
+----
+<1> Hay que asegurar exclusión mutua para evitar condiciones de carreras con el hilo de +receiver+.
+
+La tarea fundamental cuando se sale de la sección critica es enviar una respuesta a todos los procesos que enviaron mensajes (y los recibió el hilo +receiver+) mientras se estaba en la sección crítica.
+
+.Unlock
+[source, go]
+----
+requestCS = false
+mutex.Lock()            <1>
+n := len(deferred)
+mutex.Unlock()          <1>
+for i := 0; i < n; i++ {
+    src := <-deferred   <2>
+    replies[src] <- Message{source: id}
+}
+----
+<1> Hay que asegurar exclusión mutua para evitar condiciones de carreras con +receiver+.
+<2> Envía la respuesta a los que están pendientes de respuesta. Fueron añadidos a +deferred+ por +receiver+.
+
+El hilo +receiver+ se ejecuta asincrónicamente esperando peticiones de los otros procesos, éstas incluyen el identificador y número seleccionado. Cuando recibe una petición responde inmediatamente si el proceso local no desea entrar a la sección crítica o el número del proceso remoto es menor. En caso contrario agrega el identificador del proceso remoto a la cola +deferred+ para que se le envíe la respuesta en el +Unlock+.
+
+._Receiver_
+[source, go]
+----
+for {
+    m := <-requests[id]
+    mutex.Lock()
+    if m.number > highestNum {  <1>
+        highestNum = m.number
+    }
+    if !requestCS ||
+        (m.number < myNumber || <2>
+        (m.number == myNumber &&
+            m.source < id)) {   <3>
+        mutex.Unlock()
+        replies[m.source] <- Message{source: id}
+    } else {
+        deferred <- m.source    <4>
+        mutex.Unlock()
+    }
+}
+----
+<1> Actualiza +highestNum+ si el número recibido de otro proceso es mayor.
+<2> La comparación es similar al del <<bakery, algoritmo de la panadería>>.
+<3> Si el proceso no desea entrar a la sección crítica o el número del otro proceso es menor envía la respuesta inmediatamente.
+<4> Si no, agrega el proceso a los _retrasados_ para que se envíe la respuesta después de salir de la sección crítica.
+
+===== Algoritmos basados en paso de testigo
+
+El algoritmo anterior no es el único ni el más eficiente, se desarrollaron otros que minimizan la cantidad de mensajes. Dos de los más estudiados son _token-passing_ de Ricart-Agrawala (<<Agrawala>>, <<Carvalho>>) y Neilsen-Mizuno (<<Neilsen>>).
 
 
+====== _Token-passing_ de Ricart-Agrawala (1983)
+Reduce considerablemente el número de mensajes (<<distributed_me2_go, código fuente>>). Para acceder a la sección crítica el proceso debe poseer el testigo (_token_), solo uno de ellos puede tenerlo. Si el proceso que desea entrar a la sección crítica no lo posee debe solicitarlo enviando una solicitud a todos los demás, el que tenga el testigo se lo pasará cuando salga de su sección crítica.
+
+La elección de a quién le corresponde el testigo también se hace por el número elegido por cada proceso pero a diferencia del anterior no se usa un número único, cada proceso mantiene un par de arrays con los números de todos los demás. El primero (+requested+) es el número con el que solicitó el testigo cada proceso. El segundo (+granted+) el número con que se le otorgó el testigo por última vez a cada proceso. Para elegir al siguiente se  se selecciona uno cuyo número de solicitud (en +requested+) sea mayor al número de la última vez que se le otorgó el testigo (en +granted+).
+
+Cuando se pasa el testigo de un proceso a otro también se envía el array +granted+, así se asegura que el que toma la decisión tiene la versión actualizada. El tamaño de ambos arrays es proporcional al número de nodos, es un problema para grandes redes.
+
+La ventaja principal de los algoritmos basados en paso de testigo es que los procesos que salen de la sección crítica pueden volver a entrar a ella sin tener que solicitar el testigo nuevamente.
 
 
+====== _Token-passing_ de Neilsen-Mizuno (1991)
+Elimina el problema de mantener dos array y transferir uno de ellos al siguiente poseedor del testigo (<<distributed_me3_go, código fuente>>). El proceso de cada nodo solo mantiene dos variables enteras, el _padre_ (+parent+) del proceso y el identificador del siguiente nodo al que le corresponde el testigo (+deferred+).
+
+El algoritmo se basa en la creación de árboles virtuales, +parent+ indica cuál es el padre de un proceso, así se define un árbol virtual. Inicialmente hay que asignar un padre a cada nodo para definir un árbol de cobertura (_spanning tree_) virtual.
+
+Cuando un proceso solicita el testigo envía un mensaje a su padre e inmediatamente se _desconecta_ del árbol (formará otro nuevo) poniendo su +parent+ en -1. Si el receptor del mensaje no tiene el testigo pero sí un padre entonces envía una copia de del mensaje a su padre y selecciona al remitente anterior como su nuevo padre.
+
+Supongamos que _A_ solicita el testigo y que lo tiene _D_. La situación inicial es:
+
++_A_ => _B_ => _C_ => *_D_* <= _E_+
 
 
+El mensaje es así copiado hasta que llega a la raíz del árbol actual ligado al poseedor del testigo (_D_), las conexiones en ese momento serán las siguientes (hay dos árboles, la raíz de uno es el poseedor el testigo, el otro es el siguiente)_
+
++_A_ <= _B_ <= _C_   *_D_* <= _E_+
+
+
+El proceso puede estar en dos estados:
+
+1. Si no está en la sección crítica transfiere el testigo inmediatamente al proceso original que lo solicitó.
+
+2. Si está en la sección crítica pone al remitente del mensaje original en su +deferred+, será al que pase el testigo cuando haya salido de la sección crítica.
+
+En cualquier de los dos casos, el árbol se habrá unificado.
+
++*_A_* <= _B_ <= _C_ <= _D_ <= _E_+
+
+====== Eficiencia
+
+Como curiosidad, los siguientes son los tiempos de ejecución (de reloj) del contador <<go_mutex_go, usando _mutex_>> y los algoritmos distribuidos que acabamos de verfootnote:[Recordad que estamos simulando la _distribución_, todos los procesos y canales son locales.].
+
+[[distributed_comparison]]
+.Tiempos de ejecución de los algoritmos de EM distribuida
+image::distributed_comparison.png[align="center"]
+
+
+La sobrecarga por la cantidad de mensajes que se envían en el algoritmo de _autorización_ de Ricart-Agrawala es enorme. En cambio los algoritmos de _token passing_ se comportan muy bien considerando que se crean el doble de hilos (ligeros), que la lógica es más compleja y que toda la información se copia por mensajesfootnote:[También indica que la implementación de mensajes y el _scheduling_ del _runtime_ de Go es muy eficiente.]
 ////
 
 
