@@ -52,8 +52,8 @@ while True:
     # resto del código
     #
     entry_critical_section() <1>
-    critical_section() <2>
-    exit_critical_section() <3>
+    critical_section()       <2>
+    exit_critical_section()  <3>
     #
     # resto del código
 ----
@@ -122,7 +122,6 @@ Si el problema del anterior es que la variable +turn+ exigía alternancia exclus
 ----
         states = [False, False]
 
-
 while states[1]:
     pass
 states[0] = True
@@ -148,7 +147,7 @@ states[0] = True
           ## BOOOM! ##
 ----
 
-_P0_ verifica el estado de P1, sale del bucle porque es +states[1]+ falso e inmediatamente es interrumpido. _P1_ hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta _P1_ que también entra a la sección crítica.
+_P0_ verifica el estado de _P1_, sale del bucle porque es +states[1]+ falso e inmediatamente es interrumpido. _P1_ hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta _P1_ que también entra a la sección crítica.
 
 ==== Tercer intento
 
@@ -180,7 +179,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
          ## DEADLOCK! ##
 ----
 
-_P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del +while+ hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
+_P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como da verdadero no saldrá del +while+ hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 
 Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
@@ -233,7 +232,7 @@ Espera limitada::
 
 Prácticamente (y _formalmente_ por estadísticas) no se producen esperas infinitas aunque no se puede asegurar que se produzcan en un número de _pasos_ definido. Este fenómeno se denomina *_bloqueo activo_* (_livelock_), sabemos que en algún momento uno de ellos saldrá del bloque pero mientras tanto ambos procesos cambian valores de una variable sin hacer nada útil.
 +
-Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que _P0_ y _P1_ desean entrar, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de P0. No lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan *_débiles_* (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
+Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que _P0_ y _P1_ desean entrar, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de _P0_. No lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan *_débiles_* (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
 
 Entrada inmediata::
 Si uno de los procesos no desea entrar a la sección crítica su estado estará en falso, por lo que el otro podrá entrar inmediatamente y sin espera.
@@ -259,7 +258,7 @@ states[0] = True
 while states[1]:
     if turn == 1:
         states[0] = False
-        while turn != 0: <1>
+        while turn != 0:  <1>
             pass
         states[0] = True
 
@@ -296,7 +295,7 @@ Las variables son las mismas y la idea fundamental no cambia, sólo el orden en 
         turn   = 0
 
 states[0] = True
-turn = 1 <1>
+turn = 1                       <1>
 while states[1] and turn == 1: <2>
     pass:
 
@@ -343,7 +342,7 @@ La implementación básica de la idea es la siguiente:
     number  = [0, ..., 0]           <1>
 
 number[i] = 1 + max(number)         <2>
-for j in range(0, N): <3>
+for j in range(0, N):               <3>
     while number[j] > 0
         and number[j] < number[i]:  <4>
         pass
@@ -359,7 +358,7 @@ number[i] = 0
 
 La idea es sencilla. Cada proceso tiene asociado un identificador entero que lo usa acceder al array +number+ footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle +for j...+ su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
 
-Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando +max+ y justo antes de almacenar su número se interrumpe y se ejecuta P1. Éste acaba, el máximo retornado es 0 y almacenará 1 en +number[1]+. Inmediatamente se ejecuta _P1_ y coge el mismo número que P1. El estado del +number+ es el siguiente:
+Pero no es tan sencillo, son procesos independientes que ejecutan una serie de instrucciones y pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando +max+ y justo antes de almacenar su número se interrumpe y se ejecuta _P1_. Éste acaba, el máximo retornado es 0 y almacenará 1 en +number[1]+. Inmediatamente se ejecuta _P1_ y coge el mismo número que _P1_. El estado del +number+ es el siguiente:
 
     [1, 1, 0, ..., 0]
 
@@ -371,7 +370,7 @@ number[i] = 1 + max(number)
 for j in range(0, N):
     while number[j] > 0
         and (number[j] < number[i] or
-        (number[j] == number[i] <1>
+        (number[j] == number[i]      <1>
          and j < i)):
         pass:
 
@@ -404,11 +403,11 @@ Para evitar que ocurra habrá que poner un mecanismo para impedir que el proceso
     number   = [0, ..., 0]
 
 
-choosing[i] = True      <2>
+choosing[i] = True          <2>
 number[i]   = 1 + max(number)
-choosing[i] = False     <3>
+choosing[i] = False         <3>
 for j in range(0, N):
-    while choosing[j]:  <4>
+    while choosing[j]:      <4>
         pass
     while number[j] > 0
         and (number[j] < number[i] or
@@ -437,11 +436,11 @@ Exclusión mutua::
 
 Para que dos procesos estén en la sección crítica tiene que ocurrir que ambos tengan el mismo número. Pero el uso del ID único y con relación de precedencia asegura que en estos casos siempre habrá uno de ellos que será el _menor_ y el único que saldrá del último bucle.
 +
-Para que un segundo proceso (P2) entre a la sección crítica después si hay un proceso (P1) en ella debe cumplirse que el número de P2 es menor que P1. No puede ocurrir, si _P1_ está en la sección crítica habrá ejecutado +while choosing[2]+ y pueden darse uno de ambos casos:
+Para que un segundo proceso (_P2_) entre a la sección crítica después si hay un proceso (P1) en ella debe cumplirse que el número de _P2_ es menor que _P1_. No puede ocurrir, si _P1_ está en la sección crítica habrá ejecutado +while choosing[2]+ y pueden darse uno de ambos casos:
 
-- Si salió del bucle es porque P2 ya salió de la selección, por tanto su número será comparado en el siguiente bucle y habrá entrado P2 antes que P1.
+- Si salió del bucle es porque _P2_ ya salió de la selección, por tanto su número será comparado en el siguiente bucle y habrá entrado _P2_ antes que _P1_.
 
-- Si P2 todavía no entró a la selección de número entonces por +number[2] = 1 + max(number)+ seleccionará un número mayor al de P1.
+- Si P2 todavía no entró a la selección de número entonces por +number[2] = 1 + max(number)+ seleccionará un número mayor al de _P1_.
 
 +
 La exclusión mutua se cumple.
