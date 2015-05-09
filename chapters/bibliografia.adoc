@@ -86,6 +86,8 @@
 
 - [[[Ricart]]] Glenn Ricart, Ashok A. Agrawala. _An Optimal Algorithm for Mutual Exclusion in Computer Networks_. Communications of the ACM CACM Volume 24 Issue 1, Jan. 1981. http://cs.hbg.psu.edu/comp512.papers/RicartAgrawala-81.pdf
 
+- [[[Sampson]]] Adrian Sampson. _PyPy and CPython’s Broken Multithreaded Semantics_. 25 October 2012. http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html
+
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 
 - [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.

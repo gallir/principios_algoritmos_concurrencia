@@ -1,6 +1,6 @@
 [[hardware]]
 == Soluciones por hardware
-Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y con solo _registros de lectura-escritura atómicos_, todos ellos son _spinlocks_ pero muy ineficientes. Por un lado por el consumo de memoria, tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (Panadería) el número de registros necesarios es proporcional al número de procesos máximos que sincronizaránfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Esta necesidad de memoria impone una sobrecarga importante para mantener la consistencia de la memoria caché, además del consumo de CPU por la espera activa todos los procesos involucrados tienen que acceder al mismo rango de memoria que los demás. Es una penalización muy importante para sistemas con varios  procesadores o núcleos. Por otro lado, si se tiene un único procesador el avance es tan lento que lo que tarda décimas en uno puede tomar horas en otrosfootnote:[Como pasa en la Raspberry 1.] en el caso de que exista mucha _competencia_ (_contention_) porque varios procesos desean entrar a la sección crítica de forma casi simultánea.
+Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y con solo _registros de lectura-escritura atómicos_, todos ellos son _spinlocks_ pero muy ineficientes. Por un lado por el consumo de memoria, tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (Panadería) el número de registros necesarios es proporcional al número de procesos máximos que sincronizaránfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Esta necesidad de memoria impone una sobrecarga importante para mantener la consistencia de la memoria caché, además del consumo de CPU por la espera activa todos los procesos involucrados tienen que acceder al mismo rango de memoria que los demás. Es una penalización muy importante para sistemas con varios  procesadores o núcleos. Por otro lado, si se tiene un único procesador el avance es tan lento que lo que tarda décimas en uno puede tomar horas en otros en casos de mucha _competencia_ (_contention_) porque varios procesos desean entrar a la sección crítica de forma casi simultánea.
 
 Desde el inicio se buscaron soluciones por hardware que permitiesen implementar algoritmos de sincronización de forma mucho más eficiente.
 
@@ -82,7 +82,7 @@ def unlock():
 
 ----
 
-En <<getAndSet>> está el código en C implementado con el macro +\__atomic_exchange_n+. A pesar de su nombre no es la instrucción _swap_ sino un equivalente para _getAndSet_.
+En <<getAndSet>> está el código en C implementado con el macro `__atomic_exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente de _getAndSet_.
 
 
 ==== getAndAdd
@@ -234,46 +234,47 @@ Las funciones +push+ y +pop+ agregan y quitan elementos de la pila, +push+ recib
 [source, c]
 ----
 void push(struct node **head, struct node *e) {
-    e->next = *head;     <1>
+    e->next = *head;                  <1>
     while (! CAS(head, &e->next, &e); <2>
 }
+----
+<1> El nodo siguiente al nodo a insertar será el apuntado por la cabecera.
+<2> Si la cabecera no fue modificada se hará el cambio y apuntará al nuevo nodo +e+. Si por el contrario +head+ fue modificada, el nuevo valor de +head+ se copia a +e->next+ (apuntará al elemento nuevo que apuntaba +head+) y se volverá a intentar. Cuando se haya podido hacer el _swap_ +head+ apuntará correctamente a +e+ y +e->next+ al elemento que estaba antes.
 
-
+[source, c]
+----
 struct node *pop(struct node **head) {
     struct node *result, *orig;
 
-    orig = *head;        <3>
+    orig = *head;
     do {
         if (! orig) {
-            return NULL; <4>
+            return NULL;              <1>
         }
-    } while (! CAS(head, &orig, &orig->next); <5>
+    } while (! CAS(head, &orig, &orig->next)); <2>
 
-    return orig; <6>
+    return orig;                      <3>
 }
 ----
-<1> _push_: El nodo siguiente al nodo a insertar será el apuntado por la cabecera.
-<2> _push_: Si la cabecera no fue modificada se hará el cambio y ahora apuntará al nuevo nodo +e+. Si por el contrario +head+ fue modificada, el nuevo valor de +head+ se copia a +e->next+ (ahora apuntará al elemento nuevo que apuntaba +head+) y se volverá a intentar. Cuando se haya podido hacer el _swap_ +head+ apuntará correctamente a +e+ y +e->next+ al elemento que estaba antes.
-<3> _pop_: Se hace una copia de la cabecera.
-<4> _pop_: Si es NULL la pila está vacía y retorna el mismo valor. Recordad que _CAS_ copia el valor anterior de +head+ en +orig+, por lo que podría darse el caso que sea NULL, de allí que la comparación esté dentro del bucle +do... while+.
-<5> _pop_: Si por el contrario la cabecera apuntaba a un nodo y ésta no fue modificada se hará el cambio y la cabecera apuntará al siguiente nodo. Si por el contrario fue modificada se hará una copia del último valor a +orig+ y se volverá a intentar.
-<6> _pop_: Se retorna el puntero al nodo que antes apuntaba la cabecera.
+<1> Si es +NULL+ la pila está vacía y retorna el mismo valor.
+<2> Si la cabecera apuntaba a un nodo y no fue modificada se hará el cambio y la cabecera apuntará al siguiente nodo. Si por el contrario fue modificada se hará una copia del último valor a +orig+ y se volverá a intentar.
+<3> Se retorna el puntero al nodo que antes apuntaba la cabecera.
 
-Este algoritmo funciona sin problemas, de hecho es un algoritmo correcto para gestionar una pila concurrente... solo si es imposible eliminar un nodo y volver a insertar otro nuevo con la misma dirección de memoria. Con _CAS_ es imposible saber si otro proceso ha modificado y vuelto a poner el mismo valor que copiamos (en este caso +orig+). Supongamos que tenemos una pila con tres nodos que comienzan en la direcciones 10, 20 y 30:
+Este algoritmo es correcto para gestionar una pila concurrente pero solo si es imposible eliminar un nodo y volver a insertar otro nuevo con la misma dirección de memoria. Con _CAS_ es imposible saber si otro proceso ha modificado y vuelto a insertar el mismo valor que copiamos (en este caso +orig+). Supongamos una pila con tres nodos que comienzan en la direcciones 10, 20 y 30:
 
-    head -> [10] -> [20] -> [30]
++head => [10] => [20] => [30]+
 
 El proceso _P1_ acaba de ejecutar +orig = *head;+ dentro de _pop_ y es interrumpido. Otro u otros procesos eliminan dos elementos de la pila:
 
-    head -> [30]
++head => [30]+
 
 Y luego uno de ellos inserta un nuevo nodo con una dirección de memoria usada previamente:
 
-    head -> [10] -> [30]
++head => [10] => [30]+
 
 Cuando _P1_ continúe su ejecución _CAS_ hará el cambio ya que la dirección es también +10+. El problema es que era una copia antigua que apuntaba antes a +[20]+ por lo que dejará la cabecera apuntando a un nodo que ya no existe y los siguientes habrán quedado _descolgados_ de la pila:
 
-    head -> ¿20?    [30]
++head => ¿20?    [30]+
 
 Este caso es muy habitual si usamos +malloc+ para cada nuevo nodo que insertamos y luego el +free+ cuando lo eliminamos de la listafootnote:[Las implementaciones de +malloc+ suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]El siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
 
@@ -282,18 +283,18 @@ Este caso es muy habitual si usamos +malloc+ para cada nuevo nodo que insertamos
 e = malloc(sizeof(struct node));
 e->data.tid = tid;
 e->data.c = i;
-push(&head, e);     <1>
-e = pop(&head);     <2>
+push(&head, e);           <1>
+e = pop(&head);           <2>
 if (e) {
-    e->next = NULL; <3>
+    e->next = NULL;       <3>
     free(e);
 } else {
-    printf("Error, stack empty\n"); <4>
+    puts("Error, empty"); <4>
 }
 ----
-<1> Se agrega el elemento nuevo a la pila, la memoria de éste fue obtenida con el malloc de la línea anterior.
-<2> Inmediatamente se lo elimina de la lista. El resultado nunca debería ser NULL ya que siempre debería haber al menos un elemento: todos los hilos primero agregan y luego lo quitan.
-<3> Antes de liberar la memoria del elemento recién eliminado se pone +next+ en NULL. No debería hacer falta pero lo hacemos por seguridad y para que observéis claramente que los errores son por el problema ABA.
+<1> Se agrega el elemento nuevo a la pila, su memoria de fue obtenida con el +malloc+ de la línea anterior.
+<2> Inmediatamente se lo elimina de la lista. El resultado nunca debería ser +NULL+ ya que siempre debería haber al menos un elemento: todos los hilos primero agregan y luego lo quitan.
+<3> Antes de liberar la memoria del elemento recién eliminado se pone +next+ en +NULL+. No debería hacer falta pero lo hacemos por seguridad y para que observéis claramente que los errores son por el problema ABA.
 <4> Si no pudo obtener un elemento de la lista es un error y lo indicamos.
 
 Si lo ejecutáis veréis que en todos los casos da el error de la pila vacía y/o de error por intentar liberar dos veces la misma memoria.
@@ -304,7 +305,7 @@ Error, stack empty
 Aborted (core dumped)
 ----
 
-En sistemas con un único procesador, como en Raspberry 1, quizás necesites de varias ejecuciones o aumentar el número de operaciones en +OPERATIONS+ para que aparezca el error. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlos. Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
+En sistemas con un único procesador quizás necesites de varias ejecuciones o aumentar el número de operaciones en +OPERATIONS+ para que aparezca el error. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlos. Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
 
 [[cas_double_stack]] En vez de liberar la memoria de los nodos con el +free+ los insertamos en una segunda lista +free_nodes+, los nodos que se eliminan de la lista +head+ son insertados en la lista de libres. En vez de asignar memoria con +malloc+ cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa. <<stack_cas_freelist_c, El programa>> ejecutará repetidamente el siguiente código:
 

@@ -28,7 +28,7 @@ En todos los algoritmos y técnicas que analizamos en este libro asumimos que nu
 [NOTE]
 .Algoritmos distribuidos
 ====
-El extremo opuesto son los sistemas donde no se tiene acceso a memoria compartida, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas al no disponer de variables compartidas por lo que el intercambio de datos debe hacerse exclusivamente por _pasos de mensajes_, que están sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similaresfootnote:[Como la exclusión mutua, uno de los más conocidos -aunque no el más óptimo- es el conocido _token ring_.] y se basan en los mismos conceptos que la concurrencia de memoria compartida su soluciones son diferentes y más complejas no es el objetivo de este libro.
+La alternativa son los sistemas donde los procesos no pueden compartir memoria, los algoritmos de este tipo ese denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por _intercambios de mensajes_ sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similares y se basan en los mismos conceptos sus soluciones son más complejas. El diseño de algoritmos no es objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> se hace una breve introducción al problema.
 ====
 
 === Convenciones de programación
@@ -62,7 +62,7 @@ while True:
 
 === Solución para dos procesos
 
-Vamos a intentar solucionar primero el problema de concurrencia más sencillo. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
+Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
 
 El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por +0+ y +1+ footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el +0+ o _P0_. Para el proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
@@ -204,10 +204,10 @@ Si ambos procesos entran _simultáneamente_ al bucle de entrada en algún moment
 
 [NOTE]
 ====
-Pensarás que se puede hacer algo entre <1> y <2> para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundosfootnote:[Una idea, _exponential backoff_, lo <<exponential_backoff, vemos más adelante>>.] con un +sleep+ o incluso cediendo el procesadorfootnote:[+sched_yield+ en Linux.]. Una técnica así puede servir para mejorar el rendimiento -si no hubiese otra solución mejorfootnote:[Las hay, a partir del siguiente algoritmo todos son mejores, podéis olvidaros de éste una vez que lo hayáis entendido.]-, pero formalmente son equivalentes. Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- que la probabilidad de que uno de ellos se interrumpa justo después de asignar falso es bastante elevada y por la velocidad de los procesadores ocurriría en pocos nanosegundos.
+Pensarás que se puede hacer algo entre las instrucciones de asignación a `states[0]` para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese una solución mejor -las hay-, pero formalmente son equivalentes. Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- la probabilidad de que uno de ellos se interrumpa entre ambas asignaciones es bastante elevada, por la velocidad de los procesadores ocurriría en pocos nanosegundos.
 ====
 
-Vamos a analizar si cumple los requisitos:
+Analicemos si se cumplen los requisitos:
 
 
 Exclusión mutua::

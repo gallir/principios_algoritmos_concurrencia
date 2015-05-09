@@ -1,7 +1,7 @@
 [[barriers]]
 == La realidad del hardware moderno
 
-No quería hacer tan largo el capítulo anterior y me pareció que este tema merecía un capítulo independiente. Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y N procesos son formalmente correctos *no funcionarán* en la mayoría de procesadores modernos. No debería sorprenderte, los fabricantes de de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleosfootnote:[Una de las razones de la popularización de la _programación concurrente_, que permite maximizar y sacar provecho a varios procesadores.]. Más adelante veremos que sin un soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
+Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos *no funcionarán* en la mayoría de procesadores modernos. No debería sorprenderte, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleosfootnote:[Una de las razones de la popularización de la _programación concurrente_, que permite maximizar y sacar provecho a varios procesadores.]. Más adelante veremos que sin un soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
 
 Tampoco deberías decepcionarte. El objetivo fue estudiar los algoritmos y aprender a reconocer y solucionar los problemas inherentes de la programación concurrente. No es la intención que los uses directamente, sino aprender los fundamentos básicos para entender la evolución y construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
 
@@ -70,7 +70,7 @@ Este mecanismo asegura la consistencia de caché y no es el responsable de que l
 Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
 ====
 
-El código de <<counter_local_c>> es similar al contador original <<counter_c>> con la única diferencia que la suma se hace sobre una variable local en cada hilo (i.e. no compartidas) y sólo se incrementa la global al final del bucle.
+El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>> pero la suma le hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
 ----
 // The global variable
@@ -84,15 +84,14 @@ for (i=0; i < max; i++) {
 counter += local_counter;
 ----
 
-Podéis comparar los tiempos en un sistema con al menos dos núcleos y veréis que el que usa variables locales consume menos del 50% de tiempo de CPU.
+El original accede y modifica la variable compartida en cada iteración, el contador local solo una vez al final. Este último consume menos del 50% de tiempo de CPU porque no genera operaciones de sincronización del sistema de coherencia de cache.
 
 [[false_sharing]]
 [NOTE]
 ._False sharing_
 ====
-Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegurarse que no compartan líneas de caché, por ejemplo por usar las mismas direcciones o posiciones cercanas en un array. Si es posible es mejor hacerlo con variables _distantes_ (por ejemplo locales de cada hilo) para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes vía el _front side bus_ aunque sean direcciones diferentes.
+Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegurarse que no compartan líneas de caché al usar las mismas direcciones o posiciones cercanas en un array. Es mejor hacerlo con variables _distantes_ -por ejemplo locales de cada hilo- para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes vía el _front side bus_ aunque sean direcciones diferentes.
 ====
-
 
 
 === Ejecución fuera de orden
@@ -143,7 +142,7 @@ Por supuesto eso haría que el algoritmo de exclusión mutua fallase. Para soluc
 
 === Barreras de memoria
 
-Para hacer que el algoritmo funcione correctamente debemos especificar _barreras_ (_fences_ o _barriers_) al ordenador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de *barrera general* indica al procesador:
+Para hacer que el algoritmo funcione correctamente debemos especificar _barreras_ (_fences_ o _barriers_) al procesador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de *barrera general* indica al procesador:
 
 . Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
 

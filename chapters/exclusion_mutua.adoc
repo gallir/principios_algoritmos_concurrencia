@@ -50,7 +50,7 @@ a, b: 2 2
 a, b: 2 4
 ----
 
-Ninguno de ambos eran los valores que esperábamos. Si volvemos a ejecutar el programa el resultado podría ser diferente, éste depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar _bugs_ causados por _race conditions_, habitualmente estas no son frecuentes, la probabilidad de que ocurra suele ser muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
+Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar los _bugs_ causados por _race conditions_, habitualmente no son frecuentes porque la probabilidad de que ocurra es muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
 Esas dos líneas (o tres si contamos con el +print+ de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas:
 
@@ -89,7 +89,7 @@ STORE_GLOBAL  0 (counter)
 
 ==== Ejemplos en diferentes lenguajes
 
-En la sección <<counter_add>> está el código en C (<<counter_c>>) Go (<<gocounter_go>>) Java (<<counter_java>>) y Python (<<counter_py>>), todos ellos hacen lo mismo, crean dos hilos y cada uno de ellos incrementan un contador (+counter+) la mitad de veces del total (+10 000 000+). El resultado de la ejecución es la siguiente:
+Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>> <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
 
 [[counter_times]]
 .Resultados y tiempos de CPU
@@ -112,7 +112,7 @@ real    0m0.333s <1>
 user    0m0.564s
 sys     0m0.020s
 
-$ time python3 counter.py
+$ time ./counter.py
 Counter value: 7737979 Expected: 10000000
 real    0m5.400s <2>
 user    0m5.365s
@@ -125,14 +125,14 @@ sys     0m0.044s
 [NOTE]
 .Sobre los tiempos de CPU
 ====
-Fíjate en los _tiempos de CPU_ comparados con el _tiempo de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (GIL, http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html[_The Problem with CPython Semantics_])
+Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (<<Sampson>>).
 ====
 
 
 
 === Exclusión mutua
 
-En los ejemplos anteriores se observa que en todos _se perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, recordad que éstas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una *solución correcta de exclusión mutua es equivalente y funciona para ambos modos*: el paralelismo es sólo un caso particular de la intercalación.
+En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, recordad que éstas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una *solución correcta de exclusión mutua es equivalente y funciona para ambos modos*: el paralelismo es sólo un caso particular de la intercalación.
 
 Para que evitar los errores primero debemos identificar el código de ambos programas que acceden a recursos compartidos y que por lo tanto pueden ser víctimas de las _condiciones de carrera_. Esos *fragmentos de código se denominan _secciones críticas_*.
 

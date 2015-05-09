@@ -441,7 +441,7 @@ void lock(struct mcs_spinlock *node) {
 }
 ----
 <1> Inicialización del nodo, _locked_ se pone en _verdadero_.
-<2> Preparación para el _swap_, +predeccesor+ apunta inicialmente al nodo actual, cuando se haga el intercambio si había un proceso esperando o en la sección crítica +predecessor+ apuntará al nodo de ese proceso, caso contrario será _NULL_.
+<2> Preparación para el _swap_, +predeccesor+ apunta inicialmente al nodo actual, cuando se haga el intercambio si había un proceso esperando o en la sección crítica +predecessor+ apuntará al nodo de ese proceso, caso contrario será +NULL+.
 <3> Si hay otro proceso hará que su campo +next+ apunte al nodo actual.
 <4> Espera activa hasta que el predecesor cambie el estado de +locked+ a falso.
 
@@ -461,8 +461,8 @@ void unlock(struct mcs_spinlock *node) {
     node->next->locked = 0;              <4>
 }
 ----
-<1> Si +next+ del proceso actual es _NULL_ entonces podría ser el último de la cola, prepara +last+ para hacer el _compareAndSwap_.
-<2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con _NULL_.
+<1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compareAndSwap_.
+<2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
 <3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo hace.
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
 
