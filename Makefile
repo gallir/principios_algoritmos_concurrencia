@@ -1,4 +1,4 @@
-BASE=master
+BASE=concurrencia
 OUTDIR=output
 SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
