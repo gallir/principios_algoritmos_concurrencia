@@ -236,7 +236,7 @@ Salvo el problema del _livelock_ y la _debilidad_, no se hacen suposiciones sobr
 
 Aunque este algoritmo tiene problemas estamos muy cerca de una solución correcta que cumple con todos los criterios.
 
-==== Algoritmo de Dekker
+==== Algoritmo de Dekker (1963)
 
 El problema del algoritmo anterior reside en la indefinición dentro del bucle, es muy fácil solucionarlo con la variable +turn+ como en el primer intento. En caso que haya esa competencia en el bucle (el _livelock_) será esta variable la que decidirá inmediatamente qué proceso podrá entrar a la sección crítica.
 
@@ -276,9 +276,9 @@ Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua
 Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 
 [[peterson]]
-==== Algoritmo de Peterson
+==== Algoritmo de Peterson (1981)
 
-En 1981, cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Recordad que ya había soluciones más prácticas para 2 o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
+Cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ra había soluciones más prácticas y eficientespara dos o más procesos, como las instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
 
 Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es mucho más sencillo de comprender:
 
@@ -322,7 +322,7 @@ El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un p
 Los algoritmos anterior resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ con espera activa e implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
 
 [[bakery]]
-==== Algoritmo de la Panaderia
+==== Algoritmo de la Panaderia (1974)
 
 La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panadería sacan un número para saber el orden en que serán atendidos.
 
@@ -441,7 +441,7 @@ Espera limitada::
 
 Si un proceso entra y pretende volver a entrar cogerá un número mayor de los que ya están esperando, por lo que esos entrarán antes. No se puede dar el caso que un proceso quede esperando indefinidamente. Si _n_ procesos desean entrar simultáneamente como máximo tendrán que esperar que entren _n-1_ procesos. Además es un _equitativo_ (_fair_), todos los procesos entran en el orden en que han elegido su número.
 
-==== Algoritmo rápido de Lamport
+==== Algoritmo rápido de Lamport (1987)
 
 El algoritmo de la panadería es la solución correcta y cumple con todos los requisitos, pero tiene dos problemas:
 

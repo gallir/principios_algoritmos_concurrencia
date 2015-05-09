@@ -377,7 +377,7 @@ void push(struct node_head *head, struct node *e) {
 <4> Se intenta el intercambio, solo se hará si tanto el puntero al nodo y el entero +aba+ son idénticos a los copiados en +orig+. Si entre <1> y <4> el valor de +head+ es cambiado por otros procesos el valor de +aba+ habrá cambiado (será un valor mayor) por lo que _CAS_ retornará falso aunque el puntero al nodo sea el mismo.
 
 
-==== Load-link/store-conditional (_LL/SC_)
+==== Load-Link/Store-Conditional (_LL/SC_)
 
 _compareAndSwap_ es la más potente de las operaciones atómicas anteriores ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). Sin embargo en algunas arquitecturas RISC (PowerPC, Alpha, MIPS y ARM) diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado por llamadas a esas operaciones por una serie de instrucciones con _LL/SC_ que las emulan.
 

@@ -17,7 +17,7 @@ Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en ge
 
 Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (como en Erlang). Los canales de comunicación pueden asegurar la entrega de mensajes en mismo orden de envío (canales FIFO) o pueden entregarlos en orden arbitrario. Unos pueden asegurar la recepción de cada mensaje (_reliable_, lo habitual en sistemas de memoria compartida), otros pueden descartar mensajes (_best-effort_) por errores de transmisión.
 
-=== _CSP_
+=== _CSP_ (1978)
 
 El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización es el intercambio de _mensajes_. La entrada de un proceso es la salida de un anterior, ambos se ejecutan asincrónicamente y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
