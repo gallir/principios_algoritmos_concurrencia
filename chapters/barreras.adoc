@@ -1,9 +1,9 @@
 [[barriers]]
 == La realidad del hardware moderno
 
-Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos *no funcionarán* en la mayoría de procesadores modernos. No debería sorprenderte, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleosfootnote:[Una de las razones de la popularización de la _programación concurrente_, que permite maximizar y sacar provecho a varios procesadores.]. Más adelante veremos que sin un soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
+Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos no funcionarán en la mayoría de procesadores modernos. No debería sorprender, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleos (una de las razones de la popularización de la _programación concurrente_, permite maximizar y sacar provecho a varios procesadores). Más adelante veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
 
-Tampoco deberías decepcionarte. El objetivo fue estudiar los algoritmos y aprender a reconocer y solucionar los problemas inherentes de la programación concurrente. No es la intención que los uses directamente, sino aprender los fundamentos básicos para entender la evolución y construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
+Tampoco debería decepcionar. El objetivo de estudiar los algoritmos fue aprender a reconocer y razonar sobre los problemas inherentes de la programación concurrente. No es la intención usarlos en programas concurrentes, sino aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
 
 
 Para que veáis el problema programé el algoritmo de Peterson y ejecuté el programa de la misma forma que en el capítulo anterior (<<counter_times>>)footnoteref:[paciencia, Ten un poco de paciencia, el código está en el libro, ya enlazo la solución correcta un poco más adelante.]:
@@ -19,7 +19,7 @@ sys     0m0.000s
 
 Además del incremento notable de tiempo de CPU (0.017s en la ejecución sin el algoritmo de Peterson) el resultado sigue siendo erróneo, no se cumple la exclusión mutua.
 
-No es ningún secreto que los procesadores modernos ya no garantizan que los programas se ejecuten en el mismo _orden de secuencias_ del programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoria. Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el algoritmo de Peterson (<<counter_peterson_c>>, por ejemplo funciona correctamente en la Raspberry Pi con procesador ARM6).
+No es ningún secreto que los procesadores modernos ya no garantizan que los programas se ejecuten en el mismo _orden de secuencias_ del programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
 
 Hay tres razones fundamentales que pueden afectar a la violación de la consistencia secuencial:
 
@@ -72,6 +72,7 @@ Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes
 
 El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>> pero la suma le hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
+[source,c]
 ----
 // The global variable
 int local_counter = 0;
@@ -119,6 +120,7 @@ o
 
 Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcta más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
 
+[source,python]
 ----
 states[0] = True
 turn = 1
@@ -128,13 +130,14 @@ while states[1] and turn == 1:
 
 El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre +states[0]+ y +states[1]+, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
 
+[source,python]
 ----
 turn = 1
 while states[1] and turn == 1:
     pass
 states[0] = True
 
-   BOOOM!!!
+   ## BOOOM!!! ##
 ----
 
 Por supuesto eso haría que el algoritmo de exclusión mutua fallase. Para solucionarlo debes pedir _bajo demanda_ que el procesador respete el orden de acceso a memoria de nuestro programa, esto se hace con las _barreras de memoria_
@@ -142,7 +145,7 @@ Por supuesto eso haría que el algoritmo de exclusión mutua fallase. Para soluc
 
 === Barreras de memoria
 
-Para hacer que el algoritmo funcione correctamente debemos especificar _barreras_ (_fences_ o _barriers_) al procesador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de *barrera general* indica al procesador:
+Para hacer que el algoritmo funcione correctamente debemos especificar _barreras_ (_fences_ o _barriers_) al procesador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de _barrera general_ indica al procesador:
 
 . Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
 
@@ -164,6 +167,7 @@ Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes
 
 Para hacer que el algoritmo de Peterson funcione debemos insertar una barrera entre la asignación de +states+ y +turn+ y el while que verifica el turno y el estado del otro proceso:
 
+[source,python]
 ----
 states[0] = True
 turn = 1
@@ -174,11 +178,15 @@ while states[1] and turn == 1:
 
 Así el código ya funcionará correctamente.
 
+////
+Explicar mejor lo de acquire y y release
+////
+
 [NOTE]
 ====
 Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres típicas son la _general_, la de _lectura_ y la de _escritura_. La primera es la que acabamos de ver, la de lectura se aplican sólo a las operaciones de lectura y la última sólo a las de escrituras.
 
-También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Barriers>>.
+También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Howells>>.
 ====
 
 ==== Uso de barreras

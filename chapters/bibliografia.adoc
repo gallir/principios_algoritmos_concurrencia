@@ -10,7 +10,7 @@
 
 - [[[Atomics]]] _GCC Built-in functions for atomic memory access_. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
 
-- [[[Barriers]]] David Howells. _Linux Kernel Memory Barriers_. https://www.kernel.org/doc/Documentation/memory-barriers.txt
+- [[[Howells]]] David Howells. _Linux Kernel Memory Barriers_. https://www.kernel.org/doc/Documentation/memory-barriers.txt
 
 - [[[Barz]]] Hans W. Barz. _Implementing semaphores by binary semaphores_. ACM SIGPLAN, Volume 18 Issue 2, February 1983
 

@@ -61,8 +61,7 @@ Hay varios tipos de instrucciones que implementan registros _RMW_:
 - _compareAndSwap_: Compara el valor del registro con otro, si son iguales asigna un nuevo y retorna el anterior.
 
 
-Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar la programación y portabilidad los compiladores proveen macros que generan la secuencias de instrucciones que usan o simulan las operaciones en cada arquitectura. Por ejemplo GCC <<Atomics, tenía los macros>> +\__sync_*+ que en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos que están más cercanos al modelo de memoria del C11 y C++11>>.
-
+Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar la programación y portabilidad los compiladores proveen macros que generan la secuencias de instrucciones que usan o simulan las operaciones en cada arquitectura. Por ejemplo GCC <<Atomics, tenía los macros>> +\__sync_*+ que en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria del C11 y C++11.
 
 
 ==== getAndSet
@@ -70,6 +69,7 @@ Usaremos una variable global +mutex+ que estará inicializada a cero que indica 
 
 La función +lock+ es la entrada a la sección crítica y +unlock+ la salida.
 
+[source,python]
 ----
         mutex = 0
 
@@ -87,11 +87,11 @@ En <<getAndSet>> está el código en C implementado con el macro `__atomic_excha
 
 ==== getAndAdd
 
-Se puede implementar exclusión mutua con un algoritmo muy similar al de la _panadería_, cada proceso obtiene un número y espera a u turno, solo que esta vez la obtención del _siguiente número_ es atómica y por lo tanto no se necesita un array de números ni hacer un bucle de controles adicionales.
+Se puede implementar exclusión mutua con un algoritmo muy similar al de la _panadería_, cada proceso obtiene un número y espera a su turno, solo que esta vez la obtención del _siguiente número_ es atómica y por lo tanto no se necesita un array ni un bucle para controles adicionales.
 
 Usaremos dos variables, +number+ para el siguiente número y +turn+ para indicar a qué número le corresponde entrar a la sección crítica.
 
-
+[source,python]
 ----
         number = 0
         turn = 0
@@ -115,6 +115,7 @@ El <<getAndAdd, código en C>> está implementado con el macro +\__atomic_fetch_
 ==== testAndSet
 La instrucción _testAndSet_ o _TAS_ fue la instrucción más usada para control de concurrencia hasta la década de 1970 cuando fue reemplazada por operaciones que permiten niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que puede tomar valores 0 y 1. La instrucción solo recibe un argumento, la dirección de memoria. Si el valor de la dirección de memoria es +0+ le asigna +1+ y retorna +1+ (o _true_), caso contrario retorna +0+ (o _false).
 
+[source,python]
 ----
 def testAndSet(register):
     if register == 0:
@@ -126,6 +127,7 @@ def testAndSet(register):
 
 La implementación de exclusión mutua con TAS es muy similar a _getAndSet_:
 
+[source,python]
 ----
         mutex = 0
 
@@ -144,6 +146,7 @@ def unlock():
 ==== Swap
 Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente enteros de 32 o 64 bitsfootnote:[No todas las arquitecturas la tienen, en Intel es +XCHG+ para enteros de 32 bits.]. El algoritmo de la instrucción es tan sencillo como parece:
 
+[source,python]
 ----
 def swap(register1, register2):
     tmp = register1
@@ -153,6 +156,7 @@ def swap(register1, register2):
 
 El algoritmo de exclusión mutua con _swap_:
 
+[source,python]
 ----
         mutex = 0
 
@@ -178,6 +182,7 @@ Valor a comparar:: Si el valor del registro es igual a éste entonces se le asig
 
 En la versión modernafootnote:[En los <<Atomics, antiguos macros de GCC>> las instrucciones equivalentes son +\__sync_bool_compare_and_swap+ y +__sync_val_compare_and_swap+ respectivamente. La diferencia fundamental es que no se modifica el registro del valor a comparar.] de macros atómicos las dos versiones son +\__atomic_compare_exchange_n+ y +__atomic_compare_exchange+, ambas retornan un booleano si se pudo hacer el cambio, lo único que cambia es la forma de los parámetros (en el último caso son todos punteros). El algoritmo de estas instrucciones es:
 
+[source,python]
 ----
 def compareAndSwap(register, expected, desired):
     if registro == expected:
@@ -191,6 +196,7 @@ def compareAndSwap(register, expected, desired):
 
 La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es sencilla, necesitamos una variable local porque hay que pasar un puntero y ambas instrucciones copiarán el valor de mutex a la posición indicada por el puntero:
 
+[source,python]
 ----
         mutex = 0
 
@@ -489,7 +495,9 @@ De todas maneras los _spinlocks_ basados en instrucciones por hardware son funda
 
 ==== Por las dudas
 
-En todos los ejemplos de exclusión mutua vistos hasta ahora la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una instrucción y operación aritmética que en apariencia son tan simples también son víctimas del acceso concurrente desorganizado. Pero espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para hacerlo correctamente, hay instrucciones de hardware que lo hacen de forma eficiente, como el _getAndAdd_ o _addAndGet_. Por ejemplo en  C:
+En todos los ejemplos de exclusión mutua vistos hasta ahora la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una instrucción y operación aritmética que en apariencia son tan simples también son víctimas del acceso concurrente desorganizado. Pero espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para hacerlo correctamente, hay instrucciones de hardware que lo hacen de forma eficiente, como el _getAndAdd_ o _addAndGet_.
+
+Por ejemplo en  C:
 
 [source, c]
 ----

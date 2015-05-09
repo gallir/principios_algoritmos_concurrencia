@@ -89,7 +89,7 @@ STORE_GLOBAL  0 (counter)
 
 ==== Ejemplos en diferentes lenguajes
 
-Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>> <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
+Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>>, <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
 
 [[counter_times]]
 .Resultados y tiempos de CPU

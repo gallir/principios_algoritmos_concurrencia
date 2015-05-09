@@ -39,12 +39,14 @@ En las secciones críticas los procesos acceden a variables o recursos compartid
 
 
 .Inicialización de variables globales
+[source,python]
 ----
         turno = 1
         estados = [0, 0]
 ----
 
 .Programa que ejecuta cada proceso
+[source,python]
 ----
 while True:
     # resto del código
@@ -72,7 +74,7 @@ Como generalización se suele usar +i+ para identificar al propio proceso y +j+ 
 ==== Primer intento
 La idea fundamental es que la variable entera +turn+ nos va a indicar qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar sólo los valores +0+ y +1+, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
 
-
+[source,python]
 ----
         turn = 0
 ----
@@ -86,6 +88,7 @@ El siguiente es el código. El primer +while+ es la _entrada a la sección crít
 Esta espera en el +while+ _sin hacer nada_ y solo verificandofootnote:[Habitualmente llamado _polling_.]  el valor de una variable se denomina *_espera activa_* (_busy waiting_). Es una característica indeseable porque consume CPU pero muchas veces inevitable cuando no se pueden usar otras primitivas... por ejemplo para implementa esas primitivas. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
 ====
 
+[source,python]
 ----
 while turn != 0:
   pass
@@ -115,6 +118,7 @@ El problema de este algoritmo es que obliga a una *_alternancia exclusiva_* que 
 
 Si el problema del anterior es que la variable +turn+ exigía alternancia exclusiva se puede solucionar con un array. Cada posición del mismo indica si el proceso correspondiente está (+True+) o no (+False+) dentro de la sección crítica. Cuando un proceso desea entrar verifica el estado del otro, si no está en la sección crítica pone +True+ en su posición del array y continúa (entrando a la sección crítica).
 
+[source,python]
 ----
         states = [False, False]
 
@@ -126,21 +130,23 @@ states[0] = True
 critical_section()
 
 states[0] = False
-
 ----
 
 Este algoritmo no asegura la condición principal: exclusión mutua.
 
 Basta con probar que ambos valores de +states+ son verdaderos. Puede ocurrir, las instrucciones del +while+ footnote:[El +while+ es traducido a una serie de instrucciones que involucan un +if+.] y la asignación posterior no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas, como en la siguiente secuencia de ejecución de instrucciones, a la izquierda las de _P0_ y a la derecha las de _P1_.
 
-  P0                    P1
-  ¿states[1]? -> False
+[source,python]
+----
+P0                      P1
+¿states[1]? -> False
                         ¿states[0]? -> False
                         states[1] = True
                         ...
-  states[0] = True
-  ...
-              BOOOM!
+states[0] = True
+...
+          ## BOOOM! ##
+----
 
 _P0_ verifica el estado de P1, sale del bucle porque es +states[1]+ falso e inmediatamente es interrumpido. _P1_ hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta _P1_ que también entra a la sección crítica.
 
@@ -148,6 +154,7 @@ _P0_ verifica el estado de P1, sale del bucle porque es +states[1]+ falso e inme
 
 El problema del algoritmo anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado. La solución parece obvia: si se asigna el estado propio antes de verificar el otro aseguraremos que no se llegue a la sección crítica si el otro proceso ya está en ella.
 
+[source,python]
 ----
 states[0] = True
 while states[1]:
@@ -170,7 +177,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
                         ¿states[0]? -> True
   ¿states[1]? -> True
   ...
-                   DEADLOCK!
+         ## DEADLOCK! ##
 ----
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de P0. Como da verdadero no saldrá del +while+ hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
@@ -187,6 +194,7 @@ Cuando dos trenes se encuentran en un cruce de vías cada uno deberá detenerse 
 
 Se puede romper el interbloqueo que se genera en el caso de la _condición de carrera_ explicada previamente cambiando temporalmente el estado del proceso a falso e inmediatamente volver a ponerlo en verdadero. Así se abrirá una _ventana temporal_ para que alguno de los procesos pueda continuar:
 
+[source,python]
 ----
 states[0] = True
 while states[1]:
@@ -242,6 +250,7 @@ El problema del algoritmo anterior reside en la indefinición dentro del bucle, 
 
 El algoritmo queda de la siguiente forma:
 
+[source,python]
 ----
         states = [False, False]
         turn   = 0
@@ -258,14 +267,13 @@ critical_section()
 
 states[0] = False
 turn = 1 <2>
-
 ----
 <1> _P0_ esperará si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
 <2> Cuando un proceso sale de su sección crítica cede el turno al otro, si ese estaba esperando en <1> podrá continuar.
 
 Sólo en el caso que haya competencia será turno la que decidirá, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
 
-Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, ya *podemos demostrar* que no produce esperas infinitas, en ningún caso:
+Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, ya podemos demostrar que no produce esperas infinitas, en ningún caso:
 
 . Si _P1_ desea entrar a la sección crítica y _P0_ ya está en ella, _P1_ quedará esperando. Cuando _P0_ salga pondrá +turn = 1+ por lo que el siguiente en entrar será _P1_ aunque _P0_ intente volver a entrar inmediatamente.
 
@@ -282,6 +290,7 @@ Cuando no hacía falta encontrar una solución algorítmica para dos procesosfoo
 
 Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es mucho más sencillo de comprender:
 
+[source,python]
 ----
         states = [False, False]
         turn   = 0
@@ -328,13 +337,15 @@ La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>
 
 La implementación básica de la idea es la siguiente:
 
-----
-        number  = [0, ..., 0] <1>
+[source,python]
 
-number[i] = 1 + max(number) <2>
+----
+    number  = [0, ..., 0]           <1>
+
+number[i] = 1 + max(number)         <2>
 for j in range(0, N): <3>
     while number[j] > 0
-        and number[j] < number[i]: <4>
+        and number[j] < number[i]:  <4>
         pass
 
 critical_section()
@@ -354,6 +365,7 @@ Pero no es tan sencillo, son procesos independientes que ejecutan una serie de i
 
 Es decir, podemos tener números duplicados. La solución es usar el id de cada proceso para _desempatar_ en caso que hayan seleccionado el mismo número:
 
+[source,python]
 ----
 number[i] = 1 + max(number)
 for j in range(0, N):
@@ -386,9 +398,10 @@ es falsa por lo que _P0_ también entrará a la sección crítica, no asegura ex
 
 Para evitar que ocurra habrá que poner un mecanismo para impedir que el proceso que desea entrar no avance si el proceso contra el que está por comparar su número todavía lo está seleccionando. Para ello añadimos otro array, +choosing+, que indicará si el proceso todavía no almacenó su número.
 
+[source,python]
 ----
-        choosing = [False, ..., False] <1>
-        number   = [0, ..., 0]
+    choosing = [False, ..., False] <1>
+    number   = [0, ..., 0]
 
 
 choosing[i] = True      <2>
