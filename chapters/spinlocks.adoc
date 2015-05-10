@@ -31,14 +31,13 @@ La presión sobre la memoria caché:: Estos algoritmos no son _escalables_. En s
 
 Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los anteriores. Al final del capítulo estudiaremos los dos algoritmos escalables más importantes.
 
-[NOTE]
+
 ._Spinlocks_ escalables
-====
+****
 Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria caché por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS1>>, <<Boyd-Wickizer>>).
 
 Si en cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas variables se produce como mínimo un _fallo de caché_ cada vez que un proceso cambia su valor, la actualización debe propagarse a las caché locales de los otros procesadores. El problema se agrava por el <<false_sharing, _false sharing_>>, los datos que se modifican en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_, cada modificación de esas variables supone un coste adicional de sincronización. Por ello se estudiaron y desarrollaron los <<scalable_spinlocks, _spinlocks escalables_>>.
-
-====
+****
 
 Las tres técnicas de optimización que veremos a continuación no son _escalables_ pero las mejoras en eficiencia pueden ser considerables.
 
@@ -61,6 +60,7 @@ Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<
 ==== Ceder el procesador
 Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _abandona_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.
 
+[source, python]
 ----
         mutex = 0
 
@@ -76,35 +76,32 @@ Como puede observarse en <<execution_times, los gráficos>> la cesión del proce
 La forma de reducir la competencia (_contention_) y evitar el efecto ping-pong de los procesos pasando de _listos_ a _ejecución_ es bloquearlos por un tiempo variable dependiendo de las veces que ha _fallado_ la condición durante la espera activa.
 
 
-[NOTE]
+
 ._Exponential backoff_
-====
+****
 _Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares de _bus compartido_ para calcular el tiempo de espera para reenviar una trama después de una colisión, _backoff_ se refiere a la espera y _exponential_ a que el límite del tiempo de espera se duplica en cada _fallo_. El tiempo efectivo de espera de cada proceso es un número aleatorio entre 1 y el límitefootnote:[Se usa un número aleatorio para evitar que todos los procesos reintenten simultáneamente.].
 
 El siguiente es el código en C usado en los ejemplos.
 
 
-[source,c]
-----
-#define FAILURES_LIMIT 12
-void backoff(int failures) {
-    struct timespec deadline = {.tv_sec = 0};
-    unsigned limit;
+    #define FAILURES_LIMIT 12
+    void backoff(int failures) {
+        struct timespec deadline = {.tv_sec = 0};
+        unsigned limit;
 
-    if (failures > FAILURES_LIMIT) {
-        limit = 1 << FAILURES_LIMIT;
-    } else {
-        limit = 1 << failures;
+        if (failures > FAILURES_LIMIT) {
+            limit = 1 << FAILURES_LIMIT;
+        } else {
+            limit = 1 << failures;
+        }
+
+        deadline.tv_nsec = 1 + rand() % limit;
+        clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
     }
-
-    deadline.tv_nsec = 1 + rand() % limit;
-    clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
-}
-----
 
 En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función _backoff_. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit +1+ hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 
-====
+****
 
 
 [source, c]
@@ -169,11 +166,10 @@ image::optimized-arm7-real.png[align="center"]
 Aún en arquitecturas tan diferentes ceder el procesador representa un ahorro importante de CPU y de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Éste tiene más núcleos que hilos por lo que un _yield_ solo hace que un proceso abandone el procesador pero probablemente el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. También puede ser que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
 
 
-[NOTE]
 .Cede el procesador
-====
-A menos que se trate un gestor de interrupciones, rutinas críticas del núcleo del sistema operativo, o un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no te despedirán por poner un +sched_yield+ o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores, el cuello de botella acaba siendo el sistema de coherencia de caché.
-====
+****
+Las esperas activas ya son suficientemente malas si no son imprescindibles. A menos que se trate un gestor de interrupciones, rutinas críticas del núcleo del sistema operativo, o un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no tendrás problemas poner un +sched_yield+ o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores.
+****
 
 
 [[readers_writers]]
@@ -471,13 +467,13 @@ void unlock(struct mcs_spinlock *node) {
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
 
 
-[NOTE]
 .Barreras de hardware
-====
+****
 En el código C de algunos de los algoritmos se usa `__atomic_thread_fence` o `__atomic_store_n` para introducir barreras de memoria explícitas. La necesidad de barreras no se menciona en la bibliografía o los artículos científicos citados pero son necesarias por lo explicado en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (_unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (+unlock+).
 
 Durante las pruebas y validación del código de ejemplo comprobé que en algunos procesadores se manifestaba esta condición de carrera, en particular con el ARM v7 de la Raspberry 2. Preferí mostrar la versión simplificada en estas páginas pero la versión completa y correcta en el listado del código fuente para que funcione correctamente en todas las arquitecturas, aunque en algunas de ellas -como en Intel- significara una sobrecarga innecesaria.
-====
+****
+
 
 ==== CLH _Spinlock_ (1993)
 Una par de años después de la publicación del algoritmo de _MCS_ dos grupos descubrieron el _CLH_ de forma independiente, Travis Craig  de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).

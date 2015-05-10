@@ -42,10 +42,10 @@ El acceso a la memoria RAM toma hasta cientos de ciclos de reloj del procesador,
 
 Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y las siguientes accesos se hacen directamente a la caché gracias al efecto de localidad de los programas. Si una línea de caché fue modificada se marca como tal y luego es copiada a la memoria RAM.
 
-[NOTE]
-====
+
+****
 Para traducir de una dirección de memoria física a la línea correspondiente de la caché se usan métodos similares a las de `[número de página, desplazamiento]` de las páginas de memoria RAM. Se usan varios mecanismos de _asociación_. Desde el _direct mapping_ donde la asociación entre conjuntos de direcciones de memoria RAM y una línea correspondiente está predeterminada, a sistemas de _hashing_ y asociativas usando _memoria direccionable por contenido_.
-====
+****
 
 El problema es mantener las caché coherentes con varios núcleos o procesadores. Dependiendo de la arquitectura ésta puede o no garantizar _coherencia de caché_. La buena noticia es que la mayoría de procesadores la garantizan.
 
@@ -64,11 +64,10 @@ Cuando un procesador lee de la memoria y carga en caché el estado se marca como
 
 Este mecanismo asegura la consistencia de caché y no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
 
-[NOTE]
 .El problema del acceso a variables compartidas
-====
+****
 Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
-====
+****
 
 El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>> pero la suma le hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
@@ -88,11 +87,10 @@ counter += local_counter;
 El original accede y modifica la variable compartida en cada iteración, el contador local solo una vez al final. Este último consume menos del 50% de tiempo de CPU porque no genera operaciones de sincronización del sistema de coherencia de cache.
 
 [[false_sharing]]
-[NOTE]
 ._False sharing_
-====
+****
 Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegurarse que no compartan líneas de caché al usar las mismas direcciones o posiciones cercanas en un array. Es mejor hacerlo con variables _distantes_ -por ejemplo locales de cada hilo- para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes vía el _front side bus_ aunque sean direcciones diferentes.
-====
+****
 
 
 === Ejecución fuera de orden
@@ -176,18 +174,24 @@ while states[1] and turn == 1:
     pass
 ----
 
-Así el código ya funcionará correctamente.
+Así el código funcionará correctamente.
 
 ////
+
+
 Explicar mejor lo de acquire y y release
+
+
+
+
 ////
 
-[NOTE]
-====
+
+****
 Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres típicas son la _general_, la de _lectura_ y la de _escritura_. La primera es la que acabamos de ver, la de lectura se aplican sólo a las operaciones de lectura y la última sólo a las de escrituras.
 
 También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Howells>>.
-====
+****
 
 ==== Uso de barreras
 Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de 1990 (con la introducción del procesador Power1) por la complejidad que significaba en el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras, por lo que no existen instrucciones estándares y mucho menos instrucciones específicas en los lenguajes de programación de alto nivel.
