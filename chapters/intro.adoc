@@ -12,8 +12,6 @@ La terminología es fundamental para entender la documentación técnica, me tom
 
 === Concurrencia
 
-
-
 Programas concurrentes son los que se ejecutan como procesos o hilos asincrónicos y que acceden a recursos compartidos. Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutarlos, no necesariamente un programa concurrente ha de ejecutarse en paralelo, puede hacerlo en un único procesador. Los problemas y soluciones a los accesos concurrentes son similares para ambos tipos de ejecuciones.
 
 Pero con la popularización de las arquitecturas de múltiples procesadores y núcleos ha crecido enormemente el interés por el tema de concurrencia, esto está afectando también a los lenguajes más populares y seguramente les obligará a cambios radicales en los siguientes años para adaptarlos a los exigencias modernas.
@@ -25,6 +23,128 @@ Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua
 Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
 
 Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
+
+
+
+=== Intercalado de instrucciones
+
+La mayoría de los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa con las variable +a+ y +b+ inicializadas a +0+
+
+[source, python]
+----
+a = a + 1
+b = b + a
+print "a, b:", a, b
+----
+
+Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será +1 1+. Si las dos asignaciones se repiten el resultado será +a, b: 2 3+, el siguiente +a, b: 3 6+, etc.
+
+Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ con _variables compartidas_. Se puede producir la siguiente intercalación de las instrucciones del programa:
+
+
+----
+Proceso P               Proceso Q
+
+...
+a = a + 1
+                        a = a + 1
+                        b = b + a
+                        print "a, b:", a, b
+                        ...
+b = b + a
+print "a, b:", a, b
+----
+
+
+
+El resultado de la ejecución de estas instrucciones será:
+
+----
+a, b: 2 2
+a, b: 2 4
+----
+
+Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como _condición de carrera_ (_race condition_). Es muy difícil detectar los _bugs_ causados por condiciones de carrera, habitualmente no son frecuentes porque la probabilidad de que ocurra es muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
+
+Esas dos líneas (o tres si contamos con el +print+ de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas:
+
+    counter += 1
+
+Se suele suponer que una operación tan básica como sumar una constante (o _literal_) a una variable no es interrumpible, pero no es así. El código ejecutable está compuesto por al menos tres instrucciones de procesador:
+
+----
+movl  counter(%rip), %eax
+addl  $1, %eax
+movl  %eax, counter(%rip)
+----
+
+Si se ejecuta dos veces el valor de +counter+ será +2+, es factible que se presente la siguiente condición de carrera ente dos procesos:
+
+----
+movl counter(%rip), %eax <1>
+                        movl counter(%rip), %eax
+                        addl $1, %eax
+                        movl %eax, counter(%rip)
+addl $1, %eax <2>
+movl %eax, counter(%rip)
+----
+
+<1> Se almacena 0 en el registro eax.
+<2> Aunque la variable ya tiene almacenado el valor +1+, el registro %eax sigue siendo 0.
+
+En este caso el valor será +1+, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
+
+----
+LOAD_GLOBAL   0 (counter)
+LOAD_CONST    1 (1)
+INPLACE_ADD
+STORE_GLOBAL  0 (counter)
+----
+
+==== Ejemplos en diferentes lenguajes
+
+Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>>, <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
+
+[[counter_times]]
+.Resultados y tiempos de CPU
+----
+$ time ./counter
+Counter value: 5785131 Expected: 10000000
+real    0m0.010s <1>
+user    0m0.017s
+sys     0m0.000s
+
+$ time ./gocounter
+Counter value: 5052927 Expected: 10000000
+real    0m0.021s <1>
+user    0m0.032s
+sys     0m0.008s
+
+$ time java Counter
+Counter value: 4406963 Expected: 10000000
+real    0m0.333s <1>
+user    0m0.564s
+sys     0m0.020s
+
+$ time ./counter.py
+Counter value: 7737979 Expected: 10000000
+real    0m5.400s <2>
+user    0m5.365s
+sys     0m0.044s
+----
+<1> El tiempo de _reloj_ es *menor* al tiempo acumulado de CPU.
+<2> El tiempo de _reloj_ es *mayor* al tiempo acumulado de CPU.
+
+
+[NOTE]
+.Sobre los tiempos de CPU
+====
+Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (<<Sampson>>).
+====
+
+En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos: el paralelismo es sólo un caso particular de la intercalación.
+
+
 
 
 

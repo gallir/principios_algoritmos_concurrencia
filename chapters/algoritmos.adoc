@@ -1,9 +1,77 @@
 ////
 Agregar el código spinlock.c
 ////
+== Exclusión mutua
+Primero describiremos el problema de la _exclusión mutua_ (o _secciones críticas_), en qué casos se presenta y qué condiciones deben cumplir las soluciones. A continuación analizaremos las soluciones por software a la exclusión mutua, desde los primeros intentos con dos procesos a las soluciones genéricas para _N_ procesos.
+
+////
+En los siguientes capítulos veremos los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no sólo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización.
+////
+
+La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
+
+El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta variables enteras simples
+
+////
+////
+
+
+=== Definición
+
+
+La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes, que podían ser considerados cíclicos y cada uno de sus ciclos se ejecuta una parte de código denominoado _sección crítica_ que accede y modifica recursos o zonas de memoria compartidas. La intercalación de las instrucciones de esas secciones críticas generan condiciones de carrera, pueden generar resultados erróneos
+
+Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas. El modelo de sección crítica separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algotirmos que se insertan antes y después de las secciones críticas:
+
+- Preprotocolo o _entrada a la sección crítica_.
+
+- Posprotocolo o _salida de la sección crítica_.
+
+
+[source,python]
+.Modelo de sección crítica
+----
+while forever:
+    # ...
+    cs_entry()             <1>
+    critical_section()
+    cs_exit()              <2>
+    # ...
+----
+<1> Preprotoclo o entrada a la sección crítica.
+<2> Posprotocolo o salida de la sección crítica
+
+
+Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, aunque cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, consiste en desarrollar el algoritmo para la entrada y salida de la sección crítica.
+
+Esos algoritmos deben cumplir conm los siguientes requisitos:
+
+[[em_requisites]]
+[IMPORTANT]
+.Requisitos para exclusión mutua
+====
+Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
+
+Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
+
+Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
+====
+
+Además de los tres requisitos fundamentales anteriores, en el artículo roginal (<<Dijkstra65>>) Dijkstra propuso cuatro reglas que se deben cumplir:
+
+[[four_requisites]]
+.Cuatro requisitios de Dijkstra
+* La solución debe ser _simétrica_ en los diferentes procesos, no se permiten soluciones que cambien el comportamiento o la prioridad estática de algún proceso.
+
+* No se deben hacer suposiciones de la _velocidad relativa_ de los procesos, ni se puede suponer que las velocidades sean constantes.
+
+* Un proceso que se interrumpe fuera de su sección crítica (o _resto del código_) no debe _interferir_ ni bloquear a los demás procesos.
+
+* Si varios procesos desean entrar simultáneamente la decisión en la _entrada de la sección crítica_ debe tomar un número finito de pasos.
+
 
 [[algorithms]]
-== Algoritmos de exclusión mutua
+=== Algoritmos de exclusión mutua
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
 
 Estos algoritmos no se usan por varios motivos, no funcionan en las arquitecturas de procesadores modernos ya que estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: _spinlocks_, semáforos, monitores y paso de mensajes.
@@ -18,7 +86,7 @@ El objetivo de estudiar estos algoritmos y su evolución hasta la solución corr
 
 Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de consultas a bases de datos.
 
-=== Memoria compartida
+==== Memoria compartida
 
 En todos los algoritmos y técnicas que analizamos en este libro asumimos que nuestros programan tienen acceso a memoria compartida, es decir, podemos usar variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Es decir, se dice que nuestros algoritmos son _de memoria compartida_.
 
@@ -28,7 +96,7 @@ En todos los algoritmos y técnicas que analizamos en este libro asumimos que nu
 La alternativa son los sistemas donde los procesos no pueden compartir memoria, los algoritmos de este tipo ese denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por _intercambios de mensajes_ sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similares y se basan en los mismos conceptos sus soluciones son más complejas. El diseño de algoritmos no es objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> se hace una breve introducción al problema.
 ====
 
-=== Convenciones de programación
+==== Convenciones de programación
 
 Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, suponemos que el tiempo que cada proceso está en la sección crítica es finito.
 
@@ -324,7 +392,7 @@ El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un p
 
 === Solución para N procesos
 
-Los algoritmos anterior resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ con espera activa e implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
+Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ con espera activa e implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
 
 [[bakery]]
 ==== Algoritmo de la Panaderia (1974)
