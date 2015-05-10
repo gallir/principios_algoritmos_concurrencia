@@ -35,9 +35,9 @@ Los registros de procesadores modernos que usamos para la implementación de los
 
 [[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
-Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el número de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la caché, son muy ineficientes. El otro problema hemos visto es que obliga a la especificación manual -no siempre sencilla ni eficiente- para asegurar la consistencia secuencial.
+Como hemos observado en la implementación del algoritmo de la panadería, el requerimiento de registros atómicos para solucionar los problemas de exclusión mutua crece linealmente con el número de hilos o procesos involucrados. Tiene otros problemas, son _spinlocks_ sobre muchos registros que introducen mucha presión sobre grandes zonas de la caché, son muy ineficientes. También obliga a la especificación manual y explícita de barreras de memoria -no siempre sencilla ni eficiente- para asegurar la consistencia secuencial.
 
-Por ello no es de extrañar que desde el principio se introdujeron instrucciones atómicas del procesador que permitieron implementar algoritmos de sincronización más sencillos y eficientes. Este tipo de operaciones pueden ser expresadas como construcciones de registros denominados genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ son interesantes porque pueden implementarse en construcciones de lenguajes o como instrucciones de procesador, sus propiedades son similares.
+Por ello no es de extrañar que desde el principio se introdujeran instrucciones de procesador atómicas que permitieron implementar algoritmos de sincronización más simples y eficientes. Las operaciones de instrucciones atómicas pueden ser expresadas como construcciones de registros denominados genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ son interesantes porque pueden implementarse en construcciones de lenguajes o como instrucciones de procesador, sus propiedades son similares.
 
 
 [NOTE]
@@ -108,7 +108,7 @@ def unlock():
 ----
 
 [[get_and_add_ticket]]
-El <<getAndAdd, código en C>> está implementado con el macro +\__atomic_fetch_add+ y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _getAndAdd_ sino _addAndGet_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de +number+ llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también <<ticket_lock, llamados _ticket locks_>> y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
+El <<getAndAdd, código en C>> está implementado con el macro `__atomic_fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _getAndAdd_ sino _addAndGet_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _getAndSet_ esta implementación asegura que no se producen esperas infinitas ya que el número que _elige_ cada proceso es único y creciente, aunque hay que tener en cuenta que el valor de +number+ llegará a un máximo y rotará. Los _spinlocks_ de este tipo son también <<ticket_lock, llamados _ticket locks_>> y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
 
 
 
@@ -311,7 +311,7 @@ Error, stack empty
 Aborted (core dumped)
 ----
 
-En sistemas con un único procesador quizás necesites de varias ejecuciones o aumentar el número de operaciones en +OPERATIONS+ para que aparezca el error. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlos. Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
+En sistemas con un único procesador quizás necesites de varias ejecuciones o aumentar el número de operaciones en la constante +OPERATIONS+ para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlos. Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no observes el error de doble liberación del mismo puntero. Podemos forzar al reuso de direcciones recientes mediante una segunda pila.
 
 [[cas_double_stack]] En vez de liberar la memoria de los nodos con el +free+ los insertamos en una segunda lista +free_nodes+, los nodos que se eliminan de la lista +head+ son insertados en la lista de libres. En vez de asignar memoria con +malloc+ cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa. <<stack_cas_freelist_c, El programa>> ejecutará repetidamente el siguiente código:
 
@@ -385,13 +385,15 @@ void push(struct node_head *head, struct node *e) {
 
 ==== Load-Link/Store-Conditional (_LL/SC_)
 
-_compareAndSwap_ es la más potente de las operaciones atómicas anteriores ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). Sin embargo en algunas arquitecturas RISC (PowerPC, Alpha, MIPS y ARM) diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado por llamadas a esas operaciones por una serie de instrucciones con _LL/SC_ que las emulan.
+_CompareAndSwap_ es la más potente de las operaciones atómicas anteriores ya que permite el _consenso_ con infinitos procesos (_consenso de clase N_). En algunas arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: el _LL/SC_. De hecho, si has compilado los programas de ejemplos en algunas de esas arquitecturas (por ejemplo en una Raspberry) el compilador habrá reemplazado por llamadas a esas operaciones por una serie de instrucciones con _LL/SC_ que las emulan.
 
-El diseño de _LL/SC_ es muy ingenioso, se basa en dos operaciones diferentes que trabajan en cooperación con la gestión de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria en un registro: LWARX en PowerPC, LL en MIPS, LDREX en ARM. La otra a la de almacenar (_store_) un registro en una dirección de memoria: STWC en PowerPC, SC en MIPS y STREX en ARM. El matiz importante es que ambas están _enlazadas_, la ejecución de la segunda es condicional si el registro objetivo no fue modificado desde la ejecución de la primera. Tomemos por LDREX y STREX de la arquitectura ARM.
+El diseño de _LL/SC_ es muy ingenioso, se basa en dos operaciones diferentes que trabajan en cooperación con la gestión de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria en un registro: +lwarx+ en PowerPC, +ll+ en MIPS, +ldrex+ en ARM. La otra a la de almacenar (_store_) un registro en una dirección de memoria: +stwc+ en PowerPC, +sc+ en MIPS y +strex+ en ARM. El matiz importante es que ambas están _enlazadas_, la ejecución de la segunda es condicional si el registro objetivo no fue modificado desde la ejecución de la primera.
 
-LDREX:: Carga una dirección de memoria en un registro y _etiqueta_ o marca esa dirección como de _acceso exclusivo_. Luego puede ejecutarse cualquier número de instrucciones hasta el STREX.
+Veamoc como ejemplo el funcionamiento de +ldrex+ y +strex+ de la arquitectura ARM.
 
-STREX:: Almacena el valor de un registro en una dirección de memoria pero solo si esa dirección ha sido _reservada_ anteriormente con un LDREX y no ha sido modificada por ningún otro proceso. Por ejemplo las siguiente instrucciones:
++ldrex+:: Carga una dirección de memoria en un registro y _etiqueta_ o marca esa dirección como de _acceso exclusivo_. Luego puede ejecutarse cualquier número de instrucciones hasta el +strex+.
+
++strex+:: Almacena el valor de un registro en una dirección de memoria pero solo si esa dirección ha sido _reservada_ anteriormente con un +ldrex+ y no ha sido modificada por ningún otro proceso. Por ejemplo las siguiente instrucciones:
 
 ----
 ldrex   r1, [r0]     <1>
@@ -410,7 +412,7 @@ Vale la pena analizar algunas de las emulaciones de instrucciones atómicasfootn
     add     r1, r1, #1   <2>
     strex   r2, r1, [r0] <3>
     cmp     r2, #0
-    bne     .L1 <4>
+    bne     .L1          <4>
 ----
 <1> Carga la dirección especificada por +r0+ en +r1+.
 <2> Incrementa en 1.
@@ -447,7 +449,7 @@ La mayor ventaja de las instrucciones _LL/SC_ es que no sufren del problema ABA,
 
 [[llsc]]
 ===== _LL/SC_ en ensamblador nativo
-Dividimos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones +pop+ y +push+. Éstas están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con <<safe_register, la misma estructura de pila anterior>>.
+Dividimos el código en dos partes. La de <<stack_llsc_freelist_c, C>> es similar al <<stack_cas_freelist_c, ejemplo anterior con doble pila>> pero sin la implementación de las funciones +pop+ y +push+. Ambas están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARMfootnote:[Para que funcione en una Raspberry, agradezco a https://twitter.com/sergiolpascual[Sergio L. Pascual] por ayudarme a mejorar y probar el código.] y trabajan con la misma estructura de la <<safe_register, pila anterior>>.
 
 El código es bastante sencillo de entender, vamos a ver analizar en detalle la función +pop+ que es la más breve de ambas:
 

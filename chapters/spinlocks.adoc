@@ -1,12 +1,14 @@
 [[spinlocks]]
 == _Spinlocks_
-Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_. Su uso tiene sentido si se cumple una de las siguientes condiciones:
+Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de una variable o registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_.
+
+Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
 . El código en la sección crítica es muy breve y la competencia es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- e implementar otros mecanismos de sincronización sin esperas activas (que veremos a partir del siguiente capítulo).
 
 . Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente y tendría más sentido utilizar construcciones sin esperas activas.
 
-El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros (como en el algoritmo de la panadería). Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todas los procesadores ofrecen las mismas, si se quiere obtener el máximo de eficiencia hay que programar para cada arquitectura, como es habitual en el núcleo de los sistemas operativos. Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, los macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros (como en el algoritmo de la panadería). Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación. Pero no todos los procesadores ofrecen las mismas instrucciones, para obtener el máximo de eficiencia hay que programar para cada arquitectura (como es habitual en el núcleo de los sistemas operativos). Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con ldrex/strex para ARM.].
 
 Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de CPU en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre diferentes procesadores: Intel Core2 con 4 núcleos, Intel i5 con 2 núcleos y cuatro _hilos_, Intel Xeon con 2 procesadores independientes de 8 núcleos cada uno (16 en total) y Raspberry 2 con ARM v7 de 4 núcleos.
 
@@ -125,7 +127,7 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 ==== Tiempos de ejecución
 A continuación cuatro gráficas que representan los tiempos de CPU de los diferentes algoritmos en cuatro procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque la sección crítica es muy breve lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella, lo que implica que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Sólo sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que sólo se desea una barrera _release_. La solución es programar en ensamblador de arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentalesfootnote:[Y hasta a las pruebas que podéis hacer vosotros mismos.].
+También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que sólo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentalesfootnote:[Y hasta a las pruebas que podéis hacer vosotros mismos.].
 
 .Intel Core2 cuatro núcleos
 image::optimized-intel-quad.png[align="center"]
@@ -195,7 +197,7 @@ El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) imp
 Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si fue posible entran a la sección crítica, caso contrario vuelven a intentar desde el inicio del bucle.
 
 .Entrada y salida para lectores
-
+[source, python]
 ----
             rw_lock = 0             <1>
 
@@ -222,7 +224,7 @@ def reader_unlock():
 Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en +1+ e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
 
 .Entrada y salida para escritores
-
+[source, python]
 ----
 def writer_lock():
     while True:
