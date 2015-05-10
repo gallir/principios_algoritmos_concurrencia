@@ -4,12 +4,9 @@ Agregar el código spinlock.c
 
 [[algorithms]]
 == Algoritmos de exclusión mutua
+Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
 
-En este capítulo estudiaremos la solución al problema de la exclusión mutua para dos procesos y luego para dos o más procesos.
-
-Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson <<Peterson>> en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
-
-Estos algoritmos no se usan por varios motivos, no funcionan en las arquitecturas de procesadores modernos ya que estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: _spinlocks_, semáforos, monitores y paso de mensajes.
+Estos algoritmos no se usan por varios motivos, no funcionan en las arquitecturas de procesadores modernos ya que estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar _espera activa_, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: _spinlocks_, semáforos, monitores y paso de mensajes.
 
 El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones:
 
@@ -23,7 +20,7 @@ Este conocimiento no tiene un interés puramente académico, además de comprend
 
 === Memoria compartida
 
-En todos los algoritmos y técnicas que analizamos en este libro asumimos que nuestros programan tienen acceso a memoria compartida, es decir, podemos usar variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Es decir, se dice que nuestros algoritmos son del *tipo de memoria compartida*.
+En todos los algoritmos y técnicas que analizamos en este libro asumimos que nuestros programan tienen acceso a memoria compartida, es decir, podemos usar variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Es decir, se dice que nuestros algoritmos son _de memoria compartida_.
 
 [NOTE]
 .Algoritmos distribuidos
@@ -64,11 +61,11 @@ while True:
 
 === Solución para dos procesos
 
-Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan las condiciones de <<six_requisites>>.
+Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan también con las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simátricos.
 
-El algoritmo es simétrico, es decir se ejecuta el mismo en ambos procesos identificados por +0+ y +1+ footnote:[Recuerda que en informática siempre se cuenta desde cero, es muy cómodo y práctico.]. En vez de duplicar el código nos centraremos en uno de ellos, el +0+ o _P0_. Para el proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
+Los algoritmos son simétricos, se ejecuta el mismo código en ambos procesos, cada uno identificado por +0+ o +1+. En vez de duplicar el código cada vez nos centraremos en uno de ellos, el +0+ o _P0_. Para el proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
-Como generalización se suele usar +i+ para identificar al propio proceso y +j+ para identificar a los otros. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
+Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
 
 
 ==== Primer intento
@@ -111,7 +108,7 @@ Entrada inmediata:: Si +turn+ vale +1+ pero este último está en el _resto del 
 Sin suposiciones de velocidad relativa:: Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple.
 
 
-El problema de este algoritmo es que obliga a una *_alternancia exclusiva_* que provoca espera infinitas.
+El problema de este algoritmo es que obliga a una _alternancia exclusiva_ que provoca espera infinitas.
 
 
 ==== Segundo intento

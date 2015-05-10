@@ -4,11 +4,8 @@ La exclusión mutua es un problema básico y fundamental de sincronización entr
 
 El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta variables enteras simples
 
-Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y el lógico interés en que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_.
-
-Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
-
-Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
+////
+////
 
 Este capítulo describe el problema de la exclusión mutua, en qué casos se presenta y qué condiciones deben cumplir una solución correcta al problema. En los siguientes capítulos analizaremos cómo solucionarla algorítmicamente, los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no sólo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización (productor-consumidor, lectores-escritores, etc.).
 
@@ -25,7 +22,7 @@ print "a, b:", a, b
 
 Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será +1 1+. Si las dos asignaciones se repiten el resultado será +a, b: 2 3+, el siguiente +a, b: 3 6+, etc.
 
-Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ con *variables compartidas*. Se puede producir la siguiente intercalación de las instrucciones del programa:
+Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ con _variables compartidas_. Se puede producir la siguiente intercalación de las instrucciones del programa:
 
 
 ----
@@ -50,7 +47,7 @@ a, b: 2 2
 a, b: 2 4
 ----
 
-Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como *condición de carrera* (_race condition_). Es muy difícil detectar los _bugs_ causados por _race conditions_, habitualmente no son frecuentes porque la probabilidad de que ocurra es muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
+Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en _secciones críticas_ del código que acceden a recursos u _objetos compartidos_ (en este caso variables). Este problema se denomina genéricamente como _condición de carrera_ (_race condition_). Es muy difícil detectar los _bugs_ causados por condiciones de carrera, habitualmente no son frecuentes porque la probabilidad de que ocurra es muy bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es muy difícil repetir el error con las mismas condicionesfootnote:[Recuerda que la planificación de CPU es no determinística en los sistemas operativos modernos.].
 
 Esas dos líneas (o tres si contamos con el +print+ de ambos resultados) acceden a variables compartidas y que además tienen dependencias entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de _instrucciones_ no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas:
 
@@ -130,39 +127,61 @@ Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo s
 
 
 
-=== Exclusión mutua
+=== Definición
 
-En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, recordad que éstas pueden ocurrir tanto en sistemas con un sólo procesador como con paralelismo. Una *solución correcta de exclusión mutua es equivalente y funciona para ambos modos*: el paralelismo es sólo un caso particular de la intercalación.
+En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos: el paralelismo es sólo un caso particular de la intercalación.
 
-Para que evitar los errores primero debemos identificar el código de ambos programas que acceden a recursos compartidos y que por lo tanto pueden ser víctimas de las _condiciones de carrera_. Esos *fragmentos de código se denominan _secciones críticas_*.
+La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes, que podían ser considerados cíclicos y cada uno de sus ciclos se ejecuta una parte de código denominoado _sección crítica_ que accede y modifica recursos o zonas de memoria compartidas. La intercalación de las instrucciones de esas secciones críticas generan condiciones de carrera, pueden generar resultados erróneos
 
-La solución más sencilla y obvia es *evitar que la sección crítica de un proceso se ejecute mientras se está ejecutando la misma sección en otro proceso*: debemos asegurar *_exclusión mutua_* en su ejecución.
+Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas. El modelo de sección crítica separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algotirmos que se insertan antes y después de las secciones críticas:
+
+- Preprotocolo o _entrada a la sección crítica_.
+
+- Posprotocolo o _salida de la sección crítica_.
 
 
+[source,python]
+.Modelo de sección crítica
+----
+while forever:
+    # ...
+    cs_entry()             <1>
+    critical_section()
+    cs_exit()              <2>
+    # ...
+----
+<1> Preprotoclo o entrada a la sección crítica.
+<2> Posprotocolo o salida de la sección crítica
 
-=== Requisitos para la soluciones de exclusión muta
 
-Hay tres requisitos que deben cumplir los algoritmos y primitivas que pretenden solucionar el exclusión mutua.
+Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, aunque cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, consiste en desarrollar el algoritmo para la entrada y salida de la sección crítica.
+
+Esos algoritmos deben cumplir conm los siguientes requisitos:
 
 [[em_requisites]]
 [IMPORTANT]
 .Requisitos para exclusión mutua
 ====
 Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
+
 Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
+
 Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
 ====
 
+Además de los tres requisitos fundamentales anteriores, en el artículo roginal (<<Dijkstra65>>) Dijkstra propuso cuatro reglas que se deben cumplir:
 
-Estas tres condiciones nos servirán para evaluar los algoritmos o mecanismos de exclusión mutua. En el siguiente capítulo analizaremos cómo se desarrollaron los primeros algoritmos y el grado de cumplimiento con estas tres condiciones.
+[[four_requisites]]
+.Cuatro requisitios de Dijkstra
+* La solución debe ser _simétrica_ en los diferentes procesos, no se permiten soluciones que cambien el comportamiento o la prioridad estática de algún proceso.
 
-Además de los tres requisitos fundamentales anteriores (<<em_requisites>>), <<Stallings>> propone seis requisitos *equivalentes* a los anteriores pero que al ser más específicos facilitan el análisis y validación del código.
+* No se deben hacer suposiciones de la _velocidad relativa_ de los procesos, ni se puede suponer que las velocidades sean constantes.
 
-[[six_requisites]]
-.Seis requisitos para exclusión mutua
-. Asegurar *exclusión mutua*.
-. Un proceso que se interrumpe en su sección no crítica (o _resto del código_) *no debe interferir* a los demás procesos.
-. Espera limitada, no debe permitir *esperas infinitas* en la _entrada de la sección crítica_. Es decir, libre de interbloqueo e inanición.
+* Un proceso que se interrumpe fuera de su sección crítica (o _resto del código_) no debe _interferir_ ni bloquear a los demás procesos.
+
+* Si varios procesos desean entrar simultáneamente la decisión en la _entrada de la sección crítica_ debe tomar un número finito de pasos.
+
+////
 . Debe permitir la *entrada inmediata* a la sección crítica si no hay ningún proceso en ella.
-. No se deben hacer *suposiciones de la velocidad relativa* de los procesos ni del número de procesadores.
 . Un proceso permanece en su sección crítica por tiempo finito. Dado que nuestro interés es desarrollar los algoritmos de entrada y salida a la sección crítica, damos por cierta la validez de esta reglafootnote:[Pero sí se debe tomar en cuenta cuando se desarrollan los programas que *implementan* la sección crítica.].
+////

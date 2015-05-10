@@ -9,6 +9,25 @@ El código está en <<source_code>>
 
 La terminología es fundamental para entender la documentación técnica, me tomé el trabajo de indicar el nombre inglés que se suele usar para las diferentes.
 
+
+=== Concurrencia
+
+
+
+Programas concurrentes son los que se ejecutan como procesos o hilos asincrónicos y que acceden a recursos compartidos. Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutarlos, no necesariamente un programa concurrente ha de ejecutarse en paralelo, puede hacerlo en un único procesador. Los problemas y soluciones a los accesos concurrentes son similares para ambos tipos de ejecuciones.
+
+Pero con la popularización de las arquitecturas de múltiples procesadores y núcleos ha crecido enormemente el interés por el tema de concurrencia, esto está afectando también a los lenguajes más populares y seguramente les obligará a cambios radicales en los siguientes años para adaptarlos a los exigencias modernas.
+
+//
+
+Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y el lógico interés en que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_.
+
+Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
+
+Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
+
+
+
 ////
 
 http://talks.golang.org/2012/waza.slide#6
