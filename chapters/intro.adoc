@@ -22,6 +22,16 @@ Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua
 
 Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
 
+
+.Intercalado
+image::interleaving.png[height="120", align="center"]
+
+
+.Multiprocesamiento
+image::multiprocessing.png[height="120", align="center"]
+
+
+
 Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
 
