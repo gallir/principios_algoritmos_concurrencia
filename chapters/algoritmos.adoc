@@ -2,7 +2,7 @@
 Agregar el código spinlock.c
 ////
 == Exclusión mutua
-Primero describiremos el problema de la _exclusión mutua_ (o _secciones críticas_), en qué casos se presenta y qué condiciones deben cumplir las soluciones. A continuación analizaremos las soluciones por software a la exclusión mutua, desde los primeros intentos con dos procesos a las soluciones genéricas para _N_ procesos.
+En este capítulo describiremos el problema de la _exclusión mutua_ (o _secciones críticas_), en qué casos se presenta y qué condiciones deben cumplir las soluciones. A continuación analizaremos las soluciones por software a la exclusión mutua, desde los primeros intentos con dos procesos a las soluciones genéricas para _N_ procesos.
 
 ////
 En los siguientes capítulos veremos los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no sólo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización.
@@ -19,9 +19,9 @@ El mismo problema ocurre con granularidades menores, datos en ficheros modificad
 === Definición
 
 
-La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes, que podían ser considerados cíclicos y cada uno de sus ciclos se ejecuta una parte de código denominoado _sección crítica_ que accede y modifica recursos o zonas de memoria compartidas. La intercalación de las instrucciones de esas secciones críticas generan condiciones de carrera, pueden generar resultados erróneos
+La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes, que podían ser considerados cíclicos y cada uno de sus ciclos se ejecuta una parte de código denominado _sección crítica_ que accede y modifica recursos o zonas de memoria compartidas. La intercalación de las instrucciones de esas secciones críticas generan condiciones de carrera, pueden generar resultados erróneos
 
-Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas. El modelo de sección crítica separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algotirmos que se insertan antes y después de las secciones críticas:
+Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas. El modelo de sección crítica separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan antes y después de las secciones críticas:
 
 - Preprotocolo o _entrada a la sección crítica_.
 
@@ -72,7 +72,7 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 
 [[algorithms]]
 === Algoritmos de exclusión mutua
-Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963 footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
+Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
 
 Estos algoritmos no se usan por varios motivos, no funcionan en las arquitecturas de procesadores modernos ya que estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, lo que obliga a usar _barreras de memoria_ (_memory barriers_) que se explican en el capítulo siguiente (<<barriers>>). Tampoco se usan porque consumen mucha CPU al usar __, además existen otras primitivas que eliminan los problemas mencionados y que explico en otros capítulos: _spinlocks_, semáforos, monitores y paso de mensajes.
 
@@ -128,7 +128,7 @@ while True:
 
 === Solución para dos procesos
 
-Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan también con las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simátricos.
+Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan también con las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simétricos.
 
 Los algoritmos son simétricos, se ejecuta el mismo código en ambos procesos, cada uno identificado por +0+ o +1+. En vez de duplicar el código cada vez nos centraremos en uno de ellos, el +0+ o _P0_. Para el proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
@@ -162,7 +162,7 @@ critical_section()
 turno = 1
 ----
 
-Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno a _P1_. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando si se cumplen los requisitos de <<six_requisites>>.
+Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno a _P1_. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando si se cumplen los requisitos de <<four_requisites>>.
 
 Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, la asignación de enteros es atómica en los procesadores, al final sólo se almacenará +0+ o +1+.].
 
@@ -245,7 +245,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como da verdadero no saldrá del +while+ hasta que _P0_ cambie su estado falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 
-Es la perfecta definión de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
+Es la perfecta definición de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
 [[railroad_quote]]
 .Ley de Kansas
@@ -393,7 +393,7 @@ El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un p
 
 === Solución para N procesos
 
-Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ con  e implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
+Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
 
 [[bakery]]
 ==== Algoritmo de la Panaderia (1974)

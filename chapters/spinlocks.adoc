@@ -486,7 +486,7 @@ image::clh.png[align="center"]
 
 El algoritmo es breve pero más complejo, tiene más niveles de indirección (se opera sobre las direcciones de memoria de punteros de memoria) y a diferencia de _MCS_ los procesos verifican el estado de una variable en el nodo predecesor. Sus ventajas son:
 
-- Como _MCS_ la espera activa se hace sobre variables independientes aunque no necesariamente localesa cada proceso.
+- Como _MCS_ la espera activa se hace sobre variables independientes aunque no necesariamente locales a cada proceso.
 - Solo requiere la instrucción atómica _getAndSet_.
 - La memoria de los nodos puede ser gestionada independientemente. Los procesos pueden proveer un nodo a una dirección estática o el propio módulo de _spinlocks_ puede gestionar la memoria (por ejemplo haciendo +malloc+ en el +lock+ y +free+ del nodo que ya no se usa en el +unlock+).
 - Puede ser adaptado a sistemas sin coherencia de caché.

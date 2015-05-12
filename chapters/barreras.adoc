@@ -6,7 +6,7 @@ Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y 
 Tampoco debería decepcionar. El objetivo de estudiar los algoritmos fue aprender a reconocer y razonar sobre los problemas inherentes de la programación concurrente. No es la intención que se usen en programas sino aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
 
 
-Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que en los prorgamas del capítulo anterior (<<counter_times>>):
+Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que en los programas del capítulo anterior (<<counter_times>>):
 
 ----
 $ time ./counter_peterson
@@ -60,9 +60,9 @@ image::intel-quickpath.png[height=400, align="center"]
 
 Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. A cada línea se le asigna uno de esos cuatro estados, cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.
 
-Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ ésta es marcada como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con su valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
+Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ se la etiqueta como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
 
-Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas prubeasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
+Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas pruebasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
 
 ===== La sobrecarga del acceso a variables compartidas
 
@@ -234,4 +234,4 @@ En este capítulo hemos explicado uno de los mayores problemas ocasionados por l
 
 La programación con barreras explícitas no es práctica, tiende a producir errores, hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia y conocimientos. Los investigadores consideran que es un error pero es el precio a pagar por obtener procesadores más rápidos.
 
-En cualquier caso, ya no tiene sentido programar mecanismos de sincronizacón como los vistos sin ayuda del hardware que facilite la programación y recupere al menos parcialmente la propiedad de _secuencialidad_ de la máquina de Turing para múltiples procesos. En el próximo capítulo analizaremos estas soluciones de hardware, no solo sirven para solucionar la exclusión mutua, también mecanismos de consenso que permiten sincronizar procesos sin limitaciones en su número.
+En cualquier caso, ya no tiene sentido programar mecanismos de sincronización como los vistos sin ayuda del hardware que facilite la programación y recupere al menos parcialmente la propiedad de _secuencialidad_ de la máquina de Turing para múltiples procesos. En el próximo capítulo analizaremos estas soluciones de hardware, no solo sirven para solucionar la exclusión mutua, también mecanismos de consenso que permiten sincronizar procesos sin limitaciones en su número.
