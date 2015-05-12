@@ -1,3 +1,4 @@
+[[code_hardware]]
 == Código fuente: Instrucciones por hardware
 
 

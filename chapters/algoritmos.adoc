@@ -391,7 +391,7 @@ Espera limitada::
 El proceso que desea entrar primero cede turno al otro, por lo tanto si hay un proceso que ejecutó entró antes al bucle de comparación es el primero que entrará. Si este mismo sale y vuelve a intentar entrar habiendo otro esperando le cederá el turno. Así se demuestra que cualquier proceso tendrá que esperar como máximo a que el otro salga una vez de la sección crítica, luego le tocará el turno indefectiblemente.
 
 
-=== Solución para N procesos
+=== Solución para _N_ procesos
 
 Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, su estudio tiene objetivos académicos, no buscan la utilidad práctica. Como veremos en <<barriers>> y <<spinlocks>>, un algoritmo para _N procesos_ implementado sin soporte especial del hardware o el sistema operativo tampoco es útil en los sistemas modernos. Sin embargo, además del interés académico, tiene sentido estudiarlos para comprender mejor los problemas y las soluciones genéricas de exclusión mutua.
 
