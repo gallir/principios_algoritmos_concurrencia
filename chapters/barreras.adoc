@@ -1,12 +1,12 @@
 [[barriers]]
 == La realidad del hardware moderno
 
-Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos no funcionarán en la mayoría de procesadores modernos. No debería sorprender, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de procesadores o núcleos (una de las razones de la popularización de la _programación concurrente_, permite maximizar y sacar provecho a varios procesadores). Más adelante veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
+Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos no funcionarán en la mayoría de procesadores modernos. No debería sorprender, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de varios procesadores y núcleos (una de las razones de la popularización de la _programación concurrente_ para ejecución en paralelo). Veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
 
-Tampoco debería decepcionar. El objetivo de estudiar los algoritmos fue aprender a reconocer y razonar sobre los problemas inherentes de la programación concurrente. No es la intención usarlos en programas concurrentes, sino aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
+Tampoco debería decepcionar. El objetivo de estudiar los algoritmos fue aprender a reconocer y razonar sobre los problemas inherentes de la programación concurrente. No es la intención que se usen en programas sino aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que te permiten abstraerte de las particularidad y complejidades de las arquitecturas de hardware.
 
 
-Para que veáis el problema programé el algoritmo de Peterson y ejecuté el programa de la misma forma que en el capítulo anterior (<<counter_times>>)footnoteref:[paciencia, Ten un poco de paciencia, el código está en el libro, ya enlazo la solución correcta un poco más adelante.]:
+Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que en los prorgamas del capítulo anterior (<<counter_times>>):
 
 ----
 $ time ./counter_peterson
@@ -17,11 +17,11 @@ user    0m1.189s
 sys     0m0.000s
 ----
 
-Además del incremento notable de tiempo de CPU (0.017s en la ejecución sin el algoritmo de Peterson) el resultado sigue siendo erróneo, no se cumple la exclusión mutua.
+Además del incremento notable de tiempo de CPU (0.017s en la ejecución sin el algoritmo de Peterson) el resultado sigue siendo erróneo, no se cumple la exclusión mutua y se _pierden_ operaciones como si no tuviese ningún control de acceso a la sección crítica.
 
-No es ningún secreto que los procesadores modernos ya no garantizan que los programas se ejecuten en el mismo _orden de secuencias_ del programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
+Los procesadores modernos no garantizan que los programas se ejecuten en el mismo _orden de secuencias_ del programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
 
-Hay tres razones fundamentales que pueden afectar a la violación de la consistencia secuencial:
+Las tres razones principales que pueden afectar a la violación de la consistencia secuencial:
 
 * Optimizaciones del compilador
 * Caché de RAM en multiprocesadores
@@ -34,40 +34,39 @@ Los compiladores pueden optimizar el código de varias formas, desde cambiar el 
     volatile int counter = 0;
 
 
-El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con +volatile+ los algoritmos no funcionan. La causa del fallo de exclusión mutua es otra.
+El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con +volatile+ los algoritmos no funcionan. En este caso la causa del fallo de exclusión mutua es otra aún más sutil.
 
 === Caché de RAM en multiprocesadores
 
 El acceso a la memoria RAM toma hasta cientos de ciclos de reloj del procesador, para reducir estas diferencias los procesadores usan una jerarquía de hasta tres niveles (L1, L2 y L3) de memoria caché. L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y de menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada uno de los núcleos y L3 es compartido por los demás núcleos en el mismo chip.
 
-Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y las siguientes accesos se hacen directamente a la caché gracias al efecto de localidad de los programas. Si una línea de caché fue modificada se marca como tal y luego es copiada a la memoria RAM.
+Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y los siguientes accesos se hacen directamente a la caché gracias al efecto de localidad de los programas. Si una línea de caché fue modificada se marca como tal y luego es copiada a la memoria RAM.
 
 
 ****
 Para traducir de una dirección de memoria física a la línea correspondiente de la caché se usan métodos similares a las de `[número de página, desplazamiento]` de las páginas de memoria RAM. Se usan varios mecanismos de _asociación_. Desde el _direct mapping_ donde la asociación entre conjuntos de direcciones de memoria RAM y una línea correspondiente está predeterminada, a sistemas de _hashing_ y asociativas usando _memoria direccionable por contenido_.
 ****
 
-El problema es mantener las caché coherentes con varios núcleos o procesadores. Dependiendo de la arquitectura ésta puede o no garantizar _coherencia de caché_. La buena noticia es que la mayoría de procesadores la garantizan.
+En arquitecturas de multiprocesamiento es un problema mantener coherentes las copias de la memoria caché en los diferentes procesadores. Dependiendo de la arquitectura ésta puede o no garantizar _coherencia de caché_. La buena noticia es que la mayoría de procesadores la garantizan.
 
 ==== Coherencia de caché en multiprocesadores
 
-Los sistemas de multiprocesadores están conectados por una compleja red de comunicación, popularmente conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ donde los datos se transfieren por un bus compartido o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
+Los sistemas de multiprocesadores están conectados por una compleja red de comunicación, popularmente conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ -los datos se transfieren por un bus compartido- o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
 
 
 [[quickpath]]
 .Arquitectura QuickPath de Intelfootnote:[Imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_ http://www.intel.es/content/dam/doc/white-paper/quick-path-interconnect-introduction-paper.pdf]
 image::intel-quickpath.png[height=400, align="center"]
 
-Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. Cada línea tiene uno de esos cuatro estados, cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.
+Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. A cada línea se le asigna uno de esos cuatro estados, cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.
 
-Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ ésta se marcada como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con su valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
+Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ ésta es marcada como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con su valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
 
-Este mecanismo asegura la consistencia de caché y no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
+Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas prubeasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
 
-.El problema del acceso a variables compartidas
-****
-Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por *cada modificación* de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
-****
+===== La sobrecarga del acceso a variables compartidas
+
+Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por cada modificación de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
 
 El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>> pero la suma le hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
@@ -95,9 +94,9 @@ Si se va a iterar muy frecuentemente (_spinning_) sobre variables es mejor asegu
 
 === Ejecución fuera de orden
 
-El problema con la implementación de los algoritmos de exclusión mutua es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. Los procesadores reordenan las instrucciones con el objeto de optimizar la ejecución ahorrando ciclos de reloj. Por ejemplo porque ya tiene valores cargados en registros, o porque una instrucción posterior ya ha sido decodificada en el _pipeline_. Por lo tanto el procesador no asegura la consistencia secuencial con respecto al orden del programa. En cambio usa mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_) de acceso a memoria.
+El problema con la implementación de los algoritmos de exclusión mutua es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. Los procesadores reordenan las instrucciones con el objeto de optimizar la ejecución ahorrando ciclos de reloj. Por ejemplo, porque ya tiene valores cargados en registros, o porque una instrucción posterior ya ha sido decodificada en el _pipeline_. Por lo tanto el procesador no asegura la consistencia secuencial con respecto al orden del programa. En cambio usa mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_) de acceso a memoria.
 
-Esta dependencia causal funciona de la siguiente manera, supongamos un programa con las siguientes instrucciones:
+La dependencia causal funciona de la siguiente manera, supongamos un programa con las siguientes instrucciones:
 
     a = x
     b = y
@@ -116,7 +115,7 @@ o
     c = a * 2
 
 
-Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Esto funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores cada uno de ellos es incapaz de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcta más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
+Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores los procesadores son incapaces de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcto más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
 
 [source,python]
 ----
@@ -126,7 +125,7 @@ while states[1] and turn == 1:
     pass
 ----
 
-El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre +states[0]+ y +states[1]+, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente ordenfootnote:[Estoy exagerando, recordad que esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.]:
+El procesador no tiene en cuenta que las variables son modificadas por otros procesos, incluso no encuentra la dependencia entre +states[0]+ y +states[1]+, para el procesador son dos variables independientes que no tienen dependencia en _esta secuencia_. Por lo que es factible que las ejecute en el siguiente orden:
 
 [source,python]
 ----
@@ -138,12 +137,12 @@ states[0] = True
    ## BOOOM!!! ##
 ----
 
-Por supuesto eso haría que el algoritmo de exclusión mutua fallase. Para solucionarlo debes pedir _bajo demanda_ que el procesador respete el orden de acceso a memoria de nuestro programa, esto se hace con las _barreras de memoria_
+El procesador puede perfectamente ejecutarfootnote:[En el ejemplo exagero, esas instrucciones son de alto nivel y que cada una de ellas son varias instrucciones de procesador, pero creo que la analogía es razonable y se entiende mejor.] la asignación a +states[0]+ después de la verificación del valor de +states[1]+ ya que en la secuencia de instrucciones individuales no hay dependencia causal entre ambas. Por supuesto eso haría que el algoritmo de exclusión mutua fallase. Para solucionarlo se debe solicitar _bajo demanda_ y explícitamente que el procesador respete el orden de acceso a memoria entre diferentes segmentos del programa, esto se hace con las _barreras de memoria_.
 
 
 === Barreras de memoria
 
-Para hacer que el algoritmo funcione correctamente debemos especificar _barreras_ (_fences_ o _barriers_) al procesador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de _barrera general_ indica al procesador:
+Para hacer que el algoritmo funcione correctamente deben especificarse _barreras_ (_fences_ o _barriers_) al procesador para impedir que ejecute ciertas instrucciones en un orden que puede resultar erróneo entre procesos diferentes. Una instrucción de _barrera general_ indica al procesador:
 
 . Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
 
@@ -163,7 +162,7 @@ Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes
     BARRIER()
     c = a * 2
 
-Para hacer que el algoritmo de Peterson funcione debemos insertar una barrera entre la asignación de +states+ y +turn+ y el while que verifica el turno y el estado del otro proceso:
+Para que el algoritmo de Peterson funcione correctamente debemos insertar una barrera entre la asignación de +states+ y +turn+ y el +while+ que verifica el turno y el estado del otro proceso:
 
 [source,python]
 ----
@@ -174,31 +173,23 @@ while states[1] and turn == 1:
     pass
 ----
 
-Así el código funcionará correctamente.
 
-////
+==== Tipos de barreras
+Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres tradicionales son de _lectura_, _escritura_ y la _general_. Existen alternativas, como las _acquire_, _release_ y _sequential_ usadas en los macros de GCC compatibles con Ansi C/C++ de 2011 (<<Atomics_C11>>)footnote:[Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Howells>>.].
 
+- Una barrera _acquire_ es de _sentido único_ (+ATOMIC_ACQUIRE+ en <<Atomics_C11>>), garantiza que todas las operaciones de memoria posteriores a la barrera _parecerán_ haber ocurrido después, las anteriores pueden ejecutarse antes y fuera de orden.
 
-Explicar mejor lo de acquire y y release
+- Una barrera _release_ (+ATOMIC_RELEASE+) es como la anterior pero en sentido contrario. Los resultados de las operaciones previas a la barrera ocurrirán antes de la misma. Las posteriores a la barrera podrían ocurrir antes de la misma.
 
+- La barrera _sequential_ (o _completa_, o _general_, +ATOMIC_SEQ_CST+) tiene dos sentidos, las operaciones previas ocurrirán antes y las posteriores después.
 
-
-
-////
-
-
-****
-Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres típicas son la _general_, la de _lectura_ y la de _escritura_. La primera es la que acabamos de ver, la de lectura se aplican sólo a las operaciones de lectura y la última sólo a las de escrituras.
-
-También hay variaciones, como las _acquire_ y _release_. Si estáis interesados en aprender más sobre ellas y cómo afectan al desarrollo del núcleo Linux, un buen enlace para comenzar <<Howells>>.
-****
 
 ==== Uso de barreras
-Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de 1990 (con la introducción del procesador Power1) por la complejidad que significaba en el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras, por lo que no existen instrucciones estándares y mucho menos instrucciones específicas en los lenguajes de programación de alto nivel.
+Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1) por la complejidad que significaba en el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras por lo que no existen instrucciones estándares y no construcciones sintácticas específicas en los lenguajes de programación de alto nivel.
 
-Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics>>. El compilador define macros que usamos como funciones normales dentro del programa, luego el compilador inserta el código ensamblador correspondiente para cada arquitectura. Veréis que hay bastantes _macros atómicos_, algunos de ellas las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el que inserta una barrera: `__atomic_thread_fence` footnote:[Este macro es <<Atomics, para las versiones más modernas de GCC>>, en las antiguas versiones es `__sync_synchronize`, se recomienda al menos la versión 4.8 del GCC.].
+Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics_C11>>. El compilador define macros llamados como funciones normales dentro del programa, al compilar se inserta el código ensamblador correspondiente para cada arquitectura. Hay bastantes _macros atómicos_, algunos de ellos las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence` de GCCfootnote:[Este macro es para las versiones más modernas de GCC, en las antiguas versiones es `__sync_synchronize`, se recomienda al menos la versión 4.8 del GCC.].
 
-Lo único que debemos hacer es insertar la _llamada_ tal como en el siguiente fragmento de entrada a la sección crítica del <<counter_peterson_c, código completo en C>>:
+Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson (<<counter_peterson_c, código completo en C>>):
 
 [source,c]
 ----
@@ -212,7 +203,7 @@ void lock(int i) {
 }
 ----
 
-Y la ejecución si es correcta y lo que esperábamos:
+La ejecución si es correcta y lo que esperábamos:
 
 ----
 $ time ./counter_peterson
@@ -222,32 +213,25 @@ user    0m1.230s
 sys     0m0.000s
 ----
 
-
-En ese punto del programa el GCC las siguientes instrucciones para las diferentes arquitecturas:
-
-.Intel 64 bits
-----
-    mfence
-----
-
-.Intel 32 bits
-----
-    lock orl    $0, (%esp)
-----
+En el algoritmo de Peterson la solución con barreras es sencilla pero las soluciones no son sencillas ni intuitivas cuando los algoritmos se complican. Por ejemplo, el algoritmo de la panadería (<<counter_peterson_c, código en C>>) o el algoritmo rápido de Lamport (<<counter_fast, código en C>>) necesitan tres barreras de diferentes tipos en diferentes sitios para asegurar su funcionamiento correcto.
 
 
-.ARMv6 de 32 bits (Raspberry Pi 1)
-----
-    mcr     p15, 0, r0, c7, c10, 5
-----
 
-.ARMv7 y siguientes
-----
-    dmb
-----
+.Instrucciones de barreras por arquitectura
+****
+- Intel 64 bits: +mfence+
+
+- Intel 32 bits: +lock orl+
+
+- ARMv6 de 32 bits (Raspberry Pi 1): +mcr  p15, 0, r0, c7, c10, 5+
+
+- ARMv7 y posteriores: +dmb+
+****
 
 === Recapitulación
 
-En este capítulo hemos explicado uno de los mayores problemas ocasionados por la ejecución fuera de orden de los procesadores modernos, cómo solucionarlos y los problemas de rendimiento. Pero el uso de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado (varios cientos de ciclos de reloj) que se suman a la presión que introducimos al sistema de caché. No sólo eso, también es complicado saber exactamente donde hay que implementar las barreras y al mismo tiempo no abusar de ellas por el enorme coste que introducen (si queréis hacer un buen ejercicio demostrativo, implementad el algoritmo de la panadería y haced que funcione con el menor número de barreras posibles, no es nada obvio).
+En este capítulo hemos explicado uno de los mayores problemas ocasionados por la ejecución fuera de orden de los procesadores modernos y cómo solucionarlos. La especificación explícita de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado (varios cientos de ciclos de reloj) que se suman a la presión que introducimos al sistema de caché. Quizás lo más importantes desde el punto de vista del programador es la dificultad de saber exactamente dónde hay que insertar barreras y al mismo tiempo no abusar de ellas por el coste que introducen.
 
-En el próximo capítulo analizaremos soluciones mejores de hardware que permiten no solo la exclusión mutua sino implementar mecanismos de consenso para cualquier número de procesos.
+La programación con barreras explícitas no es práctica, tiende a producir errores, hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia y conocimientos. Los investigadores consideran que es un error pero es el precio a pagar por obtener procesadores más rápidos.
+
+En cualquier caso, ya no tiene sentido programar mecanismos de sincronizacón como los vistos sin ayuda del hardware que facilite la programación y recupere al menos parcialmente la propiedad de _secuencialidad_ de la máquina de Turing para múltiples procesos. En el próximo capítulo analizaremos estas soluciones de hardware, no solo sirven para solucionar la exclusión mutua, también mecanismos de consenso que permiten sincronizar procesos sin limitaciones en su número.

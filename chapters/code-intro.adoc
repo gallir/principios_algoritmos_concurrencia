@@ -1,5 +1,5 @@
 [[source_code]]
-== Código fuente introducción
+== Código fuente algoritmos de exclusión mutua
 
 
 [[threads_source]]
