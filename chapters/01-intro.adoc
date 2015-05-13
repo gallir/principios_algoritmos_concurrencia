@@ -40,15 +40,36 @@ Durante su ciclo de vida los estados pasan por tres estados básicos:
 
 - Ejecución: El proceso se está ejecutando en una CPU. Como máximo hay un proceso en ejecución por cada procesador.
 
-- Listos para ejecutar: El proceso no se está ejecutando pero puede pasar a ejecución inmediatamente. El sistema mantiene colas de los procesos en este estado ordenadas por diferentes criterios (prioridad, tiempo de ejecución, afinidad a un procesador, etc.).
+- Listos para ejecutar (o simplemente _listos_): El proceso no se está ejecutando pero puede pasar a ejecución inmediatamente. El sistema mantiene colas de los procesos en este estado ordenadas por diferentes criterios (prioridad, tiempo de ejecución, afinidad a un procesador, etc.).
 
-- Bloqueados (también llamados _suspendidos_ en Linux):  Los procesos en este estado no están listos para ser ejecutados, tienen que esperar que ocurra un evento para estar nuevamente listos. Lo más frecuente es que se trate de una operación de entrada-salida iniciada por el propio proceso, no pueden continuar hasta que tengan los datos disponibles. El sistema mantiene diferentes colas clasificadas por el tipo de evento que esperan los procesos en ella.
+- Bloqueados (también llamados _suspendidos_ en Linuxfootnote:[En la bibliografía académica _suspendido_ es otro estado diferente, cuando un proceso ha sido expulsado de la memoria RAM.]):  Los procesos en este estado no están listos para ser ejecutados, tienen que esperar que ocurra un evento para estar nuevamente listos. El sistema mantiene diferentes colas clasificadas por el tipo de evento que esperan los procesos en ella.
 
 
 .Estados de procesos
 image::processes_states.png[width="440", align="center"]
 
 
+Los procesos pasan a bloqueados porque solicitaron una operación al sistema operativo (vía _llamadas de sistema_) y deben esperar a que la operación acabe o esperar un evento de algún dispositivo. Cuando la operación acaba el proceso es movido a la cola de listos para ejecutar.
+
+La transición entre _listos_ y  en _ejecución_ lo decide el módulo _scheduler_ del sistema operativo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos) o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda tomar y no soltar el control del procesador se añaden interrupciones programadas en un reloj.
+
+Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción que hace que el procesador pase el control al _scheduler_ para que tome la decisión de qué proceso debe ejecutarse. Dado que el sistema es capaz de quitar de ejecución al proceso aunque éste no genere ninguna llamda de sistema se dice que el sistema es _apropiativo_ (_preemptive_).
+
+En cada uno de estos casos el _scheduler_ tiene que decidir cuál de los siguientes procesos se ejecutará, debe hacerlo entre unas pocas cientos de veces a decenas de miles de veces por segundo. El requisito clave del _scheduler_ es que la decisión la haga lo más rápido posible, por ello se usan sofisticados algoritmos de colas para que la selección sea lo más rápido posible y con complejidad _O(1)_ (i.e. se selecciona el primer elemento de la cola).
+
+Además el _scheduler_ debe asegurar distribuir los tiempos de procesador equitativamente, tener en cuenta las diferentes prioridades y evitar que se produzcan _esperas infinitas_ de procesos que nunca son seleccionados para ejecución. Se usa como base un algoritmo basado en turnos rotatorios (_round robin_), a cada proceso se le asigna un tiempo máximo de ejecución (el _cuanto_ o _quantum_), pasado ese tiempo el proceso es interrumpido y si hay otro proceso listo se hace un _cambio de contexto_ (_context switching).
+
+
+Los _cambios de contexto_ son relativamente caros, el sistema operativo y el procesador deben trabajar juntos para:
+
+1. Guardar los registros del procesador para restaurarlos cuando el proceso vuelva a ejecución.
+
+2. Marcar como inválidas las entradas de caché de las tablas de página (los _TLB_, _Translation Lookaside Buffer_) y copiar las entradas modificadas a sus correspondientes entradas de las tablas de página del proceso (_TLB flushing_).
+
+3. Recuperar los datos
+
+
+Los procesos no tienen el control del procesador ni cuándo se ejecutarán, dada la complejidad de las interacciones y eventos también es muy difícil predecir o repetir exactamente una secuencia de ejecución, por eso los _schedulers_ de sistemas operativos de uso general se dicen que son _no determinísticos_ y por ende no pueden ser de _tiempo real_ estricto.
 
 
 
