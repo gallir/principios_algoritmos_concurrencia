@@ -84,7 +84,7 @@ El objetivo de estudiar estos algoritmos y su evolución hasta la solución corr
 - bloqueos activos (_livelocks_),
 - etc.
 
-Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas y hasta de consultas a bases de datos.
+Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas.
 
 ==== Memoria compartida
 
@@ -92,7 +92,9 @@ En todos los algoritmos y técnicas que analizamos en este libro asumimos que nu
 
 .Algoritmos distribuidos
 ****
-La alternativa son los sistemas donde los procesos no pueden compartir memoria, los algoritmos de este tipo ese denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por _intercambios de mensajes_ sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc. Aunque hay que resolver problemas similares y se basan en los mismos conceptos sus soluciones son más complejas. El diseño de algoritmos no es objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> se hace una breve introducción al problema.
+La alternativa son los sistemas donde los procesos no pueden compartir memoria, los algoritmos de este tipo ese denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por _intercambios de mensajes_ sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
+
+Aunque hay que resolver problemas similares y se basan en los mismos conceptos sus soluciones son más complejas. El diseño de algoritmos no es objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> hay una breve introducción al problema.
 ****
 
 ==== Convenciones de programación
@@ -128,9 +130,9 @@ while True:
 
 === Solución para dos procesos
 
-Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que cumplan también con las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simétricos.
+Primero solucionaremos primero el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que también cumplan las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simétricos, lo que significa que el código debe ser el mismo para ambos procesos.
 
-Los algoritmos son simétricos, se ejecuta el mismo código en ambos procesos, cada uno identificado por +0+ o +1+. En vez de duplicar el código cada vez nos centraremos en uno de ellos, el +0+ o _P0_. Para el proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
+Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización que ejecutan es el mismo, analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
 Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
 

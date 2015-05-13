@@ -2,9 +2,9 @@
 == Soluciones por hardware
 Hasta ahora hemos visto soluciones al problema de la exclusión mutua sin soporte de hardware y únicamente con _registros de lectura-escritura atómicos_. Esos algoritmos son _spinlocks_, pero muy ineficientes.
 
-En primer lugar los requisitos de memoria, tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (algoritmo de la panadería) el número de registros necesarios es proporcional al número máximos de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Esta necesidad de memoria impone una sobrecarga importante para mantener la consistencia de la memoria caché. Además del consumo de CPU por la espera activa, los procesos involucrados deben acceder al mismo rango de memoria que los demás. En algunos sistemas de caché puede ser una penalización importante, en otros exige sistemas de consistencia muy sofisticados.
+En primer lugar los requisitos de memoria, tanto para la solución de dos procesos (Dekker y Peterson) como para _N_ procesos (algoritmo de la panadería) el número de registros necesarios es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Esta necesidad de memoria impone una sobrecarga importante para mantener la consistencia de la memoria caché. Además del consumo de CPU por la espera activa hay una sobrecarga adicional al sistema de coherencia de caché debido a los accesos concurrentes a la misma zona de memoria.
 
-Por otro lado, si se tiene un único procesador el avance es tan lento que lo que tarda unas pocas instrucciones en algunos casos en otros puede tomar horas si hay mucha competencia _competencia_ (_contention_) al haber varios procesos compitiendo simultáneamente para entrar a la sección crítica. Desde que se comenzó a estudiar el problema de la concurrencia -inicios de la década de 1960- se buscaron soluciones por hardware que permitiesen implementar algoritmos de sincronización de forma mucho más eficiente.
+Por otro lado, si los procesos se ejecutan en un único procesador el avance es tan lento que lo que tarda unas pocas instrucciones en algunos casos en otros puede tomar horas si hay mucha competencia _competencia_ (_contention_) de varios procesos compitiendo por entrar a la sección crítica. Desde que se comenzó a estudiar el problema de la concurrencia -inicios de la década de 1960- se buscaron soluciones por hardware que permitiesen implementar algoritmos de sincronización más eficientes y seguros.
 
 
 === Inhabilitación de interrupciones
@@ -13,7 +13,7 @@ Si el problema fundamental es el intercalado de instrucciones generado por las i
 Aún al nivel del núcleo del sistema operativo presenta dificultades: la complicación de deshabilitar todas las interrupciones en todos los procesadores y el riesgo de perderlas. Por esta dificultad de deshabilitar las interrupciones en varios procesadores simultáneamente tampoco es una solución para asegurar exclusión mutua dado que un _registro_ puede ser modificado por un procesador diferente sin que haya habido intercalación en el mismo procesador.
 
 === Sincronización por hardware
-Se buscaron alternativas implementadas como instrucciones del procesador, conocidas genéricamente como _primitivas de sincronización de hardware_. Son instrucciones que leen y modifican el valor de uno o varios registros sin ser interrumpidas y asegurando la coherencia de caché (introducen barreras de memoria). No existe un único conjunto estándar de instrucciones, los fabricantes diseñaron e implementaron sus propias instrucciones. No es una decisión fácil cuál o cuáles implementarán en _silicio_ que tendrá que ser útil por décadadas, casi todas las arquitecturas ofrecen no una sino un conjunto de primitivas: _getAndAdd_, _testAndSet (TAS)_, _swap_, _compareAndSwap (CAS)_, etc.
+Se buscaron alternativas implementadas como instrucciones del procesador, conocidas genéricamente como _primitivas de sincronización de hardware_. Son instrucciones que leen y modifican el valor de uno o varios registros sin ser interrumpidas y asegurando la coherencia de caché (introducen barreras de memoria). No existe un único conjunto estándar de instrucciones, los fabricantes diseñaron e implementaron sus propias instrucciones. No es una decisión fácil cuál o cuáles implementarán en _silicio_ que tendrá que ser útil por décadas, casi todas las arquitecturas ofrecen no una sino un conjunto de primitivas: _getAndAdd_, _testAndSet (TAS)_, _swap_, _compareAndSwap (CAS)_, etc.
 
 Pero antes de estudiarlas estudiaremos las definiciones de _registros_ que proporcionen modelos simples y genéricos de consistencia por encima de las interrupciones o mecanismos de consistencia de caché.
 
@@ -25,11 +25,11 @@ El término _registro_ no se refiere solo a los registros del procesador. Puede 
 Los registros con propiedades de consistencia más débiles son los _registros seguros_, su nombre es un mero accidente histórico, son muy inseguros (<<Herlihy12>>). Estos registros solo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario podrá devolver cualquier valor aceptable en el rango del registro. Por ejemplo, si se trata de un único byte y hay procesos concurrentes que escriben solo +0+ o +1+ el _get_ de un registro seguro seguro podría devolver valores entre +0+ y +255+ ya que todos están en el rango de 8 bits.
 
 ==== Registros regulares
-Una alternativa intermedia son los _registros regulares_, donde una operación de lectura concurrente con escrituras puede retornar alguno de los valores que fueron escritos. En un caso similar al anterior, el _get_ de este tipo de registros solo devolvería +0+ o +1+. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_) ya que solo aseguran retornar el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
+Una alternativa intermedia son los _registros regulares_, una operación de lectura concurrente con escrituras puede retornar alguno de los valores que fueron recientemente escritos. En un caso similar al anterior, el _get_ de este tipo de registros solo devolvería +0+ o +1+. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_) porque aseguran que devolverán el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
 
 [[atomic_register]]
 ==== Registros atómicos
-Los registros de procesadores modernos que usamos para la implementación de los algoritmos de exclusión mutua son _registros atómicos_, generalmente se tratan de registros de un único byte, una _palabra_, enteros de varios bytes, o referencias a memoria u objetos que cumplen las siguientes dos condiciones (<<Lamport2>>):
+Los registros de procesadores que devuelven el último valor escritofootnote:[Los que supusimos para las variables de los algoritmos de exclusión mutua previos.] se denominan _registros atómicos_. Generalmente son registros de un único byte, una _palabra_, enteros de varios bytes, o referencias a memoria u objetos que cumplen las siguientes dos condiciones (<<Lamport2>>):
 
 1. El método _get_ retorna el último valor escrito. Si una lectura retorna un valor y no hubo otra escritura intermedia la siguiente lectura será el mismo valor.
 
@@ -46,9 +46,11 @@ Por ello no es de extrañar que desde el principio se introdujeran instrucciones
 .Registros RMW no triviales
 ****
 
-Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anteriormente implementan registros _RMW_ no triviales.
+Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anteriormente implementan registros _RMW_ no triviales.
 
-De todas las implementaciones, _compareAndSwap_ (_CAS_) es la más potente. <<Herlihy91, Herlihy>> también demostró que pertenece a la clase de _consenso N_ (o _infinito_). Este tipo de instrucciones son, en palabras del autor, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_. Afortunadamente la mayoría de procesadores implementan _CAS_ o la equivalente en cuanto a capacidad de consenso, _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
+De todas las implementaciones, _compareAndSwap_ (_CAS_) es la más potente. <<Herlihy91, Herlihy>> también demostró que pertenece a la clase de _consenso N_ (o _infinito_). Este tipo de instrucciones son, en palabras del autor, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_.
+
+Afortunadamente la mayoría de procesadores implementan _CAS_ o su equivalente en cuanto a capacidad de consenso, _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
 
 ****
 
