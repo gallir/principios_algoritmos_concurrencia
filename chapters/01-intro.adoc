@@ -23,6 +23,36 @@ Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua
 Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
 
 
+=== Procesos
+
+Los programas en ejecución se denominan procesos, son un elemento de gestión muy importante del sistema operativo. Los procesos tienen dos partes bien diferenciadas, la imagen de memoria y las tablas de control de procesos.
+
+Se denomina imagen de memoria al código y datos del programa en la memoria RAM. Se diferencian tres partes:
+
+- El código o texto: El programa ejecutable cargado en memoria.
+- Datos estáticos: La zona de memoria donde se almacenan las variables estáticas del programa (normalmente las variables globales).
+- La pila (_stack_): La zona donde se almacenan los argumentos a funciones, su valor de retorno y las variables automáticas (locales).
+- Zona de gestión dinámica de memoria: La zona de almacenamiento de memoria asignada dinámicamente a los proceso (llamada también _anónima_ en Linux, habitualmente por llamadas a +malloc+).
+
+Para poder gestionar a los procesos los sistemas operativos mantienen complejas estructuras de datos sobre la información de contexto y estado de cada proceso. Por ejemplo los valores de los registros del procesador cuando el proceso fue interrumpido, las tablas de memoria (tablas de páginas), estado de entradas y salidas, información de propiedad, etc.
+
+Durante su ciclo de vida los estados pasan por tres estados básicos:
+
+- Ejecución: El proceso se está ejecutando en una CPU. Como máximo hay un proceso en ejecución por cada procesador.
+
+- Listos para ejecutar: El proceso no se está ejecutando pero puede pasar a ejecución inmediatamente. El sistema mantiene colas de los procesos en este estado ordenadas por diferentes criterios (prioridad, tiempo de ejecución, afinidad a un procesador, etc.).
+
+- Bloqueados (también llamados _suspendidos_ en Linux):  Los procesos en este estado no están listos para ser ejecutados, tienen que esperar que ocurra un evento para estar nuevamente listos. Lo más frecuente es que se trate de una operación de entrada-salida iniciada por el propio proceso, no pueden continuar hasta que tengan los datos disponibles. El sistema mantiene diferentes colas clasificadas por el tipo de evento que esperan los procesos en ella.
+
+
+.Estados de procesos
+image::processes_states.png[width="440", align="center"]
+
+
+
+
+
+
 .Intercalado
 image::interleaving.png[height="120", align="center"]
 

@@ -53,7 +53,7 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 Las tres técnicas de optimización que veremos a continuación no son _escalables_ pero las mejoras en eficiencia pueden ser considerables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuit&o_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale +1+ ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
+Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuito_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale +1+ ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
 
 
 ----
