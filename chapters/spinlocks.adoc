@@ -23,7 +23,7 @@ Quizás tenían sentido el momento que se diseñaron esos algoritmos -o se escri
 ****
 
 
-Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo muestra los tiempos del algoritmo de la panaderia, el tercero (_ultimate_) es el más eficiente, incrementar directamente la variable entera +counter+ usando la instrucción atómica _getAndAdd_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _getAndAdd_, _testAndSet_, _getAndSet_ y _compareAndSwap_ respectivamente.
+Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo muestra los tiempos del algoritmo de la panaderia, el tercero (_ultimate_) es el más eficiente, incrementar directamente la variable entera +counter+ usando la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _test&set_, _get&set_ y _compare&swap_ respectivamente.
 
 
 [[hardware_times]]
@@ -31,7 +31,7 @@ Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ning
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Todos los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme para los diferentes procesadores. En Intel Core2 e i5 la operación más eficiente es _getAndAdd_. En el Xeon de 16 núcleos es _getAndSet_ (seguido muy de cerca por _TAS_), y en Raspberry 2 es casi un empate entre _CAS_ y _getAndAdd_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Inesperado dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+Todos los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme para los diferentes procesadores. En Intel Core2 e i5 la operación más eficiente es _get&add_. En el Xeon de 16 núcleos es _get&set_ (seguido muy de cerca por _TAS_), y en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Inesperado dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
 
 === Optimizaciones
 Las implementaciones anteriores son ineficientes por dos razones:
@@ -53,7 +53,7 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 Las tres técnicas de optimización que veremos a continuación no son _escalables_ pero las mejoras en eficiencia pueden ser considerables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuitando_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale +1+ ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
+Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuit&o_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale +1+ ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
 
 
 ----
@@ -66,10 +66,10 @@ def lock():
 
 Las mejoras dependen de la instrucción atómica y de los mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable en procesadores Intel pero casi despreciable en la arquitectura ARM, tanto en tiempos de CPU como en tiempos de retorno.
 
-Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
+Código fuente para <<test_test_&_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_&_swap_c, _CAS_>>.
 
 ==== Ceder el procesador
-Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _abandona_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.
+Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _ab&ona_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.
 
 [source, python]
 ----
@@ -158,7 +158,7 @@ De los tiempos de las gráficos hay algunos aspectos interesantes que vale la pe
 
 - El Xeon con 16 núcleos tiene peores tiempos que los menos potentes Core2 e i5. La diferencia es que tiene dos microprocesadores diferentes, el coste de sincronización de caché es superior a los chips únicos con varios _cores_.
 
-- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compareAndSwap_ es la más eficiente.
+- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compare&swap_ es la más eficiente.
 
 - En todas las plataformas con multiprocesadores el +sched_yield+ y el +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARM v7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como +for (i = 0; i < limit; i++);+ y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.], la causa principal por la que se estudiaron _spinlocks_ escalables.
 
@@ -201,7 +201,7 @@ Las condiciones que deben cumplir son:
 
 Así como la exclusión mutua tiene un mecanismo de entrada (_lock_) y otro de salida (_unlock_), los de lectores-escritores necesitan distinguir entre ellos con entradas y salidas diferenciadas (_reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_).
 
-El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) implementado con las instrucciones _compareAndSwap_ y _getAndAdd_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica, los bits restantes se usan para contar el número de lectores. Para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Se un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencia favorable.].
+El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) implementado con las instrucciones _compare&swap_ y _get&add_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica, los bits restantes se usan para contar el número de lectores. Para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Se un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencia favorable.].
 
 Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si fue posible entran a la sección crítica, caso contrario vuelven a intentar desde el inicio del bucle.
 
@@ -227,7 +227,7 @@ def reader_unlock():
 <2> Verifica si el bit más significativo es +1+, si es así hay un escritor e itera hasta que sea +0+.
 <3> No hay escritores, obtiene el número de lectores.
 <4> Incrementa el número de lectores.
-<5> Si +rw_lock+ no fue modificado el _compareAndSwap_ almacenará el nuevo valor. Si  +rw_lock+ fue modificado volverá al inicio del +while+ y lo intentará nuevamente.
+<5> Si +rw_lock+ no fue modificado el _compare&swap_ almacenará el nuevo valor. Si  +rw_lock+ fue modificado volverá al inicio del +while+ y lo intentará nuevamente.
 <6> Decrementa atómicamente el número de lectores.
 
 Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en +1+ e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
@@ -275,9 +275,9 @@ Para evitarlo hay que usar algoritmos que aseguran que los procesos entran a la 
 
 ==== _Ticket-lock_
 [[ticket_lock]]
-Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _getAndAdd_>>, la idea es la misma que el algoritmo de la panadería solo que la obtención del número se hace con esta operación atómica, así se evita que los procesos puedan seleccionar el mismo número o lo hagan fuera de orden. Se usan dos variables: el número creciente y el turno. Un proceso obtiene su número y luego espera por su turno, cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
+Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _get&add_>>, la idea es la misma que el algoritmo de la panadería solo que la obtención del número se hace con esta operación atómica, así se evita que los procesos puedan seleccionar el mismo número o lo hagan fuera de orden. Se usan dos variables: el número creciente y el turno. Un proceso obtiene su número y luego espera por su turno, cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
 
-El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _getAndAdd_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits, 16 bits para +turn+ y +number+ respectivamente. El número y turno pueden llegarán hasta 2^16^ y rotarán.
+El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits, 16 bits para +turn+ y +number+ respectivamente. El número y turno pueden llegarán hasta 2^16^ y rotarán.
 
 [source, c]
 ----
@@ -369,7 +369,7 @@ El algoritmo es equitativo, todos los procesos entran en el orden en que obtuvie
 Es deseable que los _spinlocks_ sean escalables, el número de invalidaciones de caché (que generan _fallos de caché_, también llamados _cache bouncing_) debe ser constante independientemente del número de procesos o procesadores involucrados. La forma de lograrlo es que cada proceso itere sobre posiciones de memoria diferentes.
 
 ==== _Array-lock_
-La solución obvia es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero, salvo la primera posición que será +1+ para que el primer proceso pueda entrar. Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable +tail+ inicializada en cero. Cada proceso obtiene su posición con la operación _getAndAdd_ que simultáneamente incrementa +tail+.
+La solución obvia es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero, salvo la primera posición que será +1+ para que el primer proceso pueda entrar. Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable +tail+ inicializada en cero. Cada proceso obtiene su posición con la operación _get&add_ que simultáneamente incrementa +tail+.
 
 La variable que indica si un proceso puede entrar es booleana por lo que se usará un único byte. Para evitar el _false sharing_ es mejor separar cada posición por varios bytes. Para ello se define una estructura de mayor tamaño con un campo de un byte para la verificación, o la alternativa es que directamente se defina un array con posiciones de relleno (_padding_) para separar las posiciones del array que sí se usarán.
 
@@ -408,7 +408,7 @@ def unlock(my_index):
 
 ----
 
-Este algoritmo también es equitativo, solo requiere la instrucción atómica _getAndAdd_ y los procesos entran en orden _FIFO_. Según la teoría y bibliografía especializada (por ejemplo <<Herlihy12>>) aseguran que así se evita el _false sharing_ y por lo tanto es más eficiente que _ticket-lock_, analizaremos cuánto hay de verdad <<spinlock_times, más adelante>>.
+Este algoritmo también es equitativo, solo requiere la instrucción atómica _get&add_ y los procesos entran en orden _FIFO_. Según la teoría y bibliografía especializada (por ejemplo <<Herlihy12>>) aseguran que así se evita el _false sharing_ y por lo tanto es más eficiente que _ticket-lock_, analizaremos cuánto hay de verdad <<spinlock_times, más adelante>>.
 
 
 [[mcs_queue]]
@@ -418,7 +418,7 @@ Este algoritmo también es equitativo, solo requiere la instrucción atómica _g
 
 Algoritmos derivados, conocidos como _colas no bloqueantes_ (_lock-free queues_), son muy usados en librerías _runtime_ y maquinas virtuales, como en la implementación de <<java_monitor, _monitores_ de la máquina virtual de Java>> y en las librerías +java.util.concurrent+ (<<Lea>>).
 
-Para implementarlo se requieren las operaciones atómicas _swap_ y _compareAndSwap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
+Para implementarlo se requieren las operaciones atómicas _swap_ y _compare&swap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
 
 [source, c]
 ----
@@ -474,7 +474,7 @@ void unlock(struct mcs_spinlock *node) {
     node->next->locked = 0;              <4>
 }
 ----
-<1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compareAndSwap_.
+<1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compare&swap_.
 <2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
 <3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo hace.
 <4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
@@ -500,7 +500,7 @@ image::clh.png[align="center"]
 El algoritmo es breve pero más complejo, tiene más niveles de indirección (se opera sobre las direcciones de memoria de punteros de memoria) y a diferencia de _MCS_ los procesos verifican el estado de una variable en el nodo predecesor. Sus ventajas son:
 
 - Como _MCS_ la espera activa se hace sobre variables independientes aunque no necesariamente locales a cada proceso.
-- Solo requiere la instrucción atómica _getAndSet_.
+- Solo requiere la instrucción atómica _get&set_.
 - La memoria de los nodos puede ser gestionada independientemente. Los procesos pueden proveer un nodo a una dirección estática o el propio módulo de _spinlocks_ puede gestionar la memoria (por ejemplo haciendo +malloc+ en el +lock+ y +free+ del nodo que ya no se usa en el +unlock+).
 - Puede ser adaptado a sistemas sin coherencia de caché.
 
