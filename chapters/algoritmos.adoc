@@ -19,9 +19,9 @@ El mismo problema ocurre con granularidades menores, datos en ficheros modificad
 === Definición
 
 
-La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes, que podían ser considerados cíclicos y cada uno de sus ciclos se ejecuta una parte de código denominado _sección crítica_ que accede y modifica recursos o zonas de memoria compartidas. La intercalación de las instrucciones de esas secciones críticas generan condiciones de carrera, pueden generar resultados erróneos
+La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas generan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
 
-Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas. El modelo de sección crítica separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan antes y después de las secciones críticas:
+Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas, mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos. El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
 
 - Preprotocolo o _entrada a la sección crítica_.
 
@@ -38,11 +38,11 @@ while forever:
     cs_exit()              <2>
     # ...
 ----
-<1> Preprotoclo o entrada a la sección crítica.
+<1> Preprotocolo o entrada a la sección crítica.
 <2> Posprotocolo o salida de la sección crítica
 
 
-Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, aunque cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, consiste en desarrollar el algoritmo para la entrada y salida de la sección crítica.
+Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, diseñar el algoritmo para el pre y posprotocolo.
 
 Esos algoritmos deben cumplir con los siguientes requisitos:
 
@@ -101,7 +101,7 @@ Aunque hay que resolver problemas similares y se basan en los mismos conceptos s
 
 Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, suponemos que el tiempo que cada proceso está en la sección crítica es finito.
 
-En las secciones críticas los procesos acceden a variables o recursos compartidos y que requieren que se asegure exclusión mutua con las mismas secciones críticas de otros procesos. Nuestra responsabilidad será desarrollar los algoritmos que se insertarán antes de la sección crítica (_pre-protocolo_ o _entrada de la sección crítica_) y después de la misma (_post_protocolo_ o _salida de la sección crítica_).
+En las secciones críticas los procesos acceden a variables o recursos compartidos y que requieren que se asegure exclusión mutua con las mismas secciones críticas de otros procesos. Nuestra responsabilidad será desarrollar los algoritmos que se insertarán antes de la sección crítica (_preprotocolo_) y después de la misma (_posprotocolo_).
 
 
 .Inicialización de variables globales
@@ -123,16 +123,16 @@ while True:
     #
     # resto del código
 ----
-<1> Entrada a sección crítica o pre-protocolo. Habitualmente se usa +lock+.
+<1> Entrada a sección crítica o preprotocolo. Habitualmente se usa +lock+.
 <2> La sección crítica, por ejemplo +counter += 1+.
-<3> La salida de la sección crítica, post-protocolo, o +unlock+.
+<3> La salida de la sección crítica, posprotocolo, o +unlock+.
 
 
 === Solución para dos procesos
 
 Primero solucionaremos el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que también cumplan las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simétricos, lo que significa que el código debe ser el mismo para ambos procesos.
 
-Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización que ejecutan es el mismo, analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
+Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización que ejecutan es el mismo analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
 Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
 
@@ -177,7 +177,7 @@ Entrada inmediata:: Si +turn+ vale +1+ pero este último está en el _resto del 
 Sin suposiciones de velocidad relativa:: Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple.
 
 
-El problema de este algoritmo es que obliga a una _alternancia exclusiva_ que provoca espera infinitas.
+En pocas palabras, el problema de este algoritmo es que obliga a la _alternancia exclusiva_.
 
 
 ==== Segundo intento
@@ -230,7 +230,7 @@ critical_section()
 states[0] = False
 ----
 
-Es sencillo demostrar que sí cumple el primer requisito de exclusión mutua. Si los dos desean entrar más o menos simultáneamente el primero que ejecute la asignación a +states+ será el primero que entrará a la sección crítica.
+Es sencillo demostrar que cumple el primer requisito de exclusión mutua. Si los dos desean entrar más o menos simultáneamente el primero que ejecute la asignación a +states+ será el primero que entrará a la sección crítica.
 
 También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. Si _P1_ está en el resto del código entonces +states[1]+ será falso, por lo que no interfiere con _P0_ y éste podrá entrar y salir varias veces sin esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
@@ -300,7 +300,7 @@ Espera limitada::
 
 Prácticamente (y _formalmente_ por estadísticas) no se producen esperas infinitas aunque no se puede asegurar que se produzcan en un número de _pasos_ definido. Este fenómeno se denomina _bloqueo activo_ (_livelock_), sabemos que en algún momento uno de ellos saldrá del bloque pero mientras tanto ambos procesos cambian valores de una variable sin hacer nada útil.
 +
-Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que _P0_ y _P1_ desean entrar, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de _P0_. No lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan *_débiles_* (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
+Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que _P0_ y _P1_ desean entrar, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de _P0_. No lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan _débiles_ (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
 
 Entrada inmediata::
 Si uno de los procesos no desea entrar a la sección crítica su estado estará en falso, por lo que el otro podrá entrar inmediatamente y sin espera.
@@ -452,10 +452,10 @@ critical_section()
 
 number[i] = 0
 ----
-<1> La nueva condición, si ambos números son iguales y el id del otro (es decir el valor de _j_) es menor que _i_ entonces también deberá esperar.
+<1> La nueva condición, si ambos números son iguales y el identificador del otro (el valor de _j_) es menor que _i_ entonces también deberá esperar.
 
 
-Todavía no hemos resuelto el problema. Puede ocurrir que cuando _P1_ haya llegado al bucle +for j...+, el proceso _P0_ todavía no haya almacenado su número en +number[0]+ y vea los siguientes valores:
+Todavía no hemos resuelto el problema. Puede ocurrir que cuando _P1_ haya llegado al bucle +for j...+, el proceso _P0_ todavía no haya almacenado su número en +number[0]+ y observe los siguientes valores:
 
     [0, 1, 0, ..., 0]
 
