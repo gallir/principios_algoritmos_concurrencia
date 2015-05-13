@@ -66,7 +66,7 @@ def lock():
 
 Las mejoras dependen de la instrucción atómica y de los mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable en procesadores Intel pero casi despreciable en la arquitectura ARM, tanto en tiempos de CPU como en tiempos de retorno.
 
-Código fuente para <<test_test_&_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_&_swap_c, _CAS_>>.
+Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
 ==== Ceder el procesador
 Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _ab&ona_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.

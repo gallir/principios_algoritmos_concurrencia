@@ -95,7 +95,7 @@ def unlock():
 
 ----
 
-El <<get&Set, código en C>> está implementado con el macro `__atomic_exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente de _get&set_.
+El <<getAndSet, código en C>> está implementado con el macro `__atomic_exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente de _get&set_.
 
 ==== Get&Add
 
@@ -120,7 +120,7 @@ def unlock():
 ----
 
 [[get_and_add_ticket]]
-El <<get&add, código en C>> está implementado con el macro `__atomic_fetch_add` y <<gocounter_get_&_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&Get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _get&set_, ésta asegura que no se producen esperas infinitas ya que el número que selecciona cada proceso es único y creciente (aunque hay que tener en cuenta que el valor de +number+ llegará a un máximo y rotará). Los _spinlocks_ de este tipo son también <<ticket_lock, llamados _ticket locks_>> y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
+El <<getAndAdd, código en C>> está implementado con el macro `__atomic_fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&Get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable turn.] A diferencia de la implementación con _get&set_, ésta asegura que no se producen esperas infinitas ya que el número que selecciona cada proceso es único y creciente (aunque hay que tener en cuenta que el valor de +number+ llegará a un máximo y rotará). Los _spinlocks_ de este tipo son también <<ticket_lock, llamados _ticket locks_>> y son muy usados en el núcleo de Linux, aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
 
 
 
@@ -209,7 +209,7 @@ def compareAndSwap(register, expected, desired):
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_&_swap_c, en C>> es sencilla, se necesita una variable local porque hay que pasar un puntero. Si +mutex+ vale cero (no hay procesos en la sección crítica) se asigna uno y puede continuar. En caso de que no haya podido asignar porque +mutex+ valía uno volverá a intentarlo en un bucle:
+La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es sencilla, se necesita una variable local porque hay que pasar un puntero. Si +mutex+ vale cero (no hay procesos en la sección crítica) se asigna uno y puede continuar. En caso de que no haya podido asignar porque +mutex+ valía uno volverá a intentarlo en un bucle:
 
 [source,python]
 ----
@@ -224,7 +224,7 @@ def unlock():
     mutex = 0
 ----
 
-La instrucción +CompareAndSwapInt32+ en <<gocounter_compare_&_swap_go, en Go>> es algo diferente y más similar al antiguo macro de GCC, los argumentos del valor _esperado_ y el _nuevo_ no se pasan por puntero sino por valor:
+La instrucción +CompareAndSwapInt32+ en <<gocounter_compare_and_swap_go, en Go>> es algo diferente y más similar al antiguo macro de GCC, los argumentos del valor _esperado_ y el _nuevo_ no se pasan por puntero sino por valor:
 
 [source,go]
 ----

@@ -24,40 +24,40 @@ Principios y algoritmos de concurrencia
 ////
 
 
-include::chapters/intro.adoc[]
+include::chapters/01-intro.adoc[]
 
 // include::chapters/exclusion_mutua.adoc[]
 
-include::chapters/algoritmos.adoc[]
+include::chapters/02-algoritmos.adoc[]
 
-include::chapters/barreras.adoc[]
+include::chapters/03-barreras.adoc[]
 
-include::chapters/hardware.adoc[]
+include::chapters/04-hardware.adoc[]
 
-include::chapters/spinlocks.adoc[]
+include::chapters/05-spinlocks.adoc[]
 
-include::chapters/semaforos.adoc[]
+include::chapters/06-semaforos.adoc[]
 
-include::chapters/futex.adoc[]
+include::chapters/07-futex.adoc[]
 
-include::chapters/monitores.adoc[]
+include::chapters/08-monitores.adoc[]
 
-include::chapters/canales.adoc[]
+include::chapters/09-canales.adoc[]
 
-include::chapters/fin.adoc[]
+include::chapters/10-fin.adoc[]
 
-include::chapters/bibliografia.adoc[]
+include::chapters/a01-bibliografia.adoc[]
 
-include::chapters/code-intro.adoc[]
+include::chapters/a02-code-intro.adoc[]
 
-include::chapters/code-hardware.adoc[]
+include::chapters/a03-code-hardware.adoc[]
 
-include::chapters/code-spinlocks.adoc[]
+include::chapters/a04-code-spinlocks.adoc[]
 
-include::chapters/code-semaphores.adoc[]
+include::chapters/a05-code-semaphores.adoc[]
 
-include::chapters/code-futex.adoc[]
+include::chapters/a06-code-futex.adoc[]
 
-include::chapters/code-monitors.adoc[]
+include::chapters/a07-code-monitors.adoc[]
 
-include::chapters/code-channels.adoc[]
+include::chapters/a08-code-channels.adoc[]
