@@ -12,7 +12,7 @@ La terminología es fundamental para entender la documentación técnica, me tom
 
 === Concurrencia
 
-Programas concurrentes son los que se ejecutan como procesos o hilos asincrónicos y que acceden a recursos compartidos. Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutarlos, no necesariamente un programa concurrente ha de ejecutarse en paralelo, puede hacerlo en un único procesador. Los problemas y soluciones a los accesos concurrentes son similares para ambos tipos de ejecuciones.
+Programas concurrentes son los que se ejecutan como procesos o hilos asincrónicos y que acceden a recursos compartidos. Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es solo una forma de ejecutarlos, no necesariamente un programa concurrente ha de ejecutarse en paralelo, puede hacerlo en un único procesador. Los problemas y soluciones a los accesos concurrentes son similares para ambos tipos de ejecuciones.
 
 Pero con la popularización de las arquitecturas de múltiples procesadores y núcleos ha crecido enormemente el interés por el tema de concurrencia, esto está afectando también a los lenguajes más populares y seguramente les obligará a cambios radicales en los siguientes años para adaptarlos a los exigencias modernas.
 
@@ -20,7 +20,7 @@ Pero con la popularización de las arquitecturas de múltiples procesadores y n�
 
 Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y el lógico interés en que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_.
 
-Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es sólo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
+Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es solo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
 
 
 === Procesos
@@ -71,17 +71,17 @@ Los _cambios de contexto_ son costosos, el sistema operativo y el procesador deb
 
 3. Restaurar los registros del procesador y tablas de páginas.
 
-Hay costes adicionales, como los _fallos de caché_ -de memoria RAM y los _TLB_- porque el procesador accede a direcciones físicas y tablas de páginas diferentes. El coste es todavía algo superior si el proceso se ejecutó antes en un procesador diferente. El _scheduler_ está diseñado y en constante evolución para tomar en cuenta todos estos parámetros conseguir objetivos contradictorios: aumentar el rendimiento global del sistema, asegurar buenos tiempos de respuesta y evitar esperas prolongadas.
+Hay costes adicionales, como los _fallos de caché_ -de memoria RAM y del _TLB_- porque el procesador accede a direcciones físicas y tablas de páginas diferentes. El coste es todavía algo superior si el proceso se ejecutó antes en un procesador diferente. El _scheduler_ está diseñado y en constante evolución para tomar en cuenta todos estos parámetros conseguir objetivos contradictorios: aumentar el rendimiento global del sistema, asegurar buenos tiempos de respuesta y evitar esperas prolongadas.
 
 Los procesos no tienen el control del procesador ni cuándo se ejecutarán, dada la complejidad de las interacciones y eventos también es muy difícil predecir o repetir exactamente una secuencia de ejecución, por eso los _schedulers_ de sistemas operativos de uso general se dicen que son _no determinísticos_.
 
 === Hilos
 
-Los procesos _tradicionales_ no comparten memoria por requisitos de seguridad. Es imposible que un proceso acceda a la memoria de otros salvo que se usen mecanismos ad-hoc para poder compartir segmentos (como el +shmget+ del estándar System V). A principios de la década de 1980 se empezaron a desarrollar programas, sobre todo interactivos, más complejos y que requerían responder a una multitud de eventos diferentesfootnote:[Por ejemplo un procesador de texto, hay que responder al teclado, otro módulo que se encarga de la paginación, otro del correcto ortográfico, etc.].
+Los procesos _tradicionales_ no comparten memoria por requisitos de seguridad. Es imposible que un proceso acceda a la memoria de otros salvo que se usen mecanismos ad-hoc para compartir segmentos (como el +shmget+ del estándar System V). A principios de la década de 1980 se empezaron a desarrollar programas, sobre todo interactivos, más complejos y que requerían responder a una multitud de eventos diferentesfootnote:[Por ejemplo un procesador de texto, hay que responder al teclado, otro módulo que se encarga de la paginación, otro del correcto ortográfico, etc.].
 
 Este tipo de programación se denomina _dirigida por eventos_ (_event driven_) donde se _seleccionan_ los diferentes eventos dentro de un bucle y se llaman a las funciones correspondientes. La programación de este tipo es compleja para estructurar y asegurar que se ejecuta sin errores. De esta necesidad surgieron dos conceptos muy vigentes hoy y que en general se encuadran en lo que conocemos como _programación concurrente_.
 
-Por un lado se desarrollaron librerías -sobre todo gráficas e interfaces de usuario- y lenguajes que facilitan la programación de diferentes módulos que se ejecutan independientemente de los demás. Hoy la conocemos como _programación asincrónica_.
+Por un lado se desarrollaron librerías -sobre todo gráficas e interfaces de usuario- y lenguajes que facilitan la programación de diferentes módulos que se ejecutan independientemente de los demás. A este tipo de programación se la conoce como _programación asincrónica_.
 
 Como una forma de facilitar aún más el desarrollo de módulos asincrónicos se desarrolló el concepto de hilos (_threads_) o _procesos ligeros_ (_light weight processes_). En vez de crear una copia de toda la imagen de memoria de un proceso cuando se crea uno nuevofootnote:[Como hace el +fork+ en Unix.] se mantiene la misma copia para ambos procesos salvo la pila (cada uno tiene su propio contexto de ejecución). Los hilos comparten el código, variables estáticas y la memoria asignada dinámicamente entre todos los creados por el mismo proceso _padre_.
 
@@ -89,27 +89,45 @@ Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos inde
 
 Además de las facilidades que brinda a los programadores los hilos son más _baratos_ que los procesos. Consumen menos memoria y al no tener que copiar toda la memoria el tiempo de creación de nuevos hilos es mucho menor que el de procesos tradicionales. Tiene otras ventajas más sutiles, al compatir gran parte de la memoria entre os diferentes hilos el coste de los cambios de contexto es también menor, se invalidan y reemplazan menos entradas del _TLB_ y las líneas de caché.
 
+
 ==== Hilos ligeros
-Antes que los sistemas operativos y sus librerías diesen soporte estándarfootnote:[Como lo hacen ahora POSIX Threads en entornos Unix.] para la programación asincrónica algunos lenguajes y sus máquinas virtuales implementaron sus propios _schedulers_ a nivel de aplicación para simular hilos. Los casos más conocidos son los hilos ligeros en la máquina vitual de Erlang y la antigua emulación de hilos en la máquina virtual de Java, los _green threads_.
+Antes de que los sistemas operativos y sus librerías diesen soporte estándarfootnote:[Como lo hacen ahora las librerías POSIX Threads en entornos Unix.] para la programación asincrónica algunos lenguajes y sus máquinas virtuales implementaron sus propios _schedulers_ a nivel de aplicación para simular hilos. Los casos más conocidos son los hilos ligeros en la máquina vitual de Erlang y la antigua emulación de hilos en la máquina virtual de Java, los _green threads_.
 
 Muchos lenguajes usan hilos ligeros para reducir el coste de la creación de hilos nativos del sistema operativo. En Go se denominan _goroutines_ y permiten crear hilos con muy pocas instrucciones (aseguran que tres) y consumo de memoria de muy pocos kilobytes. En otros lenguajes se suelen llamar _tasklets_, también suelen incluir esta capacidad los módulos de _programación asíncrona_ de lenguajes dinámicos.
 
 Es importante recalcar que los hilos ligeros no son planificados por el _scheduler_ del sistema operativo sino internamente por el programa o máquina virtual. Implica que no pueden ejecutarse en paralelo a menos que creen hilos nativos con este propósito, como hace Gofootnote:[Lo veréis en los ejemplos de este libro en Go, se indica el número de hilos nativos a crear con la función +runtime.GOMAXPROCS+.] o Erlang desde la versión _SMP_ R11Bfootnote:[Cuando se arranca el intérprete +erl+ se pueden ver mensajes similares a `[smp:4:4] [async-threads:10]`, indica que arranca automáticamente diez hilos ligeros y cuatro nativos -detectó que el sistema tiene cuatro núcleos-.].
 
 
+=== Procesos concurrentes
+La necesidad de programar módulos asincrónicos que respondan a los diferentes eventos y las facilidades de compartición de memoria de procesos hizo que fuese más conveniente diseñar programas como una composición de módulos. Cada módulo se ejecuta en diferentes procesosfootnote:[Salvo que sea necesario y se indique explícitamente nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinística.] independientes y asíncronos. Llamamos _programa concurrente_ a la composición de módulos que colaboran entre entre ellos.
 
+[IMPORTANT]
+****
+La _programación concurrente_ es la composición de módulos independientes que se ejecutan independientemente y de forma no determinística.
+****
 
+La programación concurrente tiene ventajas pero éstas no son gratuitas. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que generan nuevos problemas difíciles de detectar y analizar. Debido al carácter naturalmente asincrona y no determinística no podemos razonar sobe la ejecución de estos programas como una ejecución secuencial de instrucciones.
 
+La programación concurrente está de moda pero no es nuevo, surgió ya con la aparición de los primeros _monitores_, los antecesores de los modernos sistemas operativos, a principios de la década de 1960. De hecho, el núcleo de los sistemas operativos es una composición compleja de módulos independientes que deben responder -asincrónicamente- a una enorme diversidad de eventos (interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.) que generaban problemas de inconsistencia en las complejas estructuras de datos compartidas por todos ellos.
+
+Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. Durante décadas los problemas de concurrencia fueron un área casi oscura de la informática, solo los desarrolladores de sistemas operativos estaba interesados en ellos. Con la popularización de los procesadores _multicore_ se desarrollaron lenguajes y librerías que facilitan la programación concurrente ya que sus diferentes módulos independientes pueden ser ejecutados en paralelo.
+
+****
+El paralelismo solo es una forma de ejecutar un programa concurrente. La programación concurrente es la forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
+****
+
+Los problemas de los procesos concurrentes no están generados por los multiprocesadores o la ejecución en paralelo. Los mismos problemas ocurren con un único procesador, estos se generan no por el paralelismo sino por la intercalación de instrucciones.
 
 
 ==== Intercalación
-La ejecución
 
+En un sistema con un único procesador los procesos se intercalan en la ejecución, se dice que es una _intercalación exclusiva_.
 
-
-
-.Intercalado
+.Intercalado exclusivo de procesos _A_, _B_ y _C_
 image::interleaving.png[height="120", align="center"]
+
+El _scheduler_ selecciona el proceso a ejecutar, éste se ejecuta sin interrupción durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga de CPU no se puede determinar, varía dependiendo de varios factores, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
+
 
 
 .Multiprocesamiento
@@ -183,15 +201,15 @@ Si se ejecuta dos veces el valor de +counter+ será +2+, es factible que se pres
 
 ----
 movl counter(%rip), %eax <1>
-                        movl counter(%rip), %eax
-                        addl $1, %eax
-                        movl %eax, counter(%rip)
-addl $1, %eax <2>
+                    movl counter(%rip), %eax
+                    addl $1, %eax
+                    movl %eax, counter(%rip)
+addl $1, %eax            <2>
 movl %eax, counter(%rip)
 ----
 
 <1> Se almacena 0 en el registro eax.
-<2> Aunque la variable ya tiene almacenado el valor +1+, el registro %eax sigue siendo 0.
+<2> Aunque la variable ya tiene almacenado el valor 1, el registro %eax sigue siendo 0.
 
 En este caso el valor será +1+, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
 
@@ -243,7 +261,7 @@ sys     0m0.044s
 Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (<<Sampson>>).
 ====
 
-En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos: el paralelismo es sólo un caso particular de la intercalación.
+En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos: el paralelismo es solo un caso particular de la intercalación.
 
 
 
@@ -277,35 +295,3 @@ https://existentialtype.wordpress.com/2011/03/17/parallelism-is-not-concurrency/
 The first thing to understand is parallelism has nothing to do with concurrency.  Concurrency is concerned with nondeterministic composition of programs (or their components).  Parallelism is concerned with asymptotic efficiency of programs with deterministic behavior
 
 ////
-
-
-
-=== Procesos
-
-Intro a procesos.
-
-=== Compartir memoria
-
-Cómo comparten memoria los procesos.
-
-=== Mecanismos de sincronización
-
-Algoritmos.
-
-Instrucciones hardware.
-
-
-=== Hilos
-
-Explicar hilos. Comparten memoria
-
-=== Mecanismos de sincronización
-
-fork
-exec
-clone
-futex
-mmap
-posix_threads
-
-POSIX Threads, bla bla.

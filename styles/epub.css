@@ -81,6 +81,19 @@ div.informaltable tbody {
 
 div.sidebar {
     margin: 10px 0 !important;
+    padding: 0.6em 0.6em;
+}
+
+ul, ol {
+  padding-left: 1.5em;
+}
+
+div.sidebar ul, div.sidebar ol {
+  margin-left: 1.6em;
+}
+
+div.sidebar .programlisting, .screen {
+    padding: 5px 5px !important;
 }
 
 div.tip, div.note, div.warning, div.caution, div.important {
@@ -124,12 +137,12 @@ div.itemizedlist li, div.orderedlist li {
   border: 1px solid silver;
   background-color: #f4f4f4;
   padding: 5px 5px;
-  font-size: 0.9em;
+  font-size: 0.92em;
 }
 
 .literallayout {
   margin-left: 1em;
-  font-size: 0.9em;
+  font-size: 0.92em;
 }
 
 code.literal {
@@ -138,7 +151,7 @@ code.literal {
 
 
 div.calloutlist table {
-  font-size: 0.9em;
+  font-size: 0.92em;
 }
 
 div.calloutlist table tr td {
@@ -216,7 +229,7 @@ div.calloutlist p {
 
 blockquote p, div.blockquote p {
   font-style: italic;
-  font-size: 95%;
+  font-size: 0.92em;
 }
 
 div.bibliomixed p {
@@ -225,7 +238,7 @@ div.bibliomixed p {
 
 
 div.footnote {
-  font-size: 90%;
+  font-size: 0.92em;
 }
 
 div.variablelist dd {
