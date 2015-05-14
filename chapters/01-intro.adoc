@@ -94,7 +94,7 @@ Antes que los sistemas operativos y sus librerías diesen soporte estándarfootn
 
 Muchos lenguajes usan hilos ligeros para reducir el coste de la creación de hilos nativos del sistema operativo. En Go se denominan _goroutines_ y permiten crear hilos con muy pocas instrucciones (aseguran que tres) y consumo de memoria de muy pocos kilobytes. En otros lenguajes se suelen llamar _tasklets_, también suelen incluir esta capacidad los módulos de _programación asíncrona_ de lenguajes dinámicos.
 
-Es importante recalcar que los hilos ligeros no son planificados por el _scheduler_ del sistema operativo sino internamente por el programa o máquina virtual. Esto implica que no pueden ejecutarse en paralelo, a menos que creen hilos nativos con este propósito (como hace Go o Erlang desde la versión _SMP_ R11B).
+Es importante recalcar que los hilos ligeros no son planificados por el _scheduler_ del sistema operativo sino internamente por el programa o máquina virtual. Esto implica que no pueden ejecutarse en paralelo, a menos que creen hilos nativos con este propósito, como hace Gofootnote:[Lo veréis en los ejemplos de este libro en Go, se indica el número de hilos nativos a crear con la función +runtime.GOMAXPROCS+.] o Erlang desde la versión _SMP_ R11Bfootnote:[Cuando se arranca el intérprete +erl+ se pueden ver mensajes similares a `[smp:4:4] [async-threads:10]`, indica que arranca automáticamente diez hilos ligeros y cuatro nativos -detectó que el sistema tiene cuatro núcleos-.].
 
 
 
