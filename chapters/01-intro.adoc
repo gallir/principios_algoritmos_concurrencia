@@ -119,33 +119,31 @@ El paralelismo solo es una forma de ejecutar un programa concurrente. La program
 Los problemas de los procesos concurrentes no están generados por los multiprocesadores o la ejecución en paralelo. Los mismos problemas ocurren con un único procesador, estos se generan no por el paralelismo sino por la intercalación de instrucciones.
 
 
-==== Intercalación
+=== Intercalación
 
 En un sistema con un único procesador los procesos se intercalan en la ejecución, se dice que es una _intercalación exclusiva_.
 
 .Intercalado exclusivo de procesos _A_, _B_ y _C_
 image::interleaving.png[height="120", align="center"]
 
-El _scheduler_ selecciona el proceso a ejecutar, éste se ejecuta sin interrupción durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga de CPU no se puede determinar, varía dependiendo de varios factores, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
+El _scheduler_ selecciona el proceso a ejecutar, éste se ejecuta sin interrupción durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga de CPU no se puede determinar, depende de muchos factores internos y externos al sistema, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
 
+Las combinaciones de intercalación entre los diferentes procesos es no determinística, es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos.
 
+En un sistema con varios procesadores se produce _superposición_ de ejecuciones además de la intercalación.
 
 .Multiprocesamiento
 image::multiprocessing.png[height="120", align="center"]
 
+Aunque parezca que los problemas de superposición complican las soluciones a los problemas de concurrencia no es así. Los problemas de concurrencia derivan de la intercalación y ejecución no determiníistica, las soluciones a los problemas de concurrencia consisten en _sincronizar_ adecuadamente los procesos. Una solución que es válida para intercalación también lo es para la superposición, por eso los programas concurrentes (correctos) pueden ser ejecutados en uno o varios procesos.
 
+/////////////////
+/////////////////
 
+==== Intercalado de instrucciones
 
+Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
-
-
-
-
-Los programadores estamos acostumbrados al modelo de _consistencia secuencial_ de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación de ésta. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>> veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
-
-
-
-=== Intercalado de instrucciones
 
 La mayoría de los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa con las variable +a+ y +b+ inicializadas a +0+
 
@@ -162,14 +160,14 @@ Ahora supongamos que este fragmento de código se ejecuta en procesos o hilos di
 
 
 ----
-Proceso P               Proceso Q
+Proceso P            Proceso Q
 
 ...
 a = a + 1
-                        a = a + 1
-                        b = b + a
-                        print "a, b:", a, b
-                        ...
+                     a = a + 1
+                     b = b + a
+                     print "a, b:", a, b
+                     ...
 b = b + a
 print "a, b:", a, b
 ----
@@ -220,7 +218,7 @@ INPLACE_ADD
 STORE_GLOBAL  0 (counter)
 ----
 
-==== Ejemplos en diferentes lenguajes
+===== Ejemplos en diferentes lenguajes
 
 Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>>, <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
 
