@@ -201,7 +201,7 @@ func NewBarrier(value int) *Barrier {
 ----
 <1> Se deja un mensaje en el canal con el número de procesos que faltan por llegar.
 
-Los dos canales tienen _buffer_ de tamaño uno pero sólo uno de ellos (+arrival+) contiene inicialmente un mensaje con el número de procesos que deben sincronizarse. La función de sincronización +Barrier+ tiene dos partes bien diferenciadas:
+Los dos canales tienen _buffer_ de tamaño uno pero solo uno de ellos (+arrival+) contiene inicialmente un mensaje con el número de procesos que deben sincronizarse. La función de sincronización +Barrier+ tiene dos partes bien diferenciadas:
 
 1. Llegadas: Se opera sobre el canal +arrival+, inicialmente con un mensaje con el total de procesos que faltan por llegar. Cuando un proceso llega recibe el mensaje, verifica el valor, si quedan procesos por llegar lo decrementa y vuelve a enviar el mensaje al mismo canal. Si es el último en llegar no depositará el mensaje en +arrival+ sino en +departure+ con el total de procesos que se sincronizan en la barrera.
 

@@ -96,7 +96,7 @@ void signal(futex_sem_t *sem) {
 ----
 <1> Se verifica que efectivamente se desbloqueó a un proceso (el +sched_yield+ no es imprescindible).
 
-Esta implementación es correcta y además es un semáforo fuertefootnote:[El orden de desbloqueo está definido por el orden de ejecución de +futex_wait+.] pero es muy ineficiente si se usa para sincronizar procesos con alta competencia, por ejemplo para asegurar exclusión mutua del bucle que sólo incrementa el contador compartido. Los tiempos de ejecución en estos casos son muy elevados, hasta dos órdenes de magnitud superiores a los tiempos obtenidos en <<spinlocks>> y los semáforos POSIX en <<sem_mutex>>.
+Esta implementación es correcta y además es un semáforo fuertefootnote:[El orden de desbloqueo está definido por el orden de ejecución de +futex_wait+.] pero es muy ineficiente si se usa para sincronizar procesos con alta competencia, por ejemplo para asegurar exclusión mutua del bucle que solo incrementa el contador compartido. Los tiempos de ejecución en estos casos son muy elevados, hasta dos órdenes de magnitud superiores a los tiempos obtenidos en <<spinlocks>> y los semáforos POSIX en <<sem_mutex>>.
 
 ----
 $ time ./semaphore

@@ -83,7 +83,7 @@ for (i=0; i < max; i++) {
 counter += local_counter;
 ----
 
-El original accede y modifica la variable compartida en cada iteración, el contador local solo una vez al final. Este último consume menos del 50% de tiempo de CPU porque no genera operaciones de sincronización del sistema de coherencia de cache.
+El original accede y modifica la variable compartida en cada iteración, el contador local solo una vez al final. Este último consume menos del 50% de tiempo de CPU porque no genera operaciones de sincronización del sistema de coherencia de caché.
 
 [[false_sharing]]
 ._False sharing_
@@ -155,7 +155,7 @@ Aunque en el código de ejemplo no hay dependencias detectables entre ellas, sup
     BARRIER()
     c = a * 2
 
-Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes de la asignación a +c+ lo que sólo permitirá la siguiente alternativa además de la secuencia original:
+Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes de la asignación a +c+ lo que solo permitirá la siguiente alternativa además de la secuencia original:
 
     b = y
     a = x

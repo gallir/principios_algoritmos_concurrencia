@@ -5,7 +5,7 @@ Agregar el código spinlock.c
 En este capítulo describiremos el problema de la _exclusión mutua_ (o _secciones críticas_), en qué casos se presenta y qué condiciones deben cumplir las soluciones. A continuación analizaremos las soluciones por software a la exclusión mutua, desde los primeros intentos con dos procesos a las soluciones genéricas para _N_ procesos.
 
 ////
-En los siguientes capítulos veremos los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no sólo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización.
+En los siguientes capítulos veremos los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no solo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización.
 ////
 
 La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
@@ -50,7 +50,7 @@ Esos algoritmos deben cumplir con los siguientes requisitos:
 [IMPORTANT]
 .Requisitos para exclusión mutua
 ====
-Exclusión mutua:: Se debe asegurar que sólo uno de los procesos ejecuta código de la sección crítica.
+Exclusión mutua:: Se debe asegurar que solo uno de los procesos ejecuta código de la sección crítica.
 
 Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
 
@@ -134,11 +134,11 @@ Primero solucionaremos el problema de concurrencia más sencillo, la exclusión 
 
 Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización que ejecutan es el mismo analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
-Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora sólo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
+Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora solo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
 
 
 ==== Primer intento
-La idea fundamental es que la variable entera +turn+ indicará qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar sólo los valores +0+ y +1+, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
+La idea fundamental es que la variable entera +turn+ indicará qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar solo los valores +0+ y +1+, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
 
 [source,python]
 ----
@@ -164,11 +164,11 @@ Esta espera en el +while+ _sin hacer nada_ y solo verificando el valor de una va
 ****
 
 
-Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste sólo en dar el turno a _P1_. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando además el cumplimiento de los requisitos de <<four_requisites>>.
+Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste solo en dar el turno a _P1_. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando además el cumplimiento de los requisitos de <<four_requisites>>.
 
-Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, la asignación de enteros es atómica en los procesadores, al final sólo se almacenará +0+ o +1+.].
+Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, la asignación de enteros es atómica en los procesadores, al final solo se almacenará +0+ o +1+.].
 
-Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que éste entre a su sección crítica para entrar a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Sólo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que éste entre a su sección crítica para entrar a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
 
 Espera limitada:: Por la anterior se produce espera infinita si el proceso +1+ no entra a la sección crítica.
 
@@ -247,7 +247,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
          ## DEADLOCK! ##
 ----
 
-_P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como es verdadero no saldrá del +while+ hasta que _P0_ cambie su estado a falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como sólo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
+_P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como es verdadero no saldrá del +while+ hasta que _P0_ cambie su estado a falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como solo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 
 Es la perfecta definición de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
@@ -338,7 +338,7 @@ turn = 1                    <2>
 <1> _P0_ esperará si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
 <2> Cuando un proceso sale de su sección crítica cede el turno al otro, si estaba esperando podrá continuar.
 
-Sólo en el caso que haya competencia será el valor de +turn+ el que decidirá, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
+Solo en el caso que haya competencia será el valor de +turn+ el que decidirá, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
 
 Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, ya podemos demostrar que no produce esperas infinitas, en ningún caso:
 
@@ -355,7 +355,7 @@ Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 
 Cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ya había soluciones más prácticas y eficientes para dos o más procesos, como instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
 
-Las variables son las mismas y la idea fundamental no cambia, sólo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es más fácil de comprender:
+Las variables son las mismas y la idea fundamental no cambia, solo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es más fácil de comprender:
 
 [source,python]
 ----

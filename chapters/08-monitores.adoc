@@ -259,7 +259,7 @@ En este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algoritm
 
 ==== Barreras
 
-El algoritmo de barreras con monitores es mucho más sencillo con monitores que con semáforos, en Java sólo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (<<monitors_barrier_java, código completo>>):
+El algoritmo de barreras con monitores es mucho más sencillo con monitores que con semáforos, en Java solo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (<<monitors_barrier_java, código completo>>):
 
 [source, java]
 ----
@@ -416,7 +416,7 @@ def writer_unlock():
 ----
 <1> Señaliza a lectores y escritores.
 
-La última parte -la señalización a ambas variables de condición- puede modificarse para dar prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+, si tiene proceso bloqueados se señaliza sólo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
+La última parte -la señalización a ambas variables de condición- puede modificarse para dar prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+, si tiene proceso bloqueados se señaliza solo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
 
 Aún con estos cambios se puede provocar la inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica, se puede solucionar fácilmente verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
 

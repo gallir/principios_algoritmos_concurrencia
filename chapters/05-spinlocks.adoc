@@ -8,7 +8,7 @@ Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
 . Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente. En estos casos quizás tiene más sentido utilizar construcciones sin esperas activas.
 
-El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros. Estas primitivas suponen una gran mejora en el espacio necesario -requieren sólo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación.
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros. Estas primitivas suponen una gran mejora en el espacio necesario -requieren solo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación.
 
 Pero no todos los procesadores ofrecen las mismas instrucciones, para obtener el máximo de eficiencia hay que programar para cada arquitectura (como es habitual en el núcleo de los sistemas operativos). Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con +ldrex/strex+ para ARM.].
 
@@ -135,9 +135,9 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 
 [[execution_times]]
 ==== Tiempos de ejecución
-A continuación cuatro gráficas que representan los tiempos de CPU de los diferentes algoritmos en cuatro procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que sólo incrementan un contador compartido- son muy extremos. Aunque la sección crítica es muy breve lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella, lo que implica que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Sólo sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
+A continuación cuatro gráficas que representan los tiempos de CPU de los diferentes algoritmos en cuatro procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que solo incrementan un contador compartido- son muy extremos. Aunque la sección crítica es muy breve lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella, lo que implica que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Solo sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que sólo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentalesfootnote:[Y hasta a las pruebas que podéis hacer vosotros mismos.].
+También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que solo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentalesfootnote:[Y hasta a las pruebas que podéis hacer vosotros mismos.].
 
 .Intel Core2 cuatro núcleos
 image::optimized-intel-quad.png[align="center"]
@@ -187,7 +187,7 @@ Las esperas activas ya son suficientemente malas si no son imprescindibles. A me
 === Lectores-escritores
 La mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo que interesa es que éstas sean consistentes. En los ejemplos -un único contador entero- no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño -o incluso para acceder a ficheros o dispositivos externos- hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
 
-Se puede usar exclusión mutua pero la _serialización_ de los accesos de sólo lectura es ineficiente. Una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita más de un lector en la sección crítica, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
+Se puede usar exclusión mutua pero la _serialización_ de los accesos de solo lectura es ineficiente. Una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita más de un lector en la sección crítica, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
 
 Las condiciones que deben cumplir son:
 
@@ -197,7 +197,7 @@ Las condiciones que deben cumplir son:
 
 - Los lectores no pueden entrar si hay un escritor en la sección crítica.
 
-- Sólo puede haber un escritor en la sección crítica.
+- Solo puede haber un escritor en la sección crítica.
 
 Así como la exclusión mutua tiene un mecanismo de entrada (_lock_) y otro de salida (_unlock_), los de lectores-escritores necesitan distinguir entre ellos con entradas y salidas diferenciadas (_reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_).
 
@@ -256,7 +256,7 @@ def writer_unlock():
 <3> Calcula el nuevo valor, será el número de lectores con el bit más significativo en +1+ indicando que hay un escritor.
 <4> Si el valor tomado de +rw_lock+ no cambió se almacena el nuevo, caso contrario vuelve al principio del +while+ para reintentar.
 <5> Espera que salgan todos los lectores, los siguientes ya no podrán entrar porque el bit más significativo está en +1+.
-<6> Para salir sólo debe poner +rw_lock+ en cero ya que no quedan lectores ni escritores en la sección crítica.
+<6> Para salir solo debe poner +rw_lock+ en cero ya que no quedan lectores ni escritores en la sección crítica.
 
 
 Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y acceder a los últimos valores lo antes posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición de los que tienen la menor proridad, aunque hay algoritmos que aseguran equidad los más comunes dan prioridad a uno de ellos (<<MCS2>>).
@@ -309,7 +309,7 @@ struct ticket_rw {
 };
 ----
 
-El campo +number+ es similar al algoritmo _ticket-lock_, +writer_turn+ y +reader_turn+ indicarán los turnos para escritores y lectores respectivamente. Ambas variables serán incrementadas para permitir que entren lectores o escritores de forma equitativa. El orden en que se haga la suma dejará entrar a unos u otros. Un escritor sólo dará el turno a otros lectores o escritores cuando salga de la sección crítica. Un lector dará paso a otros lectores en cuanto haya entrado a la sección crítica y permitirá a escritores cuando haya salido.
+El campo +number+ es similar al algoritmo _ticket-lock_, +writer_turn+ y +reader_turn+ indicarán los turnos para escritores y lectores respectivamente. Ambas variables serán incrementadas para permitir que entren lectores o escritores de forma equitativa. El orden en que se haga la suma dejará entrar a unos u otros. Un escritor solo dará el turno a otros lectores o escritores cuando salga de la sección crítica. Un lector dará paso a otros lectores en cuanto haya entrado a la sección crítica y permitirá a escritores cuando haya salido.
 
 Se define el campo +combined+ que incluye a ambos turnos para asignar atómicamente a ambos. Para el desarrollo del algoritmo suponemos una variable global +rw_local+ del tipo o clase +ticket_rw+.
 
@@ -477,7 +477,7 @@ void unlock(struct mcs_spinlock *node) {
 <1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compare&swap_.
 <2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
 <3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo hace.
-<4> Se ejecuta sólo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
+<4> Se ejecuta solo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
 
 
 .Barreras de memoria
@@ -576,9 +576,9 @@ image::ticket-mcs-clh.png[align="center"]
 .Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
 
-En las arquitecturas modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ sólo requiere una palabra.
+En las arquitecturas modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
-En general _MCS_ y _CLH_ son los más eficientes en tiempo, pero la diferencia no es considerable y como _array-lock_ también requieren más espacio (un nodo por cada proceso activo, aunque la asignación puede ser dinámica y sólo cuando se necesitan). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
+En general _MCS_ y _CLH_ son los más eficientes en tiempo, pero la diferencia no es considerable y como _array-lock_ también requieren más espacio (un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesitan). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
 
 ////
 
