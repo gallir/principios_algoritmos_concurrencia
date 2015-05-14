@@ -32,7 +32,7 @@ Se denomina imagen de memoria al código y datos del programa en la memoria RAM.
 - El código o texto: El programa ejecutable cargado en memoria.
 - Datos estáticos: La zona de memoria donde se almacenan las variables estáticas del programa (normalmente las variables globales).
 - La pila (_stack_): La zona donde se almacenan los argumentos a funciones, su valor de retorno y las variables automáticas (locales).
-- Zona de gestión dinámica de memoria: La zona de almacenamiento de memoria asignada dinámicamente a los proceso (llamada también _anónima_ en Linux, habitualmente por llamadas a +malloc+).
+- Zona de memoria dinámica (_heap + malloc_): La zona de almacenamiento de memoria asignada dinámicamente a los proceso (llamada también _anónima_ en Linux, habitualmente por llamadas a +malloc+).
 
 Para poder gestionar a los procesos los sistemas operativos mantienen complejas estructuras de datos sobre la información de contexto y estado de cada proceso. Por ejemplo los valores de los registros del procesador cuando el proceso fue interrumpido, las tablas de memoria (tablas de páginas), estado de entradas y salidas, información de propiedad, etc.
 
@@ -83,7 +83,18 @@ Este tipo de programación se denomina _dirigida por eventos_ (_event driven_) d
 
 Por un lado se desarrollaron librerías -sobre todo gráficas e interfaces de usuario- y lenguajes que facilitan la programación de diferentes módulos que se ejecutan independientemente de los demás. Hoy la conocemos como _programación asincrónica_.
 
-Dentro de
+Como una forma de facilitar aún más el desarrollo de módulos asincrónicos se desarrolló el concepto de hilos (_threads_) o _procesos ligeros_ (_light weight processes_). En vez de crear una copia de toda la imagen de memoria de un proceso cuando se crea uno nuevofootnote:[Como hace el +fork+ en Unix.] se mantiene la misma copia para ambos procesos salvo la pila (cada uno tiene su propio contexto de ejecución). Los hilos comparten el código, variables estáticas y la memoria asignada dinámicamente entre todos los creados por el mismo proceso _padre_.
+
+Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos independientes, cada uno de ellos -al igual que los procesos tradicionales- son _unidades de planificación_. Si los hilos se ejecutan en un sistema multiprocesador además de ejecutarse asincrónicamente pueden hacerlo en paralelo en diferentes procesadores. Por la popularización de los chips _multicore_ la programación con hilos se convirtió en una parte importante de la programación concurrrentefootnote:[Aunque muchos confunden la capacidad de ejecución asincrónica con paralelismo, de nuevo, el paralelismo es solo una forma de ejecución de programas concurrentes.].
+
+Además de las facilidades que brinda a los programadores los hilos son más _baratos_ que los procesos. Consumen menos memoria y al no tener que copiar toda la memoria el tiempo de creación de nuevos hilos es mucho menor que el de procesos tradicionales. Tiene otras ventajas más sutiles, al compatir gran parte de la memoria entre os diferentes hilos el coste de los cambios de contexto es también menor, se invalidan y reemplazan menos entradas del _TLB_ y las líneas de caché.
+
+==== Hilos ligeros
+Antes que los sistemas operativos y sus librerías diesen soporte estándarfootnote:[Como lo hacen ahora POSIX Threads en entornos Unix.] para la programación asincrónica algunos lenguajes y sus máquinas virtuales implementaron sus propios _schedulers_ a nivel de aplicación para simular hilos. Los casos más conocidos son los hilos ligeros en la máquina vitual de Erlang y la antigua emulación de hilos en la máquina virtual de Java, los _green threads_.
+
+Muchos lenguajes usan hilos ligeros para reducir el coste de la creación de hilos nativos del sistema operativo. En Go se denominan _goroutines_ y permiten crear hilos con muy pocas instrucciones (aseguran que tres) y consumo de memoria de muy pocos kilobytes. En otros lenguajes se suelen llamar _tasklets_, también suelen incluir esta capacidad los módulos de _programación asíncrona_ de lenguajes dinámicos.
+
+Es importante recalcar que los hilos ligeros no son planificados por el _scheduler_ del sistema operativo sino internamente por el programa o máquina virtual. Esto implica que no pueden ejecutarse en paralelo, a menos que creen hilos nativos con este propósito (como hace Go o Erlang desde la versión _SMP_ R11B).
 
 
 
