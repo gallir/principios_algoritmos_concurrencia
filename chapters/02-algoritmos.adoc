@@ -1,24 +1,13 @@
-////
-Agregar el código spinlock.c
-////
 == Exclusión mutua
-En este capítulo describiremos el problema de la _exclusión mutua_ (o _secciones críticas_), en qué casos se presenta y qué condiciones deben cumplir las soluciones. A continuación analizaremos las soluciones por software a la exclusión mutua, desde los primeros intentos con dos procesos a las soluciones genéricas para _N_ procesos.
+La exclusión mutua (o _secciones críticas_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes.
 
-////
-En los siguientes capítulos veremos los problemas con las arquitecturas modernas, soluciones de hardware y abstracciones de más alto nivel (semáforos, monitores, canales y mensajes, etc.) que no solo permiten solucionar la exclusión mutua, también problemas genéricos y técnicas más sofisticadas de sincronización.
-////
+Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
 
-La exclusión mutua es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos entre ellos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes. Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
+El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
 
-El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta variables enteras simples
-
-////
-////
-
+En el resto del capítulo se define el problema y se analizan las soluciones algorítimicas -correctas a incorrectas- partiendo desde el caso más simple para dos procesos hasta llegar a soluciones genéricas para _N_ procesos.
 
 === Definición
-
-
 La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas generan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
 
 Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas, mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos. El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
@@ -42,9 +31,7 @@ while forever:
 <2> Posprotocolo o salida de la sección crítica
 
 
-Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, diseñar el algoritmo para el pre y posprotocolo.
-
-Esos algoritmos deben cumplir con los siguientes requisitos:
+Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, diseñar los algoritmos para el pre y posprotocolo. Estos deben cumplir con los siguientes requisitos:
 
 [[em_requisites]]
 [IMPORTANT]

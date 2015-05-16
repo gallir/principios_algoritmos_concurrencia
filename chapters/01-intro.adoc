@@ -1,43 +1,26 @@
+== Procesos y concurrencia
 
-== Introducción
+Los programas en ejecución se denominan procesos, son los elementos de gestión centrales del sistema operativo. Desde el punto de vista del núcleofootnote:[El sistema operativo está formado por un núcleo, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al arranque, inicializa el sistema y gestiona recursos y procesos ejecutándose con privilegios especiales del procesador.] del sistema operativo los procesos tienen dos partes bien diferenciadas, la imagen de memoria y las tablas de control de procesos.
 
+Se denomina imagen de memoria al código y datos del programa en la memoria RAM. Se diferencian cuatro partes según el contenido de cada una de ellas:
 
-Hay muchos ejemplos de código, en algunos casos el lenguaje está especificado si no es así se trata de pseudocódigo. Podía usar un estándar, por ejemplo un pseudocódigo estilo Python, C, o Go. En la mayoría de los casos usaré un pseudocódigo similar a C (con sus llaves y punto y comas), pero cuando son ejemplos sencillos uso una sintaxis similar a Python para evitar el "ruido" impuesto por los +{...}+ y +;+.
-
-El código está en <<source_code>>
-
-
-La terminología es fundamental para entender la documentación técnica, me tomé el trabajo de indicar el nombre inglés que se suele usar para las diferentes.
-
-
-=== Concurrencia
-
-Programas concurrentes son los que se ejecutan como procesos o hilos asincrónicos y que acceden a recursos compartidos. Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es solo una forma de ejecutarlos, no necesariamente un programa concurrente ha de ejecutarse en paralelo, puede hacerlo en un único procesador. Los problemas y soluciones a los accesos concurrentes son similares para ambos tipos de ejecuciones.
-
-Pero con la popularización de las arquitecturas de múltiples procesadores y núcleos ha crecido enormemente el interés por el tema de concurrencia, esto está afectando también a los lenguajes más populares y seguramente les obligará a cambios radicales en los siguientes años para adaptarlos a los exigencias modernas.
-
-//
-
-Hace unas décadas el interés en el desarrollo de mecanismos a exclusión mutua estaba limitado a aquellos desarrolladores de sistemas operativos que por su propia características experimentaron problemas de sincronización desde sus inicios. Pero el interés creció en los últimos años con la popularización de arquitecturas de multiprocesadores y el lógico interés en que los programas los aprovechen al máximo. Así se desarrollaron y afinaron protocolos, algoritmos, técnicas y lenguajes para facilitar y evitar errores de programación, es lo que conocemos genéricamente como _programación concurrente_.
-
-Los programas concurrentes pueden o no ejecutarse en paralelo, esto último es solo una forma de ejecutar programas concurrentes. No necesariamente un programa concurrente ha de ejecutarse en paralelo. Por otro lado, los programas concurrentes que se ejecutan en un único procesador son  víctimas de los mismos problemas. Los programas concurrentes, y por extensión los paralelos, constan de varios hilos de ejecución independientes o _asincrónicos_. Sean en paralelo o en un único procesador, la ejecución de las instrucciones de cada uno de estos hilos se intercalan (_interleaving_), dicha intercalación de instrucciones produce los mismos problemas en ambos casos.
-
-
-=== Procesos
-
-Los programas en ejecución se denominan procesos, son un elemento de gestión muy importante del sistema operativo. Los procesos tienen dos partes bien diferenciadas, la imagen de memoria y las tablas de control de procesos.
-
-Se denomina imagen de memoria al código y datos del programa en la memoria RAM. Se diferencian tres partes:
-
-- El código o texto: El programa ejecutable cargado en memoria.
-- Datos estáticos: La zona de memoria donde se almacenan las variables estáticas del programa (normalmente las variables globales).
-- La pila (_stack_): La zona donde se almacenan los argumentos a funciones, su valor de retorno y las variables automáticas (locales).
+- Código o texto: El programa ejecutable cargado en memoria.
+- Datos: La zona de memoria donde se almacenan las constantes y variables estáticas del programa (normalmente las variables globales).
+- Pila (_stack_): La zona donde se almacenan los argumentos de las funciones, sus valores de retorno y las variables automáticas (locales).
 - Zona de memoria dinámica (_heap + malloc_): La zona de almacenamiento de memoria asignada dinámicamente a los proceso (llamada también _anónima_ en Linux, habitualmente por llamadas a +malloc+).
 
-Para poder gestionar a los procesos los sistemas operativos mantienen complejas estructuras de datos sobre la información de contexto y estado de cada proceso. Por ejemplo los valores de los registros del procesador cuando el proceso fue interrumpido, las tablas de memoria (tablas de páginas), estado de entradas y salidas, información de propiedad, etc.
+Para gestionar los procesos los sistemas mantienen complejas estructuras de datos sobre la información de contexto y estado de cada uno. Por ejemplo los valores de los registros del procesador cuando el proceso fue interrumpido, las tablas de páginas de memoria, estado de entradas y salidas, información de propiedad, etc.
+
+****
+La forma estándar de crear proceso en Unix es la llamada de sistema +fork+.
+
+    pid = fork();
+
+Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó, el nuevo proceso es _hijo_ del original y ambos continúan su ejecución independientemente. La imagen de memoria y las tablas de entrada/salida del hijo son copiasfootnote:[Se usa la técnica _copy-on-write_ (_COW_) para evitar copiar toda la memoria, se copia bajo demanda solos aquellas modificadas por alguno de los procesos. Se consigue más eficiencia y ahorro de memoria RAM.] de las de padre, la única forma de diferenciarlos en por el valor de retorno de la llamada, en el ejemplo almacenado en la variable +pid+. Si +pid+ vale cero se trata del proceso hijo, si es mayor que cero es el proceso _padre_.
+****
 
 
-==== Estados de los procesos
+=== Estados de procesos
 
 Durante su ciclo de vida los estados pasan por tres estados básicos:
 
@@ -45,7 +28,7 @@ Durante su ciclo de vida los estados pasan por tres estados básicos:
 
 - Listos para ejecutar (o simplemente _listos_): El proceso no se está ejecutando pero puede pasar a ejecución inmediatamente. El sistema mantiene colas de los procesos en este estado ordenadas por diferentes criterios (prioridad, tiempo de ejecución, afinidad a un procesador, etc.).
 
-- Bloqueados (también llamados _suspendidos_ en Linuxfootnote:[En la bibliografía académica _suspendido_ es otro estado diferente, cuando un proceso ha sido expulsado de la memoria RAM.]):  Los procesos en este estado no están listos para ser ejecutados, tienen que esperar que ocurra un evento para estar nuevamente listos. El sistema mantiene diferentes colas clasificadas por el tipo de evento que esperan los procesos en ella.
+- Bloqueados (también llamados _suspendidos_ en Linuxfootnote:[En la bibliografía académica _suspendido_ es otro estado diferente, cuando un proceso ha sido expulsado de la memoria RAM.]):  Los procesos en este estado no están listos para ser ejecutados, tienen que esperar que ocurra un evento para estar nuevamente listos. El sistema mantiene diferentes colas clasificadas por el tipo de evento que esperan los procesos en este estado.
 
 
 .Estados de procesos
@@ -53,10 +36,10 @@ image::processes_states.png[width="440", align="center"]
 
 Los procesos pasan a bloqueados porque solicitaron una operación al sistema operativo (vía _llamadas de sistema_) y deben esperar a que la operación acabe o esperar un evento de algún dispositivo. Cuando la operación acaba el proceso es movido a la cola de listos para ejecutar.
 
-==== Scheduler
-La transición entre _listos_ y  en _ejecución_ lo decide el módulo _scheduler_ del sistema operativo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos) o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda tomar y no soltar el control del procesador se añaden interrupciones programadas en un reloj.
+=== _Scheduler_
+La transición entre _listos_ y  en _ejecución_ lo decide el módulo _scheduler_ o _planificador a corto plazo_ del núcleo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos) o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda tomar y no soltar el control del procesador se añaden interrupciones programadas en un reloj.
 
-Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción que hace que el procesador pase el control al _scheduler_ para que tome la decisión de qué proceso debe ejecutarse. Dado que el sistema es capaz de quitar de ejecución al proceso aunque éste no genere ninguna llamda de sistema se dice que el sistema es _apropiativo_ (_preemptive_).
+Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción que hace el _scheduler_ tome el control y decida qué proceso debe ejecutarse a continuación. Dado que el sistema es capaz de quitar de ejecución al proceso aunque éste no genere ninguna llamada de sistema se dice que el planificador es _apropiativo_ (_preemptive_).
 
 En cada uno de estos casos el _scheduler_ tiene que decidir cuál de los siguientes procesos se ejecutará, debe hacerlo entre unas pocas cientos de veces a decenas de miles de veces por segundo. El requisito clave del _scheduler_ es que la decisión la haga lo más rápido posible, por ello se usan sofisticados algoritmos de colas para que la selección sea lo más rápido posible y con complejidad _O(1)_ (i.e. se selecciona el primer elemento de la cola).
 
@@ -90,39 +73,49 @@ Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos inde
 Además de las facilidades que brinda a los programadores los hilos son más _baratos_ que los procesos. Consumen menos memoria y al no tener que copiar toda la memoria el tiempo de creación de nuevos hilos es mucho menor que el de procesos tradicionales. Tiene otras ventajas más sutiles, al compatir gran parte de la memoria entre os diferentes hilos el coste de los cambios de contexto es también menor, se invalidan y reemplazan menos entradas del _TLB_ y las líneas de caché.
 
 
+****
+Las librerías _POSIX Threads_ definen el estándar para crear y gestionar hilos en Unix. La función +pthread_create+ crea un nuevo hilo, un argumento obligatorio es la función que debe empezar a ejecutar el nuevo hilo. Cuando dicha función acabe el hilo se destruirá, aunque se puede llamar a +pthread_exit+ en cualquier punto de la ejecución.
+
+Desde antes de la estandarización de POSIX Thread Linux ofrecía la llamada de sistema +clone+, puede crear procesos de cualquiera de los dos tipos, los tradicionales como con +fork+ o hilos similares a los creados por +pthread_create+.
+****
+
+
 ==== Hilos ligeros
-Antes de que los sistemas operativos y sus librerías diesen soporte estándarfootnote:[Como lo hacen ahora las librerías POSIX Threads en entornos Unix.] para la programación asincrónica algunos lenguajes y sus máquinas virtuales implementaron sus propios _schedulers_ a nivel de aplicación para simular hilos. Los casos más conocidos son los hilos ligeros en la máquina vitual de Erlang y la antigua emulación de hilos en la máquina virtual de Java, los _green threads_.
+Antes de que los sistemas operativos diesen soporte estándar para la creación de hilos (como POSIX Thread en Unix o +clone+ en Linux) algunos lenguajes y máquinas virtuales los simulaban con sus propios _schedulers_ a nivel de aplicación. Los casos más conocidos son los hilos ligeros en la máquina vitual de Erlang y la antigua emulación de hilos en la máquina virtual de Java, los _green threads_.
 
-Muchos lenguajes usan hilos ligeros para reducir el coste de la creación de hilos nativos del sistema operativo. En Go se denominan _goroutines_ y permiten crear hilos con muy pocas instrucciones (aseguran que tres) y consumo de memoria de muy pocos kilobytes. En otros lenguajes se suelen llamar _tasklets_, también suelen incluir esta capacidad los módulos de _programación asíncrona_ de lenguajes dinámicos.
+Muchos lenguajes usan hilos ligeros para reducir el coste de la creación de hilos nativos del sistema operativo. En Go se denominan _goroutines_, permiten crear hilos con muy pocas instrucciones (aseguran que tres) y consumo de memoria de muy pocos kilobytes. En otros lenguajes se suelen llamar _tasklets_, también suelen incluir esta capacidad los módulos de _programación asíncrona_ de lenguajes dinámicos.
 
-Es importante recalcar que los hilos ligeros no son planificados por el _scheduler_ del sistema operativo sino internamente por el programa o máquina virtual. Implica que no pueden ejecutarse en paralelo a menos que creen hilos nativos con este propósito, como hace Gofootnote:[Lo veréis en los ejemplos de este libro en Go, se indica el número de hilos nativos a crear con la función +runtime.GOMAXPROCS+.] o Erlang desde la versión _SMP_ R11Bfootnote:[Cuando se arranca el intérprete +erl+ se pueden ver mensajes similares a `[smp:4:4] [async-threads:10]`, indica que arranca automáticamente diez hilos ligeros y cuatro nativos -detectó que el sistema tiene cuatro núcleos-.].
+Hay que tener en cuenta que desde el punto de vista del sistema operativo los hilos ligeros son invisibles y por lo tanto no son planificados por el _scheduler_ sino internamente por el programa o máquina virtual. Esto implica que no pueden ejecutarse en paralelo a menos que creen hilos nativos con este propósito, como hace Gofootnote:[Lo veréis en los ejemplos de este libro en Go, se indica el número de hilos nativos a crear con la función +runtime.GOMAXPROCS+.] o Erlang desde la versión _SMP_ R11Bfootnote:[Cuando se arranca el intérprete +erl+ se pueden ver mensajes similares a `[smp:4:4] [async-threads:10]`, indica que arranca automáticamente diez hilos ligeros y cuatro nativos -detectó que el sistema tiene cuatro núcleos-.].
 
 
 === Programas concurrentes
-La necesidad de programar módulos asincrónicos que respondan a los diferentes eventos y las facilidades de compartición de memoria de procesos hizo que fuese más conveniente diseñar programas como una composición de módulos. Cada módulo se ejecuta en diferentes procesosfootnote:[Salvo que sea necesario y se indique explícitamente nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinística.] independientes y asíncronos. Llamamos _programa concurrente_ a la composición de módulos que colaboran entre entre ellos.
+La necesidad de programar módulos asincrónicos que respondan a los diferentes eventos y las facilidades de compartición de memoria de procesos hizo que fuese más conveniente diseñar programas como una composición de módulos, cada uno es responsable de tareas específicas. Cada módulo se ejecuta en diferentes procesosfootnote:[Salvo que sea necesario y se indique explícitamente nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinística.] independientes y asíncronos. Llamamos _programa concurrente_ a la composición de módulos que colaboran entre ellos.
 
 [IMPORTANT]
-****
-_Programación concurrente_ es la composición de módulos que se ejecutan independientemente y de forma no determinística.
-****
+.Programación concurrente
+====
+Es la composición de módulos que se ejecutan independientemente de forma no determinística.
+====
 
-La programación concurrente tiene ventajas pero éstas no son gratuitas. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que generan nuevos problemas difíciles de detectar y analizar. Debido al carácter naturalmente asincrona y no determinística no podemos razonar sobe la ejecución de estos programas como una ejecución secuencial de instrucciones.
+La programación concurrente tiene ventajas pero tienen su coste. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que generan nuevos problemas difíciles de detectar y analizar sin el conocimiento y herramientas adecuadas. Debido al carácter naturalmente asincrona y no determinística no podemos razonar sobe la ejecución de estos programas como una ejecución secuencial de instrucciones.
 
-Aunque está de moda el estudio de soluciones para los problemas de concurrencia no es nueva, surgió con la aparición de los primeros _monitores_ -los predecesores de los modernos sistemas operativos- a principios de la década de 1960. De hecho, el núcleo de los sistemas operativos es una composición compleja de módulos independientes que deben responder -asincrónicamente- a una enorme diversidad de eventos (interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.) que generaban problemas de inconsistencia en las complejas estructuras.
+El interés de soluciones para los problemas de concurrencia no es nuevo, surgió con la aparición de los primeros _monitores_ -los predecesores de los modernos sistemas operativos- a principios de la década de 1960. De hecho, el núcleo de los sistemas operativos es una composición compleja de módulos independientes que deben responder -asincrónicamente- a una enorme diversidad de eventos (interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.) que generaban problemas de inconsistencia en las complejas estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
 
-Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. El caso más habitual y más estudiado son los errores e incosistencias generadas por el acceso no controlado a algunos recursos, es lo que conocemos como el problema de _exclusión mutua_ o _secciones críticas_. Durante décadas los problemas de concurrencia estuvieron reservados a los desarrolladores de sistemas operativos. Con la popularización de los procesadores _multicore_ se desarrollaron lenguajes y librerías que facilitaron la programación concurrente ya que sus diferentes módulos independientes pueden ser ejecutados en paralelo.
+Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. El caso más habitual y más estudiado son los errores e inconsistencias generadas por el acceso no controlado a algunos recursos, es lo que conocemos como el problema de _exclusión mutua_ o _secciones críticas_. Durante décadas los problemas de concurrencia estuvieron reservados a los desarrolladores de sistemas operativos. Con la popularización de los procesadores _multicore_ se desarrollaron lenguajes y librerías que facilitaron la programación concurrente, el resultado es que la concurrencia dejó de ser esa ooscura área de conocimiento reservado a unos pocos expertos a convertirse a una necesidad de profesional para un proporción importante de programadores.
 
-****
+[IMPORTANT]
+.Concurrencia vs paralelismo
+====
 El paralelismo solo es una forma de ejecutar un programa concurrente. La programación concurrente es la forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
-****
+====
 
 Los problemas de los procesos concurrentes no están generados por los multiprocesadores o la ejecución en paralelo. Los mismos problemas ocurren con un único procesador, estos se generan no por el paralelismo sino por la intercalación de instrucciones.
 
 
 === Intercalación
-En un sistema operativo moderno la ejecución secuencial de un proceso puede ser detenida en cualquier momento entre la ejecución de dos instrucciones del procesador por una interrupción de hardware. Cuando estas ocurren el procesador ejecuta una función predeterminada -por la tabla de interrupciones- del núcleo del sistema operativo. Luego de que haya finalizado el tratamiento de dicha interrupción el _scheduler_ decide qué proceso se ejecutará a continuación. Puede elegir al mismo que estaba antes o a cualquier otro proceso de los que están _listos para ejecutar_.
+En un sistema operativo moderno la ejecución secuencial de un proceso puede ser detenida en cualquier momento entre la ejecución de dos instrucciones del procesador por una interrupción de hardware. Cuando estas ocurren el procesador ejecuta una función (_interrupt handler_) predeterminada por la tabla de interrupciones del núcleo del sistema operativo. Una vez finalizado el tratamiento de dicha interrupción el _scheduler_ decide qué proceso se ejecutará a continuación. Puede elegir al mismo que estaba antes o a cualquier otro proceso de los que están _listos para ejecutar_.
 
-En un sistema con un único procesador los procesos se intercalan, se dice que es una _intercalación exclusiva_.
+En un sistema con un único procesador la ejecución de procesos es una _intercalación exclusiva_.
 
 .Intercalado exclusivo de procesos _A_, _B_ y _C_
 image::interleaving.png[height="120", align="center"]
@@ -146,19 +139,8 @@ Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa d
 ****
 
 
-==== El problema de la intercalación
+==== Los problemas de la intercalación
 Los programadores estamos acostumbrados al modelo de consistencia secuencial de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>>, veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
-
-Los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa, con las variable +a+ y +b+ inicializadas a +0+:
-
-[source, python]
-----
-a = a + 1
-b = b + a
-print "a, b:", a, b
-----
-
-Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será +1 1+. Si las dos asignaciones se repiten el resultado será +a, b: 2 3+, el siguiente +a, b: 3 6+, etc.
 
 ****
 Un programa está formado por una secuencia de operaciones atómicas ordenadas, por ejemplo +P+ por +p~0~, p~1~, p~2~+ y +Q+ por +q~0~, q~1~, q~2~+. Una ejecución válida de +P+ y +Q+ es:
@@ -176,8 +158,19 @@ Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ 
 Si esas instrucciones acceden o modifican variables compartidas los resultados pueden ser diferentes dependiendo de la secuencia -no determinista- de ejecución.
 ****
 
+Los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa, con las variable +a+ y +b+ inicializadas a +0+:
 
-Ahora supongamos que este fragmento de código se ejecuta en procesos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ son _variables compartidas_. Se puede producir la siguiente intercalación de las instrucciones del programa:
+[source, python]
+----
+a = a + 1
+b = b + a
+print "a, b:", a, b
+----
+
+Por el modelo de consistencia secuencial es fácil deducir que el resultado de imprimir las tres variables será +1 1+. Si las dos asignaciones se repiten el resultado será +a, b: 2 3+, el siguiente +a, b: 3 6+, etc.
+
+
+Supongamos que este fragmento de código se ejecuta en procesos diferentes (+P+ y +Q+) sobre un sistema con un único procesador y que tanto +a+ como +b+ son variables compartidas. Se puede producir la siguiente intercalación de las instrucciones del programa:
 
 ----
 Proceso P            Proceso Q
@@ -193,7 +186,7 @@ print "a, b:", a, b
 ----
 
 
-El resultado de la ejecución de estas instrucciones será:
+El resultado de la ejecución será:
 
 ----
 a, b: 2 2
@@ -202,10 +195,9 @@ a, b: 2 4
 
 Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en secciones críticas del código que acceden a recursos u _objetos compartidos_. Este problema se denomina genéricamente como _condición de carrera_ (_race condition_).
 
-
 Los _bugs_ causados por condiciones de carrera son difíciles de detectar, habitualmente no son frecuentes porque la probabilidad de que ocurra es bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es aún más difícil repetir el error con las mismas condiciones por la planficación de CPU no determinística.
 
-Las dos líneas (tres contando el +print+) acceden a variables compartidas con dependencia entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de instrucciones no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas y sobre las que solemos hacer suposiciones erróneas, por ejemplo con una suma:
+Las dos líneas (tres contando el +print+) acceden a variables compartidas con dependencia entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de instrucciones no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas, por ejemplo con una suma:
 
     counter += 1
 
@@ -241,10 +233,10 @@ STORE_GLOBAL  0 (counter)
 
 ===== Ejemplos en diferentes lenguajes
 
-Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>>, <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos que incrementan un contador compartido (+counter+) cuyo total debería ser diez millones. El resultado de sus ejecuciones son los siguientes:
+Los siguientes programas  <<counter_c, en C>>, <<gocounter_go, Go>>, <<counter_java, Java>> y <<counter_py, Python>> hacen lo mismo: crean dos hilos nativos que incrementan una variable compartida (+counter+) cuyo valor al final de las ejecuciones debería ser diez millones. El resultado de una de sus ejecuciones:
 
 [[counter_times]]
-.Resultados y tiempos de CPU
+.Resultados y tiempos de CPUfootnote:[Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_.]
 ----
 $ time ./counter
 Counter value: 5785131 Expected: 10000000
@@ -274,13 +266,17 @@ sys     0m0.044s
 <2> El tiempo de _reloj_ es mayor al tiempo acumulado de CPU.
 
 
-[NOTE]
-.Sobre los tiempos de CPU
-====
-Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_ (<<Sampson>>).
-====
+Se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo. De hecho en Python no hay nada de paralelismo, el intérpete usado -CPython- crea hilos nativos pero no hay ejecución en paralelo, el _Python Global Interpreter Lock_ (<<Sampson>>) obliga a _serializar_ cada una de las instrucciones que ejecuta la máquina virtual.
 
-En los ejemplos anteriores se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con paralelismo.
+Los mismos errores se obtendran si se ejecutan como hilos independientes, el siguiente es el resultado de la ejecución de <<counter_c, counter.c>> en una Rasperry 1 con un único núcleo y por lo tanto con intercalación exclusiva.
+
+----
+$ time ./counter
+Counter value: 7496883 Expected: 10000000
+real	0m0.353s
+user	0m0.340s
+sys     0m0.000s
+----
 
 
 
