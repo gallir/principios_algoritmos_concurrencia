@@ -186,7 +186,7 @@ states[0] = False
 
 Este algoritmo no asegura la condición principal: exclusión mutua.
 
-Basta con probar que ambos valores de +states+ son verdaderos. Puede ocurrir, las instrucciones del +while+ footnote:[El +while+ es traducido a una serie de instrucciones que involucan un +if+.] y la asignación posterior no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas, como en la siguiente secuencia de ejecución de instrucciones, a la izquierda las de _P0_ y a la derecha las de _P1_.
+Basta con probar que ambos valores de +states+ son verdaderos. Puede ocurrir, las instrucciones del +while+ footnote:[El +while+ es traducido a una serie de instrucciones que involucran un +if+.] y la asignación posterior no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas, como en la siguiente secuencia de ejecución de instrucciones, a la izquierda las de _P0_ y a la derecha las de _P1_.
 
 [source,python]
 ----

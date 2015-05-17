@@ -113,7 +113,7 @@ Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el 
 ====
 El paralelismo solo es una forma de ejecutar un programa concurrente. La programación concurrente es la forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
 
-Los problemas de procesos concurrentes no son un problema exclusivo del procesamiento paralelo, también ocurren con un único procesador
+Los problemas de procesos concurrentes no son exclusividad del procesamiento paralelo, también ocurren con un único procesador
 ====
 
 
