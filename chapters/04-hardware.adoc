@@ -494,7 +494,7 @@ pop:
 <4> Almacena el siguiente elemento en +head+.
 <5> Copia el contenido de +r1+ a +r0+, que es el valor devuelto por la función.
 
-Una vez conocidas las características y posibilidades de _LL/SC_ es relativamente sencillo simular las otras operaciones atómicas y quizás aún más sencillo implementar el algoritmo directamente basado en _LL/SC_. La dificultad es que no es habitual contar con macros genéricos debido a que en arquitecturas sin _LL/SC_ es muy complicado simular estas operaciones con instrucciones _CAS_, por lo que habrá que recurrir a ensamblador y además con una versión para cada plataforma que lo implemente.
+Una vez conocidas las características y posibilidades de _LL/SC_ es relativamente sencillo simular las otras operaciones atómicas y quizás aún más sencillo implementar el algoritmo directamente basado en _LL/SC_. La dificultad es que no es habitual contar con macros genéricos debido a que en arquitecturas sin _LL/SC_ es muy complicado simular estas operaciones con instrucciones _CAS_, hay que programarlas en ensamblador para cada plataforma que lo implemente.
 
 Pero si se hace correctamente además de evitar el problema ABA se puede hacer mucho más eficiente. Los siguientes son los tiempos de ejecución de los algoritmos de pilas concurrentes en Raspberry 1 y 2.
 
@@ -504,7 +504,7 @@ Pero si se hace correctamente además de evitar el problema ABA se puede hacer m
 image::free_lock_stacks.png[align="center"]
 
 
-Con un único procesador del ARM6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente más rápido, que sufre del problema ABAfootnote:[Y por lo tanto incorrecto.] y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARM7l con varios núcleos el _CAS con malloc_ es el más rápido (pero erróneo), la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
+Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente más rápido, que sufre del problema ABAfootnote:[Y por lo tanto incorrecto.] y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7l con varios núcleos el _CAS con malloc_ es el más rápido (pero erróneo), la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
 
 === Recapitulación
 

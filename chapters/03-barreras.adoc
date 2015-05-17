@@ -51,7 +51,7 @@ En arquitecturas de multiprocesamiento es un problema mantener coherentes las co
 
 ==== Coherencia de caché en multiprocesadores
 
-Los sistemas de multiprocesadores están conectados por una compleja red de comunicación, popularmente conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ -los datos se transfieren por un bus compartido- o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
+En las arquitecturas _SMP_ los procesadores están conectados por una compleja red de comunicación conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ -los datos se transfieren por un bus compartido- o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
 
 
 [[quickpath]]
@@ -62,7 +62,7 @@ Para mantener la consistencia entre las diferentes copias de caché se usan algo
 
 Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ se la etiqueta como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
 
-Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas pruebasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas con múltiples procesadores.
+Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas pruebasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas _SMP_.
 
 ===== La sobrecarga del acceso a variables compartidas
 
@@ -115,7 +115,7 @@ o
     c = a * 2
 
 
-Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores los procesadores son incapaces de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcto más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
+Detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Funciona perfectamente en procesos independientes, pero si se trata de hilos independientes que se ejecutan en diferentes procesadores, estos son incapaces de asegurar las dependencias causales entre ambos procesos. Tomemos el algoritmo correcto más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
 
 [source,python]
 ----
@@ -185,7 +185,7 @@ Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres tradici
 
 
 ==== Uso de barreras
-Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1) por la complejidad que significaba en el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras por lo que no existen instrucciones estándares y no construcciones sintácticas específicas en los lenguajes de programación de alto nivel.
+Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1) por la complejidad que significaba el diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una de ellas incluyese diferentes tipos de barreras por lo que no existen instrucciones estándares y no construcciones sintácticas específicas en los lenguajes de programación de alto nivel.
 
 Afortunadamente esos problemas los solucionan los _builtin macros_ de los compiladores, por ejemplo los de operaciones atómicas del compilador GCC <<Atomics_C11>>. El compilador define macros llamados como funciones normales dentro del programa, al compilar se inserta el código ensamblador correspondiente para cada arquitectura. Hay bastantes _macros atómicos_, algunos de ellos las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence` de GCCfootnote:[Este macro es para las versiones más modernas de GCC, en las antiguas versiones es `__sync_synchronize`, se recomienda al menos la versión 4.8 del GCC.].
 
