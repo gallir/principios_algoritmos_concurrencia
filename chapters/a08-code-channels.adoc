@@ -1,4 +1,5 @@
-== Código fuente de Canales
+[appendix]
+== Canales
 
 === Barreras
 

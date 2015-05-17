@@ -184,18 +184,34 @@ dt span.term {
 
 */
 
-div.chapter>div.titlepage {
-  padding: 15px 20px 20px 20px;
+div.chapter>div.titlepage, div.appendix>div.titlepage {
+    /*padding: 15px 20px 20px 20px;
   background-color: #000;
-  color: #fff;
+  color: #fff; */
   margin-bottom: 30px;
+  margin-top: 10px;
 }
 
-div.chapter>div.titlepage h1 {
-  color: #fff;
+div.chapter>div.titlepage h1, div.appendix>div.titlepage h1 {
+  color: #980000;
   text-transform: uppercase;
   font-size: 1.8em;
   text-align: right;
+  border-color: #980000;
+}
+
+div.book>div.titlepage h1 {
+    text-align: center;
+    font-size: 2.6em;
+    color: #000;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+div.author h3 {
+    text-align: center;
+    font-size: 2em;
+    color: #980000;
 }
 
 p {

@@ -1,4 +1,5 @@
-== Código fuente de _spinlocks_
+[appendix]
+== _Spinlocks_
 
 === Swap, TAS, CAS
 

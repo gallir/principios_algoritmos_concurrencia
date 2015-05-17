@@ -1,5 +1,6 @@
+[appendix]
 
-== Código futex
+== _FUTEX_
 
 === Semáforo
 [[futex_semaphore_c]]

@@ -1,10 +1,12 @@
 Principios y algoritmos de concurrencia
 =======================================
 :doctype: book
-:author: Ricardo Galli
+:author: Ricardo Galli-Granada
 :copyrights:  Creative Commons Attribution-NonCommercial CC BY-NC
 :lang: es
 :docinfo:
+:revnumber: 1.0
+:keywords: concurrencia, algoritmos, spinlocks, semáforos, monitores, canales
 :toc:
 :toclevels: 2
 :numbered!:
@@ -23,10 +25,10 @@ Principios y algoritmos de concurrencia
 <mbp:pagebreak />
 ////
 
+include::chapters/00-prefacio.adoc[]
 
 include::chapters/01-intro.adoc[]
 
-// include::chapters/exclusion_mutua.adoc[]
 
 include::chapters/02-algoritmos.adoc[]
 

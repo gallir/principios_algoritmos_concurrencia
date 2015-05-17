@@ -1,5 +1,6 @@
+[appendix]
 [[source_code]]
-== Código fuente algoritmos de exclusión mutua
+== Exclusión mutua
 
 
 [[threads_source]]

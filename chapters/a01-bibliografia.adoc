@@ -1,5 +1,5 @@
-== Referencias
 
+== Referencias
 [bibliography]
 
 - [[[Agha]]] Gul Agha, Carl Hewitt. _Concurrent Programming Using Actors: Exploiting Large-Scale Parallelism_. A. I. Memo No. 865. October 1985. ftp://publications.ai.mit.edu/ai-publications/pdf/AIM-865.pdf

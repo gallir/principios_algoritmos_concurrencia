@@ -1,4 +1,5 @@
-== Código semáforos
+[appendix]
+== Semáforos
 
 
 === Exclusión mutua
@@ -59,7 +60,7 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/loc
 include::../code/semaphores/lock_with.py[]
 ----
 
-=== Barrera
+=== Barreras
 [[barrier_py]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/barrier.py[barrier.py]
 [source, python]
@@ -118,7 +119,7 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/rw_
 include::../code/semaphores/rw_lock_fair_faster.py[]
 ----
 
-=== Filósofos cenando
+=== Filósofos
 [[philosophers_1_py]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/philosophers_1.py[philosophers_1.py]
 

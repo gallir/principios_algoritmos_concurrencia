@@ -1,5 +1,6 @@
+[appendix]
 [[code_hardware]]
-== Código fuente: Instrucciones por hardware
+== Instrucciones por hardware
 
 
 [[getAndSet]]
