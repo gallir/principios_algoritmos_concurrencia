@@ -45,11 +45,11 @@ En todos los casos el _scheduler_ tiene que decidir cuál de los siguientes proc
 
 Además el _scheduler_ debe distribuir los tiempos de ejecución equitativamente, tener en cuenta las diferentes prioridades y evitar que se produzcan _esperas infinitas_ de procesos que nunca son seleccionados para ejecución. Se usa como base un algoritmo de turnos rotatorios (_round robin_), a cada proceso se le asigna un tiempo máximo de ejecución (el _cuanto_ o _quantum_). Pasado ese tiempo el proceso es interrumpido y si hay otro proceso listo se hace un _cambio de contexto_ (_context switching_) para permitir la ejecución de ese nuevo proceso.
 
-Además de los turnos rotatorios se usan prioridades estáticas y dinámicas calculadas según el comportamiento de los procesos, si consumen todo su cuanto son procesos orientados a cálculo y se les baja la prioridad, lo que significa que son ubicados más atrás en la cola de listos. Las prioridades incrementan el riesgo de haya procesos que prácticamente no se ejecutan, para solucionarlo se usan dos colas, una activa y una inactiva, el _scheduler_ siempre selecciona de la activa. A cada proceso se le asigna un límite de tiempo de ejecución (_timeslice_), cuando consume ese tiempo son movidos a la cola inactiva, lo que da oportunidad para que se ejecuten todos los procesos que no lograron consumir su cuota de tiempo. Cuando no quedan procesos en la cola activa se intercambia, la inactiva pasa a ser la activa y viceversa, y se reinicia el ciclo.
+Además de los turnos rotatorios se usan prioridades estáticas y dinámicas calculadas según el comportamiento de los procesos, si consumen todo su cuanto son procesos orientados a cálculo y se les baja la prioridad, lo que significa que son ubicados más atrás en la cola de listos. Las prioridades incrementan el riesgo de procesos que se retrasan indefinidamente, para evitarlo se usan técnicas muy elaboradas y en constante evolución,  colas activas e inactivas, tiempos máximos (_time slices_), árboles ordenados, etc.
 
 
 ==== Cambios de contexto
-Se denonima así al procedimiento de almacenar el estado del proceso en ejecución y restaurar el de un proceso diferente para que pueda ejecutarse. Los cambios de contexto son costosos, el sistema operativo y el procesador deben trabajar juntos para:
+Se denomina así al procedimiento de almacenar el estado del proceso en ejecución y restaurar el de un proceso diferente para que pueda ejecutarse. Los cambios de contexto son costosos, el sistema operativo y el procesador deben trabajar juntos para:
 
 1. Guardar los registros del procesador para restaurarlos cuando el proceso vuelva a ejecución.
 
