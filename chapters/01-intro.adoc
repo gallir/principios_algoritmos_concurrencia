@@ -283,7 +283,7 @@ sys     0m0.044s
 
 Se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con _SMP_. De hecho en Python no hay nada de paralelismo, el intérprete usado -CPython- crea hilos nativos pero no hay ejecución en paralelo, el _Global Interpreter Lock_ (<<Sampson>>) obliga a _serializar_ cada una de las instrucciones que ejecuta la máquina virtual.
 
-Los errores no sonb el resultado de la ejecución en varios procesadores, se obtienen los mismos aunque se ejecute en un sistema con un único procesador, por ejemplo en una Rasperry 1:
+Los errores no son el resultado de la ejecución en varios procesadores, se obtienen los mismos aunque se ejecute en un sistema con un único procesador, por ejemplo en una Rasperry 1:
 
 .Ejecución en un único procesador
 ----

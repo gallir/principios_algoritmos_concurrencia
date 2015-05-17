@@ -1,10 +1,45 @@
 [preface]
 == Prefacio
 
+Hace más de veinte años que enseño temas de concurrencia, primero en las asignaturas de _Sistemas Operativos I_ y _II_, luego en una asignatura específica, _Programación Concurrente y Distribuida_ de la carrera de informática en la Universitat de les Illes Balears. A pesar de la cantidad de notas y presentaciones que elaboré en todos estos años nunca se me pasó por la cabeza escribir un libro, ni siquiera los típicos libros de asignaturas editados por las universidades. Es muy complicado explicar los problemas de concurrencia a alumnos con poca experiencia en programación, es muy difícil captar las sutilezas y conflictos generados por las ejecuciones que no cumplen con la _secuencialidad_ de los programas.
 
-Hay muchos ejemplos de código, en algunos casos el lenguaje está especificado si no es así se trata de pseudocódigo. Podía usar un estándar, por ejemplo un pseudocódigo estilo Python, C, o Go. En la mayoría de los casos usaré un pseudocódigo similar a C (con sus llaves y punto y comas), pero cuando son ejemplos sencillos uso una sintaxis similar a Python para evitar el "ruido" impuesto por los +{...}+ y +;+.
+Pero eso cambió en diciembre de 2014.
 
-El código está en <<source_code>>
+Un amigo programador que no tuvo la fortuna de estudiar infomática se encontró con un problema de _estructuras concurrentes_. Quería aprender más sobre el tema y me preguntó en Twitter qué bibliografía le recomendaba y me metió en un problema serio.
+
+Hay muy buenos libros de texto sobre concurrencia pero además de ser caros (en general superan los 60 €) están muy orientados a la parte formal del problema, no a las aplicaciones prácticas. También suelen usar lenguajes y formalismos poco usados (Promela, Concurrent Pascal, Spaces, ADA) que no tienen sentido para un programador que quiere aprender o actualizarse y poder transferir rápidamente esos conocimientos a su lenguaje preferido.
+
+Hay buenos libros orientados a divulgación y actualización (como <<Herlihy12>>) pero que además de caros están especializados en algún tema y orientados a una audiencia más acádemica. También hay buenos libros especializados en un lenguaje en particular (como Java) y sus herramientas pero no explican los orígenes y principios fundamentanles de concurrencia.
+
+Mientras le pasaba enlaces y explicaba estos problemas él buscaba por su cuenta en los apuntes y notas de clase de las universidades más prestigiosas. Estaban muy bien, pero la mayoría estaban pensados mas como soporte de clases que como un texto estructurado que cubriese lo que se consideran los principios y algoritmos fundamentales.
+
+No hice un extenso análisis de mercado pero en unas pocas horas me di cuenta que me fue imposible recomendar un libro que le explicase _concurrencia_ de la forma que yo consideraba era la más útil y valiosa para un programador que está interesado en conocer sus _principios_.
+
+Casi como una broma respondí "a ver si tengo que escribirlo en un ebook" lo que generó inmediatas peticiones para que lo hiciese.
+
+Así es como surgió este libro, y no sabía en lo que me metía. Pensé que lo podría hacer con menos de 20 000 palabras y en unos tres meses, pero acabó teniendo más de 50 000 además de las 22 000 líneas de código en cinco lenguajes diferentes escritos exclusivamente para este libro.
+
+Creo que en el libro logro explicar, con ejemplos en lenguajes modernos y muy populares, lo que considero fundamental de los principios y algoritmos fundamentales de concurrencia. Por supuesto esto es una opinión subjetiva y cada lector tendrá su opinión y divergencia sobre por qué no cuento esa característica tan especial de su lenguaje preferido. Es muy difícil explicar o refutar esas opiniones, se necesitaría un macro ensayo filosófico, pero tengo la ventaja de haber enseñado estos temas durante dos décadas. No solo sé lo que me ha costado dominar ciertos temas, sino también lo que cuesta transmitir y hacer _captar_ las sutilezas de la programación concurrente.
+
+No se trata de aprender de memoria unos algoritmos ni se saber exactamente cómo y cuándo usarlos, se trata de otra forma de pensar la programación. Las cosas ya no son lineales ni los invariantes tan obvios, cuando analizas o desarrollas un programa concurrente has de razonar de forma muy diferente. No se trata de solo _este programa_, sino de cómo puede interactuar con _otros_ y cómo afecta la ejecución de esos _otros_ a los resultados de _éste_. Hay que pensar también de forma _concurrente_, no se adquiere con una asignatura ni leyendo un libro durante un fin de semana. Requiere motivación y entrenamiento, pero no cabe duda que un libro que explique lo fundamental y lo acompañe con código de demostración y prueba es de gran ayuda al proceso.
+
+Me temo que no había un libro de ese tipo, no al menos para el público objetivo de este libro: el programador que no tuvo la suerte de una formación universitaria, o que quiere actualizarse, o que sencillamente no recuerda a esa oscura asignatura de hace años y hoy tiene las ganas o la necesidad de recordarlo.
+
+Ante esta situación y dado que el tiempo para escribir un libro es finito, hay que aplicar filtros y seleccionar lo fundamental, cuáles son los principios y qué cosas son solo una derivación o metaconstrucción sobre esos pilares básicos. En esto lo tenía claro, no sé si están todos los que son pero sí sé que los que están son fundamentales.
+
+=== Hacer un ebook
+Este libro tiene muchos algoritmos y código completo. Mis experiencias con ebooks técnicos no son de las mejores, sobre todo si incluyen ejemplos de programas cuyas líneas no alcanzas a mostrarse completas en la pequeña pantalla del lector de ebooks o del tablet. Me duele la cabeza de solo pensarlo, sobre todo los que incluyen hasta el tratamiento de excepciones, hay que hacer un gran esfuerzo para descrifrar entre tanto galimatías la parte importante del algoritmo.
+
+Al momento que escribo estas líneas no sé si habrá una versión impresa del libro, no contacté con ninguna editorial, la intención fue desde el principio hacer un ebook que fuese accesible y fácil de leer. Por eso tuve que tomar varias decisiones importantes de cómo escribir un libro electrónico con tanto código y que no fuese doloroso de leer.
+
+Una clave es lograr escribir el algoritmo en pocas líneas, que sea suficientemente expresivo pero a la vez breve para que una línea de código sea una línea de la pantalla. En vez de invertar otro pseudocódigo uso directamente Python, no solo es expresivo, es fácil de comprender y los programas son válidos.
+
+Por las mismas razones muchos de los ejemplos están escritos en Python, pero solo si era el más adecuado para mostrar el funcionamiento y los problemas tratados. Los ejemplos están en cinco lenguajes diferentes (C, Python, Java, Go y ensamblador de ARM), usé siempre el que me parece el más apropiado para demostrar lo que estaba explicando. En algunos casos traduje el código a Python para explicarlo en el texto, en otros casos usé el lenguaje original pero los simplifiqué quitanto lo accesorio (como una lista larga de argumentos, tratamiento de excepciones y nombres de funciones).
+
+De todas formas me parece importante, y es lo que yo espero de un libro, poder ver el código completo. Dado que no tenemos las restricciones de un libro físico decidí que todo el código debía estar disponible directamente desde el lector, sin necesidad de conectarse a Internet ni picar URLs en un ordenador. El código completo de todos los ejemplos <<source_code, están en los apéndices>> al final del libro (aproximadamente el 30% del total), cada uno de ellos está enlazado en el texto donde se dicute el código simplificado. En el apéndice, justo arriba del código, está el enlace al código correspondiente en https://github.com/gallir/concurrencia_source_samples[Github].
+
+Creo que en este aspecto cumplí los objetivos, el código de ejemplo es legible fácilmente -aún en pantallas de teléfonos-, va directo al punto que interesa y no necesitan tres pantallas para leerlo completo. Aún así con un _clic_ se puede ver el código completo sin salir del libro y con otro _clic_ se puede acceder al repositorio de donde bajarlo a un ordenador.
+
 
 
 La terminología es fundamental para entender la documentación técnica, me tomé el trabajo de indicar el nombre inglés que se suele usar para las diferentes.
