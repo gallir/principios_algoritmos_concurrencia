@@ -1,3 +1,4 @@
+[[processes_concurrency]]
 == Procesos y concurrencia
 
 Los programas en ejecución se denominan procesos, son elementos de gestión centrales del sistema operativo. Desde el punto de vista del _núcleo_ del sistema operativofootnote:[El sistema operativo está formado por un núcleo o _kernel_, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al inicio, gestiona todos los recursos y los procesos ejecutándose con privilegios especiales del procesador.] los procesos tienen dos partes bien diferenciadas, la imagen de memoria y las tablas de control de procesos.

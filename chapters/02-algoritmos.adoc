@@ -1,3 +1,4 @@
+[[mutual_exclusion]]
 == Exclusión mutua
 La exclusión mutua (o _secciones críticas_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes.
 
