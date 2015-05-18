@@ -189,6 +189,11 @@ dt span.term {
 
 */
 
+dt span.term {
+  font-weight: bold;
+}
+
+
 div.preface>div.titlepage, div.chapter>div.titlepage, div.appendix>div.titlepage {
     /*padding: 15px 20px 20px 20px;
   background-color: #000;
@@ -224,7 +229,7 @@ div.author h3 {
 }
 
 p {
-  margin: 4px 0 4px 0;
+  margin: 4px 0 6px 0;
 }
 
 
