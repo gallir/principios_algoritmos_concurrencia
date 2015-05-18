@@ -5,6 +5,7 @@ Hace más de veinte años que enseño temas de concurrencia, primero en las asig
 
 Pero eso cambió en diciembre de 2014.
 
+=== Motivación
 Un amigo programador que no tuvo la fortuna de estudiar infomática se encontró con un problema de _estructuras concurrentes_. Quería aprender más sobre el tema y me preguntó en Twitter qué bibliografía le recomendaba y me metió en un problema serio.
 
 Hay muy buenos libros de texto sobre concurrencia pero además de ser caros (en general superan los 60 €) están muy orientados a la parte formal del problema, no a las aplicaciones prácticas. También suelen usar lenguajes y formalismos poco usados (Promela, Concurrent Pascal, Spaces, ADA) que no tienen sentido para un programador que quiere aprender o actualizarse y poder transferir rápidamente esos conocimientos a su lenguaje preferido.
@@ -38,8 +39,22 @@ Por las mismas razones muchos de los ejemplos están escritos en Python, pero so
 
 De todas formas me parece importante, y es lo que yo espero de un libro, poder ver el código completo. Dado que no tenemos las restricciones de un libro físico decidí que todo el código debía estar disponible directamente desde el lector, sin necesidad de conectarse a Internet ni picar URLs en un ordenador. El código completo de todos los ejemplos <<source_code, están en los apéndices>> al final del libro (aproximadamente el 30% del total), cada uno de ellos está enlazado en el texto donde se dicute el código simplificado. En el apéndice, justo arriba del código, está el enlace al código correspondiente en https://github.com/gallir/concurrencia_source_samples[Github].
 
-Creo que en este aspecto cumplí los objetivos, el código de ejemplo es legible fácilmente -aún en pantallas de teléfonos-, va directo al punto que interesa y no necesitan tres pantallas para leerlo completo. Aún así con un _clic_ se puede ver el código completo sin salir del libro y con otro _clic_ se puede acceder al repositorio de donde bajarlo a un ordenador.
+Creo que en este aspecto cumplí los objetivos, el código de los ejemplos en el texto es legible fácilmente -aún en pantallas de teléfonos-, va directo al punto que interesa y no necesitan tres pantallas para leerlo completo. Aún así con un _clic_ se puede ver el código completo sin salir del libro y con otro _clic_ se puede acceder al repositorio de donde bajarlo a un ordenador.
+
+=== Los programas y lenguajes
+Uno de los requisitos que me impuse fue que todo lo que explicase debía ir acompañado de un código compilable y funcional. Otro fue que todos deberían poder se compilados y ejecutados en el ordenador más básico posible, a día de hoy cualquier Raspberry con sus distribuciones estándares de GNU/Linux. Solo se necesita tener instalar los paquetes del gcc, Golang, Python y el SDK de Java, todos ellos disponibles en cualquier distribución para Raspberry u ordenadores de escritorio. Todos los programas están desarrollados para que funcionen sobre Raspberry 1 y 2, probados con Debian Jessie y Ubuntu 14.04, para generar sus ejecutables solo hay que ejecutar el comando +make+ en cada uno de sus directorios.
+
+La regla para usar uno u otro lenguaje de programación fue elegir el más apto para el tema que se discute, si era una buena opción usaba Python. Para _monitores_ usé principalmente Java porque es un lenguaje muy popular que incluye a los monitores como construcción sintáctica del lenguaje. Para _canales_ usé Go por la misma razón, los canales son una construcción del lenguaje.
+
+Hay bastantes ejemplos en C, lo usé cuando no había opción de hacerlo en otro lenguaje o porque éste era el más adecuado para enseñar lo que pretendía. Mi opinión personal es que todos los programadores deberían saber C. Su gramática es muy sencilla y a la vez muy próximo a la arquitectura. Si no se conoce ensamblador es la mejor forma de tener una idea el _trabajo_ que hay detrás de cada intérprete o máquina virtual (la mayoría de ellas programadas en C o C++) para transformar abstracciones de alto nivel en código ejecutable por el procesador. Si no sabes C, no te preocupes, el código es sencillo y está explicado -a veces línea a línea-, de paso empezarás a quitarte el miedo y los mitos con el lenguaje.
+
+Usé ensamblador en un <<stack_llsc_freelist_s, único caso>> porque no había otra opción para demostrar el funcionamiento de las instrucciones de sincronización de _LL/SC_. Aofrtunadamente los procesadores ARM de ambos modelos de Raspberry (ARMv6 y ARMv7) soportan esas instrucciones, por lo que no hace falta hardware especial o caro.
+
+En algunos algoritmos hay ejemplos en varios lenguajes diferentes, me pareció oportuno mostrarlos cómo se hacen en cada uno de ellos, o cómo se pueden construir mecanismos similares (notablemente simular monitores en C y Python). Para los que conozcan un lenguaje más que otro puede ser clarificador. De todas maneras nunca está mal acostumbrarse a interpreter algoritmos en varios lenguajes, es la mejor forma de introducirse y tomar confianza con los lenguajes.
 
 
-
+=== Terminología
 La terminología es fundamental para entender la documentación técnica, me tomé el trabajo de indicar el nombre inglés que se suele usar para las diferentes.
+
+
+=== Estructura
