@@ -36,23 +36,28 @@ body h1 {
 
 body h2 {
   font-size: 1.25em;
+  border: none;
 }
 
 
 body h3 {
     font-size: 1.18em;
+    border: none;
 }
 
 body h4 {
     font-size: 1.12em;
+    border: none;
 }
 
 body h5 {
     font-size: 1.05em;
+    border: none;
 }
 
 body h6 {
     font-size: 1.0em;
+    border: none;
 }
 
 div.toc p:first-child,
@@ -184,7 +189,7 @@ dt span.term {
 
 */
 
-div.chapter>div.titlepage, div.appendix>div.titlepage {
+div.preface>div.titlepage, div.chapter>div.titlepage, div.appendix>div.titlepage {
     /*padding: 15px 20px 20px 20px;
   background-color: #000;
   color: #fff; */
@@ -192,12 +197,16 @@ div.chapter>div.titlepage, div.appendix>div.titlepage {
   margin-top: 10px;
 }
 
-div.chapter>div.titlepage h1, div.appendix>div.titlepage h1 {
+div.preface>div.titlepage h1, div.chapter>div.titlepage h1, div.appendix>div.titlepage h1 {
   color: #980000;
   text-transform: uppercase;
   font-size: 1.8em;
   text-align: right;
   border-color: #980000;
+}
+
+div.preface>div.titlepage h1 {
+    border: none;
 }
 
 div.book>div.titlepage h1 {
@@ -215,7 +224,7 @@ div.author h3 {
 }
 
 p {
-  margin: 8px 0 0 0;
+  margin: 4px 0 4px 0;
 }
 
 

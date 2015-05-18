@@ -341,7 +341,7 @@ Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
 [[peterson]]
 ==== Algoritmo de Peterson (1981)
 
-Cuando no hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ya había soluciones más prácticas y eficientes para dos o más procesos, como instrucciones por hardware.] pero como espectacular ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
+No hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ya había soluciones más prácticas y eficientes para dos o más procesos, como instrucciones por hardware.] pero como ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
 
 Las variables son las mismas y la idea fundamental no cambia, solo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es más fácil de comprender:
 
@@ -390,7 +390,7 @@ Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, 
 [[bakery]]
 ==== Algoritmo de la Panaderia (1974)
 
-La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una panadería sacan un número para saber el orden en que serán atendidos.
+La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una tienda que sacan un número para saber el orden en que serán atendidos.
 
 La implementación básica de la idea es la siguiente:
 
@@ -410,13 +410,11 @@ critical_section()
 number[i] = 0
 ----
 <1> El tamaño del array debe ser igual al número máximo de procesos que pueden acceder a una sección crítica.
-<2> La función max() retorna el mayor número que encuentra en el array +number+.
+<2> La función +max+ retorna el mayor número que encuentra en el array +number+.
 <3> Se recorre todo el array para verificar el número de los demás procesos.
-<4> Esperará en el bucle si el proceso _j_ tiene un número menor al mío (_i_).
+<4> Esperará en el bucle si el proceso _j_ tiene un número menor al _mío_ (_i_).
 
-La idea básica es sencilla.
-
-Cada proceso tiene asociado un identificador entero que lo usa acceder al array +number+ footnote:[Es la misma idea que usamos para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle +for j...+ su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
+La idea básica es sencilla. Cada proceso tiene asociado un identificador entero que lo usa para acceder al array +number+ footnote:[La misma idea que para dos procesos, solo que ahora pueden ser números iguales o mayores que cero.]. El proceso que desea entrar obtiene el siguiente número y lo almacena en su posición en el array. Si no hay nadie en la sección crítica su número será 1. Si hay ya uno será 2, pero si hay otro proceso esperando en el bucle +for j...+ su número será 3, etc. El número seleccionado indicará el orden de entrada de los procesos.
 
 Pero el demonio está en los detalles.
 
@@ -487,7 +485,7 @@ number[i] = 0
 <4> Si el proceso _j_ está seleccionando se le espera porque podría corresponderle el turno.
 
 ****
-Podéis consultar y probar el <<counter_bakery, código en C>> de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio del <<barriers, siguiente capítulo>>.
+se puede consultar y probar el <<counter_bakery, código en C>> de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio del <<barriers, siguiente capítulo>>.
 ****
 
 ////
