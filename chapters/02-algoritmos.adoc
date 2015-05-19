@@ -1,21 +1,22 @@
 [[mutual_exclusion]]
 == Exclusión mutua
-La exclusión mutua (o _secciones críticas_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar que el acceso a recursos compartidos se haga de forma ordenada para asegurar que los valores o estados de esos recursos sean consistentes.
+La exclusión mutua (o _secciones críticas_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar el acceso ordenador a recursos compartidos para impedir errores e inconsistencias.
 
 Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
 
 El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
 
-En el resto del capítulo se define el problema y se analizan las soluciones algorítimicas -correctas a incorrectas- partiendo desde el caso más simple para dos procesos hasta llegar a soluciones genéricas para _N_ procesos.
 
 === Definición
-La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas generan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
+La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_ que pueden generar resultados erróneos dependiendo de la secuencia de ejecución de las instrucciones atómicas.
 
-Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente _exclusión mutua_-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas, mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos. El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
+Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente exclusión mutua-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas, mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
 
-- Preprotocolo o _entrada a la sección crítica_.
+El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
 
-- Posprotocolo o _salida de la sección crítica_.
+- _Preprotocolo_ o entrada a la sección crítica.
+
+- _Posprotocolo_ o salida de la sección crítica.
 
 
 [source,python]
@@ -28,21 +29,21 @@ while forever:
     cs_exit()              <2>
     # ...
 ----
-<1> Preprotocolo o entrada a la sección crítica.
-<2> Posprotocolo o salida de la sección crítica
+<1> Preprotocolo.
+<2> Posprotocolo.
 
 
-Hay muchas algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus propios problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, diseñar los algoritmos para el pre y posprotocolo. Estos deben cumplir con los siguientes requisitos:
+Hay muchos algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, programar los algoritmos para el pre y posprotocolo. Estos deben cumplir con los siguientes requisitos:
 
 [[em_requisites]]
 [IMPORTANT]
 .Requisitos para exclusión mutua
 ====
-Exclusión mutua:: Se debe asegurar que solo uno de los procesos ejecuta código de la sección crítica.
+Exclusión mutua:: Se debe asegurar que solo uno de los procesos ejecuta instrucciones de la sección crítica.
 
 Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica, al menos _uno de ellos_ debe poder hacerlo.
 
-Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Si cualquier proceso desea entrar en la sección crítica _ese proceso_ deber poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan con algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñados para asegurar _equidad_>>.
+Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Si cualquier proceso desea entrar en la sección crítica debe poder hacerlo en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan  algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñadas para asegurar _equidad_>>.
 ====
 
 Además de los tres requisitos fundamentales anteriores, en el artículo original (<<Dijkstra65>>) Dijkstra propuso cuatro reglas que deben cumplir los algoritmos para sección crítica:
@@ -55,16 +56,18 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 
 . _Entrada inmediata_ o _no interferencia_, un proceso que se interrumpe fuera de su sección crítica (o _resto del código_) no debe interferir ni bloquear a los demás procesos.
 
-. Si varios procesos desean entrar simultáneamente la decisión en la _entrada de la sección crítica_ debe tomar un número finito de pasos.
+. Si varios procesos desean entrar simultáneamente la decisión en la entrada de la sección crítica debe tomar un número finito de pasos.
 
 
 [[algorithms]]
 === Algoritmos de exclusión mutua
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef  Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para N procesos, el _algoritmo de la Panadería_ de Leslie Lamport (<<Lamport>>).
 
-Estos algoritmos no se usan por varios motivos, además de la espera activa no funcionan en los procesadores modernos ya que estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, lo que obliga a usar _barreras de memoria_ (_memory barriers_, explicadas en el siguiente capítulo). Existen otras primitivas y construcciones que eliminan estos problemas y que veremos en capítulos posteriores: _spinlocks_, semáforos, monitores y canales.
+****
+Estos algoritmos no son prácticos por varios motivos, además de la espera activa no funcionan en los procesadores modernos. Estos últimos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, lo que obliga a usar _barreras de memoria_ (_memory barriers_, explicadas en el siguiente capítulo). Existen otras primitivas y construcciones que eliminan estos problemas y que veremos en capítulos posteriores: _spinlocks_, semáforos, monitores y canales.
+****
 
-El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los algoritmos concurrentes, conocer las reglas fundamentales para el diseño de los algoritmos, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones:
+El objetivo de estudiar estos algoritmos y su evolución desde intentos fallidos hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, cómo probar que son correctos y aprender la terminología básica y sus aplicaciones:
 
 - esperas activas (_busy wait_),
 - interbloqueos (_deadlocks_),
@@ -72,25 +75,24 @@ El objetivo de estudiar estos algoritmos y su evolución hasta la solución corr
 - bloqueos activos (_livelocks_),
 - etc.
 
-Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas os ayudará a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de vuestros programas.
+Este conocimiento no tiene un interés puramente académico, además de comprender cómo se implementan los mecanismos y abstracciones de más alto nivel en los diferentes lenguajes y sistemas ayuda a detectar y razonar sobre los problemas de concurrencia y condiciones de carreras de programas concurrentes.
 
 ==== Memoria compartida
 
-En todos los algoritmos y técnicas que analizamos en este libro asumimos que los programas tienen acceso a variables en memoria compartida, es decir, variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Se dice que estos algoritmos son de _memoria compartida_.
+En todos los algoritmos y técnicas que analizamos en el libro asumimos que los programas tienen acceso a variables en memoria compartida, es decir, variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Se dice que estos algoritmos son de _memoria compartida_.
 
 .Algoritmos distribuidos
 ****
 La alternativa son los algoritmos para procesos que no pueden compartir memoria, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de _concurrencia_, _sincronización_ y _consenso_ pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por _intercambios de mensajes_ sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
 
-Aunque hay que resolver problemas similares y se basan en los mismos conceptos sus soluciones son más complejas. El diseño de algoritmos no es objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> hay una breve introducción al problema.
+El estudio de algoritmos distribuidos no es el objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> hay una breve introducción.
 ****
 
 ==== Convenciones de programación
 
-Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar el programa dentro de las secciones críticas ni nos interesa lo que se hace en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, suponemos que el tiempo que cada proceso está en la sección crítica es finito.
+Consideramos que los programas tienen _secciones críticas_ y _resto del código_. No podemos modificar sus secciones críticas ni interesa lo que se hacen en el _resto_. De este último tampoco tenemos información del tiempo que tarda o cómo se ejecuta, y suponemos que el tiempo de ejecución de las secciones críticas es finito. Nuestra responsabilidad será desarrollar los algoritmos para preprotocolo y el posprotocolo.
 
-En las secciones críticas los procesos acceden a variables o recursos compartidos y que requieren que se asegure exclusión mutua con las mismas secciones críticas de otros procesos. Nuestra responsabilidad será desarrollar los algoritmos que se insertarán antes de la sección crítica (_preprotocolo_) y después de la misma (_posprotocolo_).
-
+El patrón para representar los algoritmos es como el siguiente ejemplo:
 
 .Inicialización de variables globales
 [source,python]
@@ -118,22 +120,22 @@ while True:
 
 === Solución para dos procesos
 
-Primero solucionaremos el problema de concurrencia más sencillo, la exclusión mutua entre dos procesos. Lo haremos en varios intentos con complejidad creciente y asegurándonos que también cumplan las <<four_requisites, condiciones de Dijkstra>>. La primera de estas condiciones dice que los algoritmos deben ser simétricos, lo que significa que el código debe ser el mismo para ambos procesos.
+La exclusión mutua entre dos procesos es el problema más simple. Lo resolveremos en varios intentos con complejidad creciente y asegurando que además de los requisitos también cumplan las <<four_requisites, condiciones de Dijkstra>>. La primera de estas últimas condiciones dice que los algoritmos deben ser simétricos, implican que el código debe ser el mismo para ambos procesos.
 
-Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización que ejecutan es el mismo analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
+Cada uno de los dos procesos está identificado por +0+ o +1+. Dado que el código de sincronización es idéntico analizaremos la ejecución de solo uno de ellos, la del proceso +0+, o _P0_. Desde la perspectiva del proceso _P0_ el _otro_ proceso es el +1+ (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores +0+ y +1+ intercambiados.
 
-Como generalización se suele usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora solo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
+Cuando se generaliza se acostumbra usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora solo tratamos con dos procesos usaremos +0+ y +1+ y nos centraremos desde el punto de vista del proceso _P0_.
 
 
 ==== Primer intento
-La idea fundamental es que la variable entera +turn+ indicará qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar solo los valores +0+ y +1+, cada uno de ellos indica de quién es el _turno_ para entrar. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
+La idea base es que el valor de una variable entera, +turn+, indicará qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar solo los valores +0+ y +1+, cada uno de ellos indica a qué proceso le corresponde el turno para entrar a la sección crítica. La inicializamos con cero pero puede tomar cualquiera de los dos valores.
 
 [source,python]
 ----
         turn = 0
 ----
 
-El siguiente es el código, el primer +while+ es la _entrada a la sección crítica_, su función es esperar a que sea el turno del proceso. En este caso esperará en el bucle mientras +turn+ sea diferente a +0+.
+El siguiente es el código, el primer +while+ es la entrada a la sección crítica, su función es esperar a que sea el turno del proceso. En este caso esperará en un bucle mientras +turn+ sea diferente a +0+.
 
 
 [source,python]
@@ -148,19 +150,19 @@ turno = 1
 
 .Espera activa
 ****
-Esta espera en el +while+ _sin hacer nada_ y solo verificando el valor de una variable se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU pero a veces inevitable cuando no se pueden usar otras primitivas... por ejemplo para implementar esas primitivas. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
+Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU pero a veces inevitable cuando no se pueden usar otras primitivas... por ejemplo para implementar esas primitivas. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
 ****
 
 
-Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la _salida de sección crítica_ que consiste solo en dar el turno a _P1_. Ya os habréis dado cuenta del problema, pero aún así y por ser la primera vez lo analizaremos en detalle comprobando además el cumplimiento de los requisitos de <<four_requisites>>.
+Cuando la variable +turn+ sea +0+ _P0_ podrá entrar a su sección crítica, al salir de ella ejecutará la salida de sección crítica que consiste solo en dar el turno a _P1_. El problema es obvio pero por ser la primera vez lo analizaremos en detalle comprobando el cumplimiento de cada requisitio.
 
-Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, la asignación de enteros es atómica en los procesadores, al final solo se almacenará +0+ o +1+.].
+Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, todos aseguran consistencia de caché, al final solo se almacenará +0+ o +1+.].
 
-Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que éste entre a su sección crítica para entrar a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el _resto del código_ footnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón ya debemos descartar este algoritmo, pero sigamos analizando las siguientes reglas.
+Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que éste entre a su sección crítica para hacerlo a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando éste ni siquiera tiene intenciones de entrar porque está en el resto del código footnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón este algoritmo es incorrecto, pero sigamos analizando las siguientes reglas.
 
 Espera limitada:: Por la anterior se produce espera infinita si el proceso +1+ no entra a la sección crítica.
 
-Entrada inmediata:: Si +turn+ vale +1+ pero este último está en el _resto del código_ y no podrá entrar. Tampoco se cumple.
+Entrada inmediata:: Si +turn+ vale +1+ pero este último está en el resto del código y no podrá entrar. Tampoco se cumple.
 
 Sin suposiciones de velocidad relativa:: Hemos supuesto que ambos procesos entrarán alternativamente a la sección crítica, es decir que su velocidad relativa es _similar_. Tampoco la cumple.
 
@@ -170,7 +172,7 @@ En pocas palabras, el problema de este algoritmo es que obliga a la _alternancia
 
 ==== Segundo intento
 
-Si el problema del anterior es que la variable +turn+ exigía alternancia exclusiva se puede solucionar con un array. Cada posición del mismo indica si el proceso correspondiente está (+True+) o no (+False+) dentro de la sección crítica. Cuando un proceso desea entrar verifica el estado del otro, si no está en la sección crítica pone +True+ en su posición del array y continúa (entrando a la sección crítica).
+Si el problema del anterior es la +turn+ que provoca la alternancia exclusiva se puede solucionar con un array de enteros, uno para cada proceso. Cada uno indica si el proceso correspondiente está (+True+) o no (+False+) dentro de la sección crítica. Cuando un proceso desea entrar verifica el estado del otro, si no está en la sección crítica pone +True+ en su posición del array y continúa (entrando a la sección crítica).
 
 [source,python]
 ----
@@ -187,7 +189,7 @@ states[0] = False
 
 Este algoritmo no asegura la condición principal: exclusión mutua.
 
-Basta con probar que ambos valores de +states+ son verdaderos. Puede ocurrir, las instrucciones del +while+ footnote:[El +while+ es traducido a una serie de instrucciones que involucran un +if+.] y la asignación posterior no son operaciones atómicas (o _indivisibles_), el proceso puede ser interrumpido entre ellas, como en la siguiente secuencia de ejecución de instrucciones, a la izquierda las de _P0_ y a la derecha las de _P1_.
+Basta con probar que ambos valores de +states+ son verdaderos. Puede ocurrir, las instrucciones del +while+ footnote:[El +while+ es traducido a una serie de instrucciones que involucran un +if+.] y la asignación posterior no son operaciones atómicas, el proceso puede ser interrumpido entre ellas, como en la siguiente secuencia de ejecución de instrucciones, a la izquierda las de _P0_ y a la derecha las de _P1_.
 
 [source,python]
 ----
@@ -201,11 +203,11 @@ states[0] = True
           ## BOOOM! ##
 ----
 
-_P0_ verifica el estado de _P1_, sale del bucle porque es +states[1]+ falso e inmediatamente es interrumpido. _P1_ hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta _P1_ que también entra a la sección crítica.
+_P0_ verifica el estado de _P1_, sale del bucle porque +states[1]+ es falso e inmediatamente es interrumpido. _P1_ hace la misma verificación, sale del bucle, pone su estado en verdadero y entra a la sección crítica. Mientras está en ella es interrumpido y se ejecuta _P1_ que también entra a la sección crítica.
 
 ==== Tercer intento
 
-El problema del algoritmo anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado. La solución parece obvia: si se asigna el estado propio antes de verificar el otro aseguraremos que no se llegue a la sección crítica si el otro proceso ya está en ella.
+El problema del algoritmo anterior es que un proceso verifica el estado del otro antes de cambiar su propio estado. La solución parece obvia: si se cambia el estado propio antes de verificar el otro se impedirá que dos procesos entren a la sección crítica.
 
 [source,python]
 ----
@@ -223,7 +225,7 @@ Es sencillo demostrar que cumple el primer requisito de exclusión mutua. Si los
 También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. Si _P1_ está en el resto del código entonces +states[1]+ será falso, por lo que no interfiere con _P0_ y éste podrá entrar y salir varias veces sin esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
 [[first_deadlock]]
-El gran problema es que no cumple la regla de _espera limitada_, de hecho el algoritmo genera un _interbloqueo_ si ocurre la siguiente secuencia de instrucciones:
+Pero no cumple el requisito de _progreso_, el algoritmo genera interbloqueofootnote:[En el capítulo <<semaphores>> se trata el problema <<deadlocks, interbloqueos>> con mayor profundidad.] si ocurre la siguiente secuencia de instrucciones:
 
 ----
   P0                    P1
@@ -237,7 +239,7 @@ El gran problema es que no cumple la regla de _espera limitada_, de hecho el alg
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como es verdadero no saldrá del +while+ hasta que _P0_ cambie su estado a falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como solo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.
 
-Es la perfecta definición de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la puso un Senador porque no quería que se aprobase la ley por lo que insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
+Es la perfecta definición de una ley de Kansas de principios del siglo XX (<<Railroad>>)footnote:[Aunque hay que aclarar que la propuso un Senador porque no quería que se aprobase la ley, insertó esta regla estúpida para que sus colegas detuviesen el proceso al verla. Pero fue aprobada.]:
 
 [[railroad_quote]]
 .Ley de Kansas
@@ -247,7 +249,7 @@ Cuando dos trenes se encuentran en un cruce de vías cada uno deberá detenerse 
 
 ==== Cuarto intento
 
-Se puede romper el interbloqueo que se genera en el caso de la _condición de carrera_ explicada previamente cambiando temporalmente el estado del proceso a falso e inmediatamente volver a ponerlo en verdadero. Así se abrirá una _ventana temporal_ para que alguno de los procesos pueda continuar:
+Se puede romper el interbloqueo generado por la condición de carrera anterior cambiando temporalmente el estado de +states[i]+ a falso e inmediatamente volver a ponerlo en verdadero. Así se abrirá una _ventana temporal_ para que alguno de los procesos pueda continuar:
 
 [source,python]
 ----
@@ -263,11 +265,11 @@ states[0] = False
 <1> Cede el paso a otro.
 <2> Restaura el estado antes de volver a verificar en el +while+.
 
-Si ambos procesos entran _simultáneamente_ al bucle de entrada, en algún momento -por ejemplo- _P1_ pondrá a falso +states[1]+ y se interrumpirá por lo que _P0_ podrá entrar a su sección crítica. _P1_ cambiará +states[1]+ otra vez a verdadero y volverá a quedar esperando en el bucle, pero _P0_ ya estará en la sección crítica. Cuando _P0_ salga pondrá su estado a falso y _P1_ podrá entrar.
+Si ambos procesos entran simultáneamente al bucle de entrada, en algún momento -por ejemplo- _P1_ pondrá a falso +states[1]+ y se interrumpirá por lo que _P0_ podrá entrar a su sección crítica. _P1_ cambiará +states[1]+ otra vez a verdadero y volverá a quedar esperando en el bucle, pero _P0_ ya estará en la sección crítica. Cuando _P0_ salga pondrá su estado a falso y _P1_ podrá entrar.
 
 
 ****
-Pensarás que se puede hacer algo entre las instrucciones de asignación a `states[0]` para aumentar la probabilidad de que el otro pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese soluciones mejores -las hay-, pero formalmente son equivalentes.
+Es lógico que entre las instrucciones de asignación a `states[0]` se puede hacer algo para aumentar la probabilidad de que el uno de los procesos pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese soluciones mejores -las hay-, pero formalmente son equivalentes.
 
 Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- la probabilidad de que uno de ellos se interrumpa entre ambas asignaciones es bastante elevada, por la velocidad de los procesadores ocurriría en pocos nanosegundos.
 ****
@@ -277,18 +279,18 @@ Analicemos si se cumplen los requisitos:
 
 Exclusión mutua::
 
-En ese caso es algo más difícil la demostración ya que no podemos recurrir al caso simple de que una variable tenga un valor u otro, o que el array +states+ no tenga ambos valores en verdadero ya que es posible que así sea y haya exclusión mutua. Hay dos casos:
+En ese caso la demostración es algo más compleja ya que no podemos recurrir al caso simple de que una variable tenga un valor u otro, o que el array +states+ no tenga ambos valores en verdadero ya que es posible que así sea y haya exclusión mutua. Hay dos casos:
 
-    . _P0_ entra a su sección crítica antes que _P1_ verifique el valor de +states[0]+, en este caso no hay problemas, _P1_ quedará en la  y _P0_ saldrá de su sección crítica y _P1_ podrá entrar.
+1. _P0_ entra a su sección crítica antes que _P1_ verifique el valor de +states[0]+, en este caso _P1_ quedará esperando.
 
-    . Se produce una condición de carrera. Para que uno pueda entrar el otro proceso debe haberse interrumpido justo después de <1>, cuando continúe su ejecución volverá o poner su estado en verdadero por lo que volverá a esperar en el bucle hasta que el otro proceso haya salido.
+2. Hay competencia, ambos procesos entran al bucle. Para que uno pueda entrar, por ejemplo _P0_, _P1_ debe interrumpirse justo después de ejecutar +states[i] = False+. _P0_ podrá continuar y _P1_ deberá esperar.
 
 
 Espera limitada::
 
-Prácticamente (y _formalmente_ por estadísticas) no se producen esperas infinitas aunque no se puede asegurar que se produzcan en un número de _pasos_ definido. Este fenómeno se denomina _bloqueo activo_ (_livelock_), sabemos que en algún momento uno de ellos saldrá del bloque pero mientras tanto ambos procesos cambian valores de una variable sin hacer nada útil.
+Práctica y estadísticamente no se producen esperas infinitas aunque no se puede asegurar que la espera esté limitada a un número de _pasos_ definido. Este fenómeno se denomina _bloqueo activo_ (_livelock_), en algún momento uno de ellos saldrá del bloque pero mientras tanto ambos procesos cambian valores de una variable sin hacer nada útil.
 +
-Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de _entradas y salidas_ de otros procesos. Supongamos que _P0_ y _P1_ desean entrar, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de _P0_. No lo podemos demostrar, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan _débiles_ (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
+Otro problema, para demostrar que la espera es limitada hay que demostrar que si un proceso desea entrar a la sección crítica lo hará en un número finito de entradas y salidas de otros procesos. Supongamos que hay competencia entre _P0_ y _P1_, entra _P1_ y _P0_ queda esperando. Para asegurar que _P0_ no espera indefinidamente deberíamos demostrar que si _P1_ sale de la sección crítica y pretende volver a entrar lo hará después de _P0_. No es demostrable formalmente, aunque _prácticamente_ sabemos que en algún momento lo hará. Los algoritmos y primitivas de exclusión mutua de este tipo de denominan _débiles_ (_weak_)footnote:[En el siguiente capítulo veremos que las instrucciones de hardware son también débiles, como algunos tipos de semáforos y monitores.].
 
 Entrada inmediata::
 Si uno de los procesos no desea entrar a la sección crítica su estado estará en falso, por lo que el otro podrá entrar inmediatamente y sin espera.
@@ -301,7 +303,7 @@ Aunque este algoritmo tiene problemas estamos muy cerca de una solución correct
 
 ==== Algoritmo de Dekker (1963)
 
-El problema del algoritmo anterior reside en la indefinición dentro del bucle, es muy fácil solucionarlo con la variable +turn+ como en el primer intento. En caso que haya esa competencia en el bucle (el _livelock_) será esta variable la que decidirá inmediatamente qué proceso podrá entrar a la sección crítica.
+El problema del algoritmo anterior reside en la indefinición dentro del bucle, se puede usar otra variable, +turn+, que decida de quién es el turno. Como en el primer intento pero solo en caso de competencia, en este caso ambos proceso entran al bucle y será el valor de +turn+ el que decidirá inmediatamente qué proceso entra y cuál espera.
 
 El algoritmo queda de la siguiente forma:
 
@@ -328,22 +330,20 @@ turn = 1                    <2>
 
 Solo en el caso que haya competencia será el valor de +turn+ el que decidirá, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
 
-Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, ya podemos demostrar que no produce esperas infinitas, en ningún caso:
+Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, se puede demostrar que las esperas son limitadas:
 
 . Si _P1_ desea entrar a la sección crítica y _P0_ ya está en ella, _P1_ quedará esperando. Cuando _P0_ salga pondrá +turn = 1+ por lo que el siguiente en entrar será _P1_ aunque _P0_ intente volver a entrar inmediatamente.
 
-. En caso que ambos procesos intenten entrar simultáneamente y lleguen a la comparación de +turn+, uno de ellos (y solo uno) entrará a la sección crítica sin espera adicional, ejecutará la comparación una única vez.
+. En caso de competencia ambos verifican el valor de +turn+, uno de ellos (y solo uno) entrará a la sección crítica sin espera adicional.
 
 . Cuando salga el proceso que haya entrado primero dará el turno al que quedó esperando como en el caso #1.
 
-Este algoritmo funciona perfectamente pero todavía puede ser mejorado.
+Este algoritmo es correcto pero todavía puede ser simplificado.
 
 [[peterson]]
 ==== Algoritmo de Peterson (1981)
 
-No hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ya había soluciones más prácticas y eficientes para dos o más procesos, como instrucciones por hardware.] pero como ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo y fácil de entender.
-
-Las variables son las mismas y la idea fundamental no cambia, solo el orden en que se ejecutan. Además de ahorrar instrucciones de procesador es más fácil de comprender:
+No hacía falta encontrar una solución algorítmica para dos procesosfootnote:[Ya había soluciones más prácticas y eficientes para dos o más procesos, como instrucciones por hardware.] pero como ejercicio mental <<Peterson>> obtuvo un algoritmo más sencillo, fácil de entender y ahorra unos ciclos de reloj del procesador. Las variables son las mismas y la idea fundamental no cambia, solo el orden de las instrucciones.
 
 [source,python]
 ----
@@ -367,11 +367,11 @@ Como ya hemos analizado en detalle cinco algoritmos nos limitaremos a demostrar 
 Exclusión mutua::
 La demostración formal se relativamente sencilla. Para que haya dos procesos en la sección crítica y por la condición +states[j] and turn == j+ se tienen que cumplir una de las siguientes condiciones condiciones:
 
-    a. Que +states+ sea +[False, False]+: es imposible porque los procesos que desean entrar antes asignan +True+ a su posición.
+1. Que +states+ sea +[False, False]+: es imposible porque los procesos que desean entrar antes asignan +True+ a su posición.
 
-    b. Que el último que desea entrar sea _P0_ y +states+ sea +[True, True]+ y que +turn+ sea 0. Es imposible porque antes de la comparación _P0_ hizo +turn = 1+. La inversa se aplica si _P1_ es el último en pretender entrar.
+2. Que el último que desea entrar sea _P0_ y +states+ sea +[True, True]+ y que +turn+ sea 0. Es imposible porque antes de la comparación _P0_ hizo +turn = 1+. La inversa se aplica si _P1_ es el último en pretender entrar.
 
-    c. Si los dos procesos desean entrar más o menos simultáneamente (competencia) y que +turn+ valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado +turn = x+.
+3. Si los dos procesos desean entrar más o menos simultáneamente (competencia) y que +turn+ valga cero y uno simultáneamente. También imposible. En este caso el que entrará primero es el primero de los dos que haya ejecutado +turn = x+.
 
 
 Progreso::

@@ -478,7 +478,7 @@ synchronized void writerUnlock() {
 }
 ----
 
-No se puede decidir ni conocer a priori si entrarán los lectores o un escritor, depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y también depende del _scheduler_ (no son determinísticos). Al igual que el anterior este algoritmo da prioridad a los lectores, si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores que están esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero, por ejemplo:
+No se puede decidir ni conocer a priori si entrarán los lectores o un escritor, depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y también depende del _scheduler_ (es no determinista). Al igual que el anterior este algoritmo da prioridad a los lectores, si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores que están esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero, por ejemplo:
 
 [source, java]
 ----

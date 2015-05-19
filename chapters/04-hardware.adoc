@@ -92,7 +92,6 @@ def lock():
 
 def unlock():
     mutex = 0
-
 ----
 
 El <<getAndSet, código en C>> está implementado con el macro `__atomic_exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente de _get&set_.
@@ -116,7 +115,6 @@ def lock():
 
 def unlock():
     getAndAdd(turn, 1)
-
 ----
 
 [[get_and_add_ticket]]

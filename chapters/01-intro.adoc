@@ -60,7 +60,7 @@ Se denomina así al procedimiento de almacenar el estado del proceso en ejecuci�
 
 Hay costes adicionales, como _fallos de caché_ de memoria RAM y del _TLB_- porque el procesador accede a direcciones físicas y tablas de páginas diferentes. El coste es todavía algo superior si el proceso se ejecutó antes en un procesador diferente. El _scheduler_ está diseñado y en constante evolución para tomar en cuenta todos estos parámetros conseguir objetivos contradictorios: aumentar el rendimiento global del sistema, asegurar buenos tiempos de respuesta y evitar esperas prolongadas.  La contrapartida es que la ejecución de los procesos se hace cada vez más impredecible.
 
-Los procesos no tienen el control del procesador ni cuándo se ejecutarán, dada la complejidad de las interacciones y eventos también es muy difícil predecir o repetir exactamente una secuencia de ejecución, por eso los _schedulers_ de sistemas operativos de uso general se dicen que son _no determinísticos_.
+Los procesos no tienen el control del procesador ni cuándo se ejecutarán, dada la complejidad de las interacciones y eventos también es muy difícil predecir o repetir exactamente una secuencia de ejecución, por eso los _schedulers_ de sistemas operativos de uso general se dicen que son _no deterministas_.
 
 === Hilos
 
@@ -95,15 +95,15 @@ Hay que tener en cuenta que desde el punto de vista del sistema operativo los hi
 
 
 === Programas concurrentes
-La necesidad de programar módulos asincrónicos que respondan a los diferentes eventos y las facilidades de compartición de memoria de procesos hizo que fuese más conveniente diseñar programas como una composición de módulos, cada uno responsable de tareas específicas. Cada módulo se ejecuta en diferentes procesosfootnote:[Salvo que sea necesario y se indique explícitamente nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinística.] independientes y asíncronos. Llamamos _programación concurrente_ a la composición de módulos que colaboran entre ellos.
+La necesidad de programar módulos asincrónicos que respondan a los diferentes eventos y las facilidades de compartición de memoria de procesos hizo que fuese más conveniente diseñar programas como una composición de módulos, cada uno responsable de tareas específicas. Cada módulo se ejecuta en diferentes procesosfootnote:[Salvo que sea necesario y se indique explícitamente nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinista.] independientes y asíncronos. Llamamos _programación concurrente_ a la composición de módulos que colaboran entre ellos.
 
 [IMPORTANT]
 .Programación concurrente
 ====
-Es la composición de módulos que se ejecutan independientemente de forma no determinística.
+Es la composición de módulos que se ejecutan independientemente de forma no determinista.
 ====
 
-La programación concurrente tiene ventajas, pero no son gratuitas. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que provocan errores difíciles de detectar y analizar sin el conocimiento y herramientas adecuadas. Debido al carácter naturalmente asíncrona y no determinística no podemos razonar sobre la ejecución de estos programas como una ejecución secuencial de instrucciones.
+La programación concurrente tiene ventajas, pero no son gratuitas. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que provocan errores difíciles de detectar y analizar sin el conocimiento y herramientas adecuadas. Debido al carácter naturalmente asíncrona y no determinista no podemos razonar sobre la ejecución de estos programas como una ejecución secuencial de instrucciones.
 
 El interés de soluciones para los problemas de concurrencia no es nuevo, surgió con la aparición de los primeros _monitores_ -los predecesores de los modernos sistemas operativos- a principios de la década de 1960. De hecho, el núcleo de los sistemas operativos es una composición compleja de módulos independientes que deben responder -asincrónicamente- a una enorme diversidad de eventosfootnote:[Interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.] que pueden generar  inconsistencias en las complejas estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
 
@@ -134,14 +134,14 @@ En un sistema _SMP_ se produce _superposición_ de ejecuciones además de la int
 .Multiprocesamiento
 image::multiprocessing.png[height="120", align="center"]
 
-Las combinaciones de intercalación entre los diferentes procesos es no determinística, es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos. Todos los procesos comparten y compiten por recursos del sistema (procesador, memoria, acceso a dispositivos, ficheros, etc.), si estos son independientes entre ellos son los procesadores y el sistema operativo los que se encargan de que se cumpla la _consistencia secuencial_ de cada uno de ellos. El programador no se tiene que preocupar de los problemas ocasionados por las intercalaciones de sus programas ni de la competencia por recursos, es responsabilidad del sistema operativo.
+Las combinaciones de intercalación entre los diferentes procesos es no determinista, es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos. Todos los procesos comparten y compiten por recursos del sistema (procesador, memoria, acceso a dispositivos, ficheros, etc.), si estos son independientes entre ellos son los procesadores y el sistema operativo los que se encargan de que se cumpla la _consistencia secuencial_ de cada uno de ellos. El programador no se tiene que preocupar de los problemas ocasionados por las intercalaciones de sus programas ni de la competencia por recursos, es responsabilidad del sistema operativo.
 
 Una de los objetivos de los sistemas operativos es gestionar y ocultar las complejidades de la concurrencia, así se desarrollaron mecanismos complejos para asegurar la consistencia secuencial de cada proceso individual. Pero poco pueden hacer cuando se trata de programas compuestos por módulos de ejecución asincrónica, la responsabilidad es también del programa.
 
-A nivel de procesos de usuarios gestionados por sistema operativos de multiprogramaciónfootnote:[Que sí tiene la responsabilidad de gestionar múltiples procesadores.], la superposición no complica la resolución de los problemas de sincronización y acceso concurrente, la intercalación y ejecución no determinística son el origen de sus riesgos. Los algoritmos de sincronización con intercalación exclusiva también son correctos con superposición. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos de ejecución: el paralelismo es solo un caso particular de la intercalación.
+A nivel de procesos de usuarios gestionados por sistema operativos de multiprogramaciónfootnote:[Que sí tiene la responsabilidad de gestionar múltiples procesadores.], la superposición no complica la resolución de los problemas de sincronización y acceso concurrente, la intercalación y ejecución no determinista son el origen de sus riesgos. Los algoritmos de sincronización con intercalación exclusiva también son correctos con superposición. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos de ejecución: el paralelismo es solo un caso particular de la intercalación.
 
 ****
-Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa de la correcta composición de componentes no determinísticos, el segundo de la eficiencia asintótica de programas con comportamiento determinístico.
+Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa de la correcta composición de componentes no deterministas, el segundo de la eficiencia asintótica de programas con comportamiento determinista.
 ****
 
 
@@ -202,7 +202,7 @@ a, b: 2 4
 
 Ninguno de los valores es correcto. Si se ejecuta nuevamente el resultado podría ser diferente, depende del instante y orden en que cada proceso ejecuta las instrucciones en secciones críticas del código que acceden a recursos u _objetos compartidos_. Este problema se denomina genéricamente como _condición de carrera_ (_race condition_).
 
-Los _bugs_ causados por condiciones de carrera son difíciles de detectar, habitualmente no son frecuentes porque la probabilidad de que ocurra es bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es aún más difícil repetir el error con las mismas condiciones por la planificación de CPU no determinística.
+Los _bugs_ causados por condiciones de carrera son difíciles de detectar, habitualmente no son frecuentes porque la probabilidad de que ocurra es bajafootnote:[Al contrario de los ejemplos en este libro, diseñados de tal manera que se aumenta artificialmente la probabilidad de que ocurran estas condiciones de carrera.] y es aún más difícil repetir el error con las mismas condiciones por la planificación de CPU no determinista.
 
 Las dos líneas (tres contando el +print+) acceden a variables compartidas con dependencia entre ellas: el resultado de +b+ depende de +a+. Las secuencias anteriores de instrucciones no son _atómicas_, el proceso puede ser interrumpido y ejecutarse otro que modifica las mismas variables. Lo mismo puede ocurrir con instrucciones más básicas, por ejemplo con una suma:
 
