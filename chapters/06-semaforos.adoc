@@ -19,7 +19,7 @@ struct Semaphore {
 }
 ----
 
-Un semáforo puede ser inicializado con un valor no negativo, el siguiente ejemplo indica que el valor del semáforo (la variable _value_) será inicializada con +1+:
+Un semáforo puede ser inicializado con un valor no negativo, el siguiente ejemplo indica que el valor del semáforo (la variable _value_) será inicializada con 1:
 
 ----
 Semaphore s = 1
@@ -79,12 +79,12 @@ s.signal()
 ...
 ----
 
-Se inicializa el semáforo a +1+, cuando el primer proceso quiera entrar a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar el valor será cero por lo que se bloqueará hasta que el primer proceso ejecute el _signal_. La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
+Se inicializa el semáforo a 1, cuando el primer proceso quiera entrar a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar el valor será cero por lo que se bloqueará hasta que el primer proceso ejecute el _signal_. La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
-El valor del semáforo es un indicador del _número de recursos_ disponibles, también se le denomina _permisos_ (_permits_), indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En el caso de exclusión mutua interesa que solo haya un proceso en la sección crítica por ello el valor inicial es +1+. Pero se pueden programar casos más complejos de sincronización simplemente modificando el valor inicial del semáforo. Supongamos un sistema con _N_ procesadores y que para evitar cambios de contextos innecesarios queremos que haya hasta _N_ procesos ejecutando una sección del programa: solo hay que inicializar el valor del semáforo con _N_. Este tipo de uso de semáforos donde se permiten más de uno y hasta _N_ procesos en la sección crítica se denominan _multiplexes_.
+El valor del semáforo es un indicador del _número de recursos_ disponibles, también se le denomina _permisos_ (_permits_), indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En el caso de exclusión mutua interesa que solo haya un proceso en la sección crítica por ello el valor inicial es 1. Pero se pueden programar casos más complejos de sincronización simplemente modificando el valor inicial del semáforo. Supongamos un sistema con _N_ procesadores y que para evitar cambios de contextos innecesarios queremos que haya hasta _N_ procesos ejecutando una sección del programa: solo hay que inicializar el valor del semáforo con _N_. Este tipo de uso de semáforos donde se permiten más de uno y hasta _N_ procesos en la sección crítica se denominan _multiplexes_.
 
 ==== Semáforos binarios
-La definición anterior de semáforos permite valores cero y positivos, son denominados _semáforos generales_ o _contadores_. Si el semáforo permite solo valores de +0+ y +1+ se denominan _semáforos binarios_. Los semáforos binarios son equivalentes en el sentido que permiten resolver los mismos problemas aunque con algunas líneas más de código, por ejemplo recurriendo el algoritmo de Barz para simular semáforos generales (<<Barz>>). Este algoritmo  usa un par de semáforos binarios (+mutex+ y +gate+) y una variable entera (+value+).
+La definición anterior de semáforos permite valores cero y positivos, son denominados _semáforos generales_ o _contadores_. Si el semáforo permite solo valores de 0 y 1 se denominan _semáforos binarios_. Los semáforos binarios son equivalentes en el sentido que permiten resolver los mismos problemas aunque con algunas líneas más de código, por ejemplo recurriendo el algoritmo de Barz para simular semáforos generales (<<Barz>>). Este algoritmo  usa un par de semáforos binarios (+mutex+ y +gate+) y una variable entera (+value+).
 
 Las funciones +generalWait+ y +generalSignal+ son las emulaciones genéricas de _wait_ y _signal_ respectivamente,  _k_ es el valor inicial del semáforo. El uso del semáforo +mutex+ asegura exclusión mutua en las secciones críticas de la implementación, donde se modifica y verifica el valor de la variable compartida +value+. El semáforo +gate+ se usa para controlar qué procesos deben bloquearse o desbloquearse según el valor que toma +value+.
 
@@ -117,7 +117,7 @@ def generalSignal():
 ==== Semáforos _mutex_ y _locks_
 Los _semáforos mutex_, también llamados _locks_, son semáforos binarios -o equivalentes- optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre que usé en los _spinlocks_ cuando se trataba de asegurar exclusión mutua.] con restricciones y propiedades adicionales:
 
-. Son inicializados a +1+.
+. Son inicializados a 1.
 . Se añade el concepto de propiedad, solo el proceso que hizo el _wait_ puede hacer luego el _signal_.
 . Algunos sistemas permiten que el mismo hilo haga varios _wait_, si ya es el propietario del _lock_ continúa su ejecución, se denominan _reentrantes_.
 
@@ -155,7 +155,7 @@ Cada semáforo tiene asociado una cola de procesos bloqueados, el sistema de ges
 .Semáforos en Unix y Linux
 ****
 
-Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Process Communication_) del UNIX System V, fue el estándar de facto durante muchos años y siguen disponibles en las últimas versiones de Linux y Solaris. Desde la definición del estándar _POSIX Semaphores_ de 2001 ha caído casi en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con +semget+ que retorna un descriptor de un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con +semctl+ y las operaciones de _wait_ y _signal_ se hacen con +semop+. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no solo +1+ o +-1+ y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica cada operación. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
+Semáforos System V:: Estos semáforos, parte del módulo IPC (_Inter Process Communication_) del UNIX System V, fue el estándar de facto durante muchos años y siguen disponibles en las últimas versiones de Linux y Solaris. Desde la definición del estándar _POSIX Semaphores_ de 2001 ha caído casi en desuso ya que tiene una interfaz (API) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. En este estándar los semáforos se obtienen con +semget+ que retorna un descriptor de un array de semáforos (que puede ser de tamaño uno), se inicializan destruyen con +semctl+ y las operaciones de _wait_ y _signal_ se hacen con +semop+. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no solo 1 o +-1+ y hay que especificar siempre un array de valores y el índice del semáforo al que se aplica cada operación. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
 - Operaciones sobre varios semáforos del array son atómicas, facilita la programación de algoritmos complejos que lo requieran.
 - La primitiva adicional esperar por cero o _wait_for_0_. Como se intuye por su nombre bloquea a los procesos si el valor del semáforo es diferente a cero, los desbloquea cuando se hace cero.
 - Deshacer la última operación, +SEM_UNDO+, si el proceso acaba. Es útil como medida de protección, si un proceso está en la sección crítica y el proceso acaba por error el sistema revierte la última operación y los demás procesos pueden continuar.
@@ -523,7 +523,7 @@ Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Par
 4. Se debe asegurar _espera limitada_ (es decir no debe haber espera infinita o _starvation_).
 5. Debe ser eficiente, si no hay competencia por un tenedor éste debe poder ser usado por uno de sus dos filósofos vecinos.
 
-Identificamos a los filósofos y tenedores con un índice de +0+ a +4+ (es decir, de +0+ a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
+Identificamos a los filósofos y tenedores con un índice de 0 a 4 (es decir, de 0 a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
 
 Un primera solución es asegurar exclusión mutua a toda la mesa, solo un filósofo puede comer a la vez. Para ello solo se requiere un semáforo _mutex_:
 
@@ -711,7 +711,7 @@ def release(i):
     canEat(right(i)) <1>
     mutex.release()
 ----
-<1> Se reusa la función +canEat+ para verificar el estado de los _vecinos del vecino_. Si el filósofo que deja los tenedores es el +1+ entonces se llamará con el argumento +0+ (el filósofo de la izquierda) y luego con el +2+ (el filósofo de la derecha).
+<1> Se reusa la función +canEat+ para verificar el estado de los _vecinos del vecino_. Si el filósofo que deja los tenedores es el 1 entonces se llamará con el argumento 0 (el filósofo de la izquierda) y luego con el 2 (el filósofo de la derecha).
 
 Hay que tener en cuenta que las llamadas a +canEat+ se hacen siempre desde dentro de la sección crítica del semáforo +mutex+ por lo que no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array +status+.
 

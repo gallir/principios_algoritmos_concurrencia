@@ -53,7 +53,7 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 Las tres técnicas de optimización que veremos a continuación no son _escalables_ pero las mejoras en eficiencia pueden ser considerables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuito_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale +1+ ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
+Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuito_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale 1 ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
 
 
 ----
@@ -110,7 +110,7 @@ El siguiente es el código en C usado en los ejemplos para forzar la espera con 
         clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
     }
 
-En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función _backoff_. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit +1+ hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
+En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función _backoff_. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 
 ****
 
@@ -224,13 +224,13 @@ def reader_unlock():
     getAndAdd(rw_lock, -1)          <6>
 ----
 <1> La variable global +mutex+, en el ejemplo de 32 bits.
-<2> Verifica si el bit más significativo es +1+, si es así hay un escritor e itera hasta que sea +0+.
+<2> Verifica si el bit más significativo es 1, si es así hay un escritor e itera hasta que sea 0.
 <3> No hay escritores, obtiene el número de lectores.
 <4> Incrementa el número de lectores.
 <5> Si +rw_lock+ no fue modificado el _compare&swap_ almacenará el nuevo valor. Si  +rw_lock+ fue modificado volverá al inicio del +while+ y lo intentará nuevamente.
 <6> Decrementa atómicamente el número de lectores.
 
-Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en +1+ e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
+Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en 1 e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
 
 .Entrada y salida para escritores
 [source, python]
@@ -253,15 +253,15 @@ def writer_unlock():
 ----
 <1> Verifica el bit más significativo e itera hasta que no haya ningún escritor.
 <2> Obtiene el número de lectores actuales.
-<3> Calcula el nuevo valor, será el número de lectores con el bit más significativo en +1+ indicando que hay un escritor.
+<3> Calcula el nuevo valor, será el número de lectores con el bit más significativo en 1 indicando que hay un escritor.
 <4> Si el valor tomado de +rw_lock+ no cambió se almacena el nuevo, caso contrario vuelve al principio del +while+ para reintentar.
-<5> Espera que salgan todos los lectores, los siguientes ya no podrán entrar porque el bit más significativo está en +1+.
+<5> Espera que salgan todos los lectores, los siguientes ya no podrán entrar porque el bit más significativo está en 1.
 <6> Para salir solo debe poner +rw_lock+ en cero ya que no quedan lectores ni escritores en la sección crítica.
 
 
 Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y acceder a los últimos valores lo antes posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición de los que tienen la menor proridad, aunque hay algoritmos que aseguran equidad los más comunes dan prioridad a uno de ellos (<<MCS2>>).
 
-Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lectores o escritoresfootnote:[¡Seguro que no lo has pensado! este algoritmo da prioridad a los escritores. Cuando un escritor desea entrar a la sección crítica pone en +1+ el bit más significativo independientemente del estado y número de lectores, haciendo que los siguientes lectores que lleguen esperen hasta que el escritor haya entrado y salido.].
+Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lectores o escritoresfootnote:[¡Seguro que no lo has pensado! este algoritmo da prioridad a los escritores. Cuando un escritor desea entrar a la sección crítica pone en 1 el bit más significativo independientemente del estado y número de lectores, haciendo que los siguientes lectores que lleguen esperen hasta que el escritor haya entrado y salido.].
 
 [[fairness]]
 === _Spinlocks_ equitativos
@@ -369,7 +369,7 @@ El algoritmo es equitativo, todos los procesos entran en el orden en que obtuvie
 Es deseable que los _spinlocks_ sean escalables, el número de invalidaciones de caché (que generan _fallos de caché_, también llamados _cache bouncing_) debe ser constante independientemente del número de procesos o procesadores involucrados. La forma de lograrlo es que cada proceso itere sobre posiciones de memoria diferentes.
 
 ==== _Array-lock_
-La solución obvia es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero, salvo la primera posición que será +1+ para que el primer proceso pueda entrar. Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable +tail+ inicializada en cero. Cada proceso obtiene su posición con la operación _get&add_ que simultáneamente incrementa +tail+.
+La solución obvia es que cada proceso tenga su propia posición en un array de _locks_ inicializados en cero, salvo la primera posición que será 1 para que el primer proceso pueda entrar. Los procesos que compitan por la sección crítica tendrán una posición única en ese array, ésta vendrá indicada por la variable +tail+ inicializada en cero. Cada proceso obtiene su posición con la operación _get&add_ que simultáneamente incrementa +tail+.
 
 La variable que indica si un proceso puede entrar es booleana por lo que se usará un único byte. Para evitar el _false sharing_ es mejor separar cada posición por varios bytes. Para ello se define una estructura de mayor tamaño con un campo de un byte para la verificación, o la alternativa es que directamente se defina un array con posiciones de relleno (_padding_) para separar las posiciones del array que sí se usarán.
 
@@ -428,12 +428,12 @@ struct mcs_spinlock {
 };
 ----
 
-El campo +next+ es un puntero al nodo del siguiente proceso en la cola para la sección crítica, el campo +locked+ es una variable booleana que será +1+ si el proceso de ese nodo debe esperar o +0+ cuando puede entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el que estaba en la sección crítica la abandona actualizará el campo del siguiente en la cola.
+El campo +next+ es un puntero al nodo del siguiente proceso en la cola para la sección crítica, el campo +locked+ es una variable booleana que será 1 si el proceso de ese nodo debe esperar o 0 cuando puede entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el que estaba en la sección crítica la abandona actualizará el campo del siguiente en la cola.
 
 .Cola MCS
 image::mcs.png[align="center"]
 
-En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica, _Thread 1_ está en ella, el siguiente es _Thread 2_, el último en la cola es _Thread 3_. Cada uno de los procesos en espera activa verifica el campo +locked+ de su nodo local. La variable _tail_ apunta al último proceso en la cola, si no hay ningún proceso será +NULL+ (o +0+, +None+, etc.).
+En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica, _Thread 1_ está en ella, el siguiente es _Thread 2_, el último en la cola es _Thread 3_. Cada uno de los procesos en espera activa verifica el campo +locked+ de su nodo local. La variable _tail_ apunta al último proceso en la cola, si no hay ningún proceso será +NULL+ (o 0, +None+, etc.).
 
 El siguiente es el <<mcs_spinlock_c, código en C>> simplificado del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
 
@@ -477,7 +477,7 @@ void unlock(struct mcs_spinlock *node) {
 <1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compare&swap_.
 <2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
 <3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo hace.
-<4> Se ejecuta solo si había un proceso esperando, en este caso le asigna +0+ al campo +locked+ de su nodo para que pueda continuar.
+<4> Se ejecuta solo si había un proceso esperando, en este caso le asigna 0 al campo +locked+ de su nodo para que pueda continuar.
 
 
 .Barreras de memoria

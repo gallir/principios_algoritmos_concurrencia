@@ -22,10 +22,10 @@ El término _registro_ no se refiere solo a los registros del procesador. Puede 
 
 [[safe_register]]
 ==== Registros _seguros_
-Los registros con propiedades de consistencia más débiles son los _registros seguros_, su nombre es un mero accidente histórico, son muy inseguros (<<Herlihy12>>). Estos registros solo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario podrá devolver cualquier valor aceptable en el rango del registro. Por ejemplo, si se trata de un único byte y hay procesos concurrentes que escriben solo +0+ o +1+ el _get_ de un registro seguro seguro podría devolver valores entre +0+ y +255+ ya que todos están en el rango de 8 bits.
+Los registros con propiedades de consistencia más débiles son los _registros seguros_, su nombre es un mero accidente histórico, son muy inseguros (<<Herlihy12>>). Estos registros solo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario podrá devolver cualquier valor aceptable en el rango del registro. Por ejemplo, si se trata de un único byte y hay procesos concurrentes que escriben solo 0 o 1 el _get_ de un registro seguro seguro podría devolver valores entre 0 y 255 ya que todos están en el rango de 8 bits.
 
 ==== Registros regulares
-Una alternativa intermedia son los _registros regulares_, una operación de lectura concurrente con escrituras puede retornar alguno de los valores que fueron recientemente escritos. En un caso similar al anterior, el _get_ de este tipo de registros solo devolvería +0+ o +1+. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_) porque aseguran que devolverán el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
+Una alternativa intermedia son los _registros regulares_, una operación de lectura concurrente con escrituras puede retornar alguno de los valores que fueron recientemente escritos. En un caso similar al anterior, el _get_ de este tipo de registros solo devolvería 0 o 1. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_) porque aseguran que devolverán el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
 
 [[atomic_register]]
 ==== Registros atómicos
@@ -33,7 +33,7 @@ Los registros de procesadores que devuelven el último valor escritofootnote:[Lo
 
 1. El método _get_ retorna el último valor escrito. Si una lectura retorna un valor y no hubo otra escritura intermedia la siguiente lectura será el mismo valor.
 
-2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Si un _write_ concurrente es el número +0+ y otro es el número +1000+, el _get_ retornará +0+ o +1000+.
+2. Si hay varios _write_ concurrentes el valor que retornará el siguiente _get_ es uno de los valores del _write_ no un rango de posibles valores. Si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000.
 
 [[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
@@ -78,7 +78,7 @@ Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar 
 A continuación veremos cómo implementar exclusión mutua para _N_ procesos usando las instrucciones atómicas que acabamos de ver. Como hay que recurrir a macros atómicos (del GCC en este caso) la mayoría de los <<code_hardware, ejemplos>> están en C, cuando es posible también en Go (tiene primitivas atómicas en el módulo +sync+). Las instrucciones _LL/SC_ deben ser programadas y probadas en ensamblador en las arquitecturas que las tienen, por ello los ejemplos están en este lenguaje y funcionan solo en Raspberry y arquitecturas ARM con el compilador GCC.
 
 ==== Get&Set
-Se usa una variable global +mutex+ que estará inicializada a cero que indica que no hay procesos en la sección crítica. En la entrada de la sección crítica se almacena +1+ y se verifica si el valor anterior era +0+ (es decir, no había ningún proceso en la sección crítica). Si es diferente a cero esperará en un bucle hasta que lo sea.
+Se usa una variable global +mutex+ que estará inicializada a cero que indica que no hay procesos en la sección crítica. En la entrada de la sección crítica se almacena 1 y se verifica si el valor anterior era 0 (es decir, no había ningún proceso en la sección crítica). Si es diferente a cero esperará en un bucle hasta que lo sea.
 
 La función +lock+ es la entrada a la sección crítica y +unlock+ la salida.
 
@@ -125,7 +125,7 @@ El <<getAndAdd, código en C>> está implementado con el macro `__atomic_fetch_a
 ==== Test&Set
 La instrucción _test&set_ o _TAS_ fue la instrucción más usada para control de concurrencia hasta la década de 1970, cuando fue reemplazada por operaciones que permiten niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que puede tomar valores 0 y 1.
 
-La instrucción solo recibe un argumento, la dirección de memoria. Si el valor de la dirección de memoria es +0+ le asigna +1+ y retorna +1+ (o _true_), caso contrario retorna +0+ (o _false).
+La instrucción solo recibe un argumento, la dirección de memoria. Si el valor de la dirección de memoria es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false).
 
 [source,python]
 ----
@@ -291,7 +291,7 @@ Ahora uno de ellos inserta un nuevo nodo con una dirección de memoria ya usada 
 
 +head => [10] => [30]+
 
-Cuando _P1_ continúe su ejecución _CAS_ hará el cambio ya que la dirección es también +10+. El problema es que era una copia antigua que apuntaba antes a +[20]+ por lo que dejará la cabecera apuntando a un nodo que ya no existe y los siguientes habrán quedado _descolgados_ de la pila:
+Cuando _P1_ continúe su ejecución _CAS_ hará el cambio ya que la dirección es también 10. El problema es que era una copia antigua que apuntaba antes a +[20]+ por lo que dejará la cabecera apuntando a un nodo que ya no existe y los siguientes habrán quedado _descolgados_ de la pila:
 
 +head => ¿20?    [30]+
 
@@ -416,7 +416,7 @@ ldrex   r1, [r0]     <1>
 strex   r2, r1, [r0] <2>
 ----
 <1> Carga el contenido de la dirección indicada por +r0+ en el registro +r1+ y marca esa direcciónfootnote:[En ARM se etiqueta en el sistema del _monitor de acceso exclusivo_, en otras arquitecturas se asocia un bit del TLB o de memoria caché.]
-<2> Almacena el valor del registro +r1+ en la dirección apuntada por +r0+ si y solo sí esa dirección no fue modificada por otro proceso. Si se almacenó se pone +r2+ en +0+ caso contrario en +1+.
+<2> Almacena el valor del registro +r1+ en la dirección apuntada por +r0+ si y solo sí esa dirección no fue modificada por otro proceso. Si se almacenó se pone +r2+ en 0 caso contrario en 1.
 
 Vale la pena analizar algunas de las emulaciones de instrucciones atómicas, por ejemplo _get&add_ y _compare&swap_:
 

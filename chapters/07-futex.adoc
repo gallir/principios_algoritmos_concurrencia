@@ -41,7 +41,7 @@ Las llamadas se hacen con la función +syscall+, su forma genérica es:
 ==== Operaciones
 Las operaciones que se pueden especificar en la llamada de sistema de FUTEX son las siguientes:
 
-+FUTEX_WAIT+:: Si el valor del _futex_ es igual al valor +val1+ suspende al proceso y lo agrega a la cola de bloqueados para ese _futex_. Retorna +0+ si fue desbloqueado por el +FUTEX_WAKE+, +-1+ si no pudo bloquear o hubo error.
++FUTEX_WAIT+:: Si el valor del _futex_ es igual al valor +val1+ suspende al proceso y lo agrega a la cola de bloqueados para ese _futex_. Retorna 0 si fue desbloqueado por el +FUTEX_WAKE+, +-1+ si no pudo bloquear o hubo error.
 
 +FUTEX_WAKE+:: Desbloquea a uno o más procesos según lo indicado por +val1+. Retorna el número de procesos desbloqueados.
 
@@ -83,7 +83,7 @@ def wait(sem):
     if value < 0:
         futex_wait(sem.futex, sem.futex)    <1>
 ----
-<1> Si el valor es menor que +0+ el proceso siempre se bloqueará.
+<1> Si el valor es menor que 0 el proceso siempre se bloqueará.
 
 _Signal_ también es muy próxima a la definición de semáforos, lo único _extra_ es el bucle que verifica que efectivamente se desbloqueó a un proceso. Hay que hacerla ya que el proceso que decrementó el semáforo y lo dejó negativo pudo no haber ejecutado todavía el +futex_wait+.
 
@@ -124,12 +124,12 @@ struct simple_futex {
 };
 ----
 
-El campo +locked+ se usa como variable binaria, si vale +0+ no hay procesos en la sección crítica, +waiters+ indica el número de procesos bloqueados en la cola del _futex_ (es decir, que ejecutaron +futex_wait+).
+El campo +locked+ se usa como variable binaria, si vale 0 no hay procesos en la sección crítica, +waiters+ indica el número de procesos bloqueados en la cola del _futex_ (es decir, que ejecutaron +futex_wait+).
 
 
 ==== _lock_
 
-Si el resultado del _swap_ del campo +locked+ es cero significa que no hay ningún proceso en la sección crítica y podrá entrar directamente sin intervención del sistema operativo. Caso contrario se incrementa tentativamente el contador de proceso en espera y se llama a +futex_wait+ indicando que compare que el valor de +locked+ siga siendo +1+. Si no es así significa que el proceso que estaba en la sección crítica ya salió por lo que debe volver al principio del bucler después de restablecer el valor de +waiters+.
+Si el resultado del _swap_ del campo +locked+ es cero significa que no hay ningún proceso en la sección crítica y podrá entrar directamente sin intervención del sistema operativo. Caso contrario se incrementa tentativamente el contador de proceso en espera y se llama a +futex_wait+ indicando que compare que el valor de +locked+ siga siendo 1. Si no es así significa que el proceso que estaba en la sección crítica ya salió por lo que debe volver al principio del bucler después de restablecer el valor de +waiters+.
 
 Si el proceso fue bloqueado en el +futex_wait+ cuando se despierte decrementará +waiters+ y volverá al principio del bucle para verificar que efectivamente puede entrar (y el ciclo se repite).
 
@@ -144,11 +144,11 @@ def lock(futex):
         futex_wait(futex.locked, 1)      <2>
         get_and_add(futex.waiters, -1)
 ----
-<1> Si +locked+ valía cero ahora vale +1+, no hay competencia, el proceso puede entrar a la sección crítica inmediatamente.
-<2> Para que se agregue a la cola de bloqueados se verifica que +locked+ siga en +1+.
+<1> Si +locked+ valía cero ahora vale 1, no hay competencia, el proceso puede entrar a la sección crítica inmediatamente.
+<2> Para que se agregue a la cola de bloqueados se verifica que +locked+ siga en 1.
 
 ==== _unlock_
-Esta función es muy sencilla, indica que salió de la sección crítica poniendo +0+ en +locked+ y si hay procesos en espera despierta a uno de ellos.
+Esta función es muy sencilla, indica que salió de la sección crítica poniendo 0 en +locked+ y si hay procesos en espera despierta a uno de ellos.
 
 ----
 def unlock(futex):
@@ -252,7 +252,7 @@ La diferencia es enorme, incluso toma más tiempo que la primera implementación
 
 ==== Uso de la máscara BITSET
 
-Puede aliviarse usando las operaciones +FUTEX_WAIT_BITSET+ y +FUTEX_WAKE_BITSET+ para que solo se despierte al proceso al que le corresponde el turno. Para bloquear la máscara se obtiene desde el _número_ que tiene el proceso, para desbloquear a partir del turno. Definimos la función +MASK+ que obtiene la máscara dado un númerofootnote:[Al numero +0+ le toca la máscara +0+, al +1+ la máscara +2+, al +2+ la máscara +4+, etc.]:
+Puede aliviarse usando las operaciones +FUTEX_WAIT_BITSET+ y +FUTEX_WAKE_BITSET+ para que solo se despierte al proceso al que le corresponde el turno. Para bloquear la máscara se obtiene desde el _número_ que tiene el proceso, para desbloquear a partir del turno. Definimos la función +MASK+ que obtiene la máscara dado un númerofootnote:[Al numero 0 le toca la máscara 0, al 1 la máscara 2, al 2 la máscara 4, etc.]:
 
 ----
 def MASK(number):

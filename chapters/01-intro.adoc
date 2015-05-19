@@ -165,7 +165,7 @@ Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ 
 Si esas instrucciones acceden o modifican variables compartidas los resultados pueden ser diferentes dependiendo de la secuencia -no determinista- de ejecución.
 ****
 
-Los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa, con las variable +a+ y +b+ inicializadas a +0+:
+Los lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de instrucciones que se ejecutan en un programa, con las variable +a+ y +b+ inicializadas a 0:
 
 [source, python]
 ----
@@ -216,7 +216,7 @@ addl  $1, %eax
 movl  %eax, counter(%rip)
 ----
 
-Si se ejecuta dos veces el valor de +counter+ será +2+, pero es posible que se presente la siguiente condición de carrera por la intercalación de las instrucciones atómicas:
+Si se ejecuta dos veces el valor de +counter+ será 2, pero es posible que se presente la siguiente condición de carrera por la intercalación de las instrucciones atómicas:
 
 ----
 movl counter(%rip), %eax <1>
@@ -229,7 +229,7 @@ movl %eax, counter(%rip)
 <1> Se almacena 0 en el registro +eax+.
 <2> Aunque la variable ya tiene almacenado el valor 1, el registro +eax+ sigue siendo 0.
 
-En este caso el valor será +1+, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
+En este caso el valor será 1, se ha _perdido_ una operación. Es el problema más habitual. También pasa con lenguajes dinámicos y con compilación de _bytecode_ como Java o Python. El siguiente código es el generado por la compilación de Python, son cuatro instrucciones:
 
 ----
 LOAD_GLOBAL   0 (counter)
