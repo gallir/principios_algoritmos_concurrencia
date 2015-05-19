@@ -16,7 +16,7 @@ Mientras buscaba bibliografía mi amigo buscó apuntes y notas de clase de las u
 
 No hice un extenso análisis de mercado pero en pocas horas me di cuenta que me resultaba imposible recomendar un libro que explicase concurrencia de la forma que yo consideraba   más útil para un programador interesado en aprender sus fundamentos desde cero.
 
-Casi como una broma respondí a 'ver si tengo que escribirlo en un ebook', lo que generó inmediatas peticiones para que lo hiciese.
+Casi como una broma respondí a "`ver si tengo que escribirlo en un ebook`", lo que generó inmediatas peticiones para que lo hiciese.
 
 Así es como surgió este libro, no sabía en lo que me metía. Pensé que lo podría hacer en tres meses con menos de 20 000 palabras, pero acabó teniendo más de 55 000 además de las 22 000 líneas de código en cinco lenguajes diferentes escritos exclusivamente para este libro.
 

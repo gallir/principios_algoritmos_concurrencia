@@ -619,7 +619,7 @@ Retención y espera (_hold and wait_):: Un proceso mantiene los recursos ya asig
 
 No apropiación (_no preemption_):: No se puede quitar un recurso que está asignado a un proceso, debe ser éste el que lo libere.
 
-4. *Espera circular* (_circular wait_): Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
+Espera circular (_circular wait_):: Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
 
 ****
 
