@@ -325,8 +325,8 @@ critical_section()
 states[0] = False
 turn = 1                    <2>
 ----
-<1> _P0_ esperará si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
-<2> Cuando un proceso sale de su sección crítica cede el turno al otro, si estaba esperando podrá continuar.
+<1> _P0_ espera si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
+<2> Cuando un proceso sale de su sección crítica cede el turno al otro, si éste estaba esperando podrá continuar.
 
 El valor de +turn+ es relevante solo en casos de competencia, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
 
