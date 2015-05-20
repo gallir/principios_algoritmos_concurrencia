@@ -48,7 +48,7 @@ Por ello no es de extrañar que desde el principio se introdujeran instrucciones
 
 Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Todas las instrucciones mencionadas anteriormente implementan registros _RMW_ no triviales.
 
-De todas las implementaciones, _compare&swap_ (_CAS_) es la más potente. <<Herlihy91, Herlihy>> también demostró que pertenece a la clase de _consenso N_ (o _infinito_). Este tipo de instrucciones son, en palabras del autor, _a la computación asincrónica el equivalente de las máquinas de Turing de la computación secuencial_.
+De todas las implementaciones, _compare&swap_ (_CAS_) es la más potente. <<Herlihy91, Herlihy>> también demostró que pertenece a la clase de _consenso N_ (o _infinito_). Este tipo de instrucciones son, en palabras del autor, _a la computación asíncrona el equivalente de las máquinas de Turing de la computación secuencial_.
 
 Afortunadamente la mayoría de procesadores implementan _CAS_ o su equivalente en cuanto a capacidad de consenso, _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
 

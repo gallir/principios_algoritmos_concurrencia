@@ -272,9 +272,9 @@ Los productores-consumidores son muy habituales en todos los sistemas informáti
 
 Sincrónicos:: Cuando se produce un elemento debe se consumido inmediatamente antes de que el productor pueda agregar un nuevo elemento.
 
-Asincrónicos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido, estos agregan los elementos a una cola y los consumidores obtienen el primer elemento de ésta.
+Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido, estos agregan los elementos a una cola y los consumidores obtienen el primer elemento de ésta.
 
-El segundo caso es el más habitualfootnote:[El sincrónico es similar al asincrónico con tamaño de _buffer_ uno.]. El uso de un _buffer_ permite que productores y consumidores avancen a su propio ritmo pero requieren sincronización para hacer que los consumidores esperen si el _buffer_ está vacío y los productores si el _buffer_ está lleno. El algoritmo genérico para productores y consumidores es el siguiente:
+El segundo caso es el más habitualfootnote:[El síncrono es similar al asíncrono con tamaño de _buffer_ uno.]. El uso de un _buffer_ permite que productores y consumidores avancen a su propio ritmo pero requieren sincronización para hacer que los consumidores esperen si el _buffer_ está vacío y los productores si el _buffer_ está lleno. El algoritmo genérico para productores y consumidores es el siguiente:
 
 .Productor
 ----
@@ -382,7 +382,7 @@ while True:
 <1> Incrementa el semáforo para que un productor pueda añadir otro elemento.
 
 ****
-El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles, la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase +ArrayBlockingQueue+ en Java, +Queue+ en Python (+queue+ partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser sincrónicos o asincrónicos (los estudiaremos en el capítulo <<channels>>).
+El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles, la mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo la clase +ArrayBlockingQueue+ en Java, +Queue+ en Python (+queue+ partir de Python 3) y Ruby, los mensajes nativos de Go son productores-consumidores que pueden ser síncronos o asíncronos (los estudiaremos en el capítulo <<channels>>).
 ****
 
 ===== Semáforos partidos
@@ -724,7 +724,7 @@ Este algoritmo es el óptimo (<<philosophers_2_py, código fuente completo>>), a
 ****
 El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empieza a enviar datos y fotos en alta calidad. A los pocos días se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos metereológicos y científicos. Los reinicios los ordenaba la tarea _bc_sched_ responsable de verificar que las demás tareas se ejecutan correctamente.
 
-El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El bus 1553, heredado de la sonda Cassini, tenía un modo de funcionamiento sincrónico simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
+El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El bus 1553, heredado de la sonda Cassini, tenía un modo de funcionamiento síncrono simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
 
 El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxWorks, adaptado específicamente al procesador RS600. La arquitectura de software era la siguientefootnote:[En los sistemas de tiempo real es habitual llamar _tareas_ a los procesos.]:
 
@@ -777,7 +777,7 @@ VxWorks permitía configurar en una variable global si se habilitaba o no la _he
 
 === Recapitulación
 
-Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos y modelos. Hemos visto desde su uso trivial para exclusión mutua a algoritmos de sincronización más complejos: _mutex_ y _locks_, barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, lo más importante es que el análisis de cómo se construyen esas soluciones nos permiten encarar soluciones correctas y eficientes para la mayoría de los problemas de concurrencia que nos podemos encontrar durante el desarrollo de programas asincrónicos y/o paralelos.
+Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos y modelos. Hemos visto desde su uso trivial para exclusión mutua a algoritmos de sincronización más complejos: _mutex_ y _locks_, barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, lo más importante es que el análisis de cómo se construyen esas soluciones nos permiten encarar soluciones correctas y eficientes para la mayoría de los problemas de concurrencia que nos podemos encontrar durante el desarrollo de programas asíncronos y/o paralelos.
 
 Al haber sido el primer y más usado método de sincronización también sirvió para estudiar los desafíos y problemas de la concurrencia, el problema de los filósofos es un clásico. Nos sirvió para ver las diferentes formas de solucionar la sincronización entre procesos, también para reconocer y saber las reglas básicas para evitar uno de los problemas más importantes y recurrentes de sincronización, el interbloqueo. Finalmente analizamos el fenómeno curioso que se presenta por la compleja interacción de procesos en los sistemas operativos modernos, especialmente en los de _tiempo real_: la inversión de prioridades.
 
