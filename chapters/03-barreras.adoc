@@ -1,10 +1,12 @@
 [[barriers]]
 == La realidad del hardware moderno
 
-Aunque los algoritmos anteriores para solucionar la exclusión mutua para dos y _N_ procesos son formalmente correctos no funcionarán en la mayoría de procesadores modernos. No debería sorprender, los fabricantes de procesadores intentan maximizar el uso del procesador con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de varios procesadores y núcleos (una de las razones de la popularización de la _programación concurrente_ para ejecución en paralelo). Veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
+Aunque los algoritmos anteriores de exclusión mutua son formalmente correctos no funcionarán en la mayoría de procesadores modernosfootnote:[No debería decepcionar, la intención era aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales.]. Los fabricantes intentan maximizar la eficiencia con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de varios procesadores y núcleosfootnote:[Una de las razones de la popularización de la programación concurrente y también de la confusión entre concurrencia y paralelismo, desarrollar programas con varios hilos para poder ejecutarlos en paralelo en los diferentes núcleos.]. Veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente de varios hilos.
 
-Tampoco debería decepcionar. El objetivo de estudiar los algoritmos fue aprender a reconocer y razonar sobre los problemas inherentes de la programación concurrente. No es la intención que se usen en programas sino aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales. En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que permiten ignorar las particularidades y complejidades de las arquitecturas de hardware.
-
+[NOTE]
+====
+En <<hardware>> veremos cómo se puede solucionar mejor el problema con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que permiten ignorar las particularidades y complejidades de las arquitecturas de hardware.
+====
 
 Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que en los programas del capítulo anterior (<<counter_times>>):
 
@@ -19,7 +21,7 @@ sys     0m0.000s
 
 Además del incremento notable de tiempo de CPU (0.017s en la ejecución sin el algoritmo de Peterson) el resultado sigue siendo erróneo, no se cumple la exclusión mutua y se _pierden_ operaciones como si no tuviese ningún control de acceso a la sección crítica.
 
-Los procesadores modernos no garantizan que los programas se ejecuten en el mismo _orden de secuencias_ del programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
+Los procesadores modernos no garantizan que los procesos ejecuten las instrucciones de acceso a memoria en el mismo orden que aparecen en el programa, es decir no aseguran por defectofootnote:[Más adelante veremos que se puede hacer bajo demanda, pero tiene un coste importante.] _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
 
 Las tres razones principales que pueden afectar a la violación de la consistencia secuencial:
 
@@ -29,18 +31,18 @@ Las tres razones principales que pueden afectar a la violación de la consistenc
 
 === Optimizaciones del compilador
 
-Los compiladores pueden optimizar el código de varias formas, desde cambiar el orden de ejecución hasta usar registros como almacenamientos temporales (_buffer_) antes de copiar registros a memoria RAM. Para evitar que se cambie el orden de ejecución de lecturas y escrituras de variables compartidas en Cfootnote:[Tiene una semántica similar en C++ y Java, en este último es para evitar que se mantengan copias no sincronizadas en objetos usados en diferentes hilos] se puede usar la palabra clave +volatile+ en su declaración, por ejemplo:
+Los compiladores pueden optimizar el código de varias formas, desde cambiar el orden de ejecución hasta usar registros como almacenamientos temporales (_buffers_) antes de copiar registros a memoria RAM. Para evitar que se cambie el orden de ejecución de lecturas y escrituras de variables compartidas en Cfootnote:[Tiene una semántica similar en C++ y Java, en este último es para evitar que se mantengan copias no sincronizadas en objetos usados en diferentes hilos] se puede usar la palabra clave +volatile+ en su declaración, por ejemplo:
 
     volatile int counter = 0;
 
 
-El código del algoritmo de Peterson mencionado fue compilado sin optimizaciones, aún con +volatile+ los algoritmos no funcionan. En este caso la causa del fallo de exclusión mutua es otra aún más sutil.
+El código del algoritmo de Peterson fue compilado sin optimizaciones, aún con +volatile+ no funciona. En este caso la causa del fallo de exclusión mutua es otra aún más sutil.
 
 === Caché de RAM en multiprocesadores
 
-El acceso a la memoria RAM toma hasta cientos de ciclos de reloj del procesador, para reducir estas diferencias los procesadores usan una jerarquía de hasta tres niveles (L1, L2 y L3) de memoria caché. L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y de menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada uno de los núcleos y L3 es compartido por los demás núcleos en el mismo chip.
+El acceso a la memoria RAM toma hasta cientos de ciclos del procesador, para reducir estas diferencias de velocidad los procesadores usan una jerarquía de hasta tres niveles de memoria caché: _L1_, _L2_ y _L3_. El nivel L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y de menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada uno de los núcleos y L3 es compartido por los demás núcleos en el mismo chip.
 
-Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas suele tener de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente y los siguientes accesos se hacen directamente a la caché gracias al efecto de localidad de los programas. Si una línea de caché fue modificada se marca como tal y luego es copiada a la memoria RAM.
+Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas puede almacenar temporalmente de 64 a 256 bytes consecutivos de RAM. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente, los siguientes accesos se hacen directamente a la caché gracias al efecto de localidad de los programas. Si una línea de caché fue modificada se marca como tal y luego es copiada a la memoria RAM.
 
 
 ****
@@ -58,15 +60,24 @@ En las arquitecturas _SMP_ los procesadores están conectados por una compleja r
 .Arquitectura QuickPath de Intelfootnote:[Imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_ http://www.intel.es/content/dam/doc/white-paper/quick-path-interconnect-introduction-paper.pdf]
 image::intel-quickpath.png[height=400, align="center"]
 
-Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como MESI (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo MESIF en Intel, F por _forward_.]. A cada línea se le asigna uno de esos cuatro estados, cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el _bus_ de comunicaciones.
+Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo _MESIF_ en Intel, F por _forward_.].
 
-Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_. Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ se la etiqueta como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida. Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje a todos para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
+.Protocolo _MESI_
+****
+Cada línea de caché está en uno de los cuatro estados, _modified_, _exclusive_, _shared_ o _invalid_. Cada caché _escucha_ permanentemente al bus (_snoop_) y cambia el estado de la línea dependiendo de las operaciones que hace el procesador y lo que recibe de los demás vía el bus de comunicaciones.
 
-Este mecanismo asegura la consistencia de caché, en el ordenador donde hice esas pruebasfootnote:[Intel i3, i5 y ARM7 de varios núcleos.] no es el responsable de que los algoritmos de exclusión mutua no funcionen. Pero era importante discutir el tema porque tiene implicaciones importantes para el rendimiento de las aplicaciones concurrentes en sistemas _SMP_.
+Cuando un procesador lee de la memoria y carga en caché el estado se marca como _exclusive_.
+
+Si otro procesador lee la misma línea se le envía una copia y se marca su estado como _shared_. Si el procesador modifica una línea cuyo estado es _shared_ se la etiqueta como _modified_ para que sea posteriormente copiada a RAM y se envía un mensaje para que los demás procesadores marquen su copia como inválida.
+
+Si otros procesadores desean acceder a datos correspondientes a la misma línea envían un mensaje de multidifusión (_broadcast_) para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado, caso contrario accede a la memoria RAM para obtener la copia.
+****
+
+Los sistemas de caché en sistemas _SMP_ aseguran la consistencia de caché, es este caso no es el responsable del mal funcionamiento del algoritmo de exclusión mutua. Pero era importante introducir el tema porque tiene implicaciones importantes para el el rendimiento de las aplicaciones concurrentes en sistemas _SMP_.
 
 ===== La sobrecarga del acceso a variables compartidas
 
-Si dos hilos de ejecución que se ejecutan en procesadores o núcleos diferentes acceden a las mismas zonas de memoria la ejecución es mucho menos eficiente. Por cada modificación de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a que los procesadores envíen mensajes de multidifusión (_broadcast_) hacia los otros procesadores para que invaliden su entrada. Lo que provoca que estos envíen mensajes para cada acceso a las mismas variables y esperen el resultado de la copia válida.
+Si dos hilos de ejecución que se ejecutan en procesadores diferentes acceden a las mismas zonas de memoria la ejecución es menos eficiente. Por cada modificación de las variables almacenadas en la misma línea (aunque sean direcciones diferentes) obliga a los procesadores a enviar mensajes de multidifusión para que los demás invaliden sus copias. Lo que provoca que por cada acceso a la misma variable ga su vez envíe mensajes las mismas variables y esperen el resultado de la copia válida.
 
 El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>> pero la suma le hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
