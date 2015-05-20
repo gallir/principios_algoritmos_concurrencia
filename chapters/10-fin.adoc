@@ -2,6 +2,8 @@
 
 === Estructuras concurrentes no bloqueantes
 
+<<free_lock_stack>> en <<aba_problem>>
+
 ==== Pilas
 
 ==== Listas
