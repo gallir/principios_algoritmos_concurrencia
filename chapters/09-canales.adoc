@@ -19,7 +19,7 @@ Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (com
 
 === _CSP_ (1978)
 
-El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización es el intercambio de _mensajes_. La entrada de un proceso es la salida de un anterior, ambos se ejecutan asincrónicamente y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
+El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _ciencias de la computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización es el intercambio de _mensajes_. La entrada de un proceso es la salida de un anterior, ambos se ejecutan de forma asíncrona y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos, +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
 Ejemplos:
 
@@ -760,7 +760,7 @@ for i := 0; i < n; i++ {
 <1> Hay que asegurar exclusión mutua para evitar condiciones de carreras con +receiver+.
 <2> Envía la respuesta a los que están pendientes de respuesta. Fueron añadidos a +deferred+ por +receiver+.
 
-El hilo +receiver+ se ejecuta asincrónicamente esperando peticiones de los otros procesos, sus mensajes incluyen el identificador del proceso y el número que seleccionaron (con en la panadería, puede haber números repetidos). Cuando recibe una petición responde inmediatamente si el proceso local no desea entrar a la sección crítica o el número del proceso remoto es menor. En caso contrario agrega el identificador del proceso remoto a la cola +deferred+ para que se le envíe la respuesta desde +Unlock+.
+El hilo +receiver+ se ejecuta de manera asíncrona esperando peticiones de los otros procesos, sus mensajes incluyen el identificador del proceso y el número que seleccionaron (con en la panadería, puede haber números repetidos). Cuando recibe una petición responde inmediatamente si el proceso local no desea entrar a la sección crítica o el número del proceso remoto es menor. En caso contrario agrega el identificador del proceso remoto a la cola +deferred+ para que se le envíe la respuesta desde +Unlock+.
 
 ._Receiver_
 [source, go]
