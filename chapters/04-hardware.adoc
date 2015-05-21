@@ -243,7 +243,7 @@ _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se pre
 Si _A_ y _B_ son simples valores asignados a variables no hay conflictos, pero si son punteros a estructuras más complejas, por ejemplo nodos de una pila, el valor almacenado en esas estructuras pueden haber cambiado y provocar errores.
 
 [[free_lock_stack]]
-Un caso práctico con implementación de _pilas concurrentes sin bloqueo_ (_free-lock stacks_). La estructura +node+ tiene un puntero al siguiente elemento (+next+) y a una estructura que guarda los datos (o +payload+, su estructura interna nos es irrelevante):
+Un caso práctico con implementación de _pilas concurrentes sin bloqueo_ (_free-lock stacks_). La estructura +node+ tiene un puntero al siguiente elemento (+next+) y a una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+ pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o +payload+, su estructura interna nos es irrelevante):
 
 [[struct_node]]
 [source, c]
@@ -260,7 +260,7 @@ A continuación el código en C simplificado de ambas funciones.
 
 [source, c]
 ----
-void push(struct node **head, struct node *e) {
+void push(node **head, node *e) {
     e->next = *head;                  <1>
     while (! CAS(head, &e->next, &e); <2>
 }
@@ -270,8 +270,8 @@ void push(struct node **head, struct node *e) {
 
 [source, c]
 ----
-struct node *pop(struct node **head) {
-    struct node *result, *orig;
+node *pop(node **head) {
+    node *result, *orig;
 
     orig = *head;
     do {
@@ -307,7 +307,7 @@ Este caso es muy habitual si se usa +malloc+ para cada nuevo nodo que se inserta
 
 [source, c]
 ----
-e = malloc(sizeof(struct node));
+e = malloc(sizeof(node));
 e->data.tid = tid;
 e->data.c = i;
 push(&head, e);           <1>
@@ -345,7 +345,7 @@ Algunas implementaciones de +malloc+ no retornan las direcciones usadas reciente
 ----
 e = pop(&free_nodes);     <1>
 if (! e) {
-    e = malloc(sizeof(struct node)); <2>
+    e = malloc(sizeof(node)); <2>
     printf("malloc\n");
 }
 e->data.tid = tid;
@@ -378,8 +378,8 @@ En este caso necesitamos hacerlo solo para verificar el intercambio de las cabec
 [source, c]
 ----
 struct node_head {
-    struct node *node; <1>
-    uintptr_t aba;     <2>
+    struct node *node;       <1>
+    uintptr_t aba;           <2>
 };
 
 struct node_head stack_head; <3>
@@ -393,8 +393,8 @@ El código completo en C está en <<stack_cas_tagged_c, stack_cas_tagged.c>>, an
 
 [source, c]
 ----
-void push(struct node_head *head, struct node *e) {
-    struct node_head orig, next;
+void push(node_head *head, node *e) {
+    node_head orig, next;
 
     __atomic_load(head, &orig);  <1>
     do {

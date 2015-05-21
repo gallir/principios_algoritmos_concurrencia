@@ -94,21 +94,23 @@ _Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares 
 
 El siguiente es el código en C usado en los ejemplos para forzar la espera con tiempos que se duplican dependiendo del valor del argumento +failures+:
 
+[source, c]
+----
+#define FAILURES_LIMIT 12
+void backoff(int failures) {
+    struct timespec deadline = {.tv_sec = 0};
+    unsigned limit;
 
-    #define FAILURES_LIMIT 12
-    void backoff(int failures) {
-        struct timespec deadline = {.tv_sec = 0};
-        unsigned limit;
-
-        if (failures > FAILURES_LIMIT) {
-            limit = 1 << FAILURES_LIMIT;
-        } else {
-            limit = 1 << failures;
-        }
-
-        deadline.tv_nsec = 1 + rand() % limit;
-        clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
+    if (failures > FAILURES_LIMIT) {
+        limit = 1 << FAILURES_LIMIT;
+    } else {
+        limit = 1 << failures;
     }
+
+    deadline.tv_nsec = 1 + rand() % limit;
+    clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
+}
+----
 
 En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función _backoff_. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 
@@ -439,8 +441,8 @@ El siguiente es el <<mcs_spinlock_c, código en C>> simplificado del algoritmofo
 
 [source, c]
 ----
-void lock(struct mcs_spinlock *node) {
-    struct mcs_spinlock *predecessor;
+void lock(mcs_spinlock *node) {
+    mcs_spinlock *predecessor;
 
     node->next = NULL;               <1>
     node->locked = 1;                <1>
@@ -460,8 +462,8 @@ void lock(struct mcs_spinlock *node) {
 
 [source, c]
 ----
-void unlock(struct mcs_spinlock *node) {
-    struct mcs_spinlock *last;
+void unlock(mcs_spinlock *node) {
+    mcs_spinlock *last;
 
     if (! node->next) {
         last = node;                     <1>
@@ -528,8 +530,8 @@ La versión simplificada del <<clh_spinlock_c, algoritmo en C>> es la siguiente:
 
 [source, c]
 ----
-void lock(struct clh_node *node) {
-    struct clh_node *predecessor;
+void lock(clh_node *node) {
+    clh_node *predecessor;
 
     node->locked = 1;                    <1>
     node->prev = getAndSet(&tail, node); <2>
@@ -543,9 +545,9 @@ void lock(struct clh_node *node) {
 
 [source, c]
 ----
-void unlock(struct clh_node **node) {
-    struct clh_node *pred;
-    struct clh_node *tmp;
+void unlock(clh_node **node) {
+    clh_node *pred;
+    clh_node *tmp;
 
     pred = (*node)->prev; <1>
     tmp = *node;          <2>
