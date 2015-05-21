@@ -110,11 +110,11 @@ El interés de soluciones para los problemas de concurrencia no es nuevo, surgi�
 Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. El caso más habitual y más estudiado son los errores generados por el acceso no controlado recursos, es lo que conocemos como el problema de _exclusión mutua_ o _secciones críticas_. Durante décadas los problemas de concurrencia estuvieron reservados a los desarrolladores de sistemas operativos. Con la popularización de los sistemas _SMP_ se desarrollaron lenguajes y librerías que facilitaron la programación concurrente, como resultado la concurrencia dejó de ser esa oscura área de conocimiento reservada a unos pocos expertos a convertirse a una necesidad de profesional para un proporción importante de programadores.
 
 [IMPORTANT]
-.Concurrencia vs paralelismo
+.Concurrencia y paralelismo
 ====
-El paralelismo solo es una forma de ejecutar un programa concurrente. La programación concurrente es la forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
+El paralelismo es una forma de ejecutar programas concurrentes. La programación concurrente es la forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
 
-Los problemas de procesos concurrentes no son exclusividad del procesamiento paralelo, también ocurren con un único procesador
+Los problemas de procesos concurrentes no son exclusividad del procesamiento paralelo, también ocurren con un único procesador.
 ====
 
 

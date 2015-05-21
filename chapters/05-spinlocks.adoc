@@ -1,5 +1,5 @@
 [[spinlocks]]
-== _Spinlocks_
+== _Spinlocks_ avanzados
 Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de un registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_.
 
 Su uso tiene sentido si se cumple una de las siguientes condiciones:

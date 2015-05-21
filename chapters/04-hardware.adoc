@@ -123,7 +123,7 @@ El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<g
 
 
 ==== _Test&Set_
-La instrucción _test&set_ o _TAS_ fue la instrucción más usada para control de concurrencia hasta la década de 1970, cuando fue reemplazada por operaciones que permiten niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que puede tomar valores 0 y 1.
+La instrucción _test&set_ o _TAS_ fue la más usada para control de concurrencia hasta la década de 1970, cuando fue reemplazada por operaciones que permiten niveles (_clase_) de consenso más elevados. La implementación consiste de una variable entera binaria (o _booleana_) que puede tomar valores 0 y 1.
 
 La instrucción solo recibe un argumento, la dirección de memoria. Si el valor de la dirección de memoria es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false_).
 
@@ -165,7 +165,7 @@ def swap(register1, register2):
     register2 = tmp
 ----
 
-El algoritmo de exclusión mutua con _swap_ es similar al que usa _TAS_ solo que en éste el valor anterior de +mutex+ se verifica en la variable local que se usó para el intercambio:
+El algoritmo es similar al que usa _TAS_ solo que en con _swap_ el valor anterior de +mutex+ se verifica en la variable local que se usó para el intercambio:
 
 [source,python]
 ----
