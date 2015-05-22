@@ -1,0 +1,12 @@
+Con la popularización de los multiprocesadores la programación concurrente es un tema de moda. Pero hay mucha confusión y desconocimiento sobre qué es concurrencia y sus principios y algoritmos fundamentales. No hay muchos libros accesibles y actualizados que cubran estos temas de forma estructurada, genérica, con un enfoque moderno y a precios razonables. Este libro intenta llenar ese hueco, es accesible pero completo, riguroso y autocontenido.
+
+Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo   experiencia en programación, estructuras de datos básicas y deseos de aprender.
+
+El libro comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas. No se introduce ningún concepto que no se explique al menos brevemente. Cada abstracción y algoritmo importante está explicado en detalle y con programas que se pueden compilar y ejecutar.
+
+Algunos de los temas son los que se suelen estudiar en asignaturas universitarias de programación concurrente: sincronización, el problema de exclusión mutua y sincronización con semáforos, monitores y canales. Además se tratan temas más avanzados y sus últimos desarrollos, como instrucciones de hardware, optimizaciones de spinlocks y la interfaz FUTEX del núcleo Linux para la implementación de construcciones de sincronización eficientes.
+
+Para cada tema se explican el origen, conceptos y algoritmos fundamentales, siempre acompañados de ejemplos y código fuente en lenguajes populares  (C, Python, Java, Go) que funcionan en  arquitecturas modernas. Los programas están preparados y probados para que funcionen sobre cualquier sistema GNU/Linux, incluidas Raspberry 1 y 2.
+
+
+El libro está diseñado y formateado para ser leído con comodidad en lectores de ebooks.
