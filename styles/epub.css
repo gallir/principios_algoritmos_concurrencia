@@ -231,9 +231,22 @@ p {
   margin: 4px 0 6px 0;
 }
 
-p>strong {
-    text-indent: 0;
-    color: #980000;
+p + p {
+    text-indent: 1em;
+}
+
+p + p > strong {
+    margin-left: -1em;
+}
+
+
+.figure p.title {
+    text-align: center !important;
+    margin-bottom: 0;
+}
+
+pre.programlisting + p {
+    margin: 0;
 }
 
 code, pre {

@@ -569,7 +569,7 @@ La última con variables de condición ahorra un 40% de tiempo de CPU totalfootn
 [[monitor_times]]
 === Eficiencia de Monitores
 
-Los monitores aseguran la ejecución atómica de sus procedimientos -los _serializan_-, una restricción que no rquieren los semáforos y que impide implementaciones más eficientes en sistemas con múltiples procesadores. No hay muchos lenguajes modernos mayoritarios con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usados, es muy eficiente en la gestión de hilos y tiene el modelo de memoria bien definido.
+Los monitores aseguran la ejecución atómica de sus procedimientos -los _serializan_-, una restricción inexistente con semáforos, que dificulta implementaciones eficientes para múltiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usado, es muy eficiente en la gestión de hilos, y su modelo de memoria está bien definido.
 
 ==== Mutex y monitor
 En la siguiente imagen se pueden observar dos comparaciones entre la C y Java.

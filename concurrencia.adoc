@@ -1,7 +1,7 @@
 Principios y algoritmos de concurrencia
 =======================================
 :doctype: book
-:author: Ricardo Galli-Granada
+:author: Ricardo Galli
 :copyrights:  Creative Commons Attribution-NonCommercial CC BY-NC
 :lang: es
 :docinfo:
