@@ -439,7 +439,7 @@ El algoritmo anterior solo funciona con canales asíncronos, de no ser así ni s
 
 [[philosophers_hoare]]
 .Filósofos en _CSP_
-image::hoare_philosophers.png[height="180", align="center"]
+image::hoare_philosophers.png[align="center"]
 
 La solución es más sencilla de lo que parece (<<channel_philosophers_sync_go, código>>), hay que hacer como se propone en el modelo _CSP_, crear un proceso adicional para cada tenedor (+fork+), los filósofos no requieren de ningún cambio en su algoritmo. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por el canal correspondiente a su tenedor:
 
@@ -580,17 +580,17 @@ Inicialmente solo se podía programar en occam pero luego se adaptaron librería
 Una muestra de la potencia del modelo _CSP_ en arquitecturas con múltiples procesadores es el producto de matrices. Aunque el siguiente ejemplo trata con matrices y enteros pequeños su uso estaba orientado a matrices de grandes dimensiones que compensen la sobrecarga y demoras provocados por el envío de mensajes. Analizaremos el algoritmo para multiplicar en paralelo dos matrices de 3x3, como las de la siguiente imagen:
 
 [[matrix_multiplication]]
-image::matrix_multiplication.png[width="360", align="center"]
+image::matrix_multiplication.png[align="center"]
 
 Cada elemento de la matriz resultante puede ser calculado independientemente, por ejemplo el elemento central de la matriz (25) se calcula de la siguiente forma:
 
 [[element_multiplication]]
-image::element_multiplication.png[width="400", align="center"]
+image::element_multiplication.png[align="center"]
 
 El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplican un elemento de cada matriz, lo añaden a la suma parcial recibida desde otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
-image::col_row_multiplication.png[width="480", align="center"]
+image::col_row_multiplication.png[align="center"]
 
 Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial para que los algoritmos de cada multiplicador sean idénticos:
 
@@ -606,7 +606,7 @@ Tal como ya había descrito Hoare se puede generalizar para la multiplicación e
 
 [[parallel_multiplication]]
 .Array de procesos para multiplicación de matrices
-image::parallel_multiplication.png[width="480", align="center"]
+image::parallel_multiplication.png[align="center"]
 
 El algoritmo de cada uno de los cuatro tipos de procesos de la _matriz de procesos_ es el siguiente (<<parallel_matrix_multiplication_go, código completo>>):
 
@@ -665,7 +665,7 @@ En sistemas distribuidos hay que tener en cuenta otros requerimientos y problema
 Los procesos distribuidos deben responder a mensajes de sincronización que llegan desde otros nodos, lo habitual es implementar al menos un hilo auxiliar independiente responsable de recibir los mensajes de la red y responder adecuadamente lo antes posible. Un proceso que se ejecuta en un nodo (_Process_) consiste de un hilo principal (_Main_) y un auxiliar (_Receiver_) que comparten memoria y se sincronizan entre ellos con cualquiera de los mecanismos de memoria compartida vistos en este libro.
 
 [[distributed_process]]
-image::distributed_process.png[width="240", align="center"]
+image::distributed_process.png[align="center"]
 
 Los programas diseñados según los principios de _CSP_ y cuyo único mecanismo de comunicación y compartición de datos son mensajes pueden ser fácilmente adaptados a sistemas distribuidos cambiando las primitivas _send_ y _receive_ de canales locales por sistemas de gestión de _colas de mensajes_ (como Beanstalkd o RabbitMQ). Por el mismo principio, algoritmos diseñados para sistemas distribuidos pueden ser fácilmente implementados y simulados localmente con el modelo _CSP_.
 
