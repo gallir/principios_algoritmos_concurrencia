@@ -4,7 +4,7 @@ Las soluciones de exclusión mutua anteriores tienen en común una espera activa
 
 Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
-. El código en la sección crítica es muy breve y la competencia es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- y otros mecanismos de sincronización de más alto nivel y sin esperas activas (los que veremos a partir del siguiente capítulo).
+. El código en la sección crítica es muy breve y la competencia es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- y otros mecanismos de sincronización de más alto nivel y sin esperas activas.
 
 . Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente. En estos casos quizás tiene más sentido utilizar construcciones sin esperas activas.
 
@@ -17,13 +17,13 @@ Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas 
 
 
 ****
-Dado que el interés de este capítulo es analizar la eficiencia relativa de diferemtes algoritmos recurro a gráficas para poder compararlos y contrastarlos visualmente. Aunque tanta información puede resultar molesta, creo que es importante romper con una costumbre de los libros de textos más habituales: se hacen afirmaciones rotundas pero sin presentar las mediciones ni el contexto en que fueron tomadas.
+Dado que el interés de este capítulo es analizar la eficiencia relativa de diferentes algoritmos recurro a gráficas para poder compararlos y contrastarlos visualmente. Aunque tanta información puede resultar molesta, creo que es importante romper con una costumbre de los libros de textos más habituales: se hacen afirmaciones rotundas pero sin presentar las mediciones ni el contexto en que fueron tomadas.
 
-Quizás tenían sentido el momento que se diseñaron esos algoritmos -o se escribió la primera edición de los libros- pero los sistemas de multiprocesadores han evolucionado mucho, algunos algoritmos que presentaban ventajas hace décadas hoy casi no la tienen. Durante este capítulo veréis que hay algoritmos que fueron diseñados para comportarse mejor que otros, y quizás lo hacían con la arquitectura de su época, pero hoy esas diferencias no existen o no son tan relevantes.
+Quizás tenían sentido el momento que se diseñaron esos algoritmos -o se escribió la primera edición de los libros- pero los sistemas SMP han evolucionado mucho, algunos algoritmos que presentaban ventajas hace décadas hoy casi no la tienen. Durante este capítulo veréis que hay algoritmos que fueron diseñados para comportarse mejor que otros, y quizás lo hacían con la arquitectura de su época, pero hoy esas diferencias no existen o no son tan relevantes.
 ****
 
 
-Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo muestra los tiempos del algoritmo de la panaderia, el tercero (_ultimate_) es el más eficiente, incrementar directamente la variable entera +counter+ usando la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _test&set_, _get&set_ y _compare&swap_ respectivamente.
+Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo muestra los tiempos del algoritmo de la panadería, el tercero (_ultimate_) es el más eficiente, incrementar directamente la variable entera +counter+ usando la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _test&set_, _get&set_ y _compare&swap_ respectivamente.
 
 
 [[hardware_times]]
@@ -33,7 +33,7 @@ image::times-hardware.png[align="center"]
 
 Todos los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme para los diferentes procesadores. En Intel Core2 e i5 la operación más eficiente es _get&add_. En el Xeon de 16 núcleos es _get&set_ (seguido muy de cerca por _TAS_), y en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Inesperado dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
 
-=== Optimizaciones
+=== _Spinlocks_ optimizados
 Las implementaciones anteriores son ineficientes por dos razones:
 
 Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verificando el valor de una variable, si hay más hilos compitiendo que procesadores la mayor parte del tiempo se pierde en el bucle de verificación.
@@ -53,9 +53,9 @@ Si en cada iteración (o _spin_) los procesos en diferentes procesadores verific
 Las tres técnicas de optimización que veremos a continuación no son _escalables_ pero las mejoras en eficiencia pueden ser considerables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuito_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale 1 ya no se continúa con la instrucción atómicafootnote:[Cuando se usa con _TAS_ a esta estrategia se la conoce como _TAS_ o _TATAS_.].
+Se trata de reducir la presión sobre el sistema de coherencia de caché y evitar la llamada a la instrucción atómica. Antes de llamarla se verifica (_cortocircuito_) el valor de la variable sobre la que se itera -+mutex+ en los ejemplos-, si vale 1 ya no se continúa con la instrucción atómica. Cuando se usa con _TAS_ a esta estrategia se la conoce como _TTAS_ o _TATAS_.
 
-
+._TATAS_
 ----
         mutex = 0
 
@@ -64,12 +64,12 @@ def lock():
         pass
 ----
 
-Las mejoras dependen de la instrucción atómica y de los mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable en procesadores Intel pero casi despreciable en la arquitectura ARM, tanto en tiempos de CPU como en tiempos de retorno.
+Las mejoras dependen de la instrucción atómica y de los mecanismos de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable en procesadores Intel pero casi despreciable en la arquitectura ARM, tanto en tiempos de CPU como en tiempos de retornofootnote:[Se denomina tiempo de retorno al tiempo total que tarda un proceso desde que se creó hasta que acabó. El tiempo de respuesta es el tiempo que transcurre desde que ocurrió un evento que debe ser tratado por el proceso hasta que éste empezó a ejecutarse.].
 
 Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
 ==== Ceder el procesador
-Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _ab&ona_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de _listos_.
+Si un proceso debe continuar en la espera activa porque no se cumple la condición de salida se _libera_ el procesador. Se puede usar la llamada de sistema estándar +sched_yield+ que hace que el sistema operativo quite al proceso de ejecución y lo mueva a la cola de listos.
 
 [source, python]
 ----
@@ -84,7 +84,7 @@ Como puede observarse en <<execution_times, los gráficos>> la cesión del proce
 
 [[exponential_backoff]]
 ==== Espera exponencial
-La forma de reducir la competencia (_contention_) y evitar el efecto ping-pong de los procesos pasando de _listos_ a _ejecución_ es bloquearlos por un tiempo variable dependiendo de las veces que ha _fallado_ la condición durante la espera activa.
+La forma de reducir la competencia y evitar el efecto ping-pong de los procesos pasando de _listos_ a _ejecución_ es bloquearlos por un tiempo variable dependiendo de las veces que ha _fallado_ la condición durante la espera activa.
 
 
 
@@ -94,26 +94,23 @@ _Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares 
 
 El siguiente es el código en C usado en los ejemplos para forzar la espera con tiempos que se duplican dependiendo del valor del argumento +failures+:
 
-[source, c]
-----
-#define FAILURES_LIMIT 12
-void backoff(int failures) {
-    struct timespec deadline = {.tv_sec = 0};
-    unsigned limit;
 
-    if (failures > FAILURES_LIMIT) {
-        limit = 1 << FAILURES_LIMIT;
-    } else {
-        limit = 1 << failures;
+    #define FAILURES_LIMIT 12
+    void backoff(int failures) {
+        struct timespec deadline = {.tv_sec = 0};
+        unsigned limit;
+
+        if (failures > FAILURES_LIMIT) {
+            limit = 1 << FAILURES_LIMIT;
+        } else {
+            limit = 1 << failures;
+        }
+
+        deadline.tv_nsec = 1 + rand() % limit;
+        clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
     }
 
-    deadline.tv_nsec = 1 + rand() % limit;
-    clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
-}
-----
-
-En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función _backoff_. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
-
+En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función +backoff+. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 ****
 
 
@@ -129,7 +126,7 @@ def lock():
         backoff(failures)
 ----
 
-El problema con el _backoff_ es la elección de la unidad de tiempo y el límite de espera, los valores adecuados dependen de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al +sched_yield+ con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con CPUs inactivas porque todos los procesos están _bloqueados_.
+El problema con el _backoff_ es la elección de la unidad de tiempo y el límite de espera, los valores adecuados dependen de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al +sched_yield+ con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con CPUs inactivas porque todos los procesos están bloqueados.
 
 Sin embargo la mejora del _backoff_ es general para todos los procesadores probados, también para los tiempos de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] con respecto a +sched_yield+ (en los procesadores Intel la diferencia es importante, en ARM es mínima).
 
@@ -139,7 +136,7 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 ==== Tiempos de ejecución
 A continuación cuatro gráficas que representan los tiempos de CPU de los diferentes algoritmos en cuatro procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que solo incrementan un contador compartido- son muy extremos. Aunque la sección crítica es muy breve lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella, lo que implica que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Solo sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que solo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentalesfootnote:[Y hasta a las pruebas que podéis hacer vosotros mismos.].
+También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que solo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentales.
 
 .Intel Core2 cuatro núcleos
 image::optimized-intel-quad.png[align="center"]
@@ -160,15 +157,17 @@ De los tiempos de las gráficos hay algunos aspectos interesantes que vale la pe
 
 - El Xeon con 16 núcleos tiene peores tiempos que los menos potentes Core2 e i5. La diferencia es que tiene dos microprocesadores diferentes, el coste de sincronización de caché es superior a los chips únicos con varios _cores_.
 
-- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, v6 y v7 (de Raspberry 1 y 2 respectivamente) el _compare&swap_ es la más eficiente.
+- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, ARMv6 y ARMv7 (de Raspberry 1 y 2 respectivamente) _CAS_ es la más eficiente.
 
-- En las plataformas con varios procesadores +sched_yield+ y el +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARMv7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como +for (i = 0; i < limit; i++);+ y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.], la causa principal por la que se estudiaron _spinlocks_ escalables.
+- En las plataformas con varios procesadores +sched_yield+ y +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores (en el Intel Quad y en ARMv7 de Raspberry 2). La mejora no se debe a la reducción de uso de la CPU sino a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como +for (i = 0; i < limit; i++);+ y verás que se produce la misma reducción -incluso mayor-, simplemente por no acceder a las variables compartidas continuamente.], la causa principal por la que se estudiaron _spinlocks_ escalables.
 
 ===== Tiempos de CPU vs tiempos de reloj
 
-En los análisis anteriores usamos tiempos de CPU y no el _tiempo de retorno_: el tiempo de _reloj_ total desde que se arrancan los hilos hasta que finalizan todos. ¿Cuál es más representativo o útil? Es una duda razonable. El tiempo de CPU es útil para conocer efectivamente cuánta CPU necesitan para la ejecuciónfootnote:[Es una medida importante, por ejemplo para reducir el consumo de batería en móviles.], pero no da suficiente información sobre _cuánto tarda_ la ejecución. Por ejemplo, con más procesadores se consumen más ciclos de reloj aunque el tiempo de retorno se haya reducido (de hecho es lo que ocurre).
+En los análisis anteriores usamos tiempos de CPU y no el tiempo de retorno de todos los hilos. ¿Cuál es más representativo o útil? Es una duda razonable. El tiempo de CPU es útil para conocer efectivamente cuánta CPU necesitan para la ejecuciónfootnote:[Es una medida importante, por ejemplo para reducir el consumo de batería en móviles.], pero no da suficiente información sobre _cuánto tarda_ la ejecución. Por ejemplo, con más procesadores se consumen más ciclos de reloj aunque el tiempo de retorno se haya reducido (de hecho es lo que ocurre).
 
-Cuando se analiza la diferencia entre usar o no +sched_yield+ y _backoff_ la duda es aún mayor. Sabemos que lo más probable es que el consumo de ciclos de CPU se reduzcan en la espera activa, pero también que aumentará el sobrecoste del sistema operativo por los cambios de contexto de los procesos. Sin tener los datos de tiempos de retorno no podemos estar seguros que realmente se ejecuten _más rápido_. Intento evitar el exceso de gráficos pero valía la pena mostrar estos tiempos, al menos los más significativos. En los dos siguientes se puede observar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARMv7 de Raspberry 2.
+Cuando se analiza la diferencia entre usar o no +sched_yield+ y _backoff_ la duda es aún mayor. Sabemos que lo más probable es que el consumo de ciclos de CPU se reduzcan en la espera activa, pero también que aumentará el sobrecoste del sistema operativo por los cambios de contexto de los procesos. Sin tener los datos de tiempos de retorno no podemos estar seguros que realmente se ejecuten _más rápido_.
+
+Intento evitar el exceso de gráficos pero valía la pena mostrar estos tiempos, al menos los más significativos. En los dos siguientes se puede observar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARMv7 de Raspberry 2.
 
 .Tiempos de retorno en Intel Xeon 16 núcleos
 image::optimized-xeon-real.png[align="center"]
@@ -176,18 +175,18 @@ image::optimized-xeon-real.png[align="center"]
 .Tiempos de retorno en ARMv7 de Raspberry 2 cuatro núcleos
 image::optimized-arm7-real.png[align="center"]
 
-Aún en arquitecturas tan diferentes ceder el procesador representa un ahorro importante de CPU y de tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Éste tiene más núcleos que hilos por lo que un _yield_ solo hace que un proceso abandone el procesador pero probablemente el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo, depende mucho de sus algoritmos de _afinidad de CPU_. También puede ser que la unidad de tiempo elegida (un nanosegundo) se adecuada para el Xeon pero no tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
+Aún en arquitecturas tan diferentes ceder el procesador representa un ahorro importante de CPU y tiempo. En el Xeon de 16 núcleos la diferencia entre el _yield_ y el _backoff_ es mucho más notable. Éste tiene más núcleos que hilos por lo que un _yield_ solo hace que un proceso abandone el procesador pero probablemente el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo, depende mucho de los algoritmos de _afinidad de CPU_. También puede ser que la unidad de tiempo elegida (un nanosegundo) sea adecuada para el Xeon pero no tanto para el ARM, a pesar de ello se sigue ganando unos pocos milisegundos.
 
 
 .Cede el procesador
 ****
-Las esperas activas ya son suficientemente malas si no son imprescindibles. A menos que se trate un gestor de interrupciones, rutinas críticas del núcleo del sistema operativo, o un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no tendrás problemas poner un +sched_yield+ o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando te parezca que sobran procesadores.
+Las esperas activas ya son suficientemente malas si no son imprescindibles. A menos que se trate de un gestor de interrupciones, rutinas críticas del núcleo del sistema operativo, o un sistema de tiempo real donde se haya medido y calibrado casi al nivel de instrucciones individuales, no tendrás problemas poner un +sched_yield+ o _backoff_ exponencial en un _spinlock_ con mucha competencia. Esta regla es válida aún cuando parezca que sobran procesadores.
 ****
 
 
 [[readers_writers]]
 === Lectores-escritores
-La mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo que interesa es que éstas sean consistentes. En los ejemplos -un único contador entero- no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño -o incluso para acceder a ficheros o dispositivos externos- hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
+En general, la mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo que interesa es que éstas sean consistentes. En los ejemplos -un único contador entero- no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño -o incluso para acceder a ficheros o dispositivos externos- hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
 
 Se puede usar exclusión mutua pero la _serialización_ de los accesos de solo lectura es ineficiente. Una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita más de un lector en la sección crítica, estos algoritmos de sincronización son llamados lectores-escritores (_reader-writer_).
 
@@ -201,9 +200,9 @@ Las condiciones que deben cumplir son:
 
 - Solo puede haber un escritor en la sección crítica.
 
-Así como la exclusión mutua tiene un mecanismo de entrada (_lock_) y otro de salida (_unlock_), los de lectores-escritores necesitan distinguir entre ellos con entradas y salidas diferenciadas (_reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_).
+Así como la exclusión mutua tiene un protocolo de entrada (_lock_) y otro de salida (_unlock_), los de lectores-escritores necesitan distinguir entre ellos con entradas y salidas diferenciadas: _reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_.
 
-El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) implementado con las instrucciones _compare&swap_ y _get&add_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica, los bits restantes se usan para contar el número de lectores. Para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Se un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencia favorable.].
+El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>) implementado con las instrucciones _compare&swap_ y _get&add_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores, pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica, los bits restantes se usan para contar el número de lectores. Para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Es un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencias favorables.].
 
 Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si fue posible entran a la sección crítica, caso contrario vuelven a intentar desde el inicio del bucle.
 
@@ -225,11 +224,11 @@ def reader_lock():
 def reader_unlock():
     getAndAdd(rw_lock, -1)          <6>
 ----
-<1> La variable global +mutex+, en el ejemplo de 32 bits.
+<1> La variable global +mutex+, en el ejemplo es de 32 bits.
 <2> Verifica si el bit más significativo es 1, si es así hay un escritor e itera hasta que sea 0.
 <3> No hay escritores, obtiene el número de lectores.
 <4> Incrementa el número de lectores.
-<5> Si +rw_lock+ no fue modificado el _compare&swap_ almacenará el nuevo valor. Si  +rw_lock+ fue modificado volverá al inicio del +while+ y lo intentará nuevamente.
+<5> Si +rw_lock+ no fue modificado el _CAS_ almacenará el nuevo valor. Si  +rw_lock+ fue modificado volverá al inicio del +while+ y lo intentará nuevamente.
 <6> Decrementa atómicamente el número de lectores.
 
 Los escritores primero esperan a que no haya otro escritor en la sección crítica, luego ponen el bit más significativo en 1 e intentan el intercambio con _CAS_. Si no fue posible vuelven a intentarlo desde el principio. Si fue satisfactorio esperan a que no queden lectores para entrar a la sección crítica.
@@ -261,14 +260,14 @@ def writer_unlock():
 <6> Para salir solo debe poner +rw_lock+ en cero ya que no quedan lectores ni escritores en la sección crítica.
 
 
-Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y acceder a los últimos valores lo antes posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición de los que tienen la menor proridad, aunque hay algoritmos que aseguran equidad los más comunes dan prioridad a uno de ellos (<<MCS2>>).
+Una característica importante de los algoritmos de lectores-escritores es la prioridad que da a unos o a otros. Si lo que interesa es _rendimiento_ (_throughput_) y lecturas muy rápidas es mejor dar prioridad a los lectores. Si por el contrario interesa que las actualizaciones sean rápidas y acceder a los últimos valores lo antes posible se deben usar algoritmos que den prioridad a los escritores. El problema es el riesgo de inanición de los que tienen la menor prioridad, aunque hay algoritmos que aseguran equidad los más comunes dan prioridad a uno de ellos (<<MCS2>>).
 
 Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lectores o escritoresfootnote:[¡Seguro que no lo has pensado! este algoritmo da prioridad a los escritores. Cuando un escritor desea entrar a la sección crítica pone en 1 el bit más significativo independientemente del estado y número de lectores, haciendo que los siguientes lectores que lleguen esperen hasta que el escritor haya entrado y salido.].
 
 [[fairness]]
 === _Spinlocks_ equitativos
 
-Los algoritmos anteriores no cumplen uno de los <<em_requisites, requisitos deseables>> de la exclusión mutua, asegurar que la espera es limitada. Aunque estadísticamente no se pueden producir esperas infinitasfootnote:[En miles o centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.] sí que plantea problemas de equidad -un proceso se retrasa mucho más que otros-, por ejemplo en 2008 se detectó este efecto en el núcleo de Linux (<<Corbet1>>, <<Corbet2>>).
+Los algoritmos anteriores no cumplen uno de los <<em_requisites, requisitos deseables>> de la exclusión mutua, asegurar espera limitada. Aunque estadísticamente no se pueden producir esperas infinitasfootnote:[En miles o centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.] sí que plantea problemas de equidad -un proceso se retrasa mucho más que otros-. Por ejemplo, en 2008 se detectó este efecto en el núcleo de Linux (<<Corbet1>>, <<Corbet2>>).
 
 [quote, Nick Piggin]
 On an 8 core (2 socket) Opteron, spinlock unfairness is extremely noticable, with a userspace test having a difference of up to 2x runtime per thread, and some threads are starved or "unfairly" granted the lock up to 1 000 000 (!) times.
@@ -277,7 +276,7 @@ Para evitarlo hay que usar algoritmos que aseguran que los procesos entran a la 
 
 ==== _Ticket-lock_
 [[ticket_lock]]
-Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _get&add_>>, la idea es la misma que el algoritmo de la panadería solo que la obtención del número se hace con esta operación atómica, así se evita que los procesos puedan seleccionar el mismo número o lo hagan fuera de orden. Se usan dos variables: el número creciente y el turno. Un proceso obtiene su número y luego espera por su turno, cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
+Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _get&add_>>, la idea es la misma que el algoritmo de la panadería solo que la obtención del número se hace con esta operación atómica, así se evita que los procesos puedan seleccionar el mismo número o lo hagan fuera de orden. Se usan dos variables: la secuencia creciente de números y el turno. Un proceso obtiene su número y luego espera por su turno, cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
 
 El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits, 16 bits para +turn+ y +number+ respectivamente. El número y turno pueden llegarán hasta 2^16^ y rotarán.
 
@@ -311,7 +310,12 @@ struct ticket_rw {
 };
 ----
 
-El campo +number+ es similar al algoritmo _ticket-lock_, +writer_turn+ y +reader_turn+ indicarán los turnos para escritores y lectores respectivamente. Ambas variables serán incrementadas para permitir que entren lectores o escritores de forma equitativa. El orden en que se haga la suma dejará entrar a unos u otros. Un escritor solo dará el turno a otros lectores o escritores cuando salga de la sección crítica. Un lector dará paso a otros lectores en cuanto haya entrado a la sección crítica y permitirá a escritores cuando haya salido.
+El campo +number+ es similar al algoritmo _ticket-lock_, +writer_turn+ y +reader_turn+ indicarán los turnos para escritores y lectores respectivamente. Ambas variables serán incrementadas para permitir que entren lectores o escritores de forma equitativa. El orden en que se haga la suma dejará entrar a unos u otros:
+
+1. Un lector dará paso a otros lectores en cuanto haya entrado a la sección crítica y permitirá a escritores cuando haya salido.
+
+2. Un escritor solo dará el turno a otros lectores o escritores cuando salga de la sección crítica.
+
 
 Se define el campo +combined+ que incluye a ambos turnos para asignar atómicamente a ambos. Para el desarrollo del algoritmo suponemos una variable global +rw_local+ del tipo o clase +ticket_rw+.
 
@@ -351,7 +355,7 @@ def reader_lock:
 ----
 <1> El lector obtiene su número.
 <2> Espera su turno.
-<3> Cuando entró incrementa el turno de lectores para que puedan entrar el siguiente lector. Éste hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que la suma se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que haya sido incrementada.].
+<3> Cuando entró incrementa el turno de lectores para que pueda entrar el siguiente lector. Éste hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que la suma se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que haya sido incrementada.].
 
 
 [source, python]
@@ -391,7 +395,7 @@ int tail;
     flag[0] = 1;
 ----
 
-Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo resumido (<<array_lock_c, código completo en C>>) es el siguiente:
+Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo simplificado (<<array_lock_c, código completo en C>>) es el siguiente:
 
 
 [source, python]
@@ -420,7 +424,9 @@ Este algoritmo también es equitativo, solo requiere la instrucción atómica _g
 
 Algoritmos derivados, conocidos como _colas no bloqueantes_ (_lock-free queues_), son muy usados en librerías _runtime_ y maquinas virtuales, como en la implementación de <<java_monitor, _monitores_ de la máquina virtual de Java>> y en las librerías +java.util.concurrent+ (<<Lea>>).
 
-Para implementarlo se requieren las operaciones atómicas _swap_ y _compare&swap_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los procesos deben pasar como argumento la dirección de un nodo (de la pila) local, cada nodo tiene la siguiente estructura:
+Para implementarlo se requieren las operaciones atómicas _swap_ y _CAS_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los hilos deben pasar como argumento la dirección de un nodo, preferiblemente local para evitar el _false sharing_.
+
+Cada nodo tiene la siguiente estructura:
 
 [source, c]
 ----
@@ -430,12 +436,12 @@ struct mcs_spinlock {
 };
 ----
 
-El campo +next+ es un puntero al nodo del siguiente proceso en la cola para la sección crítica, el campo +locked+ es una variable booleana que será 1 si el proceso de ese nodo debe esperar o 0 cuando puede entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el que estaba en la sección crítica la abandona actualizará el campo del siguiente en la cola.
+El campo +next+ es un puntero al nodo del siguiente proceso en la cola para la sección crítica. El campo +locked+ es una variable booleana que será 1 si el proceso de ese nodo debe esperar o 0 cuando puede entrar a la sección crítica. Cada proceso verifica su propia variable, cuando el que estaba en la sección crítica la abandona actualizará el campo del siguiente en la cola.
 
 .Cola MCS
 image::mcs.png[align="center"]
 
-En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica, _Thread 1_ está en ella, el siguiente es _Thread 2_, el último en la cola es _Thread 3_. Cada uno de los procesos en espera activa verifica el campo +locked+ de su nodo local. La variable _tail_ apunta al último proceso en la cola, si no hay ningún proceso será +NULL+ (o 0, +None+, etc.).
+En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica, _Thread 1_ está en ella, el siguiente es _Thread 2_, el último en la cola es _Thread 3_. Cada uno de los procesos en espera activa verifica el campo +locked+ de su nodo local. La variable +tail+ apunta al último proceso en la cola, si no hay ningún proceso será +NULL+ (o 0, +None+, etc.).
 
 El siguiente es el <<mcs_spinlock_c, código en C>> simplificado del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
 
@@ -444,7 +450,7 @@ El siguiente es el <<mcs_spinlock_c, código en C>> simplificado del algoritmofo
 void lock(mcs_spinlock *node) {
     mcs_spinlock *predecessor;
 
-    node->next = NULL;               <1>
+    node->next = NULL;
     node->locked = 1;                <1>
     predecessor = node;              <2>
     predecessor = SWAP(&tail, node); <2>
@@ -455,7 +461,7 @@ void lock(mcs_spinlock *node) {
     node->locked = 0;
 }
 ----
-<1> Inicialización del nodo, _locked_ se pone en _verdadero_.
+<1> Inicialización del nodo, +locked+ se pone en _verdadero_.
 <2> Preparación para el _swap_, +predeccesor+ apunta inicialmente al nodo actual, cuando se haga el intercambio si había un proceso esperando o en la sección crítica +predecessor+ apuntará al nodo de ese proceso, caso contrario será +NULL+.
 <3> Si hay otro proceso hará que su campo +next+ apunte al nodo actual.
 <4> Espera activa hasta que el predecesor cambie el estado de +locked+ a falso.
@@ -476,15 +482,17 @@ void unlock(mcs_spinlock *node) {
     node->next->locked = 0;              <4>
 }
 ----
-<1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _compare&swap_.
-<2> Se pudo hacer el intercambio lo que significa que no hay ningún proceso intentando entrar a la sección crítica, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
-<3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo hace.
+<1> Si +next+ del proceso actual es +NULL+ entonces podría ser el último de la cola, prepara +last+ para hacer el _CAS_.
+<2> Se pudo hacer el intercambio, significa que no competencia, retorna sin hacer nada más, el puntero +tail+ habrá quedado con +NULL+.
+<3> Si no se pudo hacer el intercambio, hay un proceso que está ejecutando el +lock+ pero todavía no ejecutó la instrucción +predecessor->next = node+, se espera hasta que lo haga.
 <4> Se ejecuta solo si había un proceso esperando, en este caso le asigna 0 al campo +locked+ de su nodo para que pueda continuar.
 
 
 .Barreras de memoria
 ****
-En el código C de algunos de los algoritmos se usa `thread_fence` o `store_n` para introducir barreras de memoria explícitas. La necesidad de barreras no se menciona en la bibliografía o los artículos científicos citados pero son necesarias por lo explicado en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden. Si algunos _caminos_ del algoritmo de salida (_unlock_) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida (+unlock+).
+En el código C de algunos de los algoritmos se usa `thread_fence` o `store_n` para introducir barreras de memoria explícitas. La necesidad de barreras no se menciona en la bibliografía o los artículos científicos citados pero son necesarias por lo explicado en <<barriers>>: aunque el sistema de caché sea coherente aún se puede producir ejecución de instrucciones fuera de orden.
+
+Si algunos _caminos_ del protocolo de salida (+unlock+) no ejecutan ninguna instrucción atómica que implique también una barrera de memoria puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber acabado la salida.
 
 Durante las pruebas y validación del código de ejemplo comprobé que en algunos procesadores se manifestaba esta condición de carrera, en particular con el ARMv7 de Raspberry 2. Preferí mostrar la versión simplificada en estas páginas pero la versión completa y correcta en el listado del código fuente para que funcione correctamente en todas las arquitecturas, aunque en algunas de ellas -como en Intel- significara una sobrecarga innecesaria.
 ****
@@ -563,9 +571,9 @@ void unlock(clh_node **node) {
 
 [[spinlock_times]]
 === Análisis de tiempos de ejecución
-_Ticket-lock_ es un algoritmo equitativo muy utilizado pero no es _escalable_, los procesos verifican la misma posición de memoria. La respuesta es usar un array con posiciones de relleno para evitar el _false sharing_. Algunos autores proponen que el relleno complete el tamaño de una palabra (cuatro u ocho bytes), otros que sean de mayor longitud para que no compartan líneas de caché. ¿Cuál es la separación apropiada?, ésta depende de la arquitectura y es difícil saber a priori cuál es la mejor para cada una. Depende de muchos factores, el tipo de instrucción, los canales de comunicación para sincronización o el mecanismo de monitorización de los registros de _LL/SC_ (en las arquitecturas que lo implementan).
+_Ticket-lock_ es un algoritmo equitativo muy utilizado pero no es _escalable_, los procesos verifican la misma posición de memoria. La respuesta es usar un array con posiciones de relleno para evitar el _false sharing_. Algunos autores proponen que el relleno complete el tamaño de una palabra (cuatro u ocho bytes), otros que sean de mayor longitud para que no compartan líneas de caché. ¿Cuál es la separación apropiada?, depende de la arquitectura y es difícil saber a priori cuál es la mejor para cada una. Depende de muchos factores, el tipo de instrucción, los canales de comunicación para sincronización o el mecanismo de monitorización de los registros de _LL/SC_ (en las arquitecturas que lo implementan).
 
-Para tomar una decisión informada del _padding_ a usar hice pruebas con los diferentes procesadores variando el tamaño del relleno. La siguiente figura muestra los tiempos de CPU de cada procesador para diferentes tamaños. El eje horizontal muestra la separación entre las diferentes posiciones del array (desde 2 a 256 bytes) y el vertical el tiempo de CPU en segundos.
+Para tomar una decisión informada del _padding_ más conveniente hice pruebas con los diferentes procesadores variando el tamaño del relleno. La siguiente figura muestra los tiempos de CPU de cada procesador para diferentes tamaños. El eje horizontal muestra la separación entre las diferentes posiciones del array (desde 2 a 256 bytes) y el vertical el tiempo de CPU en segundos.
 
 .Diferentes tamaños de relleno
 image::array-paddings.png[align="center"]
@@ -578,9 +586,11 @@ image::ticket-mcs-clh.png[align="center"]
 .Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
 
-En las arquitecturas modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
+En las arquitecturas más modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
-En general _MCS_ y _CLH_ son los más eficientes en tiempo, pero la diferencia no es considerable y como _array-lock_ también requieren más espacio (un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesitan). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux. En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
+En general _MCS_ y _CLH_ son los más eficientes en tiempo, pero la diferencia no es considerable y, como _array-lock_, también requieren más espacio (un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesitan). Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
+
+En muchos artículos se afirma que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peor. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
 
 ////
 

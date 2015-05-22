@@ -4,6 +4,11 @@
 
 <<free_lock_stack>> en <<aba_problem>>
 
+_lock-free queues_
+<<mcs_queue>> MCS _Spinlock_ (1991)
+
+
+
 ==== Pilas
 
 ==== Listas

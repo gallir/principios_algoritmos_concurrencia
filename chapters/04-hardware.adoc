@@ -527,7 +527,7 @@ Pero si se hace correctamente además de evitar el problema ABA se puede hacer m
 image::free_lock_stacks.png[align="center"]
 
 
-Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA -por lo tanto incorrecto- y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido -pero erróneo-, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable (i.e. la emulación de _CAS_ que hace el macro es excelente).
+Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA -por lo tanto incorrecto- y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido -pero erróneo-, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
 
 === Recapitulación
 
