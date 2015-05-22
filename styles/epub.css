@@ -142,12 +142,12 @@ div.itemizedlist li, div.orderedlist li {
   border: 1px solid silver;
   background-color: #f4f4f4;
   padding: 5px 5px;
-  font-size: 0.92em;
+  font-size: 0.95em;
 }
 
 .literallayout {
   margin-left: 1em;
-  font-size: 0.92em;
+  font-size: 0.95em;
 }
 
 code.literal {
@@ -156,7 +156,7 @@ code.literal {
 
 
 div.calloutlist table {
-  font-size: 0.92em;
+  font-size: 0.95em;
 }
 
 div.calloutlist table tr td {
@@ -232,6 +232,9 @@ p {
   margin: 4px 0 6px 0;
 }
 
+p + p {
+    text-indent: 1em;
+}
 
 code, pre {
   font-size: 1em;
