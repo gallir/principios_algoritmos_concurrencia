@@ -33,7 +33,7 @@ Durante su ciclo de vida los estados pasan por tres estados básicos:
 
 
 .Estados de procesos
-image::processes_states.png[width="440", align="center"]
+image::processes_states.png[align="center"]
 
 Los procesos pasan a bloqueados porque solicitaron una operación al núcleo (vía _llamadas de sistema_) y deben esperar a que la operación acabe, normalmente porque un dispositivo  notifica con una interrupción de hardware. Cuando la operación finaliza el proceso es movido a la cola de listos para ejecutar.
 
@@ -125,14 +125,14 @@ En un sistema operativo moderno la ejecución secuencial de un proceso puede ser
 En un sistema con un único procesador la ejecución de procesos es una _intercalación exclusiva_.
 
 .Intercalado exclusivo de procesos _A_, _B_ y _C_
-image::interleaving.png[height="120", align="center"]
+image::interleaving.png[align="center"]
 
 El _scheduler_ selecciona el proceso que se ejecutará durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga de CPU no se puede conocer a priori, depende de muchos factores internos y externos al sistema, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
 
 En un sistema _SMP_ se produce _superposición_ de ejecuciones además de la intercalación.
 
 .Multiprocesamiento
-image::multiprocessing.png[height="120", align="center"]
+image::multiprocessing.png[align="center"]
 
 Las combinaciones de intercalación entre los diferentes procesos es no determinista, es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos. Todos los procesos comparten y compiten por recursos del sistema (procesador, memoria, acceso a dispositivos, ficheros, etc.), si estos son independientes entre ellos son los procesadores y el sistema operativo los que se encargan de que se cumpla la _consistencia secuencial_ de cada uno de ellos. El programador no se tiene que preocupar de los problemas ocasionados por las intercalaciones de sus programas ni de la competencia por recursos, es responsabilidad del sistema operativo.
 
