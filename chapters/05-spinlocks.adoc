@@ -292,7 +292,7 @@ struct tickets {
 
 Con la base el algoritmo _ticket-lock_ se puede implementar un algoritmo de lectores-escritores que asegure la equidad entre ellos (a diferencia de los que dan prioridad a unos u otros). Se necesitan dos variables diferentes para los turnos individuales, una estructura del siguiente tipo:
 
-image::ticket_rw.png[width="80%", align="center"]
+image::ticket_rw.png[align="center"]
 
 <<ticket_rw_lock_c, En C>> se define de la siguiente forma:
 

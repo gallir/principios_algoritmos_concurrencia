@@ -225,7 +225,7 @@ La intención de uso de barreras genéricas para un número _N_ indeterminado de
 
 Después de +do_phase+ cada proceso esperará a que los demás hayan llegado al mismo punto, solo así podrán continuar con la siguiente. La misma barrera puede ser reusada cíclicamente, también para un número indeterminado de iteraciones. Este tipo de barreras no pueden implementarse igual que las binarias. Los semáforos son recursos _costosos_, requieren colas y tiempos relativamente elevados para las llamadas de sistema. No tiene sentido tener un array de _N_ semáforos y hacer _N_ operaciones de _wait_ y _signal_, hay que lograrlo con un número limitado de semáforos y que no requiera que el número de operaciones de cada proceso sea proporcional al número de procesos involucrados en la sincronización.-
 
-El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&Add_ o similares como _add&Get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java):
+El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&Add_ o similares como _add&Get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java>>):
 
 [[alg_barriers]]
 ----
@@ -498,7 +498,7 @@ Es un modelo muy estudiado en el área de la programación concurrente, fue inve
 
 [[dining_image]]
 .Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via Wikimedia Commons - https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png]
-image::dining_philosophers.jpg[height="250", align="center"]
+image::dining_philosophers.jpg[align="center"]
 
 
 Cada filósofo realiza solo dos actividades: pensar o comer. Cada uno es un proceso independiente, el algoritmo general de cada uno de ellos es:
@@ -748,7 +748,7 @@ La inversión de prioridades es un problema que se puede presentar en los mecani
 
 [[priority_inversion_image]]
 .Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>.]
-image::priority-inversion.png[height="250", align="center"]
+image::priority-inversion.png[align="center"]
 
 _L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo _H_ hace llama al _wait_ al mismo semáforo. Antes de que _C_ pueda hacer el _signal_ es quitado del procesador (_preempted_) por el proceso _I_ de mayor prioridad. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_. Este interbloqueo causado por _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _L_, que a su vez no se ejecuta porque tiene menor prioridad que _I_.
 

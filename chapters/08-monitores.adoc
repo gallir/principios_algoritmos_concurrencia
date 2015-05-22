@@ -99,7 +99,7 @@ Hay tres alternativas habituales:
 
 [[monitors_java_image]]
 .Monitores en Javafootnote:[Imagen Wikimedia de Theodore Norvell, https://commons.wikimedia.org/wiki/File:Monitor_(synchronization)-Java.png], _E = W < S_
-image::monitor_java.png[height="350", align="center"]
+image::monitor_java.png[align="center"]
 
 
 [[monitors_semaphores]]

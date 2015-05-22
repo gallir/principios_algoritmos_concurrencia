@@ -56,7 +56,7 @@ En las arquitecturas _SMP_ los procesadores están conectados por una compleja r
 
 [[quickpath]]
 .Arquitectura QuickPath de Intelfootnote:[Imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_ http://www.intel.es/content/dam/doc/white-paper/quick-path-interconnect-introduction-paper.pdf]
-image::intel-quickpath.png[height=400, align="center"]
+image::intel-quickpath.png[align="center"]
 
 Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo _MESIF_ en Intel, F por _forward_.].
 

@@ -6,12 +6,10 @@ Los mecanismos de sincronización sin espera activa son habitualmente implementa
 ****
 Supongamos que tenemos la variable entera compartida +mutex+ y la instrucción _compareAndSwap_ (_CAS_), el algoritmo para el _wait_ verificará si se pudo hacer el intercambio, en ese caso no hay competencia y podrá continuar. Caso contrario llamará al sistema operativo que un semáforo asociado al valor de mutex bloqueará al proceso. Algo similar al siguiente algoritmo:
 
-----
-local = 1
-CAS(mutex, local, 0)
-if local != 0:
-    syscall_wait(mutex)
-----
+    local = 1
+    CAS(mutex, local, 0)
+    if local != 0:
+        syscall_wait(mutex)
 
 En caso de no haber competencia el proceso podrá entrar a la sección crítica sin necesidad de involucrar al núcleo del sistema operativo. Obviamente el algoritmo no puede ser _tan_ sencillo, pero es la idea básica (tampoco es tan complicado).
 ****
