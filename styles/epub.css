@@ -231,8 +231,9 @@ p {
   margin: 4px 0 6px 0;
 }
 
-p + p {
-    text-indent: 1em;
+p>strong {
+    text-indent: 0;
+    color: #980000;
 }
 
 code, pre {
