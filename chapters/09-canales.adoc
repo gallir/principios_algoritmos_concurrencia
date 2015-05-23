@@ -171,9 +171,9 @@ Como ambos canales ahora tienen _buffer_ los procesos no se bloquearán si al en
 
 ==== Barreras generales
 
-Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo pero en vez de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se irá copiando entre procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo, pero en lugar de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se copiará entre los procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
 
-Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+, esta última es estática, solo se inicializa con el número de procesos que se sincronizarán con la barrera. Definimos la estructura +Barrier+ con estos tres components:
+Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+. Esta última es estática, solo se inicializa con el número de procesos que se sincronizarán con la barrera. Definimos la estructura +Barrier+ con estos tres components:
 
 
 [source,go]
@@ -359,7 +359,7 @@ func NewSem(value int) Sem {
 ----
 <1> El canal +value+ se inicializa con un mensaje que almacena el valor del semáforo.
 
-Los algoritmos de las operaciones _wait_ y _signal_ son prácticamente idénticos a la <<semaphore_definition, definición>> de semáforos. La diferencia es que en vez de una variable compartida usamos un mensaje para almacenar el valor.
+Los algoritmos de las operaciones _wait_ y _signal_ son prácticamente idénticos a la <<semaphore_definition, definición>> de semáforos. La diferencia es que en lugar de una variable compartida usamos un mensaje para almacenar el valor.
 
 La función +Wait+ lee el mensaje con el valor del semáforo, lo decrementa y vuelve a depositar el mensaje en el canal. Si el valor del semáforo es menor que cero se bloqueará en el canal +queue+ hasta que otro proceso haga un _signal_.
 
@@ -595,7 +595,7 @@ El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comuni
 [[col_row_multiplication]]
 image::col_row_multiplication.png[align="center"]
 
-Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial para que los algoritmos de cada multiplicador sean idénticos:
+Para obtener el resultado final en el procesador de la izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial, así el algoritmo de los multiplicadores es el mismo para todos:
 
 [source, go]
 ----
@@ -604,14 +604,14 @@ sum := <-east
 west <- sum + first*second
 ----
 
-Tal como ya había descrito Hoare se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior envían los valores, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda. (_result_). Cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
+Tal como ya había descrito Hoare se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior envían los valores, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda (_result_). Cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
 
 
 [[parallel_multiplication]]
 .Array de procesos para multiplicación de matrices
 image::parallel_multiplication.png[align="center"]
 
-El algoritmo de cada uno de los cuatro tipos de procesos de la _matriz de procesos_ es el siguiente (<<parallel_matrix_multiplication_go, código completo>>):
+Los algoritmo de los cuatro tipos de procesos de la matriz son los siguientes (<<parallel_matrix_multiplication_go, programa completo>>):
 
 [source, go]
 ----

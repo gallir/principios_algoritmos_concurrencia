@@ -9,4 +9,4 @@ Algunos de los temas son los que se suelen estudiar en asignaturas universitaria
 Para cada tema se explican el origen, conceptos y algoritmos fundamentales, siempre acompañados de ejemplos y código fuente en lenguajes populares  (C, Python, Java, Go) que funcionan en  arquitecturas modernas. Los programas están preparados y probados para que funcionen sobre cualquier sistema GNU/Linux, incluidas Raspberry 1 y 2.
 
 
-El libro está diseñado y formateado para ser leído con comodidad en lectores de ebooks.
+El libro está diseñado y formateado para ser leído con comodidad en lectores de ebooks. El código fuente está disponible en https://github.com/gallir/concurrencia_source_samples.

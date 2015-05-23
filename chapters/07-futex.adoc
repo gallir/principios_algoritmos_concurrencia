@@ -1,7 +1,7 @@
 [[futex]]
 == FUTEX
 
-Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo. Se puede mejorar el rendimiento si se reducen las llamadas solo en caso de competencia: si un proceso es el único que desea entrar a la sección crítica puede resolverse directamente en el _espacio de usuario_ con la ayuda de instrucciones atómicas que vimos en el capítulo de <<hardware>> sin necesidad invocar al núcleo.
+Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo. Se puede mejorar el rendimiento si se reducen las llamadas de sistema solo cuando hay competencia: si un proceso es el único que desea entrar a la sección crítica puede resolverse directamente en el _espacio de usuario_, con ayuda de las instrucciones atómicas que vimos en el capítulo de <<hardware>>, sin necesidad de invocar al núcleo.
 
 ****
 Supongamos que tenemos la variable entera compartida +mutex+ y la instrucción _compareAndSwap_ (_CAS_), el algoritmo para el _wait_ verificará si se pudo hacer el intercambio, en ese caso no hay competencia y podrá continuar. Caso contrario llamará al sistema operativo que un semáforo asociado al valor de mutex bloqueará al proceso. Algo similar al siguiente algoritmo:
@@ -13,16 +13,20 @@ if local != 0:
     syscall_wait(mutex)
 ----
 
-En caso de no haber competencia el proceso podrá entrar a la sección crítica sin necesidad de involucrar al núcleo del sistema operativo. Obviamente el algoritmo no puede ser _tan_ sencillo, pero es la idea básica (tampoco es tan complicado).
+En caso de no haber competencia el proceso podrá entrar a la sección crítica sin necesidad de involucrar al núcleo del sistema operativo. Obviamente, el algoritmo no puede ser _tan_ sencillo, pero esta es la idea básica.
 ****
 
-Ofrecer esta posibilidad fue el objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast user-space mutexes_) de Linux. A pesar de su nombre FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización. La interfaz FUTEX no está diseñado para ser usada directamente desde las aplicaciones sino por los programadores de librerías. Ni siquiera exporta ni una función, hay que recurrir a +syscall+ y exige conocimientos de las instrucciones atómicas de hardware.
-
-En capítulos anteriores hemos aprendido a usar macros del compilador para generar las operaciones atómicas, cómo usarlas en diferentes algoritmos y el funcionamiento de los semáforos. Podemos aventurarnos sin demasiado esfuerzo en desarrollar algunas de esas construcciones de sincronización directamente sobre FUTEX.
+Precisamente, el objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast User-space muTEXes_) de Linux fue ofrecer esta posibilidad, especialmente a los desarrolladores de librerías -como GLibc y NTPL- que deben implementar primitivas de sincronización muy eficientes. A pesar del nombre, no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización.
 
 ****
 Las _Native POSIX Thread Libraries_ (_NPTL_, las librerías que implementan el estándar _POSIX Threads_ en Linux) y las de semáforos POSIX -ambas incluidas en las GLibc- usan FUTEX, de allí su excelente rendimiento.
 ****
+
+Aunque no impone restricciones, la interfaz FUTEX no fue diseñado para ser usada directamente desde las aplicaciones, sino por los programadores de librerías. Ni siquiera exporta una función, hay que recurrir a la función +syscall+ y requiere conocimientos de las instrucciones atómicas de hardware.
+
+En capítulos anteriores hemos aprendido a usar macros del compilador para generar las operaciones atómicas, cómo usarlas en diferentes algoritmos y el funcionamiento de los semáforos. Podemos aventurarnos sin demasiado esfuerzo en desarrollar algunas de esas construcciones de sincronización directamente sobre FUTEX.
+
+
 
 === Interfaz FUTEX
 

@@ -79,7 +79,7 @@ div.sidebar ul, div.sidebar ol {
 }
 
 div.sidebar .programlisting, .screen {
-    padding: 5px 5px !important;
+    padding: 0.6em 0.4em !important;
 }
 
 div.sidebar, div.tip, div.note, div.warning, div.caution, div.important {
@@ -97,9 +97,9 @@ div.tip h3, div.note h3, div.warning h3, div.caution h3, div.important h3, div.s
  font-size: 90%;
 }
 
-div.tip, div.note {
+div.tip, div.note, div.sidebar {
   border: 1px solid silver;
-  background-color: transparent;
+  background-color: #ffffee;
 }
 
 div.warning, div.caution {

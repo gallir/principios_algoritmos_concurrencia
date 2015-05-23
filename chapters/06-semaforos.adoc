@@ -431,7 +431,7 @@ En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un probl
 - Solo puede haber un escritor en la sección crítica.
 
 ===== La solución clásica
-El siguiente algoritmo se puede implementar con semáforos binarios o _mutex_ siempre que permitan que un proceso que no hizo el _wait_ pueda hacer el _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase +threading.Lock+, permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
+El algoritmo _clásico_ de lectores-escritores se puede implementar con semáforos binarios o _mutex_, siempre que permitan que un proceso que no hizo el _wait_ pueda hacer un _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase +threading.Lock+, permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
 
 [source, python]
 ----
@@ -441,7 +441,7 @@ El siguiente algoritmo se puede implementar con semáforos binarios o _mutex_ si
 ----
 <1> Contador de lectores en la sección crítica.
 <2> Asegura la exclusión mutua entre escritores y entre escritor y lectores.
-<3> Se usa con dos propósitos: asegurar exclusión mutua para verificar y modificar la variable +readers+ y como barrera. El primer lector bloqueará a los siguientes si hay un escritor en la sección crítica.
+<3> Se usa con dos propósitos: 1) asegurar exclusión mutua para verificar y modificar la variable +readers+, y 2) como barrera (el primer lector bloqueará a los siguientes si hay un escritor en la sección crítica).
 
 Las entradas y salidas de escritores son idénticas a las de exclusión mutua:
 

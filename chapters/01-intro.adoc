@@ -70,7 +70,7 @@ Este tipo de programación se denomina dirigida por eventos (_event driven_), se
 
 Por un lado se desarrollaron librerías -sobre todo gráficas e interfaces de usuario- y lenguajes que facilitan la programación de diferentes módulos que se ejecutan independientemente de los demás. A este tipo de programación se la conoce como _programación asíncrona_.
 
-Como una forma de facilitar aún más el desarrollo de módulos asíncronos se desarrolló el concepto de hilos (_threads_) o _procesos ligeros_ (_light weight processes_, también llamado tareas en Ada y en sistemas de tiempo real). En vez de crear una copia de toda la imagen de memoria de un proceso cuando se crea uno nuevofootnote:[Como hace el +fork+ en Unix.] se mantiene la misma copia para ambos procesos salvo la pila (cada uno tiene su propio contexto de ejecución). Los hilos comparten el código, variables estáticas y la memoria asignada dinámicamente entre todos los creados por el mismo proceso _padre_.
+Como una forma de facilitar aún más el desarrollo de módulos asíncronos se desarrolló el concepto de hilos (_threads_) o _procesos ligeros_ (_light weight processes_, también llamado tareas en Ada y en sistemas de tiempo real). En lugar de crear una copia de toda la imagen de memoria de un proceso cuando se crea uno nuevofootnote:[Como hace el +fork+ en Unix.] se mantiene la misma copia para ambos procesos salvo la pila (cada uno tiene su propio contexto de ejecución). Los hilos comparten el código, variables estáticas y la memoria asignada dinámicamente entre todos los creados por el mismo proceso _padre_.
 
 Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos independientes, cada uno de ellos -al igual que los procesos tradicionales- son _unidades de planificación_. Si los hilos se ejecutan en un sistema multiprocesador además de ejecutarse de manera asíncrona pueden hacerlo en paralelo en diferentes procesadores. Por la popularización de _SMP_ (_symmetric multi processing_) y los chips _multicore_ la programación con hilos se convirtió en una parte importante de la programación concurrentefootnote:[Aunque muchos confunden la capacidad de ejecución asíncrona con paralelismo.].
 
@@ -258,7 +258,7 @@ for i in range(5000000):
 ----
 
 
-Al final de la ejecución el valor de +counter+ debería ser +10.000.000+, pero ninguna obtiene el valor correcto. El resultado de cualquiera de sus ejecuciones es similar a las siguientes:
+Al final de la ejecución el valor de +counter+ debería ser 10 000 000, pero ninguna obtiene el valor correcto. El resultado de cualquiera de sus ejecuciones es similar a las siguientes:
 
 [[counter_times]]
 .Resultados y tiempos de CPUfootnote:[Compara los _tiempos de CPU_ con los _tiempos de reloj_. Salvo Python todos lo superan, se ejecutan en paralelo en dos CPUs por lo que por cada segundo de reloj corresponde a dos segundos de procesador. Los programas en Python no pueden ejecutarse simultáneamente en más de un procesador debido a al _Python Global Interpreter Lock_.]
