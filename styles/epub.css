@@ -153,6 +153,10 @@ code.literal {
   color: initial;
 }
 
+div.calloutlist {
+    margin-top: -8px;
+    margin-bottom: 0.5em;
+}
 
 div.calloutlist table {
   font-size: 0.95em;

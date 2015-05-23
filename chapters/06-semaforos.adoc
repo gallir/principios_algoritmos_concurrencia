@@ -26,8 +26,8 @@ Semaphore s = 1
 Además de la estructura de datos, los semáforos se componen de dos primitivas fundamentales: _P_ (de la contracción _prolaag_ del holandés _proberen te verlagen_ que significa _intentar decrementar_) y _V_ (del holandés _verhoog_ o _verhogen_ que significa _incrementar_).
 
 [horizontal]
-*_P_*:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como _wait_, _acquire_ o _lock_.
-*_V_*:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta operación es más conocida como _signal_, _release_ o _post_.
+*_P_*:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como _wait_, _acquire_, o _lock_.
+*_V_*:: Si hay un algún proceso bloqueado en el semáforo lo desbloquea para que pueda continuar su ejecución, caso contrario incrementa el valor. Esta operación es más conocida como _signal_, _release_, o _post_.
 
 El algoritmo de ambasfootnote:[En el pseudocódigo uso la notación `objeto.método()` para que sean similares a la mayoría de los ejemplos en Python, programados con las clases de sincronización de +threading+.]:
 
@@ -79,7 +79,9 @@ s.signal()
 ...
 ----
 
-Se inicializa el semáforo a 1, cuando el primer proceso quiera entrar a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar el valor de +value+ será cero por lo que se bloqueará hasta que el primero ejecute el +signal+. La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
+Se inicializa el semáforo a 1, cuando el primer proceso quiera entrar a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar el valor de +value+ será cero por lo que se bloqueará hasta que el primero ejecute el +signal+.
+
+La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
 ==== Sincronización genérica
 El valor del semáforo puede interpretarse como un indicador del _número de recursos_ disponibles -también denominado _permisos_ (_permits_)-, indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En exclusión mutua interesa que solo haya un proceso en la sección crítica, así pues, el valor inicial debe ser 1.
@@ -87,7 +89,9 @@ El valor del semáforo puede interpretarse como un indicador del _número de rec
 Se pueden programar mecanismos más complejos de sincronización usando valores iniciales diferentes. Supongamos un sistema con _N_ procesadores, para evitar cambios de contextos innecesarios queremos limitar que haya hasta _N_ procesos dentro de una sección del programa: solo hay que inicializar el valor del semáforo con _N_. Este tipo de uso de semáforos donde se permiten más de uno y hasta _N_ procesos en secciones críticas se denominan _multiplexes_.
 
 ==== Semáforos binarios
-La definición anterior de semáforos permite valores cero y positivos, son denominados _semáforos generales_ o _contadores_. Si solo permiten valores 0 y 1 se denominan _semáforos binarios_. Los binarios son equivalentes a los generales, permiten resolver los mismos problemas (con algunas líneas más de código), por ejemplo con el algoritmo de Barz para simular semáforos generales (<<Barz>>). Este algoritmo usa dos semáforos binarios (+mutex+ y +gate+) y una variable entera (+value+).
+La definición anterior de semáforos permite valores cero y positivos, son denominados _semáforos generales_ o _contadores_. Si solo permiten valores 0 y 1 se denominan _semáforos binarios_.
+
+Los binarios son equivalentes a los generales, permiten resolver los mismos problemas (con algunas líneas más de código), por ejemplo con el algoritmo de Barz para simular semáforos generales (<<Barz>>). Este algoritmo usa dos semáforos binarios (+mutex+ y +gate+) y una variable entera (+value+).
 
 Las funciones +generalWait+ y +generalSignal+ son las emulaciones genéricas de _wait_ y _signal_ respectivamente,  _k_ es el valor inicial del semáforo. El uso del semáforo +mutex+ asegura exclusión mutua en las secciones críticas de la implementación, donde se modifica y verifica el valor de la variable compartida +value+. El semáforo +gate+ se usa para controlar qué procesos deben bloquearse o desbloquearse según el valor que toma +value+.
 
@@ -195,7 +199,7 @@ Este algoritmo con un único semáforo solo permite sincronizar dos procesos, y 
 [[sync_barrier]]
 ==== Barreras
 
-A veces es conveniente desarrollar algoritmos concurrentes en fases y hacer que los procesos se sincronicen  para esperar que todos acaben la fase actual y que comiencen sincronizados la siguiente. Esta sincronización se logra de forma muy parecida al ejemplo anterior: poniendo _barreras de sincronización_ al final e inicio de cada fase.
+A veces es conveniente desarrollar algoritmos concurrentes en fases y hacer que los procesos se sincronicen para esperar que todos acaben la fase actual y comenzar la siguiente al mismo tiempo. Esta coordinación se logra de forma muy parecida al ejemplo anterior: poniendo _barreras de sincronización_ al final e inicio de cada fase.
 
 Barrera:: Es un mecanismo de sincronización que obliga a procesos concurrentes (o distribuidos) a esperar a que cada uno haya llegado a un punto determinado. El conjunto de los puntos de sincronización se denomina _barrera_. Solo cuando todos los procesos han llegado a una barrera están autorizados a continuar (<<Taunbenfeld>>).
 
@@ -230,7 +234,9 @@ La intención de uso de barreras genéricas para un número _N_ indeterminado de
         barrier(n)
 ----
 
-Después de +do_phase+ cada proceso esperará a que los demás hayan llegado al mismo punto, solo así podrán continuar con la siguiente. La misma barrera puede ser reusada cíclicamente, también para un número indeterminado de iteraciones. Estas barreras no pueden implementarse igual que las binarias. Los semáforos son recursos _costosos_, requieren colas y tiempos relativamente elevados para las llamadas de sistema. No tiene sentido tener un array de _N_ semáforos y hacer _N_ operaciones de _wait_ y _signal_, hay que lograrlo con un número limitado de semáforos y que no requiera que el número de operaciones de cada proceso sea proporcional al número de procesos involucrados en la sincronización.
+Después de +do_phase+ cada proceso esperará a que los demás hayan llegado al mismo punto, solo así podrán continuar con la siguiente. La misma barrera puede ser reusada cíclicamente, también para un número indeterminado de iteraciones.
+
+Estas barreras no pueden implementarse igual que las binarias. Los semáforos son recursos _costosos_, requieren colas y tiempos relativamente elevados para las llamadas de sistema. No tiene sentido tener un array de _N_ semáforos y hacer _N_ operaciones de _wait_ y _signal_, hay que lograrlo con un número limitado de semáforos y que no requiera que el número de operaciones de cada proceso sea proporcional al número de procesos involucrados en la sincronización.
 
 El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&add_ o similares como _add&get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java>>):
 
@@ -275,7 +281,7 @@ El problema de los productores-consumidores es un ejemplo clásico de sincroniza
 
 Hay dos tipos de procesos:
 
-Productores:: Produce un nuevo elemento que será transmitido al o los consumidores.
+Productores:: Produce un nuevo elemento que será transmitido a los consumidores.
 Consumidores:: Recibe y consume los elementos transmitidos desde los productores.
 
 Hay dos tipos de productores-consumidores:
@@ -306,7 +312,7 @@ while True:
 ===== _Buffer_ infinito
 Aunque no existen las memorias infinitas ni se puede confiar en que las velocidades relativas de los productores harán que el _buffer_ no supere un tamaño razonable, es un primer paso para la implementación del algoritmo más general.
 
-Como el _buffer_ no está limitado el algoritmo no debe comprobar que haya espacio suficiente, solo debe bloquear a los consumidores si el buffer está vacío y desbloquearlos cuando hay nuevos elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: +mutex+ para asegurar exclusión mutua mientras se añaden o quitan elementos y otro semáforo contador de sincronización, +notEmpty+, para bloquear a los consumidores si el _buffer_ está vacío.
+Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente, solo debe bloquear a los consumidores si el buffer está vacío y desbloquearlos cuando hay nuevos elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: +mutex+ para asegurar exclusión mutua mientras se añaden o quitan elementos y otro semáforo contador de sincronización, +notEmpty+, para bloquear a los consumidores si el _buffer_ está vacío.
 
 [source, python]
 ----
@@ -348,7 +354,7 @@ while True:
 <1> Se bloquea si el _buffer_ está vacío, si no es así decrementa y obtiene el siguiente elemento. El valor del semáforo contador +notEmtpy+ siempre se corresponde con el número de elementos disponibles en el _buffer_.
 <2> Obtiene el siguiente elemento de la cola.
 
-En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la implementación completa. Hay dos clases, +Producer+ y +Consumer+, que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+), los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
+En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la implementación completa. Hay dos clases -+Producer+ y +Consumer+- que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+), los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
 
 
 ===== _Buffer_ finito
@@ -401,7 +407,7 @@ El modelo productor-consumidor es muy común en informática, las _tuberías_ y 
 ****
 
 ===== Semáforos partidos
-La técnica de sincronización anterior con dos semáforos se denomina _semáforos partidos_ (_split semaphores_, <<Ben-Ari>>). Se llaman así cuando se usan dos o más semáforos cuya suma es una constante, en este caso el invariante es:
+La técnica de sincronización anterior con dos semáforos se denomina _semáforos partidos_ (_split semaphores_). Se llaman así cuando se usan dos o más semáforos cuya suma es una constante, en este caso el invariante es:
 
 _notEmpty + notFull = BUFFER_SIZE_
 
@@ -410,7 +416,7 @@ Si la constante es igual a uno la técnica se denomina _semáforos partidos bina
 En la sección crítica las operaciones _wait_ y _signal_ son ejecutadas por el mismo proceso y en ese orden. Sin embargo, en el algoritmo con _buffer_ limitado se usan dos semáforos y las llamadas a _wait_ y _signal_ se hacen desde diferentes hilos. Los _semáforos partidos_ permiten que los procesos esperen por eventos que se producen en otros.
 
 
-==== Lectores-Escritores
+==== Lectores-escritores
 En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un problema también muy habitual, relajar las condiciones de la exclusión mutua con las siguientes condiciones:
 
 - Se permite más de un lector en la sección crítica.
@@ -422,7 +428,7 @@ En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un probl
 - Solo puede haber un escritor en la sección crítica.
 
 ===== La solución clásica
-El siguiente algoritmo se puede implementar con semáforos binarios o _mutex_ siempre que permitan que un proceso que no hizo el _wait_ pueda hacer el _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase +threading.Lock+ porque permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
+El siguiente algoritmo se puede implementar con semáforos binarios o _mutex_ siempre que permitan que un proceso que no hizo el _wait_ pueda hacer el _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase +threading.Lock+, permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
 
 [source, python]
 ----
@@ -532,10 +538,10 @@ def philosopher():
         eat()
         release()   <2>
 ----
-<1> Asegura que puede coger los dos tenedores, el de la izquierda y el de la derecha
+<1> Asegura que puede tomar los dos tenedores, el de la izquierda y el de la derecha
 <2> Libera ambos tenedores.
 
-Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Para que el programa sea correcto se deben verificar las siguientes propiedades:
+Para comer necesita dos tenedores, solo puede tomar los que tiene a su lado. Para que el programa sea correcto se deben verificar las siguientes propiedades:
 
 [[philosophers_requisites]]
 1. Un filósofo solo puede comer si tiene los dos tenedores.
@@ -544,7 +550,7 @@ Para comer necesita dos tenedores, solo puede coger los que tiene a su lado. Par
 4. Se debe asegurar _espera limitada_.
 5. Debe ser eficiente, si no hay competencia por un tenedor éste debe poder ser usado por uno de sus dos filósofos vecinos.
 
-Identificamos a los filósofos y tenedores con un índice de 0 a 4 (es decir, de 0 a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_ y el de su derecha el _tenedor~1~_, así sucesivamente hasta el último _filósofo~4~_ que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
+Identificamos a los filósofos y tenedores con un índice de 0 a 4 (es decir, de 0 a _N-1_), el tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_ y el de su derecha el _tenedor~1~_. Así sucesivamente hasta el último _filósofo~4~_, que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
 
 Un primera solución es asegurar exclusión mutua a toda la mesa, solo un filósofo puede comer a la vez. Para ello solo se requiere un semáforo _mutex_ (+table+):
 
@@ -561,7 +567,7 @@ def philosopher():
 
 ----
 
-Esta solución es ineficiente, aunque hay tenedores para que puedan comer dos filósofos simultáneamente solo uno podrá hacerlo. Una mejor solución es asegurar exclusión mutua por cada tenedor, para ello se necesita un array de cinco semáforos _mutex_, uno por tenedor. El índice _i_ identifica a cada filósofo, cada proceso intentará coger primero el tenedor de su izquierda (también es _i_) y luego el de su derecha (corresponde a `(i + 1) % 5`).
+Esta solución es ineficiente, aunque hay tenedores para que puedan comer dos filósofos simultáneamente solo uno podrá hacerlo. Una mejor solución es asegurar exclusión mutua por cada tenedor, para ello se necesita un array de cinco semáforos _mutex_, uno por tenedor. El índice _i_ identifica a cada filósofo, cada proceso intentará tomar primero el tenedor de su izquierda (también es _i_) y luego el de su derecha (corresponde a `(i + 1) % 5`).
 
 Las funciones +pick+ y +release+ tomarán y soltarán los tenedores respectivamente, por conveniencia se define la función +right+ que retorna el índice del tenedor de la derecha (el tenedor de la izquierda del _filósofo~i~_ es simplemente _tenedor~i~_):
 
@@ -590,7 +596,7 @@ def release(i):
 
 ----
 
-Antes de comer cada filósofo hace +wait+ sobre cada uno de los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona -no hacen falta cinco- una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno cogerá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
+Antes de comer cada filósofo hace +wait+ sobre cada uno de los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona -no hacen falta cinco- una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno tomaá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
 
 Una secuencia de instrucciones que lleva a este estado puede ser la siguiente: cada filósofo toma el tenedor de su izquierda, la ejecución se intercala o se ejecuta en paralelo (recordad que el problema es equivalente):
 
@@ -647,7 +653,7 @@ Para prevenir interbloqueos es suficiente que el algoritmo evite que se presente
 
 1. La exclusión mutua no se puede evitar, un tenedor solo puede ser usado por un filósofo a la vez.
 
-2. La retención y espera se podría evitar pero requiere algoritmos de sincronización más complejos que el de exclusión mutua.
+2. La retención y espera se podría evitar pero requiere algoritmos de sincronización más complejos que el de exclusión mutua (lo haremos en la _solución óptima_ más adelante).
 
 3. Se podría hacer que sea _apropiativo_, si se detecta el interbloqueo y se quita el tener a uno de los filósofos involucrados en la cadena, también requiere un algoritmo más sofisticado.
 
@@ -666,7 +672,9 @@ def pick(i):
         forks[i].wait()
 ----
 
-Este algoritmo suele denominarse _LR_ porque hay dos tipos de filósofos, los que toman primero el tenedor de la izquierda (_L_) y los que lo hacen con el de la derecha (_R_). No produce interbloqueos al no haber esperas circulares. Pero no es óptimo, hay situaciones donde podrían estar comiendo dos filósofos pero solo lo hace uno. Si, como vimos antes, todos los filósofos desean comer más o menos simultáneamente puede darse la siguiente secuencia:
+Este algoritmo suele denominarse _LR_ porque hay dos tipos de filósofos, los que toman primero el tenedor de la izquierda (_L_) y los que lo hacen con el de la derecha (_R_). No produce interbloqueos al no haber esperas circulares.
+
+Pero no es óptimo, hay situaciones donde podrían estar comiendo dos filósofos pero solo lo hace uno. Si, como vimos antes, todos los filósofos desean comer más o menos simultáneamente puede darse la siguiente secuencia:
 
 ----
 fork[0].wait()
@@ -725,7 +733,7 @@ def canEat(i):
         sync[i].release()
 ----
 
-Cuando un filósofo deja de comer debe verificar si sus vecinos están esperando por los tenedores que retenía. Antes de señalizarles para comer también hay que verificar que su vecino del otro lado no está comiendo. Para ello se puede usar la función +canEat+ que precisamente hace eso, lo que cambia es el valor de +i+.
+Cuando un filósofo deja de comer debe verificar si sus vecinos están esperando por los tenedores que retenía. Antes de señalizarles para comer también hay que verificar que su vecino del otro lado no está comiendo. Para ello se puede usar la función +canEat+ que precisamente hace eso, lo que cambia es el valor del argumento +i+.
 
 [source, python]
 ----
@@ -740,7 +748,7 @@ def release(i):
 
 Hay que tener en cuenta que las llamadas a +canEat+ se hacen siempre desde dentro de la sección crítica del semáforo +mutex+, es decir, no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array +status+.
 
-Este algoritmo es óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe, entre otras cosas, a que no existe retención y espera, los filósofos que no pueden comer no retienen el tenedor libre. Sin retención y espera tampoco se puede producir la espera circular.
+Este algoritmo es óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. Se debe a que no existe retención y espera, los filósofos que no pueden comer no retienen el tenedor libre. Sin retención y espera tampoco se puede producir la espera circular.
 
 Dado que no se cumplen dos de las condiciones necesarias, no pueden producirse _interbloqueos_. Cumple con todas los requisitos que <<philosophers_requisites, impusimos al principio>>.
 
@@ -779,7 +787,7 @@ image::priority-inversion.png[align="center"]
 
 _L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo _H_ hace _wait_ sobre el mismo semáforo. Antes de que _C_ pueda hacer el _signal_ es quitado del procesador (_preempted_) por el proceso _I_ de mayor prioridad. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_.
 
-Este interbloqueo causado por _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _L_, que a su vez no se ejecuta porque tiene menor prioridad que _I_.
+Este interbloqueo causado por el _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad no se puede ejecutar porque comparte recursos con _L_, que a su vez no se ejecuta porque tiene menor prioridad que _I_.
 
 El problema era conocido desde hace tiempo en la comunidad de concurrencia pero no hubo formalizaciones ni soluciones hasta 1980 (<<Lampson>>). Hay varias soluciones:
 
@@ -800,7 +808,9 @@ Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es
 
 
 ****
-VxWorks permitía configurar en una variable global si se habilitaba o no la _herencia de prioridades_ en los semáforos. Los ingenieros de la NASA habían preferido no arriesgar y la dejaron deshabilitada. Después de estudiar y hacer simulaciones en la Tierra, para asegurarse que los efectos colaterales no eran negativos, se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
+VxWorks permitía configurar en una variable global si se habilitaba o no la _herencia de prioridades_ en los semáforos. Los ingenieros de la NASA habían preferido no arriesgar y la dejaron deshabilitada.
+
+Después de estudiar y hacer simulaciones en la Tierra, para asegurarse que los efectos colaterales no eran negativos, se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
 ****
 
 === Recapitulación
