@@ -458,10 +458,13 @@ func fork(i int) {
 ====
 Al tratarse de canales síncronos se puede invertir el orden de envío y recepción de mensajes, para tomar los tenedores los filósofos envían un mensaje y al soltarlos reciben uno. En este caso el proceso +fork+ debe invertir también sus operaciones:
 
-    for {
-        forks[i] <- Empty{}
-        <-forks[i]
-    }
+[source, go]
+----
+for {
+    forks[i] <- Empty{}
+    <-forks[i]
+}
+----
 
 De esta forma -es equivalente- el programa queda idéntico a la solución propuesta por Hoare con _CSP_.
 ====
@@ -810,14 +813,17 @@ Cuando un proceso solicita el testigo envía un mensaje a su padre e inmediatame
 
 Supongamos que _A_ solicita el testigo y que lo tiene _D_. La situación inicial es:
 
+[quote]
 +_A_ => _B_ => _C_ => *_D_* <= _E_+
 
 Cuando _B_ recibe el mensaje desde _A_ lo reenvía a _C_ y cambia su padre a _A_:
 
+[quote]
 +_A_ <= _B_   _C_ => *_D_* <= _E_+
 
 El mensaje es así copiado hasta que llega a la raíz del árbol actual ligado al poseedor del testigo (_D_), las conexiones en ese momento serán las siguientes (hay dos árboles, la raíz de uno es el poseedor el testigo, el otro es el siguiente):
 
+[quote]
 +_A_ <= _B_ <= _C_   *_D_* <= _E_+
 
 
@@ -829,6 +835,7 @@ El proceso puede estar en dos estados:
 
 En cualquier de los dos casos, el árbol se habrá unificado.
 
+[quote]
 +*_A_* <= _B_ <= _C_ <= _D_ <= _E_+
 
 ====== Eficiencia

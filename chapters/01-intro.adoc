@@ -152,15 +152,24 @@ Los programadores estamos acostumbrados al modelo de consistencia secuencial de 
 ****
 Un programa está formado por una secuencia de operaciones atómicas ordenadas, por ejemplo +P+ por +p~0~, p~1~, p~2~+ y +Q+ por +q~0~, q~1~, q~2~+. Una ejecución válida de +P+ y +Q+ es:
 
+[quote]
+--
 +p~0~, p~1~, p~2~, q~0~, q~1~, q~2~+
+--
 
 o:
 
+[quote]
+--
 +q~0~, q~1~, q~2~, p~0~, p~1~, p~2~+
+--
 
 Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ y p~2~ después de p~1~, formalmente: +p~0~ => p~1~ => p~2~+ (lo mismo para las instrucciones de +q+). La siguiente secuencia de ejecución respeta las relaciones secuenciales anteriores por lo que también es correcta y secuencialmente consistente si se analiza cada programa por separado:
 
+[quote]
+--
 +q~0~, p~0~, p~1~, q~1~, q~2~, p~2~+
+--
 
 Si esas instrucciones acceden o modifican variables compartidas los resultados pueden ser diferentes dependiendo de la secuencia -no determinista- de ejecución.
 ****

@@ -296,19 +296,31 @@ Este algoritmo es correcto para gestionar una pila concurrente pero solo si no s
 
 Supongamos una pila con tres nodos que comienzan en las direcciones 10, 20 y 30:
 
+[quote]
+--
 +head => [10] => [20] => [30]+
+--
 
 El proceso _P_ acaba de ejecutar +orig = *head+ dentro de _pop_ y es interrumpido. Otros procesos eliminan dos elementos de la pila:
 
+[quote]
+--
 +head => [30]+
+--
 
 Ahora _Q_ inserta un nuevo nodo con una dirección de memoria usada previamente:
 
+[quote]
+--
 +head => [10] => [30]+
+--
 
 Cuando _P_ continúe su ejecución _CAS_ hará el cambio ya que la dirección es también 10. El problema es que era una copia antigua que apuntaba antes a +[20]+ por lo que dejará la cabecera apuntando a un nodo que ya no existe, los siguientes habrán quedado _descolgados_ de la pila:
 
+[quote]
+--
 +head => ¿20?    [30]+
+--
 
 Este reciclado de direcciones es muy habitual si se usa +malloc+ para cada nuevo nodo que se inserta y luego el +free+ cuando lo eliminamos de la listafootnote:[Las implementaciones de +malloc+ suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]El siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
 
@@ -362,7 +374,7 @@ e = pop(&head);           <4>
 if (e) {
     push(&free_nodes, e); <5>
 } else {
-    puts("Error, stack empty"); <6>
+    puts("Error, empty"); <6>
 }
 ----
 <1> Obtiene un nodo de la lista de libres.

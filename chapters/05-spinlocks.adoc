@@ -94,21 +94,22 @@ _Exponential backoff_ es la técnica usada por redes Ethernet, WiFi y similares 
 
 El siguiente es el código en C usado en los ejemplos para forzar la espera con tiempos que se duplican dependiendo del valor del argumento +failures+:
 
+----
+#define FAILURES_LIMIT 12
+void backoff(int failures) {
+    struct timespec deadline = {.tv_sec = 0};
+    unsigned limit;
 
-    #define FAILURES_LIMIT 12
-    void backoff(int failures) {
-        struct timespec deadline = {.tv_sec = 0};
-        unsigned limit;
-
-        if (failures > FAILURES_LIMIT) {
-            limit = 1 << FAILURES_LIMIT;
-        } else {
-            limit = 1 << failures;
-        }
-
-        deadline.tv_nsec = 1 + rand() % limit;
-        clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
+    if (failures > FAILURES_LIMIT) {
+        limit = 1 << FAILURES_LIMIT;
+    } else {
+        limit = 1 << failures;
     }
+
+    deadline.tv_nsec = 1 + rand() % limit;
+    clock_nanosleep(CLOCK_REALTIME, 0, &deadline, NULL);
+}
+----
 
 En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función +backoff+. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 ****

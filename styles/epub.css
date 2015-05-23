@@ -29,7 +29,6 @@ h3, h4, h5, h6 {
   line-height: 1.1 !important;
 }
 
-
 body h1 {
   font-size: 1.4em;
   margin-top: 0.7em;
@@ -70,25 +69,6 @@ div.sidebar p.title {
   color: #980000;
 }
 
-div.table thead,
-div.table tfoot,
-div.table tbody,
-div.informaltable thead,
-div.informaltable tfoot,
-div.informaltable tbody {
-/*
-    border-top: 3px solid #980000;
-    border-bottom: 3px solid #980000;
-*/
-}
-
-
-
-
-div.sidebar {
-    margin: 10px 0 !important;
-    padding: 0.6em 0.6em;
-}
 
 ul, ol {
   padding-left: 1.5em;
@@ -102,11 +82,11 @@ div.sidebar .programlisting, .screen {
     padding: 5px 5px !important;
 }
 
-div.tip, div.note, div.warning, div.caution, div.important {
-  margin: 10px 0 !important;
+div.sidebar, div.tip, div.note, div.warning, div.caution, div.important {
+  margin: 0.7em 0 !important;
   /*border-radius: 5px;*/
   /*font-size: 90%;*/
-  padding: 10px 8px 20px 8px !important;
+  padding: 0.5em 0.5em !important;
   page-break-inside: avoid;
 }
 
@@ -118,7 +98,7 @@ div.tip h3, div.note h3, div.warning h3, div.caution h3, div.important h3, div.s
 }
 
 div.tip, div.note {
-  border: 1px solid #6cafd0;
+  border: 1px solid silver;
   background-color: transparent;
 }
 
@@ -129,10 +109,8 @@ div.warning, div.caution {
 
 div.important {
   background-color: #FFF68F;
-  border: 1px solid #615E3F;
+  border: 1px solid #B5A601;
 }
-
-
 
 div.itemizedlist li, div.orderedlist li {
   margin-left: 0px;
@@ -159,7 +137,7 @@ div.calloutlist {
 }
 
 div.calloutlist table {
-  font-size: 0.95em;
+  font-size: small;
 }
 
 div.calloutlist table tr td {
@@ -170,32 +148,9 @@ div.calloutlist p {
   margin: 0;
 }
 
-/*
-div.calloutlist table {
-  margin: 10px 0px !important;
-  background: #ffffff;
-  font-size: 0.9em;
-  border: none;
-}
-
-div.calloutlist table tr, div.calloutlist table tr th, div.calloutlist table tr td {
-  border: none;
-  background: none;
-  padding: 0.2em;
-}
-
-dt span.term {
-  font-style: bold;
-  color: navy;
-}
-
-
-*/
-
 dt span.term {
   font-weight: bold;
 }
-
 
 div.preface>div.titlepage, div.chapter>div.titlepage, div.appendix>div.titlepage {
     /*padding: 15px 20px 20px 20px;
@@ -243,6 +198,10 @@ p + p > strong {
     margin-left: -1em;
 }
 
+.blockquote > p > code {
+    font-style: normal;
+    font-size: 1em;
+}
 
 .figure p.title {
     text-align: center !important;
@@ -254,10 +213,21 @@ pre.programlisting + p {
 }
 
 code, pre {
-  font-family: monospace !important;
+  /*font-family: monospace !important;*/
   white-space: pre-wrap;
   tab-size: 4;
-  font-size: 0.92em;
+}
+
+pre {
+    font-size: small;
+}
+
+.sidebar pre, .note pre {
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 .calloutlist a {
@@ -269,14 +239,8 @@ a.simpara {
 text-decoration: none;
 }
 
-
-div.calloutlist p {
-  margin-top: 4px;
-}
-
 blockquote p, div.blockquote p {
   font-style: italic;
-  font-size: 0.92em;
 }
 
 div.bibliomixed p {
@@ -285,18 +249,12 @@ div.bibliomixed p {
 
 
 div.footnote {
-  font-size: 0.92em;
+  font-size: 0.95em;
 }
 
 div.variablelist dd {
   margin-left: 15px !important;
 }
-
-div.variablelist dd p {
-  margin-top: 4px;
-}
-
-
 
 ol {
   list-style-type: decimal;
@@ -320,23 +278,18 @@ ol, ul {
   margin-left: 1em;
 }
 */
-
-
-div.chapter, div.footnotes { page-break-before: always; }
-
-div.figure p.title {
-    margin-bottom: 0;
-}
-
-div.mediaobject img {
-    margin: 0.8em 0 0.8em 0;
-}
-
 img, object, embed {
     max-width:100%!important;
     height:auto;
     -ms-interpolation-mode:bicubic;
 }
+
+div.chapter, div.footnotes { page-break-before: always; }
+
+.informalfigure, .figure {
+    margin-top: 0.8em;
+}
+
 
 /* keep this body statement last */
 html body {

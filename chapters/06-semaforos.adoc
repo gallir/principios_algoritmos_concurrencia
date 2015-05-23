@@ -143,14 +143,15 @@ mutex.unlock()
 ----
 
 ****
-En C se puede usar los semáforos _mutex_ de librerías de POSIX Threads, las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código>>).
+En C se pueden usar los _mutex_ de las librerías POSIX Threads, las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código>>).
 
 En <<sem_lock_java, Java se puede usar>> la clase +ReentrantLock+ de +java.util.concurrent.locks+. Python tiene clases similares, +threading.Lock+ y +threading.RLock+ footnote:[También incluye primitivas similares en el nuevo paquete +asyncio+. La clase +threading.Lock+, al contrario que +threading.RLock+, no tiene control de propiedad, cualquier hilo puede hacer el +release+.], además de las llamadas tradicionales a <<sem_lock_py, +acquire+ y +release+>> se puede usar <<sem_lock_with_py, con la cláusula +with+>>:
 
-    for i in range(MAX_COUNT/THREADS):
-        with mutex:
-            counter += 1
-
+----
+for i in range(MAX_COUNT/THREADS):
+    with mutex:
+        counter += 1
+----
 ****
 
 ==== Semáforos fuertes y débiles
@@ -409,7 +410,9 @@ El modelo productor-consumidor es muy común en informática, las _tuberías_ y 
 ===== Semáforos partidos
 La técnica de sincronización anterior con dos semáforos se denomina _semáforos partidos_ (_split semaphores_). Se llaman así cuando se usan dos o más semáforos cuya suma es una constante, en este caso el invariante es:
 
+[quote]
 _notEmpty + notFull = BUFFER_SIZE_
+
 
 Si la constante es igual a uno la técnica se denomina _semáforos partidos binarios_.
 

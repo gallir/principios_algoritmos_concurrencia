@@ -1,6 +1,25 @@
 [preface]
 == Prefacio
 
+[NOTE]
+====
+Prube de note.
+====
+
+[WARNING]
+====
+Prubea de warning
+====
+
+[IMPORTANT]
+====
+prueba de important
+====
+
+****
+Prueba de sidebar
+****
+
 Hace más de veinte años que enseño _concurrencia_ en las asignaturas de _Sistemas Operativos I_ y _II_ y en  _Programación Concurrente y Distribuida_ de la carrera de informática en la Universitat de les Illes Balears. A pesar de la cantidad de notas y presentaciones que elaboré en todos estos años nunca se me pasó por la cabeza escribir un libro, ni siquiera el típico libro de apoyo a la asignatura. Es sumamente complicado transmitir las sutilezas y conflictos generados por las ejecuciones que no cumplen con la _secuencialidad_ de los programas. Si ya me resultaba difícil en clases magistrales y prácticas en laboratorio me parecía tarea imposible escribir un libro.
 
 Pero eso cambió en diciembre de 2014.
