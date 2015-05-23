@@ -1,7 +1,7 @@
 [[futex]]
 == FUTEX
 
-Los mecanismos de sincronización sin espera activa son habitualmente implementados en los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Pero las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo. Se puede mejorar el rendimiento si se reducen las llamadas solo en caso de competencia. Si un proceso es el único que desea entrar a la sección crítica puede resolverse directamente en el _espacio de usuario_ con la ayuda de instrucciones atómicas que vimos en el capítulo de <<hardware>> sin necesidad invocar al núcleo.
+Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo. Se puede mejorar el rendimiento si se reducen las llamadas solo en caso de competencia: si un proceso es el único que desea entrar a la sección crítica puede resolverse directamente en el _espacio de usuario_ con la ayuda de instrucciones atómicas que vimos en el capítulo de <<hardware>> sin necesidad invocar al núcleo.
 
 ****
 Supongamos que tenemos la variable entera compartida +mutex+ y la instrucción _compareAndSwap_ (_CAS_), el algoritmo para el _wait_ verificará si se pudo hacer el intercambio, en ese caso no hay competencia y podrá continuar. Caso contrario llamará al sistema operativo que un semáforo asociado al valor de mutex bloqueará al proceso. Algo similar al siguiente algoritmo:

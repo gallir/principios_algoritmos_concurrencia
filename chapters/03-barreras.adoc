@@ -105,7 +105,7 @@ Si se iterarará frecuentemente (_spinning_) sobre variables es mejor asegurarse
 
 === Ejecución fuera de orden
 
-El problema con la implementación de los algoritmos de exclusión mutua es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. Los procesadores reordenan las instrucciones con el objetivo de ahorrar ciclos de CPU. Por ejemplo, porque ya tiene valores cargados en registros, o porque una instrucción posterior ya ha sido decodificada en el _pipeline_. Por lo tanto los procesadores no aseguran la consistencia secuencial con respecto al orden del programa. En cambio usan mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_) de acceso a memoria.
+El problema con la implementación de los algoritmos de exclusión mutua es la ejecución fuera de orden (_out of order execution_) o _ejecución dinámica_. Los procesadores reordenan las instrucciones con el objetivo de ahorrar ciclos de CPU. Por ejemplo, porque ya tiene valores cargados en registros, o porque una instrucción posterior ya ha sido decodificada en el _pipeline_. Los procesadores no aseguran la consistencia secuencial con respecto al orden del programa, en cambio, usan mecanismos de _dependencias causales_ o _débiles_ (_weak dependencies_) de acceso a memoria.
 
 La dependencia causal funciona de la siguiente manera, supongamos un programa con las siguientes instrucciones:
 
@@ -196,7 +196,7 @@ Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres tradici
 
 
 ==== Uso de barreras
-Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1) por la complejidad del diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una incluyese diferentes tipos de barreras, por lo tanto no existen instrucciones estándares ni construcciones sintácticas específicas en los lenguajes de programación de alto nivel.
+Los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1) por la complejidad del diseño y fabricación. Las diferencias entre arquitecturas hicieron que cada una incluyese diferentes tipos de barreras, por lo tanto, no existen instrucciones estándares ni construcciones sintácticas específicas en los lenguajes de programación de alto nivel.
 
 Afortunadamente el problema está relativamentefootnote:[Sigue siendo un problema que no haya macros estándares para todos los compiladores.] solucionado por los _builtin macros_ de los compiladores como los de operaciones atómicas del compilador GCC (<<Atomics_C11>>). El compilador define macros que se tratan como funciones normales del programa, cuando genera el código inserta las instrucciones específicas de cada arquitectura. GCC tiene varios _macros atómicos_, algunos de ellos las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence`.footnote:[Este macro es de las versiones más modernas de GCC, en las antiguas versiones era `__sync_synchronize`.]
 

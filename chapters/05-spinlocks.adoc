@@ -128,7 +128,7 @@ def lock():
 
 El problema con el _backoff_ es la elección de la unidad de tiempo y el límite de espera, los valores adecuados dependen de cada arquitectura y caso de uso. Si la espera es muy breve producirá un efecto similar al +sched_yield+ con una sobrecarga aún mayor del sistema operativofootnote:[El proceso pasa de ejecución a _bloqueado_ luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y con CPUs inactivas porque todos los procesos están bloqueados.
 
-Sin embargo la mejora del _backoff_ es general para todos los procesadores probados, también para los tiempos de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] con respecto a +sched_yield+ (en los procesadores Intel la diferencia es importante, en ARM es mínima).
+Sin embargo, la mejora del _backoff_ es general para todos los procesadores probados, también para los tiempos de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] con respecto a +sched_yield+ (en los procesadores Intel la diferencia es importante, en ARM es mínima).
 
 Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>> y <<compare_and_swap_backoff_c, _CAS_>>.
 
@@ -340,7 +340,7 @@ def writer_unlock():
     rw_lock.combined = tmp.combined           <2>
 ----
 <1> Incrementa el turno para lectores y escritores en una variable temporal.
-<2> Asigna atómicamente ambos turnos. Cuando el escritor sale de la sección crítica debe poder entrar el siguiente lector o escritor, por lo tanto incrementa ambas variables.
+<2> Asigna atómicamente ambos turnos. Cuando el escritor sale de la sección crítica debe poder entrar el siguiente lector o escritor, por lo tanto, incrementa ambas variables.
 
 
 .Entrada y salida para lectores
@@ -414,7 +414,7 @@ def unlock(my_index):
 
 ----
 
-Este algoritmo también es equitativo, solo requiere la instrucción atómica _get&add_ y los procesos entran en orden _FIFO_. Según la teoría y bibliografía especializada (por ejemplo <<Herlihy12>>) aseguran que así se evita el _false sharing_ y por lo tanto es más eficiente que _ticket-lock_, analizaremos cuánto hay de verdad <<spinlock_times, más adelante>>.
+Este algoritmo también es equitativo, solo requiere la instrucción atómica _get&add_ y los procesos entran en orden _FIFO_. Según la teoría y bibliografía especializada (por ejemplo <<Herlihy12>>) aseguran que así se evita el _false sharing_ y, por lo tanto, es más eficiente que _ticket-lock_, analizaremos cuánto hay de verdad <<spinlock_times, más adelante>>.
 
 
 [[mcs_queue]]

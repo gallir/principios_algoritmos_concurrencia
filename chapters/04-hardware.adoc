@@ -2,13 +2,13 @@
 == Soluciones por hardware
 Hasta ahora hemos visto soluciones a la exclusión mutua sin soporte de hardware y únicamente con _registros de lectura-escritura atómicos_ (las variables enteras). Esos algoritmos son _spinlocks_, aunque muy ineficientes.
 
-En primer lugar por los requisitos de memoria, el número de registros necesarios -tamaño de arrays- es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Se genera una sobrecarga importante para mantener la consistencia de caché en sistemas _SMP_ debido a los accesos concurrentes a zonas extensas de memoria.
+En primer lugar, por los requisitos de memoria, el número de registros necesarios -tamaño de arrays- es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Se genera una sobrecarga importante para mantener la consistencia de caché en sistemas _SMP_ debido a los accesos concurrentes a zonas extensas de memoria.
 
 Por otro lado, si los procesos se ejecutan en un único procesador el avance es tan lento e impredecible que puede tomar pocos segundos en unos casos y horas en otros si hay mayor competencia. Desde que se comenzó a estudiar el problema de la concurrencia -inicios de la década de 1960- se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
 
 
 === Inhabilitación de interrupciones
-Si el problema fundamental es el intercalado de instrucciones generado por las interrupciones al procesador ¿por qué no deshabilitarlas?. Aunque es una solución que se usa en casos muy concretos en el núcleo de sistemas operativosfootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.] no es una solución genérica segura: si cualquier proceso puede deshabilitar las interrupciones entonces puede tomar control del sistema al anular la cualidad de apropiativo del _scheduler_. Por lo tanto no es una solución válida para procesos de usuario.
+Si el problema fundamental es el intercalado de instrucciones generado por las interrupciones al procesador ¿por qué no deshabilitarlas?. Aunque es una solución que se usa en casos muy concretos en el núcleo de sistemas operativosfootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.] no es una solución genérica segura: si cualquier proceso puede deshabilitar las interrupciones entonces puede tomar control del sistema al anular la cualidad de apropiativo del _scheduler_. Por lo tanto, no es una solución válida para procesos de usuario.
 
 Aún para el núcleo del sistema operativo presenta dificultades: la complicación de deshabilitar las interrupciones en todos los procesadores y el riesgo de perderlas. Por la dificultad de deshabilitar simultáneamente las interrupciones en varios procesadores tampoco es una solución dado que la memoria puede ser modificada por un procesador diferente (hay paralelismo) sin que haya habido intercalación en el mismo procesador.
 
@@ -101,7 +101,7 @@ El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí
 
 ==== _Get&Add_
 
-Se puede implementar exclusión mutua con un algoritmo muy similar al de la panadería, cada proceso obtiene un número y espera a su turno, solo que esta vez la obtención del _siguiente número_ es atómica y por lo tanto no se necesita un array ni un bucle para controles adicionales.
+Se puede implementar exclusión mutua con un algoritmo muy similar al de la panadería, cada proceso obtiene un número y espera a su turno, solo que esta vez la obtención del _siguiente número_ es atómica y, por lo tanto, no se necesita un array ni un bucle para controles adicionales.
 
 Se requieren dos variables, +number+ para el siguiente número y +turn+ para indicar a qué número le corresponde entrar a la sección crítica.
 
@@ -527,7 +527,7 @@ Pero si se hace correctamente además de evitar el problema ABA se puede hacer m
 image::free_lock_stacks.png[align="center"]
 
 
-Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA -por lo tanto incorrecto- y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido -pero erróneo-, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
+Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA -por lo tanto, incorrecto- y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido -pero erróneo-, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
 
 === Recapitulación
 

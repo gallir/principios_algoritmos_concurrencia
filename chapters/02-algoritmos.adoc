@@ -85,7 +85,7 @@ En todos los algoritmos y técnicas que analizamos en el libro asumimos que los 
 ****
 La alternativa son los algoritmos para procesos que no pueden compartir memoria, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de concurrencia, sincronización y consenso pero sus técnicas son más complejas, el intercambio de datos debe hacerse exclusivamente por intercambios de mensajes sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
 
-El estudio de algoritmos distribuidos no es el objetivo de este libro, sin embargo al final del capítulo de <<channels, canales>> hay una breve introducción.
+El estudio de algoritmos distribuidos no es el objetivo de este libro, sin embargo, al final del capítulo de <<channels, canales>> hay una breve introducción.
 ****
 
 ==== Convenciones de programación
@@ -520,7 +520,7 @@ El algoritmo de la panadería es la solución correcta y cumple con todos los re
 
 En 1987 Leslie Lamport (<<Lamport3>>) desarrolló un algoritmo que requiere menos espacio y es más rápido cuando no hay competencia. Requiere un array booleano de tamaño _n_ y dos variables (+x+ e +y+). Si no hay competencia un proceso puede entrar a la sección crítica sin recorrer el array ejecutando solo siete instrucciones (cinco en la entrada y dos en la salida).
 
-El <<counter_fast, algoritmo completo en C>> y funcional con sus respectivas barreras de memoria. No lo analizaremos en detalle sin embargo cabe mencionar sus problemas:
+El <<counter_fast, algoritmo completo en C>> y funcional con sus respectivas barreras de memoria. No lo analizaremos en detalle, sin embargo, cabe mencionar sus problemas:
 
 1. No asegura espera limitada.
 2. Si hay competencia entre dos procesos debe recorrer el array completo.
