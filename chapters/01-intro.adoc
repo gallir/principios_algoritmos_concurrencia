@@ -23,7 +23,7 @@ Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó, el
 
 === Estados de procesos
 
-Durante su ciclo de vida los estados pasan por tres estados básicos:
+Durante su ciclo de vida los procesos pasan por tres estados básicos:
 
 - Ejecución: El proceso se está ejecutando en una CPU. Como máximo hay un proceso en ejecución por cada procesador.
 
@@ -40,7 +40,7 @@ Los procesos pasan a bloqueados porque solicitaron una operación al núcleo (v�
 === _Scheduler_
 La transición entre _listos_ y  en _ejecución_ lo decide el módulo _scheduler_ o _planificador a corto plazo_ del núcleo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos) o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda retener el procesador se usa un reloj programable que genera interrupciones periódicamente.
 
-Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción que hace el _scheduler_ tome el control y decida qué proceso debe ejecutarse a continuación. Dado que el sistema es capaz de quitar de ejecución al proceso aunque éste no genere ninguna llamada de sistema se dice que el planificador es _apropiativo_ (_preemptive_).
+Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción que hace que el _scheduler_ tome el control y decida qué proceso debe ejecutarse a continuación. Dado que el sistema es capaz de quitar de ejecución al proceso aunque éste no genere ninguna llamada de sistema se dice que el planificador es _apropiativo_ (_preemptive_).
 
 En todos los casos el _scheduler_ tiene que decidir cuál de los siguientes procesos se ejecutará, debe hacerlo entre unas pocas cientos de veces a decenas de miles de veces por segundo. El requisito clave del _scheduler_ es que la decisión la haga lo más rápido posible, por ello se usan sofisticados algoritmos de colas para que la selección sea de baja complejidad computacional, se intenta siempre obtener _O(1)_ (i.e. seleccionar el primer elemento de la cola).
 
@@ -60,7 +60,7 @@ Se denomina así al procedimiento de almacenar el estado del proceso en ejecuci�
 
 Hay costes adicionales, como _fallos de caché_ de memoria RAM y del _TLB_- porque el procesador accede a direcciones físicas y tablas de páginas diferentes. El coste es todavía algo superior si el proceso se ejecutó antes en un procesador diferente. El _scheduler_ está diseñado y en constante evolución para tomar en cuenta todos estos parámetros conseguir objetivos contradictorios: aumentar el rendimiento global del sistema, asegurar buenos tiempos de respuesta y evitar esperas prolongadas.  La contrapartida es que la ejecución de los procesos se hace cada vez más impredecible.
 
-Los procesos no tienen el control del procesador ni cuándo se ejecutarán, dada la complejidad de las interacciones y eventos también es muy difícil predecir o repetir exactamente una secuencia de ejecución, por eso los _schedulers_ de sistemas operativos de uso general se dicen que son _no deterministas_.
+Los procesos no tienen el control del procesador, ni cuándo se ejecutarán. Por la complejidad de las interacciones y eventos es imposible predecir o repetir exactamente una secuencia de ejecución. Por eso se dice que los _schedulers_ de sistemas operativos de uso general son _no deterministas_.
 
 === Hilos
 
@@ -72,7 +72,7 @@ Por un lado se desarrollaron librerías -sobre todo gráficas e interfaces de us
 
 Como una forma de facilitar aún más el desarrollo de módulos asíncronos se desarrolló el concepto de hilos (_threads_) o _procesos ligeros_ (_light weight processes_, también llamado tareas en Ada y en sistemas de tiempo real). En lugar de crear una copia de toda la imagen de memoria de un proceso cuando se crea uno nuevofootnote:[Como hace el +fork+ en Unix.] se mantiene la misma copia para ambos procesos salvo la pila (cada uno tiene su propio contexto de ejecución). Los hilos comparten el código, variables estáticas y la memoria asignada dinámicamente entre todos los creados por el mismo proceso _padre_.
 
-Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos independientes, cada uno de ellos -al igual que los procesos tradicionales- son _unidades de planificación_. Si los hilos se ejecutan en un sistema multiprocesador además de ejecutarse de manera asíncrona pueden hacerlo en paralelo en diferentes procesadores. Por la popularización de _SMP_ (_symmetric multi processing_) y los chips _multicore_ la programación con hilos se convirtió en una parte importante de la programación concurrentefootnote:[Aunque muchos confunden la capacidad de ejecución asíncrona con paralelismo.].
+Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos independientes, cada uno de ellos -al igual que los procesos tradicionales- son _unidades de planificación_. Si los hilos se ejecutan en un sistema multiprocesador además de ejecutarse de manera asíncrona pueden hacerlo en paralelo en diferentes procesadores. Por la popularización de _SMP_ (_symmetric multi processing_) y los chips _multicore_, la programación con hilos se convirtió en una parte importante de la programación concurrentefootnote:[Aunque muchos confunden la capacidad de ejecución asíncrona con paralelismo.].
 
 Además de las facilidades que brinda a los programadores, los hilos son más _baratos_ que los procesos. Consumen menos memoria y al no tener que copiar toda la memoria el tiempo de creación de nuevos hilos es mucho menor que el de procesos tradicionales. Tiene otras ventajas más sutiles, al compartir gran parte de la memoria entre los diferentes hilos el coste de los cambios de contexto es también menor, se invalidan y reemplazan menos entradas del _TLB_ y las líneas de caché.
 
@@ -103,11 +103,11 @@ La necesidad de programar módulos asíncronos que respondan a los diferentes ev
 Es la composición de módulos que se ejecutan independientemente de forma no determinista.
 ====
 
-La programación concurrente tiene ventajas, pero no son gratuitas. Los compartición de recursos -fundamentalmente memoria- tiene riesgos que provocan errores difíciles de detectar y analizar sin el conocimiento y herramientas adecuadas. Debido al carácter naturalmente asíncrona y no determinista no podemos razonar sobre la ejecución de estos programas como una ejecución secuencial de instrucciones.
+La programación concurrente tiene ventajas, pero no son gratuitas. La compartición de recursos -fundamentalmente memoria- tiene riesgos que provocan errores difíciles de detectar y analizar sin el conocimiento y herramientas adecuadas. Debido al carácter naturalmente asíncrono y no determinista de la ejecución de proceso, no podemos tratarlos como una ejecución secuencial de instrucciones.
 
 El interés de soluciones para los problemas de concurrencia no es nuevo, surgió con la aparición de los primeros _monitores_ -los predecesores de los modernos sistemas operativos- a principios de la década de 1960. De hecho, el núcleo de los sistemas operativos es una composición compleja de módulos independientes que deben responder -de forma asíncrona- a una enorme diversidad de eventosfootnote:[Interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.] que pueden generar  inconsistencias en las complejas estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
 
-Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. El caso más habitual y más estudiado son los errores generados por el acceso no controlado recursos, es lo que conocemos como el problema de _exclusión mutua_ o _secciones críticas_. Durante décadas los problemas de concurrencia estuvieron reservados a los desarrolladores de sistemas operativos. Con la popularización de los sistemas _SMP_ se desarrollaron lenguajes y librerías que facilitaron la programación concurrente, como resultado la concurrencia dejó de ser esa oscura área de conocimiento reservada a unos pocos expertos a convertirse a una necesidad de profesional para un proporción importante de programadores.
+Se llamó _problemas de concurrencia_ a este tipo de errores ocasionados por el _acceso concurrente_ a recursos compartidos. El caso más habitual y más estudiado son los errores generados por el acceso no controlado recursos, es lo que conocemos como el problema de _exclusión mutua_ o _secciones críticas_. Durante décadas los problemas de concurrencia estuvieron reservados a los desarrolladores de sistemas operativos. Con la popularización de los sistemas _SMP_ se desarrollaron lenguajes y librerías que facilitaron la programación concurrente, como resultado la concurrencia dejó de ser esa oscura área de conocimiento reservada a unos pocos expertos a convertirse a una necesidad de profesional para una proporción importante de programadores.
 
 [IMPORTANT]
 .Concurrencia y paralelismo
@@ -138,7 +138,7 @@ Las combinaciones de intercalación entre los diferentes procesos es no determin
 
 Una de los objetivos de los sistemas operativos es gestionar y ocultar las complejidades de la concurrencia, así se desarrollaron mecanismos complejos para asegurar la consistencia secuencial de cada proceso individual. Pero poco pueden hacer cuando se trata de programas compuestos por módulos de ejecución asíncrona, la responsabilidad es también del programa.
 
-A nivel de procesos de usuarios gestionados por sistema operativos de multiprogramaciónfootnote:[Que sí tiene la responsabilidad de gestionar múltiples procesadores.], la superposición no complica la resolución de los problemas de sincronización y acceso concurrente, la intercalación y ejecución no determinista son el origen de sus riesgos. Los algoritmos de sincronización con intercalación exclusiva también son correctos con superposición. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos de ejecución: el paralelismo es solo un caso particular de la intercalación.
+A nivel de procesos de sistema operativos de multiprogramaciónfootnote:[Que sí tiene la responsabilidad de gestionar múltiples procesadores.], la superposición no complica la resolución de los problemas de sincronización y acceso concurrente, la intercalación y ejecución no determinista son el origen real de sus riesgos. Los algoritmos de sincronización con intercalación exclusiva también son correctos con superposición. Una solución correcta de exclusión mutua es equivalente y funciona para ambos modos de ejecución: el paralelismo es solo un caso particular de la intercalación.
 
 ****
 Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa de la correcta composición de componentes no deterministas, el segundo de la eficiencia asintótica de programas con comportamiento determinista.
@@ -146,7 +146,7 @@ Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa d
 
 
 ==== Los problemas de la intercalación
-Los programadores estamos acostumbrados al modelo de consistencia secuencial de los lenguajes de programación: una instrucción que está después de otra se ejecuta ejecuta a continuación. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>>, veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
+Los programadores estamos acostumbrados al modelo de consistencia secuencial de los lenguajes de programación: una instrucción que está después de otra se ejecuta a continuación. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>>, veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
 .Consistencia secuencial
 ****
