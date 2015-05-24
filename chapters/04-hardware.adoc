@@ -187,6 +187,7 @@ def unlock():
 
 Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas implementadas en el paquete +sync/atomic+, por ejemplo con +atomic.SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry asegúrate de tener una versión de Go moderna.].
 
+[[em_cas]]
 ==== _Compare&Swap_
 
 Esta instrucción, o _CAS_, es la más comúnfootnote:[Es la que se usa en la arquitectura Intel/AMD.] y la que provee el mayor _nivel de consenso_ (ver nota <<consensus>>)footnote:[Aunque sufre el _problema ABA_.]. La instrucción trabaja con tres argumentos:
