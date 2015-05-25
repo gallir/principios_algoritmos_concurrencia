@@ -1,46 +1,48 @@
 [[spinlocks]]
 == _Spinlocks_ avanzados
-Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de un registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_.
+Las soluciones de exclusión mutua anteriores tienen en común, una espera activa que continuamente verifica el estado de un registro _RMW_ hasta que el proceso puede entrar a la sección crítica. Estos algoritmos se denominan _spinlocks_, el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_.
 
 Su uso tiene sentido si se cumple una de las siguientes condiciones:
 
 . El código en la sección crítica es muy breve y la competencia es relativamente baja. Los _spinlocks_ se emplean desde los inicios de los sistemas operativos en rutinas críticas -como gestores de interrupciones- y otros mecanismos de sincronización de más alto nivel y sin esperas activas.
 
-. Los procesos se ejecutan en paralelo en diferentes procesadores, mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador, los procesos avanzarán muy lentamente. En estos casos quizás tiene más sentido utilizar construcciones sin esperas activas.
+. Los procesos se ejecutan en paralelo en diferentes procesadores. Mientras unos procesos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. Pero si hay más procesos compitiendo en _spinlocks_ que CPUs se llega a una situación similar a la de un único procesador: los procesos avanzarán muy lentamente. En estos casos quizás tiene más sentido utilizar construcciones sin esperas activas.
 
-El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto y sobre todo eliminar la necesidad de recorrer múltiples registros. Estas primitivas suponen una gran mejora en el espacio necesario -requieren solo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación.
+El problema principal es la ineficiencia provocada por la espera activa y los requerimientos de almacenamiento en las soluciones algorítmicas sin registros <<RMW, _RMW_>>. Por ello se desarrollaron las primitivas de hardware que permiten minimizar el impacto eliminando la necesidad de recorrer múltiples registros. Estas primitivas suponen una gran mejora en el espacio necesario -requieren solo una palabra por cada sección crítica (o _lock_)- como de facilidades de programación.
 
-Pero no todos los procesadores ofrecen las mismas instrucciones, para obtener el máximo de eficiencia hay que programar para cada arquitectura (como es habitual en el núcleo de los sistemas operativos). Para facilitar la portabilidad los compiladores incluyen primitivas fundamentales, macros o _intrinsics_, que son traducidas a las operaciones que implementan o simulan esas primitivas y que son las que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con +ldrex/strex+ para ARM.].
+Pero no todos los procesadores ofrecen las mismas instrucciones. Para obtener el máximo de eficiencia hay que programar para cada arquitectura (como es habitual en el núcleo de los sistemas operativos). Para facilitar la portabilidad, los compiladores incluyen macros (o _intrinsics_) que son traducidas a las operaciones que implementan o simulan esas primitivas; son los que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con +ldrex/strex+ para ARM.].
 
 
-Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas más usadas para optimizarlos. En la siguiente figura se muestran los tiempos de CPU en segundos de la ejecución de los algoritmos del capítulo anterior ejecutados sobre diferentes procesadores: Intel Core2 con 4 núcleos, Intel i5 con 2 núcleos y cuatro _hilos_, Intel Xeon con 2 procesadores independientes de 8 núcleos cada uno (16 en total) y Raspberry 2 con ARMv7 de 4 núcleos.
+Analizaremos el comportamiento de cada uno de estos _spinlocks_ y las técnicas de optimización más comunes. En las siguientes figuras se muestran los tiempos de CPU (en segundos) de ejecución sobre diferentes procesadores de los algoritmos del capítulo anterior : Intel i5 con cuatro núcleos, Intel Xeon con dos procesadores independientes de ocho núcleos cada uno (16 en total) y Raspberry 2 con ARMv7 de cuatro núcleos.
 
 
 ****
-Dado que el interés de este capítulo es analizar la eficiencia relativa de diferentes algoritmos recurro a gráficas para poder compararlos y contrastarlos visualmente. Aunque tanta información puede resultar molesta, creo que es importante romper con una costumbre de los libros de textos más habituales: se hacen afirmaciones rotundas pero sin presentar las mediciones ni el contexto en que fueron tomadas.
+Un objetivo de este capítulo es analizar la eficiencia relativa de diferentes algoritmos,  recurro a gráficos para poder compararlos y contrastarlos visualmente. Aunque tanta información puede resultar molesta, creo que es importante romper con una costumbre de muchos libros de textos: se hacen afirmaciones rotundas pero sin presentar las mediciones ni el contexto en que fueron tomadas.
 
-Quizás tenían sentido el momento que se diseñaron esos algoritmos -o se escribió la primera edición de los libros- pero los sistemas SMP han evolucionado mucho, algunos algoritmos que presentaban ventajas hace décadas hoy casi no la tienen. Durante este capítulo veréis que hay algoritmos que fueron diseñados para comportarse mejor que otros, y quizás lo hacían con la arquitectura de su época, pero hoy esas diferencias no existen o no son tan relevantes.
+Quizás tenían sentido el momento que se diseñaron esos algoritmos pero los sistemas SMP han evolucionado mucho. Algunos algoritmos que presentaban ventajas hace décadas hoy casi no la tienen.
+
+Durante este capítulo veremos que hay algoritmos que fueron diseñados para comportarse mejor que otros, y quizás lo hacían con la arquitectura de su época, pero hoy esas diferencias prácticamente irrelevantes para las arquitecturas más comunes.
 ****
 
 
-Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua. El segundo muestra los tiempos del algoritmo de la panadería, el tercero (_ultimate_) es el más eficiente, incrementar directamente la variable entera +counter+ usando la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _test&set_, _get&set_ y _compare&swap_ respectivamente.
+Cada grupo es una medición diferente. El primero (_none_) es el tiempo sin ningún mecanismo de exclusión mutua; el segundo muestra los tiempos del algoritmo de la panadería; el tercero (_best_) es el más eficiente, el incremento de +counter+ se hace directamente con la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _test&set_, _get&set_ y _compare&swap_ respectivamente.
 
 
 [[hardware_times]]
-.Tiempos de ejecución para los diferentes macros e instrucciones de hardware
+.Tiempos de CPU para los diferentes macros e instrucciones de hardware
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Todos los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme para los diferentes procesadores. En Intel Core2 e i5 la operación más eficiente es _get&add_. En el Xeon de 16 núcleos es _get&set_ (seguido muy de cerca por _TAS_), y en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Inesperado dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC.]
+Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme para en todos procesadores. En Intel i5 y Xeon de 16 núcleos los mejores son _get&set_ y _TAS_, en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Inesperado dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC, y la complejidad de _CAS_.]
 
-=== _Spinlocks_ optimizados
+=== _Spinlocks_ óptimos
 Las implementaciones anteriores son ineficientes por dos razones:
 
 Uso y competencia por el procesador:: Los procesos consumen el 100% CPU verificando el valor de una variable, si hay más hilos compitiendo que procesadores la mayor parte del tiempo se pierde en el bucle de verificación.
 
 La presión sobre la memoria caché:: Estos algoritmos no son _escalables_. En sistemas con varios procesadores todos los procesos verifican el estado de la misma variable (_hot spot_) por lo que se generan mensajes extras de sincronización de caché.
 
-Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los anteriores. Al final del capítulo estudiaremos los dos algoritmos escalables más importantes.
+Aunque son preferibles los _spinlocks_ escalables veremos técnicas básicas para mejorar el rendimiento de los anteriores. Al final del capítulo estudiaremos los dos algoritmos escalables más importantes: _MCS_ y _CLH_.
 
 
 ._Spinlocks_ escalables
@@ -137,12 +139,9 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 ==== Tiempos de ejecución
 A continuación cuatro gráficas que representan los tiempos de CPU de los diferentes algoritmos en cuatro procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que solo incrementan un contador compartido- son muy extremos. Aunque la sección crítica es muy breve lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella, lo que implica que la competencia es extremadamente elevada y muy lejos de ser un caso práctico. Solo sirve para tener una base de comparación entre diferentes procesadores y arquitecturas.
 
-También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Éste no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que solo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentales.
+También hay que tener en cuenta que los ejemplos están programados en _C portable_ usando los macros atómicos de GCC. Estos no siempre genera el código más eficiente para las diferentes arquitecturas, por ejemplo en ARM los macros de barreras de memoria siempre generan una barrera completa (+dmb sy+) aunque se especifique que solo se desea una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos, pero habría sido más costoso y dificultado la transmisión de las ideas fundamentales.
 
-.Intel Core2 cuatro núcleos
-image::optimized-intel-quad.png[align="center"]
-
-.Intel i5 dos núcleos con extensión SMP
+.Intel i5 cuatro núcleos
 image::optimized-intel.png[align="center"]
 
 .Intel Xeon 16 núcleos
@@ -154,9 +153,6 @@ image::optimized-arm7.png[align="center"]
 
 De los tiempos de las gráficos hay algunos aspectos interesantes que vale la pena destacar:
 
-- La mayor eficiencia del Intel i5 sobre el Core2 a pesar de que el segundo tiene más núcleos _reales_ se debe a que el _Front Side Buffer_ del Intel Core2 usa bus compartido para los mensajes del protocolo de coherencia de caché mientras que el i5 tiene el nuevo sistema <<quickpath, _QuickPath Interconnect_>>.
-
-- El Xeon con 16 núcleos tiene peores tiempos que los menos potentes Core2 e i5. La diferencia es que tiene dos microprocesadores diferentes, el coste de sincronización de caché es superior a los chips únicos con varios _cores_.
 
 - El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, ARMv6 y ARMv7 (de Raspberry 1 y 2 respectivamente) _CAS_ es la más eficiente.
 
@@ -169,6 +165,9 @@ En los análisis anteriores usamos tiempos de CPU y no el tiempo de retorno de t
 Cuando se analiza la diferencia entre usar o no +sched_yield+ y _backoff_ la duda es aún mayor. Sabemos que lo más probable es que el consumo de ciclos de CPU se reduzcan en la espera activa, pero también que aumentará el sobrecoste del sistema operativo por los cambios de contexto de los procesos. Sin tener los datos de tiempos de retorno no podemos estar seguros que realmente se ejecuten _más rápido_.
 
 Intento evitar el exceso de gráficos pero valía la pena mostrar estos tiempos, al menos los más significativos. En los dos siguientes se puede observar el tiempo de retorno medido en _tiempo de reloj_ de los algoritmos anteriores para el Xeon de 16 núcleos y el ARMv7 de Raspberry 2.
+
+.Tiempos de retorno Intel i5 cuatro núcleos
+image::optimized-intel-real.png[align="center"]
 
 .Tiempos de retorno en Intel Xeon 16 núcleos
 image::optimized-xeon-real.png[align="center"]
@@ -579,7 +578,7 @@ Para tomar una decisión informada del _padding_ más conveniente hice pruebas c
 .Diferentes tamaños de relleno
 image::array-paddings.png[align="center"]
 
-En Intel Xeon e i5 los tiempos son constantes mientras que en Raspberry 2 e Intel Core2 se produce un descenso importante a los 16 y 32 bytes. Para hacer una comparación razonable el tamaño del relleno elegido asegura que la separación entre posiciones consecutivas es 32 bytes. En las dos imágenes a continuación se muestran los tiempos comparados de CPU y tiempo de reloj respectivamente para los algoritmos _ticket-lock_, _array-lock_, _MCS_ y _CLH_.
+En Intel Xeon e i5 los tiempos son constantes mientras que en Raspberry 2 se produce un descenso importante a los 16 y 32 bytes. Para hacer una comparación razonable el tamaño del relleno elegido asegura que la separación entre posiciones consecutivas es 32 bytes. En las dos imágenes a continuación se muestran los tiempos comparados de CPU y tiempo de reloj respectivamente para los algoritmos _ticket-lock_, _array-lock_, _MCS_ y _CLH_.
 
 .Ticket-lock vs array-lock vs MCS vs CLH
 image::ticket-mcs-clh.png[align="center"]

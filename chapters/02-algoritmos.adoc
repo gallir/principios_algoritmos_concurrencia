@@ -1,16 +1,19 @@
 [[mutual_exclusion]]
 == Exclusión mutua
-La exclusión mutua (o _secciones críticas_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_, se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
+
+image::jrmora/bosquejo-03.jpg[align="center"]
+
+La exclusión mutua (o _sección crítica_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
 
 Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
 
-El mismo problema ocurre con granularidades menores, datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
+El mismo problema ocurre con granularidades menores: datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
 
 
 === Definición
-La solución formal a la solución a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_ que pueden generar resultados erróneos dependiendo de la secuencia de ejecución de las instrucciones atómicas.
+La solución formal a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Consideró una ejecución de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
 
-Así se definió el modelo o _problema de la sección crítica_  -también llamado simplemente exclusión mutua-, es el más sencillo y estudiado de los problemas genéricos de concurrencia o sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas, mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
+Así se definió el modelo o _problema de la sección crítica_, también llamado simplemente exclusión mutua. Es el más sencillo y estudiado de los problemas genéricos de sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas; mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
 
 El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
 
@@ -33,7 +36,7 @@ while forever:
 <2> Posprotocolo.
 
 
-Hay muchos algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software, es decir, programar los algoritmos para el pre y posprotocolo. Estos deben cumplir con los siguientes requisitos:
+Hay muchos algoritmos y construcciones de lenguajes que solucionan el problema de la sección crítica, cada uno tiene sus problemas y ventajas. El objetivo del resto del capítulo es razonar y encontrar soluciones por software; es decir, programar los algoritmos para el pre y posprotocolo. Estos deben cumplir con los siguientes requisitos:
 
 [[em_requisites]]
 [IMPORTANT]
@@ -46,7 +49,7 @@ Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios 
 Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Cualquier proceso debe poder entrar a la sección crítica en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan  algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñadas para asegurar _equidad_>>.
 ====
 
-Además de los tres requisitos fundamentales anteriores, en el artículo original (<<Dijkstra65>>) Dijkstra propuso cuatro requisitos que deben cumplir los algoritmos de sección crítica:
+Además de los tres requisitos fundamentales anteriores, en el artículo original (<<Dijkstra65>>) Dijkstra propuso cuatro que deben cumplir los algoritmos de sección crítica:
 
 [[four_requisites]]
 .Cuatro requisitos de Dijkstra

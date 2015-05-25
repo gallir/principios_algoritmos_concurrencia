@@ -1,16 +1,17 @@
 [[processes_concurrency]]
 == Procesos y concurrencia
 
-Los programas en ejecución se denominan procesos, son elementos de gestión centrales del sistema operativo. Desde el punto de vista del _núcleo_ del sistema operativofootnote:[El sistema operativo está formado por un núcleo o _kernel_, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al inicio, gestiona todos los recursos y los procesos ejecutándose con privilegios especiales del procesador.] tienen dos partes bien diferenciadas, la _imagen de memoria_ y las _tablas de control de procesos_.
 
-Se denomina imagen de memoria al código y datos del programa en la memoria RAM. Se diferencian cuatro partes según su contenido:
+Los programas en ejecución se denominan procesos, son elementos de gestión centrales del sistema operativo. Desde el punto de vista del _núcleo_ del sistema operativofootnote:[El sistema operativo está formado por un núcleo o _kernel_, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al inicio, gestiona todos los recursos y los procesos ejecutándose con privilegios especiales del procesador.] tienen dos partes bien diferenciadas: la _imagen de memoria_ y las _tablas de control de procesos_.
+
+La _imagen de memoria_ es la memoria física ocupada por el código y datos del programa. Se diferencian cuatro partes según su contenido:
 
 - Código o texto: El programa ejecutable cargado en memoria.
 - Datos: La zona de memoria donde se almacenan las constantes y variables estáticas del programa (normalmente las variables globales).
 - Pila (_stack_): La zona donde se almacenan los argumentos de las funciones, sus valores de retorno y las variables automáticas (locales).
 - Zona de memoria dinámica (_heap + malloc_): La zona de almacenamiento de memoria asignada dinámicamentefootnote:[Habitualmente por llamadas a +malloc+, llamada también _memoria anónima_ en Linux.].
 
-Para gestionar los procesos el núcleo mantiene complejas estructuras de datos con información de contexto y estado de cada uno. Por ejemplo, los valores de los registros del procesador cuando el proceso fue interrumpido, las tablas de páginas de memoria, estado de entradas y salidas, información de propiedad, etc.
+Para gestionar los procesos el núcleo mantiene las complejas estructuras de datos, las _tablas de control de procesos_, con información de contexto y estado de cada uno. Por ejemplo, los valores de los registros del procesador cuando el proceso fue interrumpido, tablas de páginas de memoria, estado de entradas y salidas, información de propiedad, etc.
 
 ****
 La forma estándar de crear proceso en Unix es la llamada de sistema +fork+:
