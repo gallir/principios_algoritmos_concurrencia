@@ -617,7 +617,7 @@ image::ticket-mcs-clh-real.png[align="center"]
 
 En las arquitecturas modernas no hay tanta diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra más el relleno por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
-En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesitan. Ésta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
+En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesita. Ésta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
 
 Muchos artículos afirman que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peorfootnote:[También hay que aclarar que las diferencias sí pueden ser importantes en sistemas con más procesadores.]. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
 
