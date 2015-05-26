@@ -1,0 +1,7 @@
+#! /bin/bash
+
+for f in big/*.jpg
+do
+    base=$(basename $f)
+    convert $f -quality 75% -resize 1100 $base
+done
