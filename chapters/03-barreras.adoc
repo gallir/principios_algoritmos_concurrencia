@@ -1,6 +1,9 @@
 [[barriers]]
 == La realidad del hardware moderno
 
+image::jrmora/03-barreras.jpg[align="center"]
+
+
 Aunque los algoritmos de exclusión mutua anteriores son formalmente correctos no funcionan en la mayoría de procesadores modernosfootnote:[No debería decepcionar, la intención era aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales.]. Los fabricantes intentan maximizar la eficiencia con todos los medios posibles, desde múltiples niveles de caché pasando por segmentación y cola de instrucciones (_instruction pipeline_) al uso ya extendido de varios procesadores y núcleosfootnote:[Una de las razones de la popularización de la programación concurrente y también de la confusión entre concurrencia y paralelismo, desarrollar programas con varios hilos para poder ejecutarlos en paralelo en los diferentes núcleos.]. Veremos que sin soporte especial de hardware estos procesadores no cumplen las condiciones de la _máquina universal de Turing_ cuando se trata de la ejecución concurrente.
 
 [NOTE]

@@ -98,8 +98,8 @@ div.tip h3, div.note h3, div.warning h3, div.caution h3, div.important h3, div.s
 }
 
 div.tip, div.note, div.sidebar {
-  border: 1px solid silver;
-  background-color: #ffffee;
+  border: 1px solid #D9D9C3;
+  background-color: #FCFCE3;
 }
 
 div.warning, div.caution {
@@ -156,8 +156,8 @@ div.preface>div.titlepage, div.chapter>div.titlepage, div.appendix>div.titlepage
     /*padding: 15px 20px 20px 20px;
   background-color: #000;
   color: #fff; */
-  margin-bottom: 30px;
-  margin-top: 10px;
+  margin-bottom: 2em;
+  margin-top: 0;
 }
 
 div.preface>div.titlepage h1, div.chapter>div.titlepage h1, div.appendix>div.titlepage h1 {
@@ -210,7 +210,12 @@ p + p > strong {
 }
 
 .titlepage + .informalfigure {
-    margin-bottom: 2em;
+    margin-bottom: 0.7em;
+    margin-top: -1.9em
+}
+
+.titlepage + .informalfigure img {
+    margin: 0;
 }
 
 pre.programlisting + p {
