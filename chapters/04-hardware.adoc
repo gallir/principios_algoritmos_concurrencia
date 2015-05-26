@@ -8,7 +8,7 @@ Por otro lado, si los procesos se ejecutan en un único procesador el avance es 
 
 
 === Inhabilitación de interrupciones
-Si el problema fundamental es el intercalado de instrucciones generado por las interrupciones al procesador ¿por qué no deshabilitarlas?. Aunque es una solución que se usa en casos muy concretos en el núcleo de sistemas operativosfootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.] no es una solución genérica segura: si cualquier proceso puede deshabilitar las interrupciones entonces puede tomar control del sistema al anular la cualidad de apropiativo del _scheduler_. Por lo tanto, no es una solución válida para procesos de usuario.
+Si el problema fundamental es el intercalado de instrucciones generado por las interrupciones al procesador ¿por qué no deshabilitarlas? Aunque es una solución que se usa en casos muy concretos en el núcleo de sistemas operativosfootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.] no es una solución genérica segura: si cualquier proceso puede deshabilitar las interrupciones entonces puede tomar control del sistema al anular la cualidad de apropiativo del _scheduler_. Por lo tanto, no es una solución válida para procesos de usuario.
 
 Aún para el núcleo del sistema operativo presenta dificultades: la complicación de deshabilitar las interrupciones en todos los procesadores y el riesgo de perderlas. Por la dificultad de deshabilitar simultáneamente las interrupciones en varios procesadores tampoco es una solución dado que la memoria puede ser modificada por un procesador diferente (hay paralelismo) sin que haya habido intercalación en el mismo procesador.
 

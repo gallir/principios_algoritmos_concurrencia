@@ -98,7 +98,7 @@ div.tip h3, div.note h3, div.warning h3, div.caution h3, div.important h3, div.s
 }
 
 div.tip, div.note, div.sidebar {
-  border: 1px solid #D9D9C3;
+  border: 1px solid #D1D1BC;
   background-color: #FCFCE3;
 }
 
