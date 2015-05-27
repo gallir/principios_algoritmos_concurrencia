@@ -1,0 +1,29 @@
+
+[colophon]
+== Créditos
+
+Principios y algoritmos de concurrencia
+
+
+(C) Ricardo Galli Granada
+
+
+Diseño de portada: Damián Vila
+
+Ilustraciones: Juan Ramón Mora "JRMora"
+
+Foto: _Spaghetti Worlds_, Carl Milner (https://www.flickr.com/photos/62766743@N07/8757888849/[Flickr])
+
+Versión: {revnumber}, {localdate}
+
+Palma de Mallorca, 2015
+
+
+ISBN: 978-84-606-8761-0
+
+Licencia: CC BY-NC-ND 4.0
+
+
+
+
+image::legal.png[width=480, align="center"]
