@@ -4,7 +4,7 @@ SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
 CSS=epub.css
 
-RESOURCES=--resource styles/docbook-xsl.css --resource styles/asciidoctor-default.css
+RESOURCES=--resource styles/docbook-xsl.css 
 A2XOPTIONS=-v $(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
 
 

@@ -1,5 +1,6 @@
 == Temas no tratados
 
+////
 === Estructuras concurrentes no bloqueantes
 
 <<free_lock_stack>> en <<aba_problem>>
@@ -24,3 +25,4 @@ _lock-free queues_
 === Patrones de programación
 
 === Algoritmos distribuidos
+////

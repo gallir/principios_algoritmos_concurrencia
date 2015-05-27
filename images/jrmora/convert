@@ -3,5 +3,5 @@
 for f in big/*.jpg
 do
     base=$(basename $f)
-    convert $f -quality 75% -resize 1100 $base
+    convert $f -strip -set colorspace Gray -separate -average -interlace Plane -gaussian-blur 0.05 -quality 70% -resize 1200 $base
 done

@@ -8,7 +8,7 @@ Los algoritmos de exclusión mutua anteriores son formalmente correctos, pero no
 
 [NOTE]
 ====
-En <<hardware>> veremos cómo se puede solucionar más eficientemente con instrucciones de hardware y en los siguientes capítulos construcciones de más alto nivel que permiten ignorar las particularidades y complejidades de las arquitecturas de hardware.
+En <<hardware>> veremos cómo se puede solucionar más eficientemente con instrucciones de hardware.
 ====
 
 Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que a los programas del capítulo anterior (<<counter_times>>):

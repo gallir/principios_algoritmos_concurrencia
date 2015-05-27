@@ -160,16 +160,32 @@ div.preface>div.titlepage, div.chapter>div.titlepage, div.appendix>div.titlepage
   margin-top: 0;
 }
 
-div.preface>div.titlepage h1, div.chapter>div.titlepage h1, div.appendix>div.titlepage h1 {
+div.preface>div.titlepage h1, div.chapter>div.titlepage h1, div.appendix>div.titlepage h1, div.colophon>h1 {
   color: #980000;
   text-transform: uppercase;
   font-size: 1.8em;
   text-align: right;
   border-color: #980000;
+  line-height: 1.1;
 }
 
 div.preface>div.titlepage h1 {
     border: none;
+}
+
+div.colophon>h1 {
+    border: none;
+    font-size: 1.3em;
+    text-align: center;
+    margin-bottom: 2.5em;
+}
+
+div.colophon .informalfigure {
+    margin: 3em 0 0 0;
+}
+
+div.colophon p {
+    text-indent: 0;
 }
 
 div.book>div.titlepage h1 {
@@ -211,7 +227,7 @@ p + p > strong {
 
 .titlepage + .informalfigure {
     margin-bottom: 0.7em;
-    margin-top: -1.9em
+    margin-top: -1.6em
 }
 
 .titlepage + .informalfigure img {
@@ -303,9 +319,9 @@ div.chapter, div.footnotes { page-break-before: always; }
 
 /* keep this body statement last */
 html body {
-  font-family: Georgia, Caecilia, Palatino, serif;
+  font-family: Bookerly, Literata, Georgia, Caecilia, Palatino, serif;
   font-size: medium;
   max-width: 36em;
-  margin: 0.5em 2% 0.5em 2%;
+  /* margin: 0 0.5em 0 0.5em; */
   line-height: 1.2;
 }

@@ -1,9 +1,10 @@
 [[mutual_exclusion]]
 == Exclusión mutua
+image::jrmora/02-algoritmos.jpg[align="center"]
 
 La exclusión mutua (o _sección crítica_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
 
-Un problema de exclusión mutua muy genérico y naïve pero que ilustra perfectamente el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen, es decir, asegurar la exclusión mutua en el acceso a la impresora.
+Un problema de exclusión mutua -muy genérico y naïve- que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
 
 El mismo problema ocurre con granularidades menores: datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
 
@@ -13,7 +14,7 @@ La solución formal a este problema fue publicado por Dijkstra en 1965 (<<Dijkst
 
 Así se definió el modelo o _problema de la sección crítica_, también llamado simplemente exclusión mutua. Es el más sencillo y estudiado de los problemas genéricos de sincronización de procesos. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas; mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
 
-El modelo separa al código en secciones críticas y _resto del código_. La solución consiste en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
+El modelo separa al código en secciones críticas y _resto del código_. La solución se basa en desarrollar los algoritmos que se insertan justo antes y después de las secciones críticas:
 
 - _Preprotocolo_ o entrada a la sección crítica.
 

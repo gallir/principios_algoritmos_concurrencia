@@ -1,8 +1,8 @@
-Principios y algoritmos de concurrencia
-=======================================
 :doctype: book
+:firstname: Ricardo
+:lastname: Galli Granada
 :author: Ricardo Galli
-:copyrights:  Creative Commons Attribution-NonCommercial CC BY-NC
+:copyrights: Attribution-NonCommercial-NoDerivatives 4.0 International CC BY-NC-ND 4.0
 :lang: es
 :docinfo:
 :revnumber: 1.0
@@ -17,6 +17,9 @@ Principios y algoritmos de concurrencia
 //:icons:
 //:source-highlighter: source-highlight
 
+Principios y algoritmos de concurrencia
+=======================================
+
 ////
 --stringparam toc.section.depth 1 --stringparam generate.section.toc.level 1
 ////
@@ -24,6 +27,9 @@ Principios y algoritmos de concurrencia
 ////
 <mbp:pagebreak />
 ////
+
+include::chapters/00-colophon.adoc[]
+
 
 include::chapters/00-prefacio.adoc[]
 
