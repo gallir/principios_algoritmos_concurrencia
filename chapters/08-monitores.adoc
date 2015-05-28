@@ -256,7 +256,7 @@ void unlock() {
 
 En el capítulo <<semaphores>> hemos visto los algoritmos de sincronización más estudiados, no se pretende resolver todos los problemas con dichos algoritmos o que se deban reprogramar cada vez que se necesitan (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar, vale la pena conocer los principios detrás de las librerías de alto nivel y proporcionan una mejor perspectiva del porqué se han diseñado de una forma u otra. Es complicado aprender a reconocer y resolver los problemas de concurrencia y sincronización, analizar los soluciones ayudan mucho al aprendizaje y entrenamiento.
 
-En este capítulo -y los siguientes- haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos.
+En este capítulo –y los siguientes– haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos.
 
 ==== Barreras
 
@@ -417,7 +417,7 @@ def writer_unlock():
 ----
 <1> Señaliza a lectores y escritores.
 
-La última parte -la señalización a ambas variables de condición- puede modificarse para dar prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+, si tiene proceso bloqueados se señaliza solo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
+La última parte –la señalización a ambas variables de condición– puede modificarse para dar prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+, si tiene proceso bloqueados se señaliza solo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
 
 Aún con estos cambios se puede provocar la inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica, se puede solucionar fácilmente verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
 
@@ -570,7 +570,7 @@ La última con variables de condición ahorra un 40% de tiempo de CPU totalfootn
 [[monitor_times]]
 === Eficiencia de Monitores
 
-Los monitores aseguran la ejecución atómica de sus procedimientos -los _serializan_-, una restricción inexistente con semáforos, que dificulta implementaciones eficientes para múltiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usado, es muy eficiente en la gestión de hilos, y su modelo de memoria está bien definido.
+Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–, una restricción inexistente con semáforos, que dificulta implementaciones eficientes para múltiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores, pero vale la pena compararla con Java, es uno de los lenguajes más usado, es muy eficiente en la gestión de hilos, y su modelo de memoria está bien definido.
 
 ==== Mutex y monitor
 En la siguiente imagen se pueden observar dos comparaciones entre la C y Java.
@@ -623,7 +623,7 @@ Las barreras son un ejemplo más práctico para comparar la eficiencia entre sem
 [caption=""]
 image::monitors-barriers.png[align="center"]
 
-En ambos casos la implementación con monitores implica una sobrecarga -proporcionalmente menor en Java. sobre la programada con semáforos. La simplicidad de los monitores no es gratuita, en general introduce un coste adicional al forzar la exclusión mutua en los métodos.
+En ambos casos la implementación con monitores implica una sobrecarga –proporcionalmente menor en Java– sobre la programada con semáforos. La simplicidad de los monitores no es gratuita, en general introduce un coste adicional al forzar la exclusión mutua en los métodos.
 
 ////
 

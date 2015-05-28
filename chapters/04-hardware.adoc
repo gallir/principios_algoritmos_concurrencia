@@ -2,9 +2,9 @@
 == Soluciones por hardware
 Hasta ahora hemos visto soluciones a la exclusión mutua sin soporte de hardware y únicamente con _registros de lectura-escritura atómicos_ (las variables enteras). Esos algoritmos son _spinlocks_, aunque muy ineficientes.
 
-En primer lugar, por los requisitos de memoria, el número de registros necesarios -tamaño de arrays- es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Se genera una sobrecarga importante para mantener la consistencia de caché en sistemas _SMP_ debido a los accesos concurrentes a zonas extensas de memoria.
+En primer lugar, por los requisitos de memoria, el número de registros necesarios –tamaño de arrays– es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. Se genera una sobrecarga importante para mantener la consistencia de caché en sistemas _SMP_ debido a los accesos concurrentes a zonas extensas de memoria.
 
-Por otro lado, si los procesos se ejecutan en un único procesador el avance es tan lento e impredecible que puede tomar pocos segundos en unos casos y horas en otros si hay mayor competencia. Desde que se comenzó a estudiar el problema de la concurrencia -inicios de la década de 1960- se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
+Por otro lado, si los procesos se ejecutan en un único procesador el avance es tan lento e impredecible que puede tomar pocos segundos en unos casos y horas en otros si hay mayor competencia. Desde que se comenzó a estudiar el problema de la concurrencia –inicios de la década de 1960– se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
 
 
 === Inhabilitación de interrupciones
@@ -214,7 +214,7 @@ def CAS(register, expected, desired):
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, usamos una variable local porque el macro de _CAS_ de GCC requiere un puntero. Si +mutex+ vale cero -no hay procesos en la sección crítica- se asigna uno y puede continuar. En caso de haber fallado la asignación -+mutex+ valía uno- volverá a intentarlo en un bucle:
+La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, usamos una variable local porque el macro de _CAS_ de GCC requiere un puntero. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación -+mutex+ valía uno– volverá a intentarlo en un bucle:
 
 [source,python]
 ----
@@ -246,7 +246,7 @@ _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se pre
 - _Q_ modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que  _P_ vuelva a ejecutarse,
 - _P_ ejecutará la instrucción _CAS_ sin haber detectado el cambio.
 
-Si _A_ y _B_ son valores simples no hay conflictos, pero si son punteros a estructuras más complejas -como nodos de una pila- un valor de esas estructuras pudo haber cambiado y provocar errores.
+Si _A_ y _B_ son valores simples no hay conflictos, pero si son punteros a estructuras más complejas –como nodos de una pila– un valor de esas estructuras pudo haber cambiado y provocar errores.
 
 [[free_lock_stack]]
 Un caso práctico con implementación de _pilas concurrentes sin bloqueo_ (_free-lock stacks_). La estructura +node+ tiene un puntero al siguiente elemento (+next+) y a una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+ pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o +payload+, su estructura interna nos es irrelevante):
@@ -354,7 +354,7 @@ Aborted (core dumped)
 
 En sistemas con un único procesador quizás se necesiten varias ejecuciones o aumentar el número de operaciones en la constante +OPERATIONS+ para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlo. Como en este caso, si no se conoce y tiene en cuenta el problema _ABA_ es muy difícil asegurar que el programa es correcto.
 
-Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no se observe el error de doble liberación del mismo puntero. Para forzar el reuso de direcciones recientes -y así probar que puede ser víctima de _ABA_- se puede user una segunda pila como _caché_ de los nodos eliminados de la primera.
+Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente por lo que quizás no se observe el error de doble liberación del mismo puntero. Para forzar el reuso de direcciones recientes –y así probar que puede ser víctima de _ABA_– se puede user una segunda pila como _caché_ de los nodos eliminados de la primera.
 
 [[cas_double_stack]] En vez de liberar la memoria de los nodos con el +free+ los insertamos en una segunda lista +free_nodes+, los nodos que se eliminan de la lista +head+ son insertados en la lista de libres. En vez de asignar memoria con +malloc+ cada vez que se crea un nuevo nodo se busca primero de la lista de libres y se lo reusa.
 
@@ -540,7 +540,7 @@ Pero si se hace correctamente además de evitar el problema ABA se puede hacer m
 image::free_lock_stacks.png[align="center"]
 
 
-Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA -por lo tanto, incorrecto- y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido -pero erróneo-, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
+Con un único procesador del ARMv6 la implementación con _LL/SC nativo_ es más de dos veces más rápido que el siguiente, que sufre del problema ABA –por lo tanto, incorrecto– y más de cuatro veces más rápido que la simulación de _CAS etiquetado_. En el más moderno ARMv7 con varios núcleos el _CAS con malloc_ es el más rápido –pero erróneo–, la implementación en ensamblador con LL/SC es la siguiente más rápida aunque las diferencias con el _CAS etiquetado_ implementado en C con los macros atómicos de GCC no es tan notable.
 
 === Recapitulación
 
@@ -548,7 +548,7 @@ En este capítulo hemos visto las instrucciones por hardware esenciales para con
 
 No hay instrucciones de hardware unificadas para todas las arquitecturas, tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_, que luego son traducidos a secuencias más complejas que simulan a las instrucciones o registros _RMW_ representados por el macro. Lo vimos claramente con la arquitectura ARM, todas las operaciones se simulan con _LL/SC_.
 
-Simular _LL/SC_ con _CAS_ o _TAS_ es más complicado -sino imposible- por lo que habitualmente no se cuentan con esos macrosfootnote:[Salvo los compiladores de los fabricantes que los incluyen en sus compiladores propietarios.] y tuvimos que recurrir al ensamblador para poder aprovechar las capacidades nativas de cada procesador, muy habitual en los sistemas operativosfootnote:[Por ejemplo en Linux se usa el ensamblador +inline+, +ASM()+.].
+Simular _LL/SC_ con _CAS_ o _TAS_ es más complicado –sino imposible– por lo que habitualmente no se cuentan con esos macrosfootnote:[Salvo los compiladores de los fabricantes que los incluyen en sus compiladores propietarios.] y tuvimos que recurrir al ensamblador para poder aprovechar las capacidades nativas de cada procesador, muy habitual en los sistemas operativosfootnote:[Por ejemplo en Linux se usa el ensamblador +inline+, +ASM()+.].
 
 Los _spinlocks_ basados en instrucciones por hardware son fundamentales y se requieren algoritmos muy eficientes, más eficientes que los que vimos, sobre todo para sistemas _SMP_. Además interesa contar con otras construcciones como lectores-escritores y que minimicen el impacto sobre el sistema de coherencia caché. Estos son los temas del siguiente capítulo.
 

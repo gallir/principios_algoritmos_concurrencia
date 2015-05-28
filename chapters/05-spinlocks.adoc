@@ -26,7 +26,7 @@ Uno de los objetivos de este capítulo es analizar la eficiencia relativa de dif
 Quizás tenían sentido el momento que se diseñaron esos algoritmos, pero los sistemas SMP han evolucionado y mejorado sustancialmente. Las mejoras notables de hace una década hoy pueden ser inexistentes o residuales.
 ====
 
-En la siguiente figura se muestran los tiempos de CPU -en segundos- de los algoritmos del capítulo anterior con diferentes procesadores: Intel i5 con cuatro núcleos, Intel Xeon con dos procesadores independientes de ocho núcleos cada uno (16 en total) y Raspberry 2 con ARMv7 de cuatro núcleos.
+En la siguiente figura se muestran los tiempos de CPU –en segundos– de los algoritmos del capítulo anterior con diferentes procesadores: Intel i5 con cuatro núcleos, Intel Xeon con dos procesadores independientes de ocho núcleos cada uno (16 en total) y Raspberry 2 con ARMv7 de cuatro núcleos.
 
 Cada grupo de barras es una medición diferente. El primero por la izquierda (_none_) son los tiempos sin ningún mecanismo de exclusión mutua; el segundo los tiempos del algoritmo de la panadería; el tercero (_best_) es el más eficiente: el incremento de +counter+ se hace directamente con la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _TAS_, _get&set_ y _CAS_ respectivamente.
 
@@ -59,7 +59,7 @@ El objetivo de los _spinlocks_ escalables es minimizar el sobrecoste inducido po
 Veremos tres técnicas de optimización de _spinlocks_ que se pueden aplicar a cualquier a que itere sobre una variable compartida. Comprobaremos que sus mejoras en eficiencia son considerables.
 
 ==== Verificación local
-Se trata de reducir la presión sobre el sistema de coherencia de caché y reducir las llamadas a las relativamente costosas primitivas de sincronización. Antes de ejecutarlas se verifica (o _cortocircuita_) el valor del registro -+mutex+ en los ejemplos-; si vale 1 ya no hace falta continuar con la instrucción atómica. Cuando se usa con _TAS_ esta estrategia es conocida como _TTAS_ o _TATAS_; con _CAS_ se llama _TCAS_.
+Se trata de reducir la presión sobre el sistema de coherencia de caché y reducir las llamadas a las relativamente costosas primitivas de sincronización. Antes de ejecutarlas se verifica (o _cortocircuita_) el valor del registro –+mutex+ en los ejemplos–; si vale 1 ya no hace falta continuar con la instrucción atómica. Cuando se usa con _TAS_ esta estrategia es conocida como _TTAS_ o _TATAS_; con _CAS_ se llama _TCAS_.
 
 ._TATAS_
 [source, python]
@@ -156,7 +156,7 @@ Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>
 
 [[execution_times]]
 ==== Tiempos de ejecución
-A continuación tres gráficas que representan los tiempos de CPU de los diferentes algoritmos en procesadores distintos. Cabe recordar que el ejemplo que usamos -hilos que solo incrementan un contador compartido- es muy extremo. Aunque la sección crítica es muy breve, lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella; implica que la competencia es extremadamente elevada y muy lejos de ser un caso realista. Pero nos sirve para tener una base de comparación.
+A continuación tres gráficas que representan los tiempos de CPU de los diferentes algoritmos en procesadores distintos. Cabe recordar que el ejemplo que usamos –hilos que solo incrementan un contador compartido– es muy extremo. Aunque la sección crítica es muy breve, lo único que hacen es entrar y salir continuamente sin ejecutar código fuera de ella; implica que la competencia es extremadamente elevada y muy lejos de ser un caso realista. Pero nos sirve para tener una base de comparación.
 
 También hay que tener en cuenta que los ejemplos están programados con los macros atómicos de GCC. Estos no generan el código más eficiente para cada arquitectura. Por ejemplo, para ARM los macros de barreras de memoria siempre generan una barrera completa, aunque se haya especificado una barrera _release_. La solución es programar en ensamblador de la arquitectura, como se hace en el núcleo de los sistemas operativos. Pero este nivel de optimización supera los objetivos de este libro.
 
@@ -206,7 +206,7 @@ Las esperas activas ya son suficientemente malas si no son imprescindibles. A me
 
 [[readers_writers]]
 === Lectores-escritores
-En aplicaciones reales, la mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo importante es que éstas sean consistentes. En los ejemplos -un único contador entero- no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño -o para acceder a ficheros o dispositivos externos- hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
+En aplicaciones reales, la mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo importante es que éstas sean consistentes. En los ejemplos –un único contador entero– no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño –o para acceder a ficheros o dispositivos externos– hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
 
 La solución de exclusión mutua no es la más adecuada, la _serialización_ de los accesos de solo lectura provoca esperas innecesarias. Una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita más de un lector en la sección crítica. Estos algoritmos son conocidos como lectores-escritores (_reader-writer_).
 
@@ -445,7 +445,7 @@ Este algoritmo también es equitativo, los procesos entran en orden FIFO. Solo r
 
 [[lock-free_queue]]Una estrategia para disminuir la presión sobre la caché es hacer que  las esperas activas se hagan sobre una variable local de cada proceso. Así se asegura que no se comparten líneas de caché. Tampoco habrá penalización si la variable del _spinlock_ está próxima a otras variables locales, pueden compartir las misma líneas de cache pero no están compartidas con los otros procesos.
 
-El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda -no soy el único- de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS1>>). Se considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006.
+El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda –no soy el único– de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS1>>). Se considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006.
 
 Algoritmos derivados, conocidos como _colas no bloqueantes_ (_lock-free queues_), son muy usados en librerías _runtime_ y maquinas virtuales, como en los <<java_monitor, _monitores_ de la máquina virtual de Java>> y en las librerías +java.util.concurrent+ (<<Lea>>).
 
@@ -626,7 +626,7 @@ image::ticket-mcs-clh.png[align="center"]
 .Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
 
-En las arquitecturas modernas no hay demasiada diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio -una palabra más el relleno por proceso- que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
+En las arquitecturas modernas no hay demasiada diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio –una palabra más el relleno por proceso– que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
 En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesita. Ésta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
 

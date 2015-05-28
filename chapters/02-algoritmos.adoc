@@ -4,7 +4,7 @@ image::jrmora/02-algoritmos.jpg[align="center"]
 
 La exclusión mutua (o _sección crítica_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
 
-Un problema de exclusión mutua -muy genérico y naïve- que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
+Un problema de exclusión mutua –muy genérico y naïve– que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
 
 El mismo problema ocurre con granularidades menores: datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de la memoria del navegador web accedidas y modificadas desde diferentes hilos de ejecución, hasta simples variables enteras.
 
@@ -267,13 +267,13 @@ states[0] = False
 <1> Cede el paso al otro.
 <2> Restaura el estado antes de volver a verificar en el +while+.
 
-Si ambos procesos entran simultáneamente al bucle de entrada, en algún momento -por ejemplo- _P1_ pondrá a falso +states[1]+ y se interrumpirá por lo que _P0_ podrá entrar a su sección crítica. _P1_ cambiará +states[1]+ otra vez a verdadero y volverá a quedar esperando en el bucle, pero _P0_ ya estará en la sección crítica. Cuando _P0_ salga pondrá su estado a falso y _P1_ podrá entrar.
+Si ambos procesos entran simultáneamente al bucle de entrada, en algún momento –por ejemplo– _P1_ pondrá a falso +states[1]+ y se interrumpirá por lo que _P0_ podrá entrar a su sección crítica. _P1_ cambiará +states[1]+ otra vez a verdadero y volverá a quedar esperando en el bucle, pero _P0_ ya estará en la sección crítica. Cuando _P0_ salga pondrá su estado a falso y _P1_ podrá entrar.
 
 
 ****
-Es lógico pensar que entre las instrucciones de asignación a `states[0]` se puede hacer algo para aumentar la probabilidad de que uno de los procesos pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese soluciones mejores -las hay-, pero formalmente son equivalentes.
+Es lógico pensar que entre las instrucciones de asignación a `states[0]` se puede hacer algo para aumentar la probabilidad de que uno de los procesos pueda entrar, por ejemplo bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese soluciones mejores –las hay–, pero formalmente son equivalentes.
 
-Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas -unas diez- la probabilidad de que uno de ellos se interrumpa entre ambas asignaciones es bastante elevada, por la velocidad de los procesadores ocurriría en pocos nanosegundos.
+Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas –unas diez– la probabilidad de que uno de ellos se interrumpa entre ambas asignaciones es bastante elevada, por la velocidad de los procesadores ocurriría en pocos nanosegundos.
 ****
 
 Analicemos si se cumplen los requisitos:
@@ -382,7 +382,7 @@ Si hay competencia el valor de +turn+ decide qué proceso continúa, como +turn+
 
 Espera limitada::
 
-El proceso que desea entrar primero cede el turno al otro antes de la comparación en el bucle. En caso de competencia el proceso que intenta volver a entrar cederá el turno al que ya estaba esperando. Cada proceso espera como máximo un único _paso_, si hay competencia podrá entrar -siempre- cuando haya salido el que entró previamente.
+El proceso que desea entrar primero cede el turno al otro antes de la comparación en el bucle. En caso de competencia el proceso que intenta volver a entrar cederá el turno al que ya estaba esperando. Cada proceso espera como máximo un único _paso_, si hay competencia podrá entrar –siempre– cuando haya salido el que entró previamente.
 
 
 === Solución para _N_ procesos
@@ -394,7 +394,7 @@ Los algoritmos anteriores resuelven la exclusión mutua solo para dos procesos, 
 
 La solución más simple conocida la publicó Leslie Lamport en 1974 (<<Lamport>>), se lo conoce como el _algoritmo de la panadería_ (_bakery algorithm_) por su similitud a los clientes de una tienda que sacan un número que determina el orden en que serán atendidos.
 
-La implementación básica -pero incompleta- de la idea es la siguiente:
+La implementación básica –pero incompleta– de la idea es la siguiente:
 
 [source,python]
 
@@ -540,7 +540,7 @@ El <<counter_fast, algoritmo completo y correcto en C>>, con sus respectivas bar
 
 === Recapitulación
 
-El problema de exclusión mutua es el más básico y mejor modelado de concurrencia y sincronización de procesos, sus requisitos y partes están bien definidas: sección crítica, protocolo de entrada y de salida y resto del código. Comenzamos desde lo más básico -dos procesos- hasta encontrar la solución que cumple con todas las condiciones para la solución para _N_ procesos.
+El problema de exclusión mutua es el más básico y mejor modelado de concurrencia y sincronización de procesos, sus requisitos y partes están bien definidas: sección crítica, protocolo de entrada y de salida y resto del código. Comenzamos desde lo más básico –dos procesos– hasta encontrar la solución que cumple con todas las condiciones para la solución para _N_ procesos.
 
 Este capítulo sirvió de introducción para reconocer los problemas de procesos concurrentes y la terminología técnica básica. Experimentamos que el modelo secuencial de programa al que estamos acostumbrados no nos sirve cuando se trata de analizar procesos concurrentes.
 

@@ -1,7 +1,7 @@
 [[channels]]
 == Canales
 
-Las construcciones de programación concurrente de capítulos anteriores -algoritmos, _spinlocks_, semáforos y monitores- requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción, además de sus capacidad de sincronización equivalente sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
+Las construcciones de programación concurrente de capítulos anteriores –algoritmos, _spinlocks_, semáforos y monitores– requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción, además de sus capacidad de sincronización equivalente sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
 
 Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
 
@@ -46,7 +46,7 @@ En 2010 Google publicó la primera versión estable del lenguaje Go diseñado po
 Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo en múltiples procesadores:
 
 
-Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidos por la instrucción +go+ -llamadas _goroutines_- hacen que éstas se ejecuten de forma asíncrona, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
+Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidos por la instrucción +go+ –llamadas _goroutines_– hacen que éstas se ejecuten de forma asíncrona, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
 Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son síncronos pero también pueden ser asíncronos si se especifica el tamaño de _buffer_ al momento de la inicialización (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
@@ -87,7 +87,7 @@ func main() {
 }
 ----
 
-Dado que implementan variantes del modelo _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable -y habitual- la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
+Dado que implementan variantes del modelo _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable –y habitual– la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
 
 - En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa _atractiva_ (sic) equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor. En Go se especifica el canal, cualquier número de estos puede recibir o enviar al mismo canal.
 
@@ -167,11 +167,11 @@ ch_a <- true        ch_b <- true
 <-ch_b              <-ch_a
 ----
 
-Como ambos canales ahora tienen _buffer_ los procesos no se bloquearán si al enviar no hay ningún proceso ya esperando a recibir. Desde el punto de vista de sincronización la idea es similar al valor o _número de permisos_ de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_ pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejemplos de sincronización de este capítulo -y en aplicaciones reales- es habitual recurrir a canales síncronos o asíncronos con _buffer_ de tamaño uno.
+Como ambos canales ahora tienen _buffer_ los procesos no se bloquearán si al enviar no hay ningún proceso ya esperando a recibir. Desde el punto de vista de sincronización la idea es similar al valor o _número de permisos_ de los semáforos. Si un semáforo vale cero bloqueará al primer _wait_ pero si es uno el proceso que haga el primer _wait_ podrá continuar (como se hace con los semáforos usados como _mutex_). En los ejemplos de sincronización de este capítulo –y en aplicaciones reales– es habitual recurrir a canales síncronos o asíncronos con _buffer_ de tamaño uno.
 
 ==== Barreras generales
 
-Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo, pero en lugar de variables compartidas -sujetas a los problemas de condiciones de carrera- el contador estará almacenado en un mensaje que se copiará entre los procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] aprovecharemos las dos capacidades de los mensajes: sincronización y comunicación. En los soluciones con semáforos usamos dos de ellos, uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo, pero en lugar de variables compartidas –sujetas a los problemas de condiciones de carrera– el contador estará almacenado en un mensaje que se copiará entre los procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
 
 Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+. Esta última es estática, solo se inicializa con el número de procesos que se sincronizarán con la barrera. Definimos la estructura +Barrier+ con estos tres components:
 
@@ -466,10 +466,10 @@ for {
 }
 ----
 
-De esta forma -es equivalente- el programa queda idéntico a la solución propuesta por Hoare con _CSP_.
+De esta forma –es equivalente– el programa queda idéntico a la solución propuesta por Hoare con _CSP_.
 ====
 
-Los procesos comunicados por canales asíncronos pueden ser convertidos -tal como acabamos de hacer- a uno equivalente con canales síncronos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_. Para el <<channel_mutex_go, código>> de simulación de _mutex_, por ejemplo, se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asíncronos crea un canal con _buffer_ 1 y deposita un mensaje:
+Los procesos comunicados por canales asíncronos pueden ser convertidos –tal como acabamos de hacer– a uno equivalente con canales síncronos. La solución general es añadir nuevos procesos que suplanten las capacidades de los canales con _buffer_. En el caso de los filósofos añadimos un nuevo proceso para cada tenedor para convertirlo en una comunicaciones entre procesos _filósofos_ y otros _tenedores_. Para el <<channel_mutex_go, código>> de simulación de _mutex_, por ejemplo, se requieren muy pocos cambios. La función _pseudo-constructora_ de +Mutex+ con canales asíncronos crea un canal con _buffer_ 1 y deposita un mensaje:
 
 
 [source,go]

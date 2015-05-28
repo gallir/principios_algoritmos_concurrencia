@@ -54,7 +54,7 @@ En arquitecturas _SMP_ es un desafío mantener coherentes las copias de la memor
 
 ==== Coherencia de caché en multiprocesadores
 
-En las arquitecturas _SMP_ los procesadores están conectados por una compleja red de comunicación conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ -los datos se transfieren por un bus compartido- o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
+En las arquitecturas _SMP_ los procesadores están conectados por una compleja red de comunicación conocida como _front side buffer_. Dependiendo del fabricante esta red puede ser del tipo _bus_ –los datos se transfieren por un bus compartido– o arquitecturas más sofisticadas que permiten comunicaciones más rápidas y con mayor ancho de banda como la _QuickPath_ de Intel que comunica cada núcleo o procesador con cada uno de los demás.
 
 
 [[quickpath]]
@@ -102,7 +102,7 @@ El original accede y modifica la variable compartida en cada iteración, el cont
 [[false_sharing]]
 ._False sharing_
 ****
-Si se iterarará frecuentemente (_spinning_) sobre variables es mejor asegurarse de que no compartan la misma línea de caché. Las variables han de ser _distantes_ -por ejemplo locales de cada hilo- para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes aunque sean direcciones diferentes.
+Si se iterarará frecuentemente (_spinning_) sobre variables es mejor asegurarse de que no compartan la misma línea de caché. Las variables han de ser _distantes_ –por ejemplo, locales de cada hilo– para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes aunque sean direcciones diferentes.
 ****
 
 
@@ -243,7 +243,7 @@ En el algoritmo de Peterson la solución con barreras es sencilla pero las soluc
 
 === Recapitulación
 
-En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. La especificación explícita de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado -varios cientos de ciclos de CPU- que se suman a la presión que introducimos al sistema de caché. Desde el punto de vista del programador lo relevante es la dificultad de saber exactamente dónde hay que insertar barreras y al mismo tiempo no abusar de ellas por el coste que introducen.
+En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. La especificación explícita de barreras no es el mejor método de la sincronización entre procesos concurrentes, tiene un coste elevado –varios cientos de ciclos de CPU– que se suman a la presión que introducimos al sistema de caché. Desde el punto de vista del programador lo relevante es la dificultad de saber exactamente dónde hay que insertar barreras y al mismo tiempo no abusar de ellas por el coste que introducen.
 
 La programación con barreras explícitas no es práctica, tiende a producir errores, hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos  consideran que es un error permitir la ejecución fuera de orden pero es el precio a pagar por obtener procesadores más rápidos.
 

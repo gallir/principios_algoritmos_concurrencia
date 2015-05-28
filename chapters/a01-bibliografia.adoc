@@ -78,7 +78,7 @@
 
 - [[[Neilsen]]] Mitchell L. Neilsen , Masaaki Mizuno. _A Dag-Based Algorithm for Distributed Mutual Exclusion_. IEEE 11th International Conference on Distributed Computing Systems, 1991. http://www.it.iitb.ac.in/~deepak/deepak/courses/seminar/00148689.pdf
 
-- [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116
+- [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116.
 
 - [[[Popov]]] Vlad Popov, Oleg Mazonka. _Faster Fair Solution for the Reader-Writer Problem_. 2013. http://arxiv.org/pdf/1309.4507.pdf
 

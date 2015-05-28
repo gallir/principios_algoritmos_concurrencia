@@ -1,6 +1,6 @@
 [[semaphores]]
 == Semáforos
-Al concepto de semáforos lo inventó Edsger W. Dijkstra a finales de la década de 1960 (<<Dijkstra74>>) -aunque las primeras ideas aparecieron a principios de la misma década (<<Dijkstra35>>)-, fue el primero en solucionar los problemas de sincronización sin espera activa. Está inspirado de las señales visuales ferroviariasfootnote:[Viene del inglés _semaphore_, no son los semáforos de las calles -estos se llaman _traffic lights_- sino de las señalizaciones ferroviarias _binarias_.] que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos.
+Al concepto de semáforos lo inventó Edsger W. Dijkstra a finales de la década de 1960 (<<Dijkstra74>>) –aunque las primeras ideas aparecieron a principios de la misma década (<<Dijkstra35>>)-, fue el primero en solucionar los problemas de sincronización sin espera activa. Está inspirado de las señales visuales ferroviariasfootnote:[Viene del inglés _semaphore_, no son los semáforos de las calles –estos se llaman _traffic lights_– sino de las señalizaciones ferroviarias _binarias_.] que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla, eficiente y muy utilizada que permite solucionar problemas genéricos de sincronización entre procesos.
 
 
 Las soluciones a exclusión mutua y otros mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio, los semáforos se implementan habitualmente como servicios de los sistemas operativos. Estos tienen la característica intrínseca de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
@@ -84,7 +84,7 @@ Se inicializa el semáforo a 1, cuando el primer proceso quiera entrar a la secc
 La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
 ==== Sincronización genérica
-El valor del semáforo puede interpretarse como un indicador del _número de recursos_ disponibles -también denominado _permisos_ (_permits_)-, indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En exclusión mutua interesa que solo haya un proceso en la sección crítica, así pues, el valor inicial debe ser 1.
+El valor del semáforo puede interpretarse como un indicador del _número de recursos_ disponibles –también denominado _permisos_ (_permits_)–, indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En exclusión mutua interesa que solo haya un proceso en la sección crítica, así pues, el valor inicial debe ser 1.
 
 Se pueden programar mecanismos más complejos de sincronización usando valores iniciales diferentes. Supongamos un sistema con _N_ procesadores, para evitar cambios de contextos innecesarios queremos limitar que haya hasta _N_ procesos dentro de una sección del programa: solo hay que inicializar el valor del semáforo con _N_. Este tipo de uso de semáforos donde se permiten más de uno y hasta _N_ procesos en secciones críticas se denominan _multiplexes_.
 
@@ -123,7 +123,7 @@ def generalSignal():
 
 
 ==== Semáforos _mutex_ y _locks_
-Los _semáforos mutex_, también llamados _locks_, son semáforos binarios -o equivalentes- optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre usado en los _spinlocks_ para exclusión mutua.] con restricciones y propiedades adicionales:
+Los _semáforos mutex_, también llamados _locks_, son semáforos binarios –o equivalentes– optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_ de _mutual exclusion_, el mismo nombre usado en los _spinlocks_ para exclusión mutua.] con restricciones y propiedades adicionales:
 
 . Son inicializados a 1.
 . Se añade el concepto de propiedad, solo el proceso que hizo el _wait_ puede hacer luego el _signal_.
@@ -355,7 +355,7 @@ while True:
 <1> Se bloquea si el _buffer_ está vacío, si no es así decrementa y obtiene el siguiente elemento. El valor del semáforo contador +notEmtpy+ siempre se corresponde con el número de elementos disponibles en el _buffer_.
 <2> Obtiene el siguiente elemento de la cola.
 
-En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la implementación completa. Hay dos clases -+Producer+ y +Consumer+- que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+), los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
+En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la implementación completa. Hay dos clases –+Producer+ y +Consumer+– que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+), los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
 
 
 ===== _Buffer_ finito
@@ -599,7 +599,7 @@ def release(i):
 
 ----
 
-Antes de comer cada filósofo hace +wait+ sobre cada uno de los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona -no hacen falta cinco- una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno tomaá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
+Antes de comer cada filósofo hace +wait+ sobre cada uno de los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona –no hacen falta cinco– una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno tomaá su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
 
 Una secuencia de instrucciones que lleva a este estado puede ser la siguiente: cada filósofo toma el tenedor de su izquierda, la ejecución se intercala o se ejecuta en paralelo (recordad que el problema es equivalente):
 
@@ -760,7 +760,7 @@ Dado que no se cumplen dos de las condiciones necesarias, no pueden producirse _
 
 .Un bug marciano
 ****
-El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje -el _SpaceCraft_- y a las pocas horas empieza a enviar datos y fotos en alta calidad. Unos días después se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos meteorológicos y científicos. Los reinicios los ordenaba la tarea _bc_sched_, responsable de verificar que las demás tareas se ejecutan correctamente.
+El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empieza a enviar datos y fotos en alta calidad. Unos días después se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos meteorológicos y científicos. Los reinicios los ordenaba la tarea _bc_sched_, responsable de verificar que las demás tareas se ejecutan correctamente.
 
 El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El bus 1553, heredado de la sonda Cassini, tenía un modo de funcionamiento síncrono simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
 
@@ -820,7 +820,7 @@ Después de estudiar y hacer simulaciones en la Tierra, para asegurarse que los 
 
 Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, el conocimiento de cómo se construyen esas soluciones nos permiten encarar soluciones correctas y eficientes para la mayoría de los problemas que nos podemos encontrar en programación concurrente.
 
-Al haber sido el primer -y más usado- método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problemas de los filósofos es un clásico. Sirvió para estudiar las diferentes formas de solucionar la sincronización entre procesos, también para reconocer y saber las reglas básicas para evitar los interbloqueos.
+Al haber sido el primer –y más usado– método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problemas de los filósofos es un clásico. Sirvió para estudiar las diferentes formas de solucionar la sincronización entre procesos, también para reconocer y saber las reglas básicas para evitar los interbloqueos.
 
 Finalmente analizamos el fenómeno curioso que se presenta por la compleja interacción de procesos en los sistemas operativos modernos, especialmente en los de _tiempo real_: la inversión de prioridades.
 
