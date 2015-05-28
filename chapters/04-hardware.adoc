@@ -200,7 +200,7 @@ Nuevo valor (_desired_):: El valor que se asignará al registro si su valor era 
 
 
 El algoritmo de la instrucción esfootnote:[
-GCC tiene dos macros para _CAS_, +compare_exchange_n+ y +compare_exchange+, ambos retornan un booleano si se pudo hacer el cambio. Se diferencias por la forma de un parámetro, en el primero el valor esperado se pasa por copia, en el segundo por referencia.]:
+GCC tiene dos macros para _CAS_, +compare_exchange_n+ y +compare_exchange+, ambos retornan un booleano si se pudo hacer el cambio. Se diferencian por la forma de un parámetro, en el primero el valor esperado se pasa por copia, en el segundo por referencia.]:
 
 [source,python]
 ----
