@@ -23,7 +23,7 @@ ISBN: 978-84-606-8761-0
 
 Licencia: CC BY-NC-ND 4.0
 
-
+// –
 
 
 image::legal.png[width=480, align="center"]

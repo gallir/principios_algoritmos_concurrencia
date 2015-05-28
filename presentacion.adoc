@@ -1,10 +1,12 @@
-Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación, estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
+Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación y estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
 
-Algunos de los temas son los que se suelen estudiar en asignaturas universitarias de programación concurrente: sincronización, el problema de exclusión mutua y sincronización con semáforos, monitores y canales. Además se tratan temas más avanzados y sus últimos desarrollos, como instrucciones de hardware, optimizaciones de spinlocks y la interfaz FUTEX del núcleo Linux para la implementación de construcciones de sincronización eficientes.
+Algunos de los temas son los que se suelen estudiar en asignaturas universitarias de programación concurrente: sincronización, el problema de exclusión mutua y sincronización con semáforos, monitores y canales. También se tratan temas más avanzados: instrucciones de hardware, optimizaciones de spinlocks y la interfaz FUTEX del núcleo Linux.
 
-Para cada tema se explican el origen, conceptos y algoritmos fundamentales, siempre acompañados de ejemplos y código fuente en lenguajes populares  (C, Python, Java, Go). Los programas están preparados y probados para que funcionen sobre cualquier sistema GNU/Linux, incluidas Raspberry 1 y 2.
+Para cada tema se explican el origen, conceptos y algoritmos fundamentales, siempre con  ejemplos y código fuente en lenguajes populares  (C, Python, Java, Go). Los programas están preparados y probados para que funcionen sobre cualquier sistema GNU/Linux, incluidas Raspberry 1 y 2.
 
-El libro está diseñado y formateado para ser leído con comodidad en lectores de ebooks. El código fuente está disponible en https://github.com/gallir/concurrencia_source_samples.
+El libro está diseñado y formateado para ser leído con comodidad en lectores de ebooks.
+
+El código fuente está disponible en https://github.com/gallir/concurrencia_source_samples.
 
 
 

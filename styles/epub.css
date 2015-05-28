@@ -310,7 +310,10 @@ img, object, embed {
     -ms-interpolation-mode:bicubic;
 }
 
-div.chapter, div.footnotes { page-break-before: always; }
+div.chapter, div.footnotes {
+    margin-top: 2em;
+    /*page-break-before: always;*/
+}
 
 .informalfigure, .figure {
     margin-top: 0.8em;
