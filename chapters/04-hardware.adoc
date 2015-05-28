@@ -214,7 +214,7 @@ def CAS(register, expected, desired):
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, usamos una variable local porque el macro de _CAS_ de GCC requiere un puntero. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación -+mutex+ valía uno– volverá a intentarlo en un bucle:
+La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, usamos una variable local porque el macro de _CAS_ de GCC requiere un puntero. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación –+mutex+ valía uno– volverá a intentarlo en un bucle:
 
 [source,python]
 ----
