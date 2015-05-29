@@ -84,7 +84,7 @@ Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar 
 
 === Exclusión mutua con registros _Read-Modify-Write_
 
-Estudiaremos los algoritmos de exclusión mutua para _N_ procesos con las instrucciones de hardware. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
+Estudiaremos los algoritmos de exclusión mutua para _N_ procesos con instrucciones de hardware. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
 
 Las instrucciones _LL/SC_ solo pueden ser programadas en ensamblador de algunas arquitecturas. Sus ejemplos están en ese lenguaje, solo funcionan en arquitecturas ARM (incluidas las Raspberry).
 
@@ -169,7 +169,7 @@ def unlock():
 
 
 ==== _Swap_
-Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente palabras de 32 o 64 bits. El algoritmo de la instrucción:
+Esta instrucción intercambia atómicamente dos posiciones de memoria, usualmente palabras de 32 o 64 bits. Su algoritmo:
 
 [source,python]
 ----
@@ -179,7 +179,7 @@ def swap(register1, register2):
     register2 = tmp
 ----
 
-El algoritmo es casi idéntico al que usa _TAS_. La diferencia es que el valor anterior de +mutex+ se verifica en una variable local, la que se usó para el intercambio:
+El algoritmo de exclusión mutua es casi idéntico al que usa _TAS_. La diferencia es que el valor anterior de +mutex+ se verifica en la variable local que se usó para el intercambio:
 
 [source,python]
 ----
@@ -194,7 +194,7 @@ def unlock():
     mutex = 0
 ----
 
-Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas implementadas en el paquete +sync/atomic+, por ejemplo con +atomic.SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
+Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas del paquete +sync/atomic+, por ejemplo con +SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
 
 [[em_cas]]
 ==== _Compare&Swap_
@@ -213,7 +213,7 @@ El algoritmo de la instrucción esfootnote:[GCC tiene dos macros para _CAS_, +co
 [source,python]
 ----
 def CAS(register, expected, desired):
-    if registro == expected:
+    if register == expected:
         register = desired
         return True
     else:
@@ -222,7 +222,7 @@ def CAS(register, expected, desired):
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, en el ejemplo se usa una variable local porque el macro de de GCC requiere un puntero para el valor esperado. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación –+mutex+ valía uno– volverá a intentarlo en un bucle:
+La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, en el ejemplo se usa una variable local porque el macro de de GCC requiere un puntero para el valor esperado. Si +mutex+ vale cero –no hay procesos en la sección crítica–, se le asigna uno y puede continuar. En caso de fallo –+mutex+ valía uno–, volverá a intentarlo en un bucle:
 
 [source,python]
 ----
@@ -305,7 +305,7 @@ node *pop(node **head) {
 <2> Si la cabecera apuntaba a un nodo y no fue modificada, se hará el cambio y la cabecera apuntará al siguiente nodo. Si fue modificada, se hace una copia del último valor a +orig+ y se volverá a intentar.
 
 
-Este algoritmo es correcto para gestionar una pila concurrente, pero solo si es imposible eliminar un nodo e inmediatamente insertar uno con la misma dirección de memoria. Con _CAS_ no se puede detectar si ocurrió una inserción de este tipo, es el problema ABA.
+Este algoritmo es correcto para gestionar una pila concurrente, pero solo si es imposible eliminar un nodo e inmediatamente insertar otro con la misma dirección de memoria. Con _CAS_ no se puede detectar si ocurrió una inserción de este tipo, es el problema ABA.
 
 Supongamos una pila con tres nodos que comienzan en las direcciones 10, 20 y 30:
 
@@ -366,7 +366,7 @@ Error, stack empty
 Aborted (core dumped)
 ----
 
-En sistemas con un único procesador quizás se necesiten varias ejecuciones, o aumentar el número de operaciones en la constante +OPERATIONS+, para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a menudo la probabilidad de que ocurra el error es muy baja. Si no se conoce el problema _ABA_, es muy difícil detectar que el programa es incorrecto.
+En sistemas con un único procesador quizás se necesiten varias ejecuciones, o aumentar el número de operaciones en la constante +OPERATIONS+, para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a menudo la probabilidad de que ocurra el error es muy baja. Es muy difícil detectar el _bug_ si se desconoce el problema _ABA_.
 
 ====== ABA con doble pila
 Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente, quizás no se observe el error de doble liberación. Para forzar el reuso de direcciones recientes –y así probar el problema _ABA_–, se puede usar una segunda pila como _caché_ de los nodos eliminados de la primera.
@@ -414,11 +414,11 @@ Error in 3 it shouldn't be empty
 
 [[stack_cas_tagged]]
 ===== Compare&Swap etiquetado
-Una solución para el problema ABA es usar bits adicionales para _etiquetar_ una _transacción_ (_tagged CAS_). Se requiere que _CAS_ compare e intercambie registros que incluyan el _valor esperado_ y la etiqueta, es decir, que opere sobre registros mayores al tamaño de palabra de la arquitecturafootnote:[Se usa _CAS_ principalmente con punteros, estos tienen el tamaño de palabra de la arquitectura.].
+Una solución para el problema ABA es usar bits adicionales para _etiquetar_ una _transacción_ (_tagged CAS_). Se requiere que _CAS_ compare e intercambie registros que incluyan el _valor esperado_ y la etiqueta. Es decir, que opere con registros mayores al tamaño de palabra de la arquitecturafootnote:[Se usa _CAS_ principalmente con punteros del mismo tamaño que el de palabra de la arquitectura.].
 
 Algunos fabricantes introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de registros de mayor tamaño que una palabra. Las instrucciones +cmpxchg8b+ y +cmpxchg16b+ de Intel operan con áreas de 64 y 128 bits, en lugar de solo 32 o 64 respectivamente. Se pueden usar esos bits adicionales para la _etiqueta_.
 
-Para la manipulación de pilas se requiere un campo adicional en las cabeceras. Se define la estructura +node_head+ compuesta por el puntero al nodo (+node+) y un entero que hará de etiqueta (+aba+). En cada intercambio se incrementa el valor anterior de +aba+, así es como se identifica cada _transacción_.
+Para la manipulación de pilas se requiere un campo adicional en las cabeceras. Se define la estructura +node_head+ compuesta por el puntero al nodo (+node+) y un entero que será la etiqueta (+aba+). En cada intercambio se incrementa el valor anterior de +aba+, así es como se identifica cada _transacción_.
 
 [source, c]
 ----
@@ -457,9 +457,9 @@ void push(node_head *head, node *e) {
 
 ==== Load-Link/Store-Conditional (_LL/SC_)
 
-_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: el _LL/SC_. De hecho, al compilar los programas de ejemplos en algunas de esas arquitecturas –por ejemplo, en Raspberry–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
+_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplos en algunas de esas arquitecturas –por ejemplo, en Raspberry–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
 
-El diseño de _LL/SC_ se basa en dos operacionesfootnote:[+lwarx+/+stwc+ en PowerPC, +ll+/+sc+ en MIPS, +ldrex+/+strex+ en ARM.] que trabajan en cooperación con el sistema de coherencia de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria en un registro; la otra a la de almacenar (_store_) un registro en una posición de memoria. La diferencia es que ambas están _enlazadas_, la ejecución de la segunda (_SC_) es condicional: almacena el valor solo si la dirección de memoria no fue modificada desde la ejecución de la primera (_LL_).
+El diseño de _LL/SC_ se basa en dos operacionesfootnote:[+lwarx+/+stwc+ en PowerPC, +ll+/+sc+ en MIPS, +ldrex+/+strex+ en ARM.] que trabajan en cooperación con el sistema de coherencia de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria; la otra a la de almacenar (_store_) en una posición de memoria. La diferencia es que ambas están _enlazadas_, la ejecución de la segunda (_SC_) es condicional: almacena el valor solo si la dirección de memoria no fue modificada desde la ejecución de la primera (_LL_).
 
 ===== _LL/SC_ en ARM
 
@@ -539,7 +539,7 @@ En una arquitectura con _LL/SC_ hay que implementar el algoritmo directamente co
 
 [[llsc]]
 ===== _LL/SC_ en ensamblador nativo
-Veremos la implementación con _LL/SC_ del mismo algoritmo con <<cas_double_stack, dos pilas _concurrentes_>> que sufría el problema ABA con _CAS_. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
+Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que tenía el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
 
 1. El <<stack_llsc_freelist_c, módulo en C>> es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+.
 
@@ -589,9 +589,9 @@ Con un único núcleo del ARMv6 la implementación con _LL/SC nativo_ es más de
 
 === Recapitulación
 
-En este capítulo hemos visto las instrucciones por hardware esenciales para construir _spinlock_ eficientes. Analizamos varias de ellas, desde las más básicas hasta las más potentes como _CAS_ y _LL/SC_. Además de la exclusión mutua, vimos el uso de las primitivas _RMW_ para resolver problemas más sofisticados, como las pilas concurrentes sin bloqueo. También estudiamos el problema ABA y su solución, _CAS etiquetado_.
+En este capítulo hemos visto las instrucciones por hardware esenciales para construir _spinlock_ eficientes. Analizamos varias de ellas, desde las más básicas hasta las más potentes: _CAS_ y _LL/SC_. Además de la exclusión mutua, vimos el uso de las primitivas _RMW_ para resolver problemas más sofisticados, como las pilas concurrentes sin bloqueo. También estudiamos el problema ABA y su solución, _CAS etiquetado_.
 
-No hay instrucciones de hardware unificadas para todas las arquitecturas, tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_, que luego son traducidos a secuencias más complejas que emulan los registros _RMW_ representados por el macro. Lo vimos claramente con la arquitectura ARM, todas se emulan con _LL/SC_.
+No hay instrucciones de hardware unificadas para todas las arquitecturas, tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_, que traducen o emulan los registros _RMW_ representados por el macro.
 
 Simular _LL/SC_ con _CAS_ o _TAS_ es más complicado –sino imposible–, por lo que GCC no incluye macros para _LL/SC_. Tuvimos que recurrir a ensamblador para poder usarlas en procesadores ARM.
 
