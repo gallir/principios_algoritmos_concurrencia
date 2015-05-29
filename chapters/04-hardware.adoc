@@ -1,6 +1,6 @@
 [[hardware]]
 == Soluciones por hardware
-Hemos visto soluciones a la exclusión mutua sin soporte especial de hardware, solo requieren _registros de lectura-escritura atómicos_ (las variables enteras compartidas). Son _spinlocks_ pero sin uso práctico, son muy ineficientes.
+Hemos visto algoritmos que solucionan la exclusión mutua sin soporte especial de hardware, solo requieren _registros atómicos_ (las variables enteras compartidas). Son _spinlocks_ pero sin uso práctico, son muy ineficientes.
 
 En primer lugar, por los requisitos de almacenamiento. El número de registros necesarios –tamaño de arrays– es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. En sistemas _SMP_ implica una sobrecarga importante, el sistema de coherencia de cache debe mantener la consistencia de zonas extensas de memoria.
 
@@ -33,17 +33,17 @@ En el siguiente nivel están los _registros regulares_. Una operación de lectur
 
 [[atomic_register]]
 ==== Registros atómicos
-Los registros que devuelven el último valor escritofootnote:[Los que supusimos para las variables de los algoritmos de exclusión mutua previos.] se denominan _registros atómicos_. Generalmente son registros de un único byte, una _palabra_, enteros de varios bytes, o referencias a memoria u objetos que cumplen las siguientes dos condiciones (<<Lamport2>>):
+Los registros que devuelven el último valor escrito se denominan _registros atómicos_. Generalmente son registros de un único byte, una _palabra_, enteros de varios bytes, o referencias a memoria u objetos que cumplen las siguientes dos condiciones (<<Lamport2>>):
 
 1. El método _get_ retorna el último valor escrito. Si una lectura retorna un valor y no hubo otra escritura intermedia, la siguiente lectura retornará el mismo valor.
 
-2. Si hay varios _write_ concurrentes, el valor que retornará el siguiente _get_ es uno de los valores del _write_, no un rango de posibles valores. Si un _write_ concurrente es el número 0 y otro es el número 1000, el _get_ retornará 0 o 1000.
+2. Si hay varios _write_ concurrentes, _get_ retornará uno de los valores escritos. Si un _write_ concurrente es el número 1 y otro es 100, _get_ retornará 1 o 100.
 
 [[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
-Como hemos observado en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos involucrados. Además se hacen esperas activas sobre muchos registros que introducen presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de porcesos son ineficientes e inseguras.
+Como observamos en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos concurrentes. Además, las esperas activas recorren muchos registros, se introduce presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de procesos son ineficientes e inseguras.
 
-Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema operativo de tener varios procesos activos en memoria e intercalar su ejecución.] se diseñaron instrucciones atómicas que permitieron implementar algoritmos más seguros y eficientes. Estas primitivas pueden ser expresadas como abstracciones denominadas genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ pueden implementarse en construcciones de lenguajes o como instrucciones de procesador, sus propiedades son similares.
+Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema operativo de tener varios procesos activos en memoria e intercalar su ejecución.] se diseñaron instrucciones atómicas que permitieron implementar algoritmos más seguros y eficientes. Estas primitivas pueden ser expresadas como abstracciones denominadas genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ pueden implementarse como construcciones de lenguajes o instrucciones de procesador, sus propiedades son similares.
 
 [[consensus]]
 .Registros RMW no triviales
@@ -55,7 +55,7 @@ _CAS_ es la más potente de la lista, <<Herlihy91, Herlihy>> demostró que perte
 [quote, Maurice Herlihy]
 _CAS_ es a la computación asíncrona el equivalente de las máquinas de Turing de la computación secuencial.
 
-Afortunadamente la mayoría de procesadores implementan _CAS_ o una equivalente en cuanto a capacidad de consenso, _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
+Afortunadamente la mayoría de procesadores implementan _CAS_, o una equivalente en cuanto a capacidad de consenso: _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
 ****
 
 Hay varios tipos de instrucciones que implementan registros _RMW_, las que están disponibles en la mayoría de procesadores son:
@@ -74,21 +74,21 @@ Hay varios tipos de instrucciones que implementan registros _RMW_, las que está
 - _compare&swap_: Compara el valor del registro con otro, si son iguales asigna un nuevo y retorna el anterior.
 
 
-Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar la programación y portabilidad los compiladores proveen macros o _intrinsics_. Los macros de compiladores generan o simulan la secuencia de instrucciones para cada arquitecturafootnote:[Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*` que en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria de C11 y C++11.], los programadores no se deben preocupar de programar en ensamblador.
+Los fabricantes implementan conjuntos de operaciones diferentes, para facilitar la programación y portabilidad los compiladores proveen macros o _intrinsics_. Los macros de compiladores generan o simulan la secuencia de instrucciones para cada arquitecturafootnote:[Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*`, en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria de C11 y C++11.], los programadores no se deben preocupar de programar en ensamblador.
 
 
 === Exclusión mutua con registros _Read-Modify-Write_
 
-A continuación veremos los algoritmos de exclusión mutua para _N_ procesos con las instrucciones anteriores. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible también están en Go, éste tiene primitivas atómicas en el módulo +sync+.
+A continuación veremos los algoritmos de exclusión mutua para _N_ procesos con las instrucciones anteriores. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
 
-Las instrucciones _LL/SC_ solo pueden ser programadas y probadas en ensamblador en algunas arquitecturas, en este caso los ejemplos están en ese lenguaje y funcionan solo en arquitecturas ARM (incluidas las Raspberry).
+Las instrucciones _LL/SC_ solo pueden ser programadas y probadas en ensamblador en algunas arquitecturas, en este caso los ejemplos están en ese lenguaje y funcionan en arquitecturas ARM (incluidas las Raspberry).
 
 Dejando de lado las limitaciones y restricciones prácticas de programar con instrucciones del procesador, es sorprendente la simplicidad de los algoritmos de exclusión mutua con estas primitivas. Sobre todo después de analizar los problemas de los algoritmos sin soporte del hardware.
 
 ==== _Get&Set_
 Se usa una variable global +mutex+ inicializada a cero, indica que no hay procesos en la sección crítica. En el preprotocolo se almacena 1 y se verifica si el valor anterior era 0 (es decir, no había ningún proceso en la sección crítica). Si es diferente a cero, esperará en un bucle hasta que lo sea.
 
-La función +lock+ es la entrada a la sección crítica y +unlock+ la salida.
+La función +lock+ es la entrada a la sección crítica, +unlock+ la salida.
 
 [source,python]
 ----
@@ -102,13 +102,13 @@ def unlock():
     mutex = 0
 ----
 
-El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre no es la instrucción _swap_ sino un equivalente de _get&set_.
+El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre, no se trata la instrucción _swap_ sino un equivalente de _get&set_.
 
 ==== _Get&Add_
 
-Se puede implementar exclusión mutua con un algoritmo muy similar al de la panadería, cada proceso obtiene un número y espera a su turno. Ahora la obtención del _siguiente número_ es atómica y, por lo tanto, no se necesita un array ni un bucle para controles adicionales. El contraste muestra las ventajas de disponer registros _RMW_.
+Se puede implementar exclusión mutua con un algoritmo muy similar al de la panadería, cada proceso obtiene un número y espera a su turno. Ahora la obtención del _siguiente número_ es atómica y, por lo tanto, no se necesita un array ni un bucle para controles adicionales. Este contraste muestra las ventajas de disponer registros _RMW_.
 
-Se requieren dos variables, +number+ para el siguiente número y +turn+ para indicar a qué número le corresponde entrar.
+Se requieren dos variables, +number+ para el siguiente número y +turn+ para indicar el turno de entrada.
 
 [source,python]
 ----
@@ -126,16 +126,15 @@ def unlock():
 ----
 
 [[get_and_add_ticket]]
-El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&Get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
+El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
 
-A diferencia de la implementación con _get&set_, ésta asegura espera limitada: el número que selecciona cada proceso es único y creciente (aunque hay que tener en cuenta que el valor de +number+ llegará a un máximo y rotará). Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>, muy usados en el núcleo de Linux porque aseguran que no se producen esperas infinitas y que los procesos entran a la sección crítica en orden FIFO (_fairness_).
-
+A diferencia de la implementación con _get&set_, ésta asegura espera limitada: el número que selecciona cada proceso es único y crecientefootnote:[Aunque hay que tener en cuenta que el valor de +number+ llegará a su máximo y rotará.]. Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>. Son muy usados en el núcleo de Linux, aseguran espera limitada equidad (_fairness_): los procesos entran a la sección crítica en orden FIFO.
 
 
 ==== _Test&Set_
-La instrucción _test&set_ o _TAS_ fue la más usada hasta la década de 1970, cuando empezó a ser reemplazada por operaciones que permiten niveles (_clases_) de consenso más elevados. La implementación en hardware usa una variable entera binaria (o booleana) que puede tomar valores 0 y 1.
+La instrucción _test&set_ (_TAS_) fue la más usada hasta la década de 1970, cuando empezó a ser reemplazada por operaciones que permiten niveles (_clases_) de consenso más elevados. La implementación en hardware usa una variable entera binaria (o booleana) que puede tomar valores 0 y 1.
 
-La instrucción solo tiene un operando. Si el valor es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false_).
+La instrucción solo tiene un operando. Si su valor es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false_).
 
 [source,python]
 ----
@@ -175,7 +174,7 @@ def swap(register1, register2):
     register2 = tmp
 ----
 
-El algoritmo de exclusión mutua es casi idéntico al que usa _TAS_, en este caso el valor anterior de +mutex+ se verifica en la variable local que se usó para el intercambio:
+El algoritmo de exclusión mutua es casi idéntico al que usa _TAS_. La diferencia es que el valor anterior de +mutex+ se verifica en una la variable local, la que se usó para el intercambio:
 
 [source,python]
 ----
@@ -190,16 +189,16 @@ def unlock():
     mutex = 0
 ----
 
-Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas implementadas en el paquete +sync/atomic+, por ejemplo con +atomic.SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, si la pruebas en una Raspberry asegúrate de tener una versión de Go moderna.].
+Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas implementadas en el paquete +sync/atomic+, por ejemplo con +atomic.SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
 
 [[em_cas]]
 ==== _Compare&Swap_
 
-_CAS_ es la más común, se usa en la arquitectura Intel/AMD. Provee el mayor _nivel de consenso_, aunque sufre el _problema ABA_. La instrucción requiere tres operandos:
+_CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_, aunque sufre el _problema ABA_. La instrucción requiere tres operandos:
 
 Registro (_register_):: La dirección de memoria cuyo valor se comparará y asignará un nuevo valor, si corresponde.
 
-Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC de los ejemplos incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _nuevo valor_ (se copia en el sentido inverso).
+Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC  incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _nuevo valor_ (se copia en el sentido inverso).
 
 Nuevo valor (_desired_):: El valor que se asignará al registro si su valor era igual al esperado.
 
@@ -210,15 +209,15 @@ El algoritmo de la instrucción esfootnote:[GCC tiene dos macros para _CAS_, +co
 ----
 def CAS(register, expected, desired):
     if registro == expected:
-        registro = desired
+        register = desired
         return True
     else:
-        desired = registro
+        desired = register
         return False
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, se usa una variable local porque el macro de de GCC requiere un puntero. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación –+mutex+ valía uno– volverá a intentarlo en un bucle:
+La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, en el ejemplo se usa una variable local porque el macro de de GCC requiere un puntero para el valor esperado. Si +mutex+ vale cero –no hay procesos en la sección crítica– se asigna uno y puede continuar. En caso de haber fallado la asignación –+mutex+ valía uno– volverá a intentarlo en un bucle:
 
 [source,python]
 ----
@@ -246,11 +245,11 @@ func lock() {
 ===== El _problema ABA_
 _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se presenta en algoritmos sencillos como el de exclusión mutua, sino en casos de intercalados más complejos. Por ejemplo, dos procesos _P_ y _Q_ que modifican un registro con _CAS_:
 
-- El proceso _P_ lee el valor _A_ y se interrumpe,
-- _Q_ modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que  _P_ vuelva a ejecutarse,
+- El proceso _P_ lee el valor _A_ y se interrumpe.
+- _Q_ modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que  _P_ vuelva a ejecutarse (de allí el nombe _ABA_).
 - _P_ ejecutará la instrucción _CAS_ sin haber detectado el cambio.
 
-Si _A_ y _B_ son valores simples no hay conflictos; pero si son punteros a estructuras más complejas, como nodos de una pila, un valor de esas estructuras pudo haber cambiado y provocar errores.
+Si _A_ y _B_ son valores simples no hay conflictos; pero si son punteros a estructuras más complejas, como nodos de una pila, un campo de esas estructuras pudo haber cambiado y provocar errores.
 
 [[free_lock_stack]]
 ====== Pilas concurrentes sin bloqueo
@@ -278,7 +277,7 @@ void push(node **head, node *e) {
 }
 ----
 <1> El nodo siguiente al nodo a insertar será el apuntado por la cabecera.
-<2> Si la cabecera no fue modificada, se hará el cambio y apuntará al nuevo nodo +e+. Si por el contrario +head+ fue modificada, el nuevo valor de +head+ se copia a +e->next+ (apuntará al elemento nuevo que apuntaba +head+) y se volverá a intentar. Cuando se haya podido hacer el _swap_ +head+ apuntará correctamente a +e+ y +e->next+ al elemento que estaba antes.
+<2> Si la cabecera no fue modificada, se hará el cambio y apuntará al nuevo nodo +e+. Si +head+ fue modificada, su nuevo valor se copia a +e->next+ (apuntará al elemento nuevo que apuntaba +head+) y se volverá a intentar. Cuando se haya podido hacer el _swap_ +head+ apuntará correctamente a +e+ y +e->next+ al elemento que estaba antes.
 
 [source, c]
 ----
@@ -296,7 +295,7 @@ node *pop(node **head) {
 }
 ----
 <1> Si es +NULL+ la pila está vacía y retorna el mismo valor.
-<2> Si la cabecera apuntaba a un nodo y no fue modificada se hará el cambio y la cabecera apuntará al siguiente nodo. Si fue modificada, se hace una copia del último valor a +orig+ y se volverá a intentar.
+<2> Si la cabecera apuntaba a un nodo y no fue modificada, se hará el cambio y la cabecera apuntará al siguiente nodo. Si fue modificada, se hace una copia del último valor a +orig+ y se volverá a intentar.
 <3> Se retorna el puntero al nodo al que apuntaba previamente la cabecera.
 
 Este algoritmo es correcto para gestionar una pila concurrente, pero solo si no se puede eliminar un nodo e inmediatamente insertar uno nuevo con la misma dirección de memoria. Con _CAS_ no se puede detectar si ocurrió una inserción de este tipo.
@@ -330,8 +329,8 @@ Cuando _P_ continúe su ejecución y compare +orig+ en el _CAS_ hará el cambio,
 +head => ¿20?    [30]+
 --
 
-====== Problema ABA generado por malloc
-Este _reciclado_ de direcciones es habitual si se usa +malloc+ para nuevos nodos, y luego  +free+ cuando se elimina de la listafootnote:[Las implementaciones de +malloc+ suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]Camos a comprobarlo, el siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes, cada uno de ellos ejecuta repetidamente el siguiente código:
+====== ABA con malloc
+Este _reciclado_ de direcciones es habitual si se usa +malloc+ para nuevos nodos, y   +free+ cuando se elimina de la pilafootnote:[Las implementaciones de +malloc+ suelen reusar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]Podemos comprobarlo, el siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes. Cada uno de ellos ejecuta repetidamente el siguiente código:
 
 [source, c]
 ----
@@ -362,7 +361,7 @@ Aborted (core dumped)
 
 En sistemas con un único procesador quizás se necesiten varias ejecuciones, o aumentar el número de operaciones en la constante +OPERATIONS+, para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlo. Como en este caso, si no se conoce y tiene en cuenta el problema _ABA_, es muy difícil detectar que el programa es incorrecto.
 
-====== Problema ABA generado con doble pila
+====== ABA con doble pila
 Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente, por lo que quizás no se observe el error de doble liberación. Para forzar el reuso de direcciones recientes –y así probar que puede ser víctima de _ABA_– se puede usar una segunda pila como _caché_ de los nodos eliminados de la primera.
 
 [[cas_double_stack]] No se libera la memoria de los nodos con +free+, se insertan en una segunda pila de _caché_ de libres, +free_nodes+. En lugar de siempre asignar memoria con +malloc+, cada vez que se crea un nuevo nodo se busca primero de la lista de libres.
