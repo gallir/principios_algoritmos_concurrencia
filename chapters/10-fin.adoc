@@ -1,4 +1,4 @@
-== Epílogo
+== 10. Epílogo
 
 image::jrmora/10-fin.jpg[align="center"]
 

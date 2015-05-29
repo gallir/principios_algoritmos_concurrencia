@@ -1,5 +1,5 @@
 [[hardware]]
-== Soluciones por hardware
+== 4. Soluciones por hardware
 
 image::jrmora/04-hardware.jpg[align="center"]
 

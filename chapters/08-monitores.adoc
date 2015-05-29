@@ -1,5 +1,5 @@
 [[monitors]]
-== Monitores
+== 8. Monitores
 image::jrmora/08-monitores.jpg[align="center"]
 
 Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Per Brinch-Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>). Buscaban  una forma de estructurar a los sistemas operativos usando lenguajes de alto nivelfootnote:[Le llamaron _monitor_, así es como se llamabam en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaron _monitor_ al conjunto de procedimientos y datos que debía gestionar cada _scheduler_.

@@ -1,5 +1,5 @@
 [[channels]]
-== Canales
+== 9. Canales
 image::jrmora/09-canales.jpg[align="center"]
 
 Las construcciones de programación concurrente de capítulos anteriores –algoritmos, _spinlocks_, semáforos y monitores– requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente, sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).

@@ -1,5 +1,5 @@
 [[barriers]]
-== La realidad del hardware moderno
+== 3. La realidad del hardware moderno
 
 image::jrmora/03-barreras.jpg[align="center"]
 

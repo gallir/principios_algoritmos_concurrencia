@@ -1,5 +1,5 @@
 [[futex]]
-== FUTEX
+== 7. FUTEX
 
 Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo.
 
