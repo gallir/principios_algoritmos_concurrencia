@@ -1,4 +1,9 @@
-== Temas no tratados
+== Epílogo
+
+image::jrmora/10-fin.jpg[align="center"]
+
+Despedida y mención de temas no tratados pero importantes.
+
 
 ////
 === Estructuras concurrentes no bloqueantes

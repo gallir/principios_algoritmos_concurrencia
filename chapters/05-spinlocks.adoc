@@ -290,7 +290,8 @@ Queda a ejercicio del lector encontrar si este algoritmo da prioridad a los lect
 Los algoritmos con instrucciones de hardware anteriores no cumplen uno de los <<em_requisites, requisitos deseables>> de la exclusión mutua, asegurar espera limitada. Aunque estadísticamente no se pueden producir esperas infinitasfootnote:[En miles o centenares de miles de iteraciones es extremadamente improbable que nunca le toque a un proceso.], presenta problemas de equidad: unos procesos pueden retrasarse más que otros. Por ejemplo, en 2008 se detectó este efecto en el núcleo de Linux (<<Corbet1>>, <<Corbet2>>):
 
 [quote, Nick Piggin]
-On an 8 core (2 socket) Opteron, spinlock unfairness is extremely noticable, with a userspace test having a difference of up to 2x runtime per thread, and some threads are starved or "unfairly" granted the lock up to 1 000 000 (!) times.
+En un Opteron con 8 núcleos (2 procesadores), la injusticia de los _spinlocks_ es extremadamente notable, con un test en espacio de usuario se obtienen diferencias de tiempo de CPU de hasta 2 veces por hilo, y mientras algunos hilos sufren inanición a otros se les garantiza el _lock_ hasta 1 000 000 (!) de veces.
+
 
 Para evitarlo hay que usar algoritmos que aseguran que los procesos entran a la sección crítica en el orden que llegaron (_FIFO_).
 
