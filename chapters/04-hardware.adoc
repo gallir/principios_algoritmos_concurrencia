@@ -362,9 +362,9 @@ Aborted (core dumped)
 En sistemas con un único procesador quizás se necesiten varias ejecuciones, o aumentar el número de operaciones en la constante +OPERATIONS+, para que el error se manifieste. Es uno de los problemas inherentes de la programación concurrente, a veces la probabilidad de que ocurra el error es muy baja y hace más difícil detectarlo. Como en este caso, si no se conoce y tiene en cuenta el problema _ABA_, es muy difícil detectar que el programa es incorrecto.
 
 ====== ABA con doble pila
-Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente, por lo que quizás no se observe el error de doble liberación. Para forzar el reuso de direcciones recientes –y así probar que puede ser víctima de _ABA_– se puede usar una segunda pila como _caché_ de los nodos eliminados de la primera.
+Algunas implementaciones de +malloc+ no retornan las direcciones usadas recientemente, quizás no se observe el error de doble liberación. Para forzar el reuso de direcciones recientes –y así probar que puede ser víctima de _ABA_– se puede usar una segunda pila como _caché_ de los nodos eliminados de la primera.
 
-[[cas_double_stack]] No se libera la memoria de los nodos con +free+, se insertan en una segunda pila de _caché_ de libres, +free_nodes+. En lugar de siempre asignar memoria con +malloc+, cada vez que se crea un nuevo nodo se busca primero de la lista de libres.
+[[cas_double_stack]] No se libera la memoria de los nodos con +free+, se insertan en una segunda pila de _caché_ de libres, +free_nodes+. En lugar de asignar memoria siempre con +malloc+, cuando se crea un nuevo nodo se busca primero de la lista de libres.
 
 <<stack_cas_freelist_c, El programa>> ejecutará repetidamente el siguiente código:
 
@@ -393,7 +393,7 @@ if (e) {
 <5> Si se pudo extraer el elemento se lo agrega a la pila de libres.
 <6> La lista estaba vacía, es un error.
 
-La ejecución del programa dará numerosos errores de la _pila vacía_, se harán también más +malloc+ de los que debería. Ambos son consecuencia del problema ABA.
+La ejecución del programa dará numerosos errores de _pila vacía_, se harán también más +malloc+ de los que debería. Ambos son consecuencia del problema ABA.
 
 ----
 0 malloc
@@ -407,9 +407,9 @@ Error in 3 it shouldn't be empty
 
 [[stack_cas_tagged]]
 ===== Compare&Swap etiquetado
-Una solución para el problema ABA es usar bits adicionales como etiquetas para identificar una _transacción_ (_tagged CAS_). Algunas arquitecturas introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de más de una palabra. Por ejemplo Intel con las instrucciones +cmpxchg8b+ y +cmpxchg16b+, permiten trabajar con estructuras de 64 y 128 bits en lugar de solo 32 o 64. Se pueden usar esos bits adicionales para la _etiqueta_, ésta también se incluye en la comparación con el valor esperado.
+Una solución para el problema ABA es usar bits adicionales como etiquetas para identificar una _transacción_ (_tagged CAS_). Algunas arquitecturas introdujeron instrucciones _CAS_ que permiten la verificación e intercambio de más de una palabra. Las instrucciones +cmpxchg8b+ y +cmpxchg16b+ de Intel permiten trabajar con estructuras de 64 y 128 bits, en lugar de solo 32 o 64. Se pueden usar esos bits adicionales para la _etiqueta_, ésta también se incluye en la comparación con el valor esperado.
 
-En este caso de manipulación de pilas necesitamos la etiqueta (+aba+) solo para verificar el intercambio de las cabeceras, usaremos la estructura +node_head+ compuesta por el puntero al nodo y la etiqueta.
+En este caso de manipulación de pilas solo se necesita la etiqueta (+aba+) para verificar el intercambio de las cabeceras, se defina la estructura +node_head+ compuesta por el puntero al nodo y la etiqueta +aba+.
 
 
 [source, c]

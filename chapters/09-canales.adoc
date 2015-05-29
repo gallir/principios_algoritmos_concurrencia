@@ -2,13 +2,13 @@
 == Canales
 image::jrmora/09-canales.jpg[align="center"]
 
-Las construcciones de programación concurrente de capítulos anteriores –algoritmos, _spinlocks_, semáforos y monitores– requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción, además de sus capacidad de sincronización equivalente sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
+Las construcciones de programación concurrente de capítulos anteriores –algoritmos, _spinlocks_, semáforos y monitores– requieren y solo sirven para sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente, sirven para comunicación mediante intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_).
 
 Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
 
 Comunicación síncrona:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea en el _send_ hasta que el receptor ejecute el _receive_. Y viceversa, el receptor se bloquea hasta que el remitente envíe el mensaje.
 
-Comunicación asíncrona:: Alternativamente se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asíncrona requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal, si no hay receptores o estos consumen mensajes a menor ritmo el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
+Comunicación asíncrona:: Alternativamente, se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asíncrona requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal, si no hay receptores o estos consumen mensajes a menor ritmo el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
 
 Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_) en general los mensajes tienen destinatarios, hay dos formas básicas de especificarlos (_addressing_):
 

@@ -2,9 +2,9 @@
 == Monitores
 image::jrmora/08-monitores.jpg[align="center"]
 
-Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Per Brinch-Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>) como una forma de estructurar a los sistemas operativos usando lenguajes de alto nivelfootnote:[Le llamaron _monitor_ porque así es como se llamaba en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaron _monitor_ al conjunto de procedimientos y datos que debía gestionar cada _scheduler_.
+Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Per Brinch-Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>). Buscaban  una forma de estructurar a los sistemas operativos usando lenguajes de alto nivelfootnote:[Le llamaron _monitor_, así es como se llamabam en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaron _monitor_ al conjunto de procedimientos y datos que debía gestionar cada _scheduler_.
 
-Para evitar los problemas derivados de los accesos concurrentes cada monitor debe asegurar la exclusión mutua de la ejecución de sus procedimientos y sus variables solo deben accedidos o modificados desde estos procedimientos. Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ (basado en Pascal y con ideas de Modula67) que fue el primer _lenguaje concurrente_ y sirvió para el desarrollo de varios sistemas operativos experimentales y otros lenguajes como Modula, Concurrent C, Mesa, ADA y Java. Este último incluye monitores como construcción sintáctica, la combinación de métodos y bloques +synchronized+ con las funciones de sincronización +wait+, +notify+ y +notifyAll+.
+Para evitar los problemas derivados de los accesos concurrentes, cada monitor debe asegurar la exclusión mutua de la ejecución de sus procedimientos. Las variables del monitor solo deben accedidos o modificados desde estos procedimientos. Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ (basado en Pascal y con ideas de Modula67) que fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y otros lenguajes como Modula, Concurrent C, Mesa, ADA y Java. Este último incluye monitores como construcción sintáctica: la combinación de métodos y bloques +synchronized+ con las funciones de sincronización +wait+, +notify+ y +notifyAll+.
 
 En la propuesta original un monitor se declaraba de una forma similar a la siguientefootnote:[La especificación original de Hoare fue en Pascal, en la bibliografía posterior se empezó a usar una notación sin la sobrecarga de tantos +BEGIN+ y +END+.]:
 
@@ -18,11 +18,11 @@ monitor Counter
 
 El monitor +Counter+ tiene una variable +counter+ y el procedimiento +increment+, la variable es accesible solo desde este procedimiento.
 
-Ningún procedimiento de un monitor se ejecutará si otro se está ejecutando, es decir, se asegura exclusión mutua en la ejecución de sus métodos. Como las variables solo pueden accederse desde sus procedimientos el problema de la sección crítica está resuelto.
+Ningún procedimiento de un monitor se ejecutará si otro se está ejecutando, es decir, se asegura exclusión mutua en la ejecución de sus métodos. Como las variables solo pueden accederse desde sus procedimientos, el problema de la sección crítica está resuelto.
 
 [[java_monitor]]
 === Monitores en Java
-La estructura de monitores que encapsula variables y procedimientos es similar a la programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No hay una construcción específica para definir monitores pero cada objeto en Java tiene asociado un _mutex_ implícito que se puede usar para forzar la exclusión mutua de la ejecución de un bloque de código indicando que es +synchronized+ respecto a dicho objeto, como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
+La estructura de monitores que encapsula variables y procedimientos es similar al concepto de programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No tiene una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ implícito. Se lo puede usar para forzar la exclusión mutua de ejecución de un bloque de código indicando que es +synchronized+ respecto a dicho objeto, como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
 
 
 [source, java]
