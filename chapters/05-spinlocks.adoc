@@ -36,7 +36,7 @@ Cada grupo de barras es una medición diferente. El primero por la izquierda (_n
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC, y la complejidad de _CAS_.]
+Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC y la complejidad de _CAS_.]
 
 === _Spinlocks_ óptimos
 Las implementaciones anteriores son ineficientes por dos razones:
@@ -585,7 +585,7 @@ void lock(clh_node *node) {
 }
 ----
 <1> Se almacena al nodo actual como +locked+, este campo será verificado por el siguiente proceso que pretenda entrar a la sección crítica.
-<2> Se obtiene la dirección de +tail+, indica cuál es el predecesor del proceso actual, y se almacena en +tail+ la dirección del nodo actual. El valor que tenía +tail+ se almacena en el campo +prev+ (es el puntero al nodo del proceso anterior) y se hace una copia en +predecessor+.
+<2> Se obtiene la dirección de +tail+, indica cuál es el predecesor del proceso actual y se almacena en +tail+ la dirección del nodo actual. El valor que tenía +tail+ se almacena en el campo +prev+ (es el puntero al nodo del proceso anterior) y se hace una copia en +predecessor+.
 <3> Se hace la espera activa sobre el campo +locked+ del nodo anterior, cuando sea falso el proceso actual podrá continuar.
 
 [source, c]
