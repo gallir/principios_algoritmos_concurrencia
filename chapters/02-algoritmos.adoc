@@ -6,11 +6,11 @@ La exclusión mutua (o _sección crítica_) es un problema básico y fundamental
 
 Un problema de exclusión mutua –muy genérico y _naïve_– que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
 
-El mismo problema ocurre con granularidades menores: datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de memoria del navegador web modificados desde diferentes hilos de ejecución, hasta simples variables enteras.
+El mismo problema ocurre con granularidades menores: desde datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de memoria del navegador web modificados desde diferentes hilos de ejecución, hasta simples variables enteras.
 
 
 === Definición
-La solución formal a este problema fue publicado por Dijkstra en 1965 (<<Dijkstra65>>). Un conjunto de procesos independientes que pueden ser considerados cíclicos, en cada ciclo ejecutan una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
+La solución formal a este problema fue publicado por Edsger Dijkstra en 1965 (<<Dijkstra65>>). Un conjunto de procesos independientes que pueden ser considerados cíclicos ejecutan en cada ciclo una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
 
 Así se definió el modelo del _problema de la sección crítica_ o _exclusión mutua_. Es el más sencillo y estudiado de los problemas genéricos de concurrencia. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas; mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
 
@@ -66,10 +66,10 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para _N_ procesos, el _algoritmo de la panadería_ de Leslie Lamport (<<Lamport>>).
 
 ****
-Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, tampoco funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
+Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, tampoco funcionan en los procesadores modernos. Éstos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
 ****
 
-El objetivo de estudiar estos algoritmos –y su evolución hasta la solución correcta– es aprender a reconocer y razonar sobre los problemas de los programación concurrente; conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua; las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
+El objetivo de estudiar estos algoritmos –y su evolución hasta la solución correcta– es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
 
 - esperas activas (_busy wait_);
 - interbloqueos (_deadlocks_);
@@ -364,7 +364,7 @@ states[0] = False
 <1> Cede el turno al otro proceso.
 <2> Espera si el estado del otro es verdadero y es su turno.
 
-Como ya hemos analizado en detalle los algoritmos anteriores, en éste nos limitaremos a demostrar que se cumplen los tres criterios fundamentales (<<em_requisites>>):
+Como ya hemos analizado en detalle los algoritmos anteriores, en este nos limitaremos a demostrar que se cumplen los tres criterios fundamentales (<<em_requisites>>):
 
 Exclusión mutua::
 Para que haya dos procesos en la sección crítica y por la condición +states[j] and turn == j+ se tiene que cumplir una de las condiciones siguientes:
@@ -501,7 +501,7 @@ Se puede consultar y probar el <<counter_bakery, código en C>> de este algoritm
 ****
 
 ////
-Separador para que no lo incluya en el lista anterior :-O
+Separador para que no lo incluya en la lista anterior :-O
 ////
 
 Exclusión mutua::
