@@ -15,7 +15,7 @@ Desde que se comenzó a estudiar el problema de la concurrencia, inicios de la d
 === Inhabilitación de interrupciones
 Si el problema fundamental es el intercalado provocado por las interrupciones, ¿por qué no deshabilitarlas? Aunque se recurre a este mecanismo en casos muy concretos en el núcleofootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.] no es una solución genérica segura. Si un proceso puede deshabilitar las interrupciones, entonces puede tomar el control del sistema: se anula la cualidad de apropiativo del _scheduler_. No es una solución aceptable para _procesos de usuarios_.
 
-Aún en el núcleo del sistema operativo presenta dificultades, existe el riesgo de perder interrupciones y la complicación de deshabilitarlas en todos los procesadores. Además, por la dificultad de deshabilitar interrupciones simultáneamente en varios procesadores, tampoco se previene el efecto de intercalación: la memoria puede ser modificada por un procesador sin las interrupciones inhabilitadas.
+Inhabilitar interrupciones presenta dificultades aún en el núcleo del sistema operativo. Existe el riesgo de perderlas y la complicación para hacerlo en todos los procesadores. Además, por la dificultad de deshabilitar interrupciones simultáneamente en varios procesadores, tampoco se previene el efecto de intercalación: la memoria puede ser modificada por un procesador sin las interrupciones inhabilitadas.
 
 === Sincronización por hardware
 Se desarrollaron alternativas a nivel del procesador, las _primitivas de sincronización de hardware_. Son instrucciones que leen y modifican el valor de uno o varios registros sin ser interrumpidas. También aseguran coherencia de caché e introducen barreras de memoria para mantener el orden parcial de instrucciones.
