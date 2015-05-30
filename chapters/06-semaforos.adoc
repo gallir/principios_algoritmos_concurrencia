@@ -1,6 +1,8 @@
 [[semaphores]]
 == 6. Semáforos
 
+image::jrmora/06-semaforos.jpg[align="center"]
+
 El concepto de semáforos fue el primero en solucionar problemas de sincronización sin espera activa. Lo inventó Edsger W. Dijkstra a finales de la década de 1960 (<<Dijkstra74>>), aunque las primeras ideas aparecieron a principios de la misma década (<<Dijkstra35>>). Está inspirado en las señales visuales ferroviariasfootnote:[Viene del inglés _semaphore_, no son los semáforos de las calles –estos se llaman _traffic lights_– sino de las señalizaciones ferroviarias _binarias_.] que indican si un tren está habilitado para entrar en una vía. Es una construcción sencilla y eficiente que permite solucionar problemas genéricos de sincronización entre procesos.
 
 Los mecanismos de sincronización vistos hasta ahora no requieren la colaboración del sistema operativo, funcionan directamente sobre el _hardware desnudo_. En cambio, los semáforos se implementan habitualmente como servicios del núcleo de los sistemas operativos. Estos tienen la capacidad de bloquear y planificar para ejecución de los procesos e hilos. Bloquear a un proceso hasta que pueda continuar su ejecución no necesita de funcionalidades adicionales sofisticadas, los sistemas operativos hacen lo mismo para todas las operaciones de entrada-salida. En el caso de semáforos, los procesos se bloquean o ejecutan condicionados únicamente por el valor que tiene una variable entera. Una abstracción tan simple como potente.
