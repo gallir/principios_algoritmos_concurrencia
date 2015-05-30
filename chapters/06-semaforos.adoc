@@ -160,7 +160,7 @@ for i in range(MAX_COUNT/THREADS):
 ****
 
 ==== Semáforos fuertes y débiles
-Cada semáforo tiene asociado una cola de procesos bloqueados, la política de gestión de esta cola es fundamental. Si la cola es FIFO, aseguran espera limitada y equidad; estos semáforos se denominan _semáforos fuertes_. Por el contrario, se denominan _semáforos débiles_ (_weak semaphores_) si los procesos se seleccionan aleatoriamente.
+Cada semáforo tiene asociado una cola de procesos bloqueados y la política de gestión de esta cola es fundamental. Si la cola es FIFO, aseguran espera limitada y equidad; estos semáforos se denominan _semáforos fuertes_. Por el contrario, se denominan _semáforos débiles_ (_weak semaphores_) si los procesos se seleccionan aleatoriamente.
 
 
 .Semáforos en Unix y Linux
@@ -207,7 +207,7 @@ Este algoritmo con un único semáforo solo permite sincronizar dos procesos, y 
 
 A veces es conveniente desarrollar programas concurrentes que se sincronizan por fases. Los procesos deben esperar que todos acaben la fase actual y comenzar la siguiente simultáneamente. Esta coordinación se logra de forma muy parecida al ejemplo anterior: poniendo _barreras de sincronización_ al final e inicio de cada fase.
 
-Barrera:: Es un mecanismo de sincronización que obliga a procesos concurrentes (o distribuidos) a esperar a que todos hayan llegado a un punto determinado. Solo podrán continuar cuando todos los procesos haya llegado a una barrera. El conjunto de los puntos de sincronización se denomina _barrera_ (<<Taunbenfeld>>).
+Barrera:: Es un mecanismo de sincronización que obliga a procesos concurrentes (o distribuidos) a esperar a que todos hayan llegado a un punto determinado. Solo podrán continuar cuando todos los procesos hayan llegado a una barrera. El conjunto de los puntos de sincronización se denomina _barrera_ (<<Taunbenfeld>>).
 
 ===== Barreras binarias
 
@@ -294,9 +294,9 @@ Hay dos tipos de productores-consumidores:
 
 Sincrónicos:: Cuando se produce un elemento, éste debe ser consumido para que el  productor pueda continuar su ejecución.
 
-Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido. Los productores agregan los elementos a una cola y los consumidores obtienen el primer elemento de ésta.
+Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido. Los productores agregan los elementos a una cola y los consumidores obtienen el primer elemento de esta.
 
-El segundo caso es el más habitual. El uso de un _buffer_ permite que productores y consumidores avancen a su propio ritmo; pero requieren sincronización para hacer que los consumidores esperen si el _buffer_ está vacío, y los productores si el _buffer_ está lleno. Los procesos pueden ser considerados cíclicos, ambos ejecutan un bucle donde añaden o quitan elementos del _buffer_:
+El segundo caso es el más habitual. El uso de un _buffer_ permite que productores y consumidores avancen a su propio ritmo; pero requiere sincronización para hacer que los consumidores esperen si el _buffer_ está vacío, y los productores si el _buffer_ está lleno. Los procesos pueden ser considerados cíclicos, ambos ejecutan un bucle donde añaden o quitan elementos del _buffer_:
 
 .Productor
 [source, python]
@@ -364,7 +364,7 @@ En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la
 
 
 ===== _Buffer_ finito
-El algoritmo anterior puede ser extendido para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_, los productores deben hacer los mismo si no quedan _posiciones libres_. Se necesita un semáforo contador adicional (+notFull+) cuyo valor indicará el número de posiciones libres, por lo que se inicializa con el tamaño del _buffer_ (+BUFFER_SIZE+).
+El algoritmo anterior puede ser extendido para que funcione con un tamaño de _buffer_ limitado. Así como los consumidores se bloquean si no hay elementos en el _buffer_, los productores deben hacer lo mismo si no quedan _posiciones libres_. Se necesita un semáforo contador adicional (+notFull+) cuyo valor indicará el número de posiciones libres, por lo que se inicializa con el tamaño del _buffer_ (+BUFFER_SIZE+).
 
 [source, python]
 ----
@@ -528,7 +528,7 @@ POSIX Threads ofrece lectores-escritores con las funciones +pthread_rwlock_*+, e
 
 Es un modelo muy estudiado en el área de la programación concurrente, fue inventado como ejercicio por Dijkstra en 1965 y luego formalizado por Hoare. No es un problema cuya solución tenga un uso práctico directo, pero es lo suficientemente simple y propone desafíos interesantes. Es objeto habitual de estudio y comparación entre las diferentes mecanismos de sincronización concurrentes.
 
-Se trata de cinco filósofos sentados en una mesa, sobre ésta también hay cinco tenedoresfootnote:[Algunos textos dicen que son palillos, por ello se suele decir que los filósofos son chinos pero es contradictorio con la imagen.], uno a cada lado de los filósofos.
+Se trata de cinco filósofos sentados en una mesa en la que también hay cinco tenedoresfootnote:[Algunos textos dicen que son palillos, por ello se suele decir que los filósofos son chinos pero es contradictorio con la imagen.], uno a cada lado de los filósofos.
 
 [[dining_image]]
 .Filósofos cenandofootnote:["Dining philosophers" by Benjamin D. Esham / Wikimedia Commons. Licensed under CC BY-SA 3.0 via https://commons.wikimedia.org/wiki/File:Dining_philosophers.png#/media/File:Dining_philosophers.png[Wikimedia Commons].]
@@ -549,7 +549,7 @@ def philosopher():
 <1> Asegura que puede tomar los dos tenedores, el de la izquierda y el de la derecha
 <2> Libera ambos tenedores.
 
-Cada filósofo necesita dos tenedores para comer, solo puede tomar los que tiene a su lado. Para que el programa sea correcto se deben cumplir los siguientes requisitos:
+Cada filósofo necesita dos tenedores para comer y solo puede tomar los que tiene a su lado. Para que el programa sea correcto se deben cumplir los siguientes requisitos:
 
 [[philosophers_requisites]]
 1. Un filósofo solo puede comer si tiene los dos tenedores.
@@ -764,24 +764,24 @@ Dado que no se cumplen dos de las condiciones necesarias, no pueden producirse _
 
 .Un bug marciano
 ****
-El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empezó a enviar datos y fotos en alta calidad. Unos días después se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos meteorológicos y científicos. Los reinicios los ordenaba la tarea _bc_sched_, responsable de verificar que las demás tareas se ejecutan correctamente.
+El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empezó a enviar datos y fotos en alta calidad. Unos días después se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos meteorológicos y científicos. Los reinicios eran ordenados por la tarea _bc_sched_, responsable de verificar que las demás tareas se ejecutan correctamente.
 
 El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El bus 1553, heredado de la sonda Cassini, tenía un modo de funcionamiento síncrono simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
 
 El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxWorks, adaptado específicamente al procesador RS600. La arquitectura de software era la siguientefootnote:[En los sistemas de tiempo real es habitual llamar _tareas_ a los procesos.]:
 
-- _bc_sched_: La tarea con máxima prioridad, se encargaba de preparar las transacciones para el siguiente ciclo de 0.125 segs sobre el bus 1553.
+- _bc_sched_: La tarea con máxima prioridad, esta se encargaba de preparar las transacciones para el siguiente ciclo de 0.125 segs sobre el bus 1553.
 
 - _entry+landing_: La tarea con la segunda prioridad, ya inactiva.
 
-- _bc_dist_: La tarea de tercera prioridad, toma datos del 1553 y los copia en un doble _buffer_ circular desde donde extraen información las otras tareas, salvo las ASI/MET.
+- _bc_dist_: La tarea de tercera prioridad toma datos del 1553 y los copia en un doble _buffer_ circular desde donde extraen información las otras tareas, salvo las ASI/MET.
 
 - Otras tareas de prioridad intermedia.
 
-- _ASI/MET_: La tarea de menor prioridad, junto con otras tareas científicas (generación y compresión de imágenes, etc.). A diferencia de las otras, ASI/MET toma datos del 1553 a través de un mecanismo de comunicación entre procesos usando el _pipe_ estándar de Unix.
+- _ASI/MET_: Esta era la tarea de menor prioridad, junto con otras tareas científicas (generación y compresión de imágenes, etc.). A diferencia de las otras, ASI/MET toma datos del 1553 a través de un mecanismo de comunicación entre procesos usando el _pipe_ estándar de Unix.
 
 
-Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_, el problema era siempre el mismo: _bc_dist_ no completaba su ejecución en el tiempo previsto. Después de 18 horas de simulaciones descubrieron la causa: por la cantidad inesperada de datos que se recogía, el sistema estaba más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a un _mutex_ dentro de las funciones del +pipe+, pero no alcanzaba a salir porque el núcleo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_, de mayor prioridad, también hacía un _wait_ al mismo _mutex_ pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
+Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_. El problema era siempre el mismo: _bc_dist_ no completaba su ejecución en el tiempo previsto. Después de 18 horas de simulaciones descubrieron la causa: por la cantidad inesperada de datos que se recogía, el sistema estaba más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a un _mutex_ dentro de las funciones del +pipe+, pero no alcanzaba a salir porque el núcleo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_, de mayor prioridad, también hacía un _wait_ al mismo _mutex_ pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
 
 Así, _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_.
 ****
@@ -817,7 +817,7 @@ Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es
 ****
 VxWorks permitía configurar en una variable global si se habilitaba o no la _herencia de prioridades_ en los semáforos. Los ingenieros de la NASA habían preferido no arriesgar y la dejaron deshabilitada.
 
-Después de estudiar y hacer simulaciones en la Tierra, para asegurarse que los efectos colaterales no eran negativos, se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
+Después de estudiar y hacer simulaciones en la Tierra para asegurarse de que los efectos colaterales no eran negativos, se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
 ****
 
 === Recapitulación
@@ -828,7 +828,7 @@ Al haber sido el primer –y más usado– método de sincronización, también 
 
 Finalmente analizamos el fenómeno que se presenta por la compleja interacción de procesos en los sistemas operativos modernos, especialmente en los de _tiempo real_: la inversión de prioridades.
 
-Los conocimientos adquiridos permitirán enfrentar con bastante facilidad los dos mecanismos más usados en los lenguajes de programación modernos, los _monitores_ y _mensajes_. Pero antes veremos un tema que raramente se estudia, una interfaz genérica del núcleo del sistema operativo que permite la implementación eficiente de semáforos y otros mecanismos de sincronización.
+Los conocimientos adquiridos permitirán enfrentar con bastante facilidad los dos mecanismos más usados en los lenguajes de programación modernos, los _monitores_ y _mensajes_. Pero antes veremos un tema que raramente se estudia: una interfaz genérica del núcleo del sistema operativo que permite la implementación eficiente de semáforos y otros mecanismos de sincronización.
 
 Linux tiene una interfaz de este tipo, la _Fast Userspace Mutex_ (FUTEX). Aunque está pensada para ser usada por los programadores de librerías, como la GLibc, es muy pedagógico aprender cómo se programan a bajo nivel los mecanismos de sincronización. De esto tratará el siguiente capítulo.
 
