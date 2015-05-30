@@ -1,6 +1,8 @@
 [[futex]]
 == 7. FUTEX
 
+image::jrmora/07-futex.jpg[align="center"]
+
 Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo.
 
 Se puede mejorar el rendimiento si se invoca al núcleo únicamente en caso de competencia entre procesos. Si solo uno desea entrar a una sección crítica, puede resolverse directamente en el _espacio de usuario_ con ayuda de las instrucciones atómicas estudiadas en el capítulo <<hardware>>.
@@ -45,7 +47,7 @@ Donde `__NR_futex` es el identificador de llamada de sistema de FUTEXfootnote:[D
 ==== Operaciones
 Las operaciones que se pueden especificar en +syscall+ son las siguientes:
 
-+FUTEX_WAIT+:: Si el valor del _futex_ es igual al valor +val1+ suspende al proceso y lo agrega a la cola de bloqueados del _futex_. Retorna 0 si fue desbloqueado por el +FUTEX_WAKE+, +-1+ si no pudo bloquear o hubo error.
++FUTEX_WAIT+:: Si el valor del _futex_ es igual al valor +val1+ suspende al proceso y lo agrega a la cola de bloqueados del _futex_. Retorna 0 si fue desbloqueado por el +FUTEX_WAKE+, -1 si no pudo bloquear o hubo error.
 
 +FUTEX_WAKE+:: Desbloquea a uno o más procesos según lo indicado por +val1+. Retorna el número de procesos desbloqueados.
 
