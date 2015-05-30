@@ -3,7 +3,7 @@
 image::jrmora/01-intro.jpg[align="center"]
 
 
-Los programas en ejecución se denominan procesos, son elementos de gestión centrales del sistema operativo. Desde el punto de vista del _núcleo_ del sistema operativofootnote:[El sistema operativo está formado por un núcleo o _kernel_, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al inicio, gestiona todos los recursos y los procesos ejecutándose con privilegios especiales del procesador.] tienen dos partes bien definidas: la _imagen de memoria_ y las _tablas de control de procesos_.
+Los programas en ejecución se denominan procesos. Son elementos de gestión centrales del sistema operativo. Desde el punto de vista del _núcleo_ del sistema operativofootnote:[El sistema operativo está formado por un núcleo o _kernel_, como Linux, y las librerías y herramientas necesarias para poder arrancar y ejecutar los procesos necesarios para el funcionamiento normal del sistema. El núcleo es el programa que se carga al inicio, gestiona todos los recursos y los procesos ejecutándose con privilegios especiales del procesador.] tienen dos partes bien definidas: la _imagen de memoria_ y las _tablas de control de procesos_.
 
 La _imagen de memoria_ es la memoria física ocupada por el código y datos del programa. Se diferencian cuatro partes según su contenido:
 
@@ -48,13 +48,13 @@ Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en L
 
 El _scheduler_ debe tomar decisiones muy frecuentemente, entre unas pocos cientos a decenas de miles de veces por segundo. Para que la decisión sea muy rápida y eficiente se usan sofisticados algoritmos de colas para que la selección sea de baja complejidad computacional, se busca obtener _O(1)_ (i.e. seleccionar el primer elemento de la cola).
 
-El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Éstas tienen requisitos contradictorios, los más importantes son:
+El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Éstas tienen requisitos contradictorios, de los cuales los más importantes son:
 
 - Tiempo de respuesta: Los usuarios y algunos programas demandan que el sistema operativo responda rápido a los eventos. Cuando se hace clic en un menú se espera respuesta inmediata, o reproducir un vídeo sin saltos.
 
 - Equidad: Los procesos deben tener acceso equitativo a los recursos, la CPU incluida.
 
-- Diferentes prioridades: No todos los procesos son iguales, las tareas criticas del sistema deben ejecutarse con la mayor prioridad, los procesos interactivos deben responder más rápido que los de cálculo, etc.
+- Diferentes prioridades: No todos los procesos son iguales, las tareas críticas del sistema deben ejecutarse con la mayor prioridad, los procesos interactivos deben responder más rápido que los de cálculo, etc.
 
 - Evitar _esperas infinitas_ de procesos: Cualquier estrategia para cumplir los requisitos anteriores puede provocar que haya procesos que nunca son seleccionados para ejecución. El _scheduler_ debe asegurar que las esperas no superen límites razonables.
 
@@ -109,7 +109,7 @@ Los hilos ligeros son invisibles al núcleo, no pueden ser planificados por el _
 
 
 === Programas concurrentes
-La necesidad de programar módulos asíncronos que respondan a diferentes eventos, y la comodidad de compartir memoria, hizo que fuese más conveniente diseñar programas como una composición de módulos, cada uno responsable de tareas específicas. Cada módulo se ejecuta como un procesofootnote:[Salvo que sea necesario y se indique explícitamente, nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinista.] independiente y asíncrono. Esto es, precisamente, lo que llamamos _programación concurrente_.
+La necesidad de programar módulos asíncronos que respondan a diferentes eventos y la comodidad de compartir memoria hicieron que fuese más conveniente diseñar programas como una composición de módulos, cada uno responsable de tareas específicas. Cada módulo se ejecuta como un procesofootnote:[Salvo que sea necesario y se indique explícitamente, nos referiremos en general como _procesos_ aunque estrictamente sean hilos nativos o _ligeros_, la distinción es irrelevante si la ejecución es asíncrona y no determinista.] independiente y asíncrono. Esto es, precisamente, lo que llamamos _programación concurrente_.
 
 [IMPORTANT]
 .Programación concurrente
@@ -117,9 +117,9 @@ La necesidad de programar módulos asíncronos que respondan a diferentes evento
 Es la composición de módulos que se ejecutan independientemente, de forma asíncrona y no determinista.
 ====
 
-La programación concurrente tiene ventajas, pero no son gratuitas. La compartición de recursos –fundamentalmente memoria– tiene riesgos, pueden provocar errores difíciles de detectar y depurar. Debido al carácter naturalmente asíncrono y no determinista de la ejecución de procesos, ya no es posible tratar a los procesos concurrentes como una ejecución secuencial de instrucciones.
+La programación concurrente tiene ventajas, pero no son gratuitas. La compartición de recursos –fundamentalmente memoria– tiene riesgos y puede provocar errores difíciles de detectar y depurar. Debido al carácter naturalmente asíncrono y no determinista de la ejecución de procesos, ya no es posible tratar a los procesos concurrentes como una ejecución secuencial de instrucciones.
 
-El interés de soluciones para los problemas de concurrencia no es nuevo, surgió con la aparición de los primeros _monitores_ –los predecesores del núcleo de los modernos sistemas operativos– a principios de la década de 1960. De hecho, el núcleo es una composición compleja de módulos independientes que deben responder –de forma asíncrona– a una enorme diversidad de eventosfootnote:[Interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.] que pueden generar inconsistencias en las estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
+El interés de soluciones para los problemas de concurrencia no es nuevo. Surgió con la aparición de los primeros _monitores_ –los predecesores del núcleo de los modernos sistemas operativos– a principios de la década de 1960. De hecho, el núcleo es una composición compleja de módulos independientes que deben responder –de forma asíncrona– a una enorme diversidad de eventosfootnote:[Interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.] que pueden generar inconsistencias en las estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
 
 Se llamó _problemas de concurrencia_ a los errores ocasionados por el acceso no controlado a recursos compartidos. Son los más habituales y estudiados: el problema de _exclusión mutua_ (o _secciones críticas_).
 
@@ -145,7 +145,7 @@ image::interleaving.png[align="center"]
 
 El _scheduler_ selecciona el proceso que se ejecutará, éste lo hará durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga no se puede conocer a priori, depende de muchos factores internos y externos al sistema, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
 
-Las combinaciones de intercalación entre los diferentes procesos es no determinista, es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos.
+Las combinaciones de intercalación entre los diferentes procesos es no determinista. Es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos.
 
 Todos los procesos comparten y compiten por recursos del sistema (procesador, memoria, acceso a dispositivos, ficheros, etc.); si son independientes entre ellos son los procesadores y el núcleo los que se encargan de que se cumpla la _consistencia secuencial_ de cada programa. Se desarrollaron mecanismos complejosfootnote:[Sistema de memoria virtual, gestión de páginas, sincronización de caché, instrucciones atómicas complejas, etc.] para asegurar esta consistencia de cada proceso individual, el programador no se tiene que preocupar de los problemas ocasionados por intercalaciones o competencia. Pero cuando se trata de procesos concurrentes, el núcleo y hardware ya no pueden asegurar esa consistencia. Pasa a ser también responsabilidad del programador.
 
