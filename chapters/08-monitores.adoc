@@ -2,9 +2,15 @@
 == 8. Monitores
 image::jrmora/08-monitores.jpg[align="center"]
 
-Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Per Brinch-Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>). Buscaban  una forma de estructurar a los sistemas operativos usando lenguajes de alto nivelfootnote:[Le llamaron _monitor_, así es como se llamabam en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida. La idea consistía en que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaron _monitor_ al conjunto de procedimientos y datos que debía gestionar cada _scheduler_.
+Los semáforos se inventaron para resolver los problemas de sincronización sin espera activa. Sin embargo, son primitivas de _bajo nivel_, no están estructuradas. No previenen errores de programación, la responsabilidad recae completamente en los programadores. La omisión accidental de un _signal_ o un _unlock_ probablemente provocará un fallo completo del programa.
 
-Para evitar los problemas derivados de los accesos concurrentes, cada monitor debe asegurar la exclusión mutua de la ejecución de sus procedimientos. Las variables del monitor solo deben accedidos o modificados desde estos procedimientos. Brinch Hansen diseñó y desarrolló _Concurrent Pascal_ (basado en Pascal y con ideas de Modula67) que fue el primer _lenguaje concurrente_, sirvió para el desarrollo de varios sistemas operativos experimentales y otros lenguajes como Modula, Concurrent C, Mesa, ADA y Java. Este último incluye monitores como construcción sintáctica: la combinación de métodos y bloques +synchronized+ con las funciones de sincronización +wait+, +notify+ y +notifyAll+.
+Los monitores son una primitiva estructurada de programación concurrente que concentra la responsabilidad en los _módulos_ de los programas. Son una generalización del núcleo de los primeros sistemas operativos. Con el tiempo, los monitores se convirtieron en un mecanismo de sincronización muy importante ya que son una generalización natural de la programación orientada a objetos (<<Ben-Ari>>).
+
+Los monitores evolucionaron a partir de ideas y discusiones entre Dijkstra, Per Brinch-Hansen, Ole-Johan Dahl y C.A.R. Hoare (<<Brinch>>). Buscaban una forma de estructurar a los sistemas operativos usando lenguajes de alto nivelfootnote:[Le llamaron _monitor_, así es como se llamabam en la década de 1950 y 1960 a los antecesores de los modernos sistemas operativos.]. En 1973 fueron formalizados por Hoare (<<Hoare1>>) en su notación más conocida.
+
+La idea era que el sistema operativo es un conjunto de módulos, _schedulers_, que asignan recursos compartidos para diversos procesos. Llamaron _monitor_ al conjunto de procedimientos y datos que debía gestionar cada _scheduler_. Para evitar los problemas derivados de los accesos concurrentes, cada monitor debía asegurar la exclusión mutua de la ejecución de sus procedimientos. Las variables del monitor solo podían ser accedidas  desde estos procedimientos.
+
+Brinch Hansen diseñó y desarrolló el primer _lenguaje concurrente_, _Concurrent Pascal_, basado en Pascal y con ideas de Modula67. Concurrent Pascal sirvió para el desarrollo de varios sistemas operativos experimentales y otros lenguajes como Concurrent C, Mesa, ADA y Java. Este último incluye monitores como construcción sintáctica: la combinación de métodos y bloques +synchronized+ con las funciones de sincronización +wait+, +notify+ y +notifyAll+.
 
 En la propuesta original un monitor se declaraba de una forma similar a la siguientefootnote:[La especificación original de Hoare fue en Pascal, en la bibliografía posterior se empezó a usar una notación sin la sobrecarga de tantos +BEGIN+ y +END+.]:
 
@@ -22,7 +28,9 @@ Ningún procedimiento de un monitor se ejecutará si otro se está ejecutando, e
 
 [[java_monitor]]
 === Monitores en Java
-La estructura de monitores que encapsula variables y procedimientos es similar al concepto de programación orientada a objetos, es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. No tiene una construcción específica para definir monitores, pero cada objeto en Java tiene asociado un _mutex_ implícito. Se lo puede usar para forzar la exclusión mutua de ejecución de un bloque de código indicando que es +synchronized+ respecto a dicho objeto, como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
+La estructura de monitores que encapsula variables y procedimientos es similar al concepto de programación orientada a objetos. Esta es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. Aunque no tiene una construcción específica para definir monitores, cada objeto en Java tiene asociado un _mutex_ implícito.
+
+El _mutex_ se puede usar para forzar la exclusión mutua de un bloque de código indicando que es +synchronized+ respecto a dicho objeto. Como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
 
 
 [source, java]
@@ -36,7 +44,7 @@ La estructura de monitores que encapsula variables y procedimientos es similar a
     }
 ----
 
-Java agrega automáticamente las operaciones _lock_ u _unlock_ sobre el _mutex_ asociado al objeto +lock+ a la entrada y salida del bloque. La alternativa equivalente es declarar +synchronized+ a los métodos que acceden a recursos compartidos, como el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
+Java agrega automáticamente las operaciones _lock_ y _unlock_ sobre el _mutex_ al inicio y salidas del bloque de código. La alternativa equivalente y más simple es declarar +synchronized+ a los métodos que acceden a recursos compartidos, como el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
 
 [source, java]
 ----
@@ -50,24 +58,35 @@ Java agrega automáticamente las operaciones _lock_ u _unlock_ sobre el _mutex_ 
         }
 ----
 
-En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. La especificación +synchronized+ especifica que el hilo debe obtener el _lock_ para ejecutar el método o bloque. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_.
+En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. La especificación +synchronized+ especifica que el hilo debe obtener el _lock_ para ejecutar el método. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_.
 
 ****
-Una clase cuyos métodos públicos están todos declarados como _synchronized_ se denomina _monitor Java_, aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
+Una clase cuyos métodos públicos están todos declarados como _synchronized_ se denomina _monitor Java_. Aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
 ****
 
-Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un único global que _protege_ a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
+Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un _mutex_ global que _protege_ a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
 
 
 === Variables de condición
 
-La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, para ellos se añadieron dos operaciones, _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta de todas los hilos que estén en la cola), que permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio. Las dos operaciones se implementan de distintas formas:
+La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, para ello se añadieron dos operaciones: _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta de todas los hilos que estén en la cola). Estas permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo, para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio.
 
-1. Sobre unas variables explícitas denominadas _variables de condición_ queda a cargo del programa la verificación de condiciones y llamar a _wait_ y _signal_ sobre las variables de condición adecuadas. No son variables normales, no permiten almacenar o leer valores, se usan como _receptoras_ de las dos operaciones y tienen asociada una cola de espera de los proceso bloqueados. El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto. Esta fue la implementación original en _Concurrent Pascal_,  los lenguajes que tienen construccionesfootnote:[C con POSIX Threads, Java, Python, Ruby, Go... y la mayoría de lenguajes modernos.] de _variables condicionales_ permiten mecanismos y algoritmos equivalentes.
+Las operaciones _wait_ y _signal_ se implementan de distintas formas:
 
-2. Operaciones genéricas _wait_ y _signal_ no ligadas a ninguna variable explícita, solo hay una única variable implícita con una única cola. Como no es posible señalizar a variables diferentes según la condición que varió cada proceso bloqueado debe verificar una variable de estado para detectar si le corresponde continuar o no la ejecución (en general implica cambiar un +if+ por un +while+). Como en el anterior si no hay ningún proceso bloqueado por un _wait_ el _signal_ no tiene efecto. Esta es la implementación de monitores en Java, la operación _wait_ es el el método +wait+, _signal_ es +notify+ y _broadcast_ es +notifyAll+.
+Variables de condición explícitas::
+Se declaran explícitamente _variables de condición_. No son variables _normales_, no permiten almacenar o leer valores, solo pueden usarse como _receptoras_ de _wait_ y _signal_. Las variables de condición tienen asociada una cola de los procesos bloqueados en ellas. Es responsabilidad del programa la verificación de condiciones lógicas y de llamar a _wait_ y _signal_ sobre las variables de condición adecuadas.
++
+El _signal_ sobre una variable en particular desbloquea a un proceso en esa variable, si no hay ninguno no tiene ningún efecto. Esta fue la implementación original en _Concurrent Pascal_, los lenguajes que tienen construccionesfootnote:[C con POSIX Threads, Python, Ruby, Go... y la mayoría de lenguajes modernos.] de variables condicionales permiten mecanismos y algoritmos equivalentes.
 
-3. El bloqueo automático sobre expresiones lógicas, es responsabilidad del compilador o máquina virtual el desbloqueo de los procesos cuando la expresión se hace verdadera. Este tipo de mecanismo se denomina _tipo_ u  _objetos protegidos_, por ejemplofootnote:[De https://en.wikibooks.org/wiki/Ada_Programming/Tasking.] en ADA para ejecutar un método cuando la variable +Emtpy+ es verdadera:
+Variables de condición implícitas::
+Las operaciones _wait_ y _signal_ no están ligadas a ninguna variable explícita, hay una única variable implícita con una única cola. Como no es posible señalizar a variables diferentes se requieren variables de estado adicionales. Un proceso que se desbloqeua debe verificar la variable de estado para decidir si le corresponde continuar o no la ejecución (en general implica cambiar un +if+ por un +while+).
++
+Como en la forma anterior, si no hay ningún proceso bloqueado la operación _signal_ no tiene efecto. Esta es la implementación de monitores en Java, la operación _wait_ es el método +wait+, _signal_ es +notify+ y _broadcast_ es +notifyAll+.
+
+Objetos protegidos::
+El bloqueo y desbloqueo es automático y depende de expresiones lógicas. El compilador o la máquina virtual tienen la responsabilidad de bloquear al proceso si la condición es falsa y despertarlos si se hace verdadera.
++
+Este tipo de mecanismo se denomina _tipo_ u  _objetos protegidos_. ADA permite la declaración de tipos protegidos. Por ejemplofootnote:[De https://en.wikibooks.org/wiki/Ada_Programming/Tasking.], para ejecutar un método solo cuando la variable +Emtpy+ es verdadera:
 
     protected body Protected_Buffer_Type is
         entry Insert (An_Item : in  Item)
@@ -184,7 +203,7 @@ class Mutex {
 ----
 
 ==== Variables condicionales de POSIX Threads
-Los monitores no son únicamente una construcción sintáctica de los lenguajes de programación, también es una forma de estructurar los programas. Se pueden implementar los mismos _algoritmos de monitores_ si se asegura exclusión mutua entre las funciones del monitor y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
+Los monitores no son únicamente una construcción sintáctica de los lenguajes de programación, también son una forma de estructurar los programas. Se pueden implementar los mismos algoritmos si se asegura exclusión mutua entre las funciones del monitor y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
 Las variables de condición de POSIX Threads tienen las operaciones básicas sobre variables de condición: _wait_ (+pthread_cond_wait+), _signal_ (+pthread_cond_signal+) y la operación _broadcast_ (+pthread_cond_broadcast+) para despertar a todos los procesos bloqueados (similar a +notifyAll+ de Java).
 
