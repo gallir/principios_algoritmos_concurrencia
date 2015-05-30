@@ -121,7 +121,7 @@ real    0m27.587s
 user    0m3.678s
 sys     0m31.147s <1>
 ----
-<1> Nótese la cantidad de CPU que se consumió en modo sistema, está provocado por el bloqueo y desbloqueo de procesos.
+<1> Nótese la cantidad de CPU que se consumió en modo sistema, esto está provocado por el bloqueo y desbloqueo de procesos.
 
 Cuando el +valor+ del semáforo se hace negativo (la situación habitual para un _mutex_ de alta competencia), todos los procesos pasan obligatoriamente por la cola de bloqueados, provocando cambios de contexto innecesarios. No es sencillo mejorarlo sin un algoritmo bastante más complejo, por dos razones:
 
@@ -233,7 +233,7 @@ sys     0m2.284s
 ----
 
 
-Este algoritmo requiere una única variable y, al reducir las operaciones atómicas de incremento y decremento en el _lock_, cargaría menos al sistema de coherencia de caché  con muchos procesadores.
+Este algoritmo requiere una única variable y, al reducir las operaciones atómicas de incremento y decremento en el _lock_, cargaría menos al sistema de coherencia de caché con muchos procesadores.
 
 === _Mutex_ equitativo
 
@@ -263,7 +263,7 @@ def lock(futex):
 <1> Cada proceso selecciona un número creciente único.
 <2> Espera que sea su turno, en caso contrario se bloquea.
 
-En _unlock_ es imposible despertar únicamente al proceso al que le toca el siguiente turno, hay que despertar a todos y que cada uno verifique si le corresponde continuar (ya lo hacen en el _lock_, están dentro del bucle mientras +number != turn+).
+En _unlock_ es imposible despertar únicamente al proceso al que le toca el siguiente turno. Hay que despertar a todos y que cada uno verifique si le corresponde continuar (ya lo hacen en el _lock_, están dentro del bucle mientras +number != turn+).
 
 [source, python]
 ----
@@ -288,7 +288,7 @@ La diferencia es enorme, incluso toma más tiempo que la primera implementación
 
 ==== Uso de la máscara BITSET
 
-Se puede evitar la _tormenta_ usando las operaciones +FUTEX_WAIT_BITSET+ y +FUTEX_WAKE_BITSET+ para que solo se despierte al proceso al que le corresponde el turno. Para ello hay que calcular una máscara binaria adecuada, se puede usar el módulo de enteros. Para bloquear en _lock_ la máscara se obtiene a partir del número del proceso, para desbloquear en el _unlock_ se calcula a partir del _turno_ actual.
+Se puede evitar la _tormenta_ usando las operaciones +FUTEX_WAIT_BITSET+ y +FUTEX_WAKE_BITSET+ para que solo se despierte al proceso al que le corresponde el turno. Para ello hay que calcular una máscara binaria adecuada, así se puede usar el módulo de enteros. Para bloquear en _lock_ la máscara se obtiene a partir del número del proceso, para desbloquear en el _unlock_ se calcula a partir del _turno_ actual.
 
 La función +MASK+ que obtiene la máscara dado un númerofootnote:[Al numero 0 le toca la máscara 0, al 1 la máscara 2, al 2 la máscara 4, etc.] es la siguiente:
 
@@ -453,9 +453,9 @@ def wait(barrier)
 
 === Recapitulación
 
-La programación con interfaces como FUTEX requieren conocimientos avanzados de sistemas operativos, instrucciones de hardware y los problemas de concurrencia y condiciones de carrera. Con las herramientas de sincronización que ofrecen los lenguajes modernos es muy difícil que surja la necesidad de programar con FUTEX, a menos que se trate de algún aplicación para sistemas empotrados o de tiempo real.
+La programación con interfaces como FUTEX requieren conocimientos avanzados de sistemas operativos, instrucciones de hardware y los problemas de concurrencia y condiciones de carrera. Con las herramientas de sincronización que ofrecen los lenguajes modernos es muy difícil que surja la necesidad de programar con FUTEX, a menos que se trate de alguna aplicación para sistemas empotrados o de tiempo real.
 
-Pero es interesante conocer cómo se implementa una interfaz de este tipo, ayuda a comprender:
+Sin embargo, es interesante conocer cómo se implementa una interfaz de este tipo, dado que ayuda a comprender:
 
 1. La necesidad y ventajas de las instrucciones de hardware y _spinlocks_, y cómo usarlos convenientemente con técnicas como _spin-then-block_.
 
