@@ -2,7 +2,7 @@
 == 8. Monitores
 image::jrmora/08-monitores.jpg[align="center"]
 
-Los semáforos se inventaron para resolver los problemas de sincronización sin espera activa. Sin embargo, son primitivas de _bajo nivel_, no están estructuradas. Son propensos a provocar errores de programación, la responsabilidad recae completamente en los programadores. La omisión accidental de un _signal_ o un _unlock_ provoca fallos críticos.
+Los semáforos se inventaron para resolver problemas de sincronización sin espera activa. Sin embargo, son primitivas de _bajo nivel_, no están estructuradas. Son propensas a provocar errores de programación, la responsabilidad recae completamente en los programadores. La omisión accidental de un _signal_ o un _unlock_ provoca fallos críticos.
 
 Los monitores son una primitiva estructurada de programación concurrente que concentra la responsabilidad en los _módulos_ de los programas. Son una generalización del núcleo de los primeros sistemas operativos. Con el tiempo, los monitores se convirtieron en un mecanismo de sincronización muy importante ya que son una generalización natural de la programación orientada a objetos (<<Ben-Ari>>).
 
@@ -69,7 +69,7 @@ Un error habitual de programadores no experimentados es confundir el _mutex_ de 
 
 === Variables de condición
 
-La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, para ello se añadieron dos operaciones: _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta de todas los hilos que estén en la cola). Estas permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo, para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio.
+La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, para ello se añadieron dos operaciones: _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta a todos los hilos en la cola). Estas permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo, para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio.
 
 Las operaciones _wait_ y _signal_ se implementan de distintas formas:
 
@@ -84,7 +84,7 @@ Las operaciones _wait_ y _signal_ no están ligadas a ninguna variable explícit
 Como en la forma anterior, si no hay ningún proceso bloqueado la operación _signal_ no tiene efecto. Esta es la implementación de monitores en Java, la operación _wait_ es el método homónimo, _signal_ es +notify+ y _broadcast_ es +notifyAll+.
 
 Objetos protegidos::
-El bloqueo y desbloqueo es automático y depende de expresiones lógicas o _guards_. El compilador o la máquina virtual tienen la responsabilidad de bloquear al proceso si la condición es falsa y despertarlos si se hace verdadera.
+El bloqueo y desbloqueo es automático y depende de expresiones lógicas, o _guards_. El compilador o la máquina virtual tienen la responsabilidad de bloquear al proceso si la condición es falsa y despertarlos si se hace verdadera.
 +
 Este tipo de mecanismo se denomina _tipo_ u  _objetos protegidos_. En ADAfootnote:[Del https://en.wikibooks.org/wiki/Ada_Programming/Tasking[manual de programación de ADA].], por ejemplo, para que el método +Insert+ solo se ejecute cuando la variable +Emtpy+ es verdadera:
 +
@@ -109,7 +109,7 @@ image::monitors.png[align="center"]
 
 Por la exclusión mutua solo un proceso puede estar _dentro_ del monitor. Los procesos dentro del monitor pueden bloquearse en variables de condición, por lo que tienen que liberar temporalmente el _lock_ para que otros puedan entrar. Para diferenciarlos de procesos que todavía no han entrado al monitor, a los bloqueados en variables de condición se los representan en _salas internas_.
 
-Cuando un proceso que está dentro del monitor señaliza (_S_) a una variable de condición, si hay varios procesos esperando en variables de condición (_W_) y otros esperando para entrar al monitor (_E_), ¿se bloquea al proceso que señaliza? ¿a qué proceso se desbloquea primero?
+Cuando un proceso que está dentro del monitor señaliza (_S_) a una variable de condición, si hay procesos esperando en variables de condición (_W_) y otros esperando para entrar al monitor (_E_), ¿se bloquea al proceso que señaliza? ¿a qué proceso se desbloquea primero?
 
 
 ==== Especificación de prioridades
@@ -123,9 +123,9 @@ Hay tres alternativas habituales:
 [quote]
 _E < S < W_.
 +
-Los procesos bloqueados en las variables de condición (_W_) son los de mayor prioridad, el proceso que señaliza (_S_) se bloquea inmediatamente y ejecutará a continuación, los que están esperando en la entrada (_E_) son los de menor prioridad.
+Los procesos bloqueados en las variables de condición (_W_) son los de mayor prioridad, el proceso que señaliza (_S_) se bloquea inmediatamente y cede el monitor. Los que están esperando en la entrada (_E_) son los de menor prioridad.
 
-2. El proceso que señaliza sale del monitor, luego los que estaban bloqueados en la variable de condición señalizada y finalmente los que esperan entrar al monitor. Esta especificación es
+2. El proceso que señaliza sale del monitor, luego se ejecutan los que estaban bloqueados en la variable de condición señalizada y finalmente los que esperan entrar al monitor. Esta especificación es
 +
 [quote]
 _E < W < S_.
@@ -135,7 +135,7 @@ _E < W < S_.
 [quote]
 _E = W < S_.
 +
-Esta es la especificación para monitores en Java. El proceso que señaliza tiene la mayor prioridad, continúa su ejecución hasta salir del monitor. Los procesos desbloqueados por el +notify+ o +notifyAll+ van a la misma cola que los procesos en espera para entrar al monitor.
+Esta es la especificación de monitores en Java. El proceso que señaliza tiene la mayor prioridad, continúa su ejecución hasta salir del monitor. Los procesos desbloqueados por el +notify+ o +notifyAll+ van a la misma cola que los procesos en espera para entrar al monitor.
 
 
 [[monitors_java_image]]
@@ -209,7 +209,7 @@ class Semaphore {
 }
 ----
 
-<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo de la simulación semáforos. Este ejemplo es similar y equivalente al <<sem_counter_java, ejemplo>> con la clase +Semaphore+ de +java.util.concurrent+ que vimos en el capítulo <<semaphores>>.
+<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo de la simulación semáforos. Este ejemplo es similar y equivalente al <<sem_counter_java, código>> con la clase +Semaphore+ de +java.util.concurrent+ que vimos en el capítulo <<semaphores>>.
 
 ==== Mutex
 
@@ -234,14 +234,14 @@ class Mutex {
 }
 ----
 
-==== Variables condicionales de POSIX Threads
-Los monitores no están limitados solo construcciones sintácticas, también son una forma de estructurar los programas. Se pueden implementar los mismos algoritmos en cualquier lenguaje si se asegura exclusión mutua entre las funciones del _monitor_ y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
+=== Variables condicionales de POSIX Threads
+Los monitores no están limitados solo a construcciones sintácticas, también son una forma de estructurar los programas. Se pueden implementar los mismos algoritmos en cualquier lenguaje si se asegura exclusión mutua entre las funciones del _monitor_ y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
 Las variables de condición de POSIX Threads tienen las operaciones estándar: _wait_ (+pthread_cond_wait+), _signal_ (+pthread_cond_signal+) y la operación _broadcast_ (+pthread_cond_broadcast+) para despertar a todos los procesos (similar a +notifyAll+ de Java).
 
 Los monitores, y Java, requieren que _wait_, _notify_ y _broadcast_ se llamen desde métodos sincronizados. Para asegurar las mismas condiciones de entrada y salida de la _sección crítica_ del monitor, POSIX Threads requiere que la función +pthread_cond_wait+ se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan _signals_.] como segundo argumento. Así pues, su funcionalidad es similar a Java: cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
 
-===== Semáforos con POSIX Threads
+==== Semáforos con POSIX Threads
 Para implementar semáforos con el _método_ de monitores se necesita un _mutex_, una variable de condición y el valor del semáforo:
 
 [source, c]
@@ -284,7 +284,7 @@ En la llamada a +cond_wait+, además de la variable de condición, se envía com
 El proceso que se despierta en la variable de condición compite en la entrada con los demás procesos en la cola de _mutex_. Así pues, las prioridades de monitores con POSIX Threads son idénticas a las de Java: _E = W < S_.
 
 [[monitor_mutex_emulation]]
-===== Mutex con POSIX Threads
+==== Mutex con POSIX Threads
 
 La implementación de un semáforo _mutex_ es igual de sencillo que el de Java, el código simplificado (<<monitors_mutex_c, código completo>>):
 
@@ -337,7 +337,7 @@ Tampoco se puede adelantar ningún proceso, la asignación de +arrived+ y el +no
 
 Este algoritmo funciona aunque el monitor tenga especificación diferente a _E = W < S_ –por ejemplo _E < S < W_–, porque el valor de +arrived+ fue asignado antes de ejecutar +notifyAll+.
 
-===== Monitores _no nativos_
+===== Monitores con Python
 
 Así como existen las variables condicionales en POSIX Threads, otros lenguajes también proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase +Lock+ de +java.util.concurrent.locks+. De una instancia de +Lock+ se pueden obtener las variables de condición necesarias, por ejemplo: +lock.newCondition()+]. En Python se puede usar un objeto de +threading.Condition+ asociado con el _mutex_ de las funciones del monitor. Además del contador +arrived+ se usa +mutex+ y la variable de condición +allArrived+ sobre la que se señalizará cuando todos los procesos hayan llegado.
 
@@ -364,7 +364,7 @@ def barrier(n):
 ----
 <1> +with mutex+ asegura exclusión mutua de todo el bloque, en este caso es la función completa.
 
-La función _broadcast_ simplifica el algoritmo, sin ella habría que hacer tantos _signals_ como procesos bloqueados. A diferencia de la barrera <<alg_barriers, con semáforos>>, en este caso no es un problema, solo hay que agregar un bucle. El _mutex_ de la función impide que  procesos desbloqueados se adelanten y ejecuten el +wait+ cuando todavía no se acabó de despertar a los procesos anteriores. Es la ventaja de usar el _patrón_ de monitores.
+La función _broadcast_ simplifica el algoritmo, sin ella habría que hacer tantos _signals_ como procesos bloqueados. A diferencia de la barrera <<alg_barriers, con semáforos>>, en este caso no es un problema, solo hay que agregar un bucle. El _mutex_ de la función impide que  procesos desbloqueados se adelanten y ejecuten el +wait+ cuando todavía no se acabó de despertar a los procesos anteriores. Es una ventaja de usar el _patrón_ de monitores.
 
 ==== Productores-consumidores
 
@@ -428,7 +428,7 @@ Al no poder disponer de variables independientes los productores y consumidores 
 
 Se usan dos variables de condición: +canRead+ para notificar a los lectores y +canWrite+ para los escritores. También una variable entera +readers+ para contar los lectores en la sección crítica y la booleana +writing+ para indicar si hay un escritor (<<monitors_rw_lock_py, código completo>>).
 
-Si hay un escritor en la sección crítica los lectores esperarán en la variable +canRead+ hasta que el escritor le señalice y comprueben si pueden entrar. Si es el caso, incrementan el número de lectores y señalizan a +canRead+ para que los lectores bloqueados puedan avanzar.
+Si hay un escritor en la sección crítica los lectores esperarán en la variable +canRead+ hasta que el escritor señalice y comprueben si pueden entrar. Si es el caso, incrementan el número de lectores y señalizan a +canRead+ para que los lectores bloqueados puedan avanzar.
 
 .Lectores
 [source, python]
@@ -549,7 +549,7 @@ synchronized void writerUnlock() {
 }
 ----
 
-No se puede decidir ni conocer a priori si entrarán lectores o un escritor. Depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y depende del _scheduler_. Al igual que el anterior, este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero.
+No se puede decidir ni conocer a priori si entrarán lectores o un escritor. Depende de cuál se ejecute primero, no está definido por la política de las colas de espera y depende del _scheduler_. Al igual que el anterior, este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero.
 
 Por ejemplo:
 
@@ -594,9 +594,9 @@ class Table {
 }
 ----
 
-El array +forks+ mantiene el estado de cada tenedor, +true+ si está disponible. El método +pick+ es simple: si ambos están disponibles los toma poniendo en +false+ al estado de los dos, caso contrario llama a +wait+ para bloquearse hasta que sus vecinos liberen los tenedores. La liberación de ambos tenedores (+release+) consiste en marcar como libres a ambos y señalizar por si hay filósofos esperando por alguno de los tenedores que acaba de liberar.
+El array +forks+ mantiene el estado de cada tenedor, +true+ si está disponible. El método +pick+ es simple: si ambos están disponibles los toma poniendo en +false+ al estado de los dos, caso contrario llama a +wait+ para bloquearse hasta que sus vecinos liberen los tenedores. La liberación de ambos tenedores (+release+) consiste en marcarlos como libres y señalizar por si hay filósofos esperando por alguno de los tenedores que acaba de liberar.
 
-El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es eficiente y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es notable, otra evidencia de la potencia de los monitores.
+El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es eficiente y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es también notable.
 
 ===== Con variables de condición
 A pesar de su simplicidad se puede observar otra vez la potencial ineficiencia, la _tormenta_ de procesos desbloqueados, provocada por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados esperando por tenedores diferentes. Para evitar despertar a todos se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Se pueden usar las clases de sincronización de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
@@ -632,7 +632,7 @@ def release():
 [[monitor_times]]
 === Eficiencia de Monitores
 
-Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–. Esta  característica dificulta implementaciones eficientes para multiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores nativos, pero se puede hacer con Java. Es uno de los lenguajes más usado, es eficiente gestionando hilos y su modelo de memoria está bien definido.
+Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–. Esta  característica dificulta implementaciones eficientes para multiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores nativos, pero al menos podemos intentarlo con Java. Es uno de los lenguajes más usado, es eficiente gestionando hilos y su modelo de memoria está bien definido.
 
 
 ==== Exclusión mutua
