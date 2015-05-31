@@ -125,6 +125,7 @@ def generalSignal():
 <3> Antes estaba en cero, permite que entre otro proceso.
 
 
+[[mutex_lock]]
 ==== Semáforos _mutex_ y _locks_
 Los _semáforos mutex_, también llamados _locks_, son semáforos binarios –o equivalentes– optimizados para ser usados con exclusión mutuafootnote:[De allí el nombre _mutex_, de _mutual exclusion_, el mismo nombre usado en los _spinlocks_ para exclusión mutua.], con restricciones y propiedades adicionales:
 
