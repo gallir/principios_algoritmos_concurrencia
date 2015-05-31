@@ -136,7 +136,7 @@ Esta es la especificación para monitores en Java. El proceso que señaliza tien
 
 
 [[monitors_java_image]]
-.Monitores en Javafootnote:[Imagen Wikimedia de Theodore Norvell, https://commons.wikimedia.org/wiki/File:Monitor_(synchronization)-Java.png], _E = W < S_
+.Monitores en Javafootnote:[https://commons.wikimedia.org/wiki/File:Monitor_(synchronization)-Java.png[Imagen Wikimedia] de Theodore Norvell], _E = W < S_
 image::monitor_java.png[align="center"]
 
 
@@ -357,13 +357,13 @@ def barrier(n):
 ----
 <1> +with mutex+ asegura exclusión mutua de todo el bloque, en este caso es la función completa.
 
-La razón fundamental de la simplicidad del algoritmo de barreras es el _broadcast_ que desbloquea a todos los procesos en una única operación. Sin ella el algoritmo sería más complejo, habría que despertar a los procesos individualmente y asegurar que uno que superó la barrera no vuelva a ejecutarla e interfiera y se adelante a los que todavía están por desbloquearse de la fase anterior (tal como se <<alg_barriers, hace con semáforos>>).
+El _broadcast_ simplifica el algoritmo, sin ella habría que hacer tantos _signal_ como proceso bloqueados haya. A diferencia de la barrera <<alg_barriers, con semáforos>>, en este caso no es un problema, solo un bucle adicional. El _mutex_ de la función impide que otros procesos desbloqueados antes se adelanten y ejecuten el +wait+ cuando todavía no se acabó de despertar a los procesos anteriores. Es la ventaja de usar el _patrón_ de monitores.
 
 ==== Productores-consumidores
 
-El algoritmo de productores-consumidores con _buffer_ finito se puede implementar con dos variables de condición (<<monitors_producer_consumer_py, código completo en Python>>), una para bloquear los productores cuando el _buffer_ está lleno (+notFull+) y otra para bloquear a los consumidores (+notEmpty+) cuando no hay elementos en el _buffer_.
+El algoritmo de productores-consumidores con _buffer_ finito se puede implementar con dos variables de condición (<<monitors_producer_consumer_py, código completo en Python>>): una para bloquear los productores cuando el _buffer_ está lleno (+notFull+) y otra para bloquear a los consumidores (+notEmpty+) cuando no hay elementos en el _buffer_.
 
-La lógica del productor es sencilla, mientras el _buffer_ está está lleno se bloquea en +notFull+, después de agregar un elemento hace un _signal_ a +notEmpty+ para que se despierte un consumidor (si es que hay alguno esperando).
+La lógica del productor es sencilla. Mientras el _buffer_ está está lleno se bloquea en +notFull+. Después de agregar un elemento se hace un _signal_ a +notEmpty+ para que se despierte un consumidor (si hay alguno esperando).
 
 [source, python]
 ----
@@ -375,7 +375,7 @@ def append(self, data):
         notEmpty.notify()
 ----
 
-De forma similar, el consumidor se bloquea si el _buffer_ está vacío y luego de obtener un elemento señaliza +notFull+ por si hay productores bloqueados.
+El consumidor se bloquea si el _buffer_ está vacío y luego de obtener un elemento señaliza +notFull+ por si hay productores bloqueados.
 
 [source, python]
 ----
@@ -383,15 +383,15 @@ def take(self):
     with mutex:
         while not buffer:
             notEmpty.wait()
-        data = buffer.popleft()
+        data = buffer.popleft() <1>
         notFull.notify()
         return data
 ----
+<1> Extrae el primer elemento de la lista.
 
-El algoritmo es correcto porque asegura que el productor no puede avanzar si no hay espacio en el _buffer_ ni los consumidores si no hay elementos: mientras se hace la verificación del estado del _buffer_ ningún otro proceso puede agregar o quitar elementos por la exclusión mutua entre las funciones del monitor.
+El algoritmo es correcto porque asegura que el productor no puede avanzar si no hay espacio en el _buffer_ ni los consumidores si no hay elementos. Mientras se hace la verificación del estado del _buffer_ ningún otro proceso puede agregar o quitar elementos debido a la exclusión mutua entre las funciones del monitor.
 
-
-En los monitores nativos de Java no se pueden usar diferentes variables de condición pero el algoritmo es casi idéntico (<<monitors_producer_consumer_java, código completo>>):
+En los monitores nativos de Java no se pueden usar diferentes variables de condición, pero el algoritmo es casi idéntico (<<monitors_producer_consumer_java, código completo>>):
 
 
 [source, java]
@@ -414,15 +414,18 @@ synchronized void append(Integer data) {
 }
 ----
 
-Al no poder esperar o señalizar variables independientes los productores y consumidores comparten la misma cola, no se puede discriminar a qué procesos hay que desbloquear. Ambos deben llamar a +notifyAll+ para que todos, productores y consumidores, verifiquen si pueden continuar. Como ésta se hace dento de un +while+ el algoritmo también es correcto pero algo más ineficiente: cuando un productor o consumidor hace el +notifyAll+ se despiertan todos los productores y consumidores que hayan hecho en _wait_ aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
+Al no poder disponer de variables independientes los productores y consumidores comparten la misma cola por lo que no se puede discriminar a qué procesos hay que desbloquear. Ambos  llaman a +notifyAll+ para que todos –productores y consumidores– verifiquen si pueden continuar. Como la verificación se hace dento de un +while+ el algoritmo también es correcto, pero más ineficiente: cuando un productor o consumidor ejecuta +notifyAll+ se despiertan todos los productores y consumidores bloqueados, aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
 
 
 ==== Lectores-escritores
 
-Se usan dos variables de condición, +canRead+ para notificar a los lectores y +canWrite+ para los escritores, una variable entera +readers+ para llevar la cuenta de lectores en la sección crítica y la booleana +writing+ para indicar si hay un escritor está en la sección crítica (<<monitors_rw_lock_py, código completo>>).
+Se usan dos variables de condición: +canRead+ para notificar a los lectores y +canWrite+ para los escritores. También una variable entera +readers+ para contar los lectores en la sección crítica y la booleana +writing+ para indicar si hay un escritor (<<monitors_rw_lock_py, código completo>>).
 
-Si hay un escritor en la sección crítica los lectores esperarán en la variable +canRead+ hasta que el escritor le señalice para que comprueben si pueden entrar. Si es así incrementan el número de lectores y señalizan a +canRead+ para que los lectores bloqueados puedan avanzar.
 
+
+Si hay un escritor en la sección crítica los lectores esperarán en la variable +canRead+ hasta que el escritor le señalice y comprueben si pueden entrar. Si es el caso, incrementan el número de lectores y señalizan a +canRead+ para que los lectores bloqueados puedan avanzar.
+
+.Lectores
 [source, python]
 ----
 def reader_lock():
@@ -447,8 +450,10 @@ def reader_unlock():
 ----
 <1> Si es el último lector desbloquea a los escritores bloqueados.
 
-Los escritores se bloquean en la variable +canWrite+ si hay otros lectores o un escritor, cuando pueden entrar ponen +writing+ en +True+ para bloquear a los siguientes lectores y escritores.
 
+Los escritores se bloquean en la variable +canWrite+ si hay otros lectores o un escritor. Cuando la condición es falsta podrán entrar, ponen +writing+ en +True+ para bloquear a los siguientes lectores y escritores.
+
+.Escritores
 [source, python]
 ----
 def writer_lock():
@@ -472,9 +477,10 @@ def writer_unlock():
 ----
 <1> Señaliza a lectores y escritores.
 
-La última parte –la señalización a ambas variables de condición– puede modificarse para dar prioridad a lectores o escritores, una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+, si tiene proceso bloqueados se señaliza solo a ella. Lo mismo puede hacerse para dar prioridad a los escritores.
+La última parte –la señalización a +canRead+ y +canWrite+– puede modificarse para dar prioridad a lectores o escritores. Una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+ y si tiene procesos bloqueados se señaliza solo a ella. Lo mismo puede hacerse con +canWrite+ para dar prioridad a los escritores.
 
-Aún con estos cambios se puede provocar la inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica, se puede solucionar fácilmente verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
+===== Sin inanición de escritores
+Aún con los cambios anteriores puede ocurrir inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica. Se puede solucionar fácilmente verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
 
 [source, python]
 ----
@@ -487,8 +493,14 @@ def reader_lock():
 ----
 
 
-En Java no podemos usar dos variables de condición por lo que hay que recurrir al +notifyAll+ para desbloquear a lectores y escritores. El código es algo más ineficiente pero el algoritmo queda muy sencillo (<<monitors_rw_java, código completo>>). Se necesitan dos variables, el contador de lectores (+readers+) y una booleana que indicará si hay un escritor en la sección crítica (+writing+). Los lectores solo se bloquean si hay un escritor, cuando entran hacen el +notifyAll+ para que puedan entrar otros lectores que se hayan bloqueado en el +wait+ (también despertará a los escritores que volverán a bloquearse inmediatamente).
+===== Lectores-escritores con Java
+En Java no se pueden usar dos variables de condición por lo que hay que recurrir al +notifyAll+ para desbloquear a lectores y escritores. El código es algo más ineficiente pero el algoritmo queda muy sencillo (<<monitors_rw_java, código completo>>).
 
+Se necesitan dos variables, el contador de lectores (+readers+) y una booleana que indicará si hay un escritor en la sección crítica (+writing+).
+
+Los lectores solo se bloquean si hay un escritor, cuando entran hacen el +notifyAll+ para que puedan entrar otros lectores que se hayan bloqueado en el +wait+ (también despertará a los escritores que volverán a bloquearse inmediatamente).
+
+.Lectores
 [source, java]
 ----
 synchronized void readerLock() {
@@ -500,7 +512,7 @@ synchronized void readerLock() {
 }
 ----
 
-Si el lector que sale es el último debe hacer el +notifyAll+ para que puedan entrar los escritores bloqueados.
+El último lector en salir debe hacer el +notifyAll+ para que puedan entrar los escritores bloqueados.
 
 [source, java]
 ----
@@ -514,6 +526,7 @@ synchronized void readerUnlock() {
 
 Los escritores quedan bloqueados si hay otro escritor o lectores en la sección crítica.
 
+.Escritores
 [source, java]
 ----
 synchronized void writerLock() {
@@ -524,7 +537,7 @@ synchronized void writerLock() {
 }
 ----
 
-Cuando el escritor señaliza a todos para que puedan entrar los siguientes lectores y escritores.
+El escritor que sale señaliza para que puedan entrar los siguientes lectores y escritores.
 
 [source, java]
 ----
@@ -534,7 +547,9 @@ synchronized void writerUnlock() {
 }
 ----
 
-No se puede decidir ni conocer a priori si entrarán los lectores o un escritor, depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y también depende del _scheduler_ (es no determinista). Al igual que el anterior este algoritmo da prioridad a los lectores, si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores que están esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero, por ejemplo:
+No se puede decidir ni conocer a priori si entrarán los lectores o un escritor. Depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y también depende del _scheduler_ (es no determinista). Al igual que el anterior, este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero.
+
+Por ejemplo:
 
 [source, java]
 ----
@@ -550,9 +565,9 @@ synchronized void readerLock() {
 
 ==== Filósofos cenando
 
-Con la solución con semáforos del problema de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> que se podían generar con un diseño descuidado. Planteado de forma correcta el algoritmo con monitores es mucho más sencillo y menos propenso a sufrir los problemas de las soluciones con semáforosfootnote:[La intención inicial de la construcción de semáforos.]. Debido a la exclusión mutua entre métodos del monitor hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de generar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después después de que un hilo ha sido desbloqueado de su _wait_.
+Con la solución con semáforos de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> provocados por un diseño descuidado. Planteado de forma correcta, el algoritmo con monitores es mucho más sencillo y menos propenso a sufrir los problemas de semáforos. Debido a la exclusión mutua entre métodos, hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de generar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después de que un hilo fue desbloqueado de su _wait_.
 
-El caso de los filósofos es otro ejemplo notable (como el de barreras) de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_) que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (+pick+ y +release+ respectivamente).
+El caso de los filósofos es otro ejemplo notable –como el de barreras– de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_) que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (+pick+ y +release+ respectivamente).
 
 El algoritmo simplificado en Java es el siguiente (<<monitors_philosophers_java, código completo>>):
 
