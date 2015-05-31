@@ -64,7 +64,7 @@ En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. 
 Una clase cuyos métodos públicos están todos declarados como _synchronized_ se denomina _monitor Java_. Aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
 ****
 
-Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un _mutex_ global que _protege_ a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa que no se asegura exclusión mutua si hay varias instancias que modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
+Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un _mutex_ global que _resguarda_ a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Si hay varias instancias cada una ejecuta sus métodos independientemente de las demás. Esto significa, por ejemplo, que no hay exclusión mutua si varias instancias modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
 
 
 === Variables de condición
@@ -81,7 +81,7 @@ El _signal_ sobre una variable en particular desbloquea a un proceso en esa vari
 Variables de condición implícitas::
 Las operaciones _wait_ y _signal_ no están ligadas a ninguna variable explícita, hay una única variable implícita con una única cola. Como no es posible señalizar a variables diferentes se requieren variables de estado adicionales. Un proceso que se desbloqeua debe verificar la variable de estado para decidir si le corresponde continuar o no la ejecución (en general implica cambiar un +if+ por un +while+).
 +
-Como en la forma anterior, si no hay ningún proceso bloqueado la operación _signal_ no tiene efecto. Esta es la implementación de monitores en Java, la operación _wait_ es el método +wait+, _signal_ es +notify+ y _broadcast_ es +notifyAll+.
+Como en la forma anterior, si no hay ningún proceso bloqueado la operación _signal_ no tiene efecto. Esta es la implementación de monitores en Java, la operación _wait_ es el método homónimo, _signal_ es +notify+ y _broadcast_ es +notifyAll+.
 
 Objetos protegidos::
 El bloqueo y desbloqueo es automático y depende de expresiones lógicas. El compilador o la máquina virtual tienen la responsabilidad de bloquear al proceso si la condición es falsa y despertarlos si se hace verdadera.
@@ -104,17 +104,35 @@ Un monitor se suele representar gráficamente de la siguiente forma:
 image::monitors.png[align="center"]
 
 
-Por la exclusión mutua solo un proceso puede estar _dentro_ del monitor pero pueden bloquearse en variables de condición, tienen que liberar temporalmente el _lock_ para que otros procesos puedan entrar. Estos procesos bloqueados se representan en _salas internas_ esperando a que otro proceso señalice a su respectiva variable de condición. Cuando un proceso que está dentro del monitor señaliza (_S_) una variable de condición donde hay varios procesos esperando (_W_) además de los procesos que están esperando para entrar (_E_), ¿cuál de ellos continúa la ejecución?
+Por la exclusión mutua solo un proceso puede estar _dentro_ del monitor. Los procesos dentrol del monitor pueden bloquearse en variables de condición, por lo que tienen que liberar temporalmente el _lock_ para que otros puedan entrar. Estos procesos bloqueados se representan en _salas internas_ esperando a que otro proceso señalice a su respectiva variable de condición.
+
+Cuando un proceso que está dentro del monitor señaliza (_S_) a una variable de condición, donde hay varios procesos esperando (_W_) y procesos que están esperando para entrar al monitor (_E_), ¿cuál de ellos se ejecuta a continuación?
+
 
 ==== Especificación de prioridades
 
+Los monitores deben especificar la prioridad que dan a los diferentes procesos. Como comprobaremos enseguida, esa especificación es fundamental para el diseño de los algoritmo.
+
 Hay tres alternativas habituales:
 
-1. El proceso que estaba bloqueado en la variable de condición se debe reanudar inmediatamente, a esta condición se la llama _requerimiento de reanudación inmediata_ (o _IRR_, _Immediate Resumption Requeriment_), es característica de los monitores tradicionales cuya especificación es *_E < S < W_*. Los procesos bloqueados en las variables de condición son los de mayor prioridad, el proceso que señaliza se bloquea inmediatamente para que se ejecute un proceso esperando, los que están esperando en la entrada son los de menor prioridad.
+1. El proceso que estaba bloqueado en la variable de condición se debe reanudar inmediatamente. A esta condición se la llama _requerimiento de reanudación inmediata_ (o _IRR_, _Immediate Resumption Requeriment_). Es característica de los monitores tradicionales, su especificación de prioridades es
++
+[quote]
+_E < S < W_.
++
+Los procesos bloqueados en las variables de condición son los de mayor prioridad, el proceso que señaliza se bloquea inmediatamente, los que están esperando en la entrada son los de menor prioridad.
 
-2. El proceso que señaliza sale del monitor, luego los que estaban bloqueados en la variable de condición señalizada y finalmente los que esperan entrar al monitor. Esta especificación es *_E < W < S_*.
+2. El proceso que señaliza sale del monitor, luego los que estaban bloqueados en la variable de condición señalizada y finalmente los que esperan entrar al monitor. Esta especificación es
++
+[quote]
+_E < W < S_.
 
-3. Los procesos que están esperando para entrar tienen la misma prioridad que los bloqueados en la entrada del monitor, *_E = W < S_*. Esta es la especificación para monitores en Java, los proceso desbloqueados por el +notify+ o +notifyAll+ van a la misma cola que los procesos en espera para entrar al monitor.
+3. Los procesos que están esperando para entrar tienen la misma prioridad que los bloqueados en la entrada del monitor,
++
+[quote]
+_E = W < S_.
++
+Esta es la especificación para monitores en Java. El proceso que señaliza tiene la mayor prioridad, continúa su ejecución hasta salir del monitor. Los procesos desbloqueados por el +notify+ o +notifyAll+ van a la misma cola que los procesos en espera para entrar al monitor.
 
 
 [[monitors_java_image]]
@@ -123,9 +141,11 @@ image::monitor_java.png[align="center"]
 
 
 [[monitors_semaphores]]
-=== Simulación de semáforos
+=== Semáforos
 
-Hoare demostró (<<Hoare1>>) que los monitores son equivalentes a los semáforos, cualquiera de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo. Se necesita una variable entera para el valor del semáforo (+value+) y una variable de condición (+notZero+) para bloquear a los procesos en la operación +wait+ si el semáforo es igual a cero. El siguiente es el algoritmo con monitores tradicionales:
+Hoare demostró (<<Hoare1>>) que los monitores son equivalentes a los semáforos ya que cualquiera de ellos se puede implementar con el otro. La simulación de semáforos con monitores es un buen ejemplo. Se necesita una variable entera para el valor del semáforo (+value+) y una variable de condición (+notZero+) para bloquear a los procesos en la operación _wait_ si el semáforo es igual a cero.
+
+El siguiente es el algoritmo de simulación de semáforos con monitores tradicionales:
 
 ----
 monitor Semaphore
@@ -142,9 +162,11 @@ monitor Semaphore
         signalC(notZero)
 ----
 
-El algoritmo es correcto pero tiene un problema, requiere la _reanudación inmediata_ (es decir _E < S < W_). Cuando un proceso ejecuta el +signal+ el otro proceso que estaba bloqueado debe ejecutarse inmediatamente para evitar que +value+ sea modificado por otro proceso. Por ejemplo uno que esperando para ejecutar +wait+ (como puede ocurrir en Java ya que la prioridad de ambos es la misma, _E = W_). O que el mismo proceso que hizo el +signal+ haga otro +wait+. En ambos casos el valor del semáforo acabaría en negativo.
+El algoritmo es correcto pero tiene un problema, requiere la _reanudación inmediata_ (es decir _E < S < W_). Cuando un proceso ejecuta el +signalC+, el proceso bloqueado debe ejecutarse inmediatamente para evitar que +value+ sea modificado por otro proceso. Por ejemplo: uno que a punto de ejecutar +wait+ (como puede ocurrir en Java ya que la prioridad de ambos es la misma, _E = W_), o el mismo proceso que hizo el +signal+ puede hacer otro +wait+. En ambos casos el valor del semáforo acabaría negativo, un error grave.
 
-Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condición se mantiene después de despertarse del +wait+, en este caso es verificar si el semáforo sigue siendo distinto a cero. En  +wait+ hay que cambiar el +if+ por +while+:
+Si el monitor no asegura _E < S < W_, el proceso tiene que volver a verificar si condición se mantiene al despertarse del +wait+. En este caso tiene que verificar si +value+ sigue siendo distinto a cero.
+
+En  +wait+ hay que cambiar el +if+ por +while+:
 
 ----
     operation wait
@@ -153,7 +175,9 @@ Si el monitor no asegura _E < S < W_ hay que volver a verificar si las condició
         value = value - 1
 ----
 
-La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón habitual es usar +while+ en vez de +if+ para verificar si se cumplen las condiciones para volver a entrar al monitor. Un algoritmo así puede ser directamente traducido a Java, se necesita la misma variable entera +value+ y los métodos _synchronized_ +wait+ y +signal+ de los semáforos (en este caso reemplazados por +p()+ y +v()+ para no confundir el _wait_ de semáforos con el del método de bloqueo dentro del monitor de Java):
+La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón de programación correcto para verificar la condición es usar +while+ en lugar de +if+.
+
+Un algoritmo así puede ser directamente traducido a Java. Se necesita la misma variable entera +value+ e implementar el _wait_ y _signal_ como métodos _synchronized_ (en este ejemplo se usa +p+ y +v+ para no confundir con el _wait_ nativo de Java, sino dará error de compilación):
 
 
 [source, java]
@@ -179,7 +203,7 @@ class Semaphore {
 }
 ----
 
-<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo del contador para simular semáforos, muy similar y equivalente al <<sem_counter_java, ejemplo>> usando la clase +Semaphore+ de +java.util.concurrent+ vista en el capítulo <<semaphores>> aunque esta última está muy optimizada (la eficiencia se analiza más adelante, en <<monitor_times>>).
+<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo de la simulación semáforos. Este ejemplo es similar y equivalente al <<sem_counter_java, ejemplo>> con la clase +Semaphore+ de +java.util.concurrent+ que vimos en el capítulo <<semaphores>>, aunque esta última está muy optimizada (la eficiencia se analiza más adelante, en <<monitor_times>>).
 
 ==== Mutex
 
@@ -188,6 +212,8 @@ La implementación de _mutex_ es más sencilla (<<monitors_mutex_java, código c
 [source, java]
 ----
 class Mutex {
+    boolean lock;
+
     synchronized void lock() {
         while (lock) {
             wait();
@@ -203,13 +229,13 @@ class Mutex {
 ----
 
 ==== Variables condicionales de POSIX Threads
-Los monitores no son únicamente una construcción sintáctica de los lenguajes de programación, también son una forma de estructurar los programas. Se pueden implementar los mismos algoritmos si se asegura exclusión mutua entre las funciones del monitor y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
+Los monitores no están limitados solo a los que son una construcción sintáctica de lenguajes, también son una forma de estructurar los programas. Se pueden implementar los mismos algoritmos en cualquier lenguaje si se asegura exclusión mutua entre las funciones del _monitor_ y se disponen de variables de condición. Las librerías POSIX Threads proveen ambas, además del _mutex_ también ofrecen variables de condición idénticas a las diseñadas para monitores.
 
-Las variables de condición de POSIX Threads tienen las operaciones básicas sobre variables de condición: _wait_ (+pthread_cond_wait+), _signal_ (+pthread_cond_signal+) y la operación _broadcast_ (+pthread_cond_broadcast+) para despertar a todos los procesos bloqueados (similar a +notifyAll+ de Java).
+Las variables de condición de POSIX Threads tienen las operaciones básicas sobre variables de condición: _wait_ (+pthread_cond_wait+), _signal_ (+pthread_cond_signal+) y la operación _broadcast_ (+pthread_cond_broadcast+) para despertar a todos los procesos (similar a +notifyAll+ de Java).
 
-Java exige que +wait+, +notify+ y +notifyAll+ se llamen desde métodos sincronizados, POSIX Threads  requiere que la función +pthread_cond_wait+ se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan señales.] como segundo argumento. En este caso la funcionalidad es similar a Java, cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
+Java exige que +wait+, +notify+ y +notifyAll+ se llamen desde métodos sincronizados. Para asegurar las mismas condiciones de entrada y salida de la _sección crítica_ del monitor, POSIX Threads requiere que la función +pthread_cond_wait+ se llame con un _mutex_ asociadofootnote:[Además es necesario que se llame al _wait_ con el _mutex_ ya adquirido para que no se pierdan _signals_.] como segundo argumento. Asi pues, su funcionalidad es similar a Java: cuando el proceso se bloquea libera el _mutex_ (es una operación atómica) y cuando se desbloquea lo vuelve a adquirir.
 
-===== Semáforos
+===== Semáforos con POSIX Threads
 Para implementar semáforos con el _método_ de monitores se necesita un _mutex_, una variable de condición y el valor del semáforo:
 
 [source, c]
@@ -220,7 +246,9 @@ int value = 1;
 ----
 
 
-Se usa +mutex+ para asegurar la exclusión mutua entre las dos operaciones (+p()+ y +v()+), la variable de condición +notZero+ para los procesos bloqueados por _wait_ y +value+ para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ (al inicio y fin de cada función respectivamente), el resto del código es idéntico a la implementación de semáforos con monitores tradicionales. El código simplificadofootnote:[Para que no superen los márgenes no puse el código de inicialización del +mutex+ y +notZero+ y abrevié las llamadas +pthread_*+.] (<<monitors_semaphore_c, código completo>>):
+Se usa +mutex+ para asegurar la exclusión mutua entre las dos operaciones (+p+ y +v+), la variable de condición +notZero+ para los procesos bloqueados en el _wait_ y +value+ para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ (al inicio y fin de cada función respectivamente), el resto del código es idéntico a la implementación de semáforos con monitores en Java.
+
+El código simplificadofootnote:[Para que no superen los márgenes no incluí el código de inicialización y abrevié las llamadas +pthread_*+.] (<<monitors_semaphore_c, código completo>>):
 
 [source, c]
 ----
@@ -241,16 +269,18 @@ void v() {
 }
 ----
 
-En la llamada a +cond_wait+ además de la variable de condición se envía como argumento el +mutex+ del _monitor_ para cumplir con sus requisitos:
+En la llamada a +cond_wait+, además de la variable de condición, se envía como argumento el +mutex+ del _monitor_ para cumplir con los requisitos de monitores:
 
-- El _mutex_ es liberado al bloquearse el proceso para que otro pueda entrar al monitor.
+- El _mutex_ es liberado cuando el proceso se bloquea en una variable de condición, así puede entrar otro proceso.
 
-- El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ para que se asegure la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función. Además compite en la entrada con los demás procesos que estén en la cola del _mutex_, las prioridades son idénticas a las de Java: _E = W < S_.
+- El _mutex_ vuelve a adquirirse en cuánto el proceso es despertado por un _signal_ y así asegurar la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función.
++
+El proceso que se despierta en la variable de condición compite en la entrada con los demás procesos en la cola de _mutex_. Así pues, las prioridades de monitores con POSIX Threads son idénticas a las de Java: _E = W < S_.
 
 [[monitor_mutex_emulation]]
-===== Mutex
+===== Mutex con POSIX Threads
 
-La implementación de un semáforo _mutex_ es igual de sencillo al Java, el código simplificado (<<monitors_mutex_c, código completo>>):
+La implementación de un semáforo _mutex_ es igual de sencillo que el de Java, el código simplificado (<<monitors_mutex_c, código completo>>):
 
 [source, c]
 ----
@@ -273,13 +303,13 @@ void unlock() {
 
 === Algoritmos de sincronización
 
-En el capítulo <<semaphores>> hemos visto los algoritmos de sincronización más estudiados, no se pretende resolver todos los problemas con dichos algoritmos o que se deban reprogramar cada vez que se necesitan (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar, vale la pena conocer los principios detrás de las librerías de alto nivel y proporcionan una mejor perspectiva del porqué se han diseñado de una forma u otra. Es complicado aprender a reconocer y resolver los problemas de concurrencia y sincronización, analizar los soluciones ayudan mucho al aprendizaje y entrenamiento.
+En el capítulo <<semaphores>> vimos algunos algoritmos de sincronización, no se pretende resolver todos los problemas con dichos algoritmos, ni que se deban reprogramar cada vez que se necesitan (la mayoría de ellos ya están disponibles como librerías). Se los estudia porque son modelos de las diferentes tipos de problemas que nos podemos encontrar
 
-En este capítulo –y los siguientes– haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos que con semáforos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos.
+La mala noticia es que con monitores haremos lo mismo, estudiaremos los algoritmos para resolver los mismos casos. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos.
 
 ==== Barreras
 
-El algoritmo de barreras con monitores es mucho más sencillo con monitores que con semáforos, en Java solo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso que faltaba por llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (<<monitors_barrier_java, código completo>>):
+El algoritmo de barreras con monitores es mucho más sencillo con monitores que con semáforos. En Java solo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso en llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (<<monitors_barrier_java, código completo>>):
 
 [source, java]
 ----
@@ -287,17 +317,22 @@ synchronized void barrier(int n) {
     arrived++;
     if (arrived == n) {
         arrived = 0;
-        notifyAll();
+        notifyAll();     <1>
     } else {
         wait();
     }
 }
 ----
+<1> Despierta a todos los procesos bloqueados.
 
-El proceso que llama a +notifyAll+ es siempre el último proceso que faltaba llegar a la barrera, no hay interferencia ni otros procesos pueden adelantarse. Los que hayan superado la barrera podrán superar la barrar hasta que el último la haya superado, el contador +arrived+ ya valdrá cero y comenzará la cuenta para la siguiente fase por lo que quedarán bloqueados en el +wait+.footnote:[Aunque el monitor del lenguaje tenga una prioridad diferente a _E = W < S_, por ejemplo de reanudación inmediata (_E < S < W_), el valor de +arrived+ ya es cero porque fue asignado antes del _signal_.]
+El proceso que llama a +notifyAll+ es siempre el último proceso que faltaba llegar a la barrera. El método +barrier+ asegura exclusión mutua por lo tanto hay certeza de que todos los anteriores ya ejecutaron el +wait+ y están bloqueados. No se pierden señales ni quedan procesos sin despertar.
 
-Así como existen las variables condicionales en POSIX Threads, otros lenguajes proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase +Lock+ de +java.util.concurrent.locks+. De una instancia de +Lock+ se pueden obtener las variables de condición necesarias, por ejemplo: +lock.newCondition()+]. En Python se puede usar un objeto de +threading.Condition+ asociado con el _mutex_ que se usa para la exclusión mutua en las funciones del monitor. Además del contador +arrived+ se usa +mutex+ y la variable de condición +allArrived+ sobre la que se señalizará cuando todos los procesos hayan llegado:
+Tampoco se puede adelantar ningún proceso, la asignación del contador +arrived+ y el +notifyAll+ son atómicas. Cuando llegue el primer proceso en la siguiente fase +arrived+ ya valdrá 0 y quedará bloqueado en el +wait+.
 
+Este algoritmo funciona aunque el monitor tenga especificación diferente a _E = W < S_ –por ejemplo _E < S < W_–, porque el valor de +arrived+ fue asignado antes del _signal_.
+
+
+Así como existen las variables condicionales en POSIX Threads, otros lenguajes también proveen las mismas funcionalidadesfootnote:[En Java también se pueden usar variables condicionales asociadas a un _lock_, se implementa en la clase +Lock+ de +java.util.concurrent.locks+. De una instancia de +Lock+ se pueden obtener las variables de condición necesarias, por ejemplo: +lock.newCondition()+]. En Python se puede usar un objeto de +threading.Condition+ asociado con el _mutex_ de las funciones del monitor. Además del contador +arrived+ se usa +mutex+ y la variable de condición +allArrived+ sobre la que se señalizará cuando todos los procesos hayan llegado.
 
 [source, python]
 ----
@@ -312,7 +347,7 @@ El código simplificado de la función +barrier+ (<<monitors_barrier_py, código
 [source, python]
 ----
 def barrier(n):
-    with mutex:
+    with mutex:         <1>
         arrived += 1
         if arrived == n:
             arrived = 0
@@ -320,6 +355,7 @@ def barrier(n):
         else:
             allArrived.wait()
 ----
+<1> +with mutex+ asegura exclusión mutua de todo el bloque, en este caso es la función completa.
 
 La razón fundamental de la simplicidad del algoritmo de barreras es el _broadcast_ que desbloquea a todos los procesos en una única operación. Sin ella el algoritmo sería más complejo, habría que despertar a los procesos individualmente y asegurar que uno que superó la barrera no vuelva a ejecutarla e interfiera y se adelante a los que todavía están por desbloquearse de la fase anterior (tal como se <<alg_barriers, hace con semáforos>>).
 
