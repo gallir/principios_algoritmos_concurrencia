@@ -159,7 +159,7 @@ Cuando la variable +turn+ sea 0 _P0_ podrá entrar a su sección crítica. Al sa
 
 Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, todos aseguran consistencia de caché y es un supuesto de los algoritmos de memoria compartida.].
 
-Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que éste entre a su sección crítica para hacerlo a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando éste no tiene intenciones de entrarfootnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón este algoritmo es incorrecto, pero sigamos analizando las siguientes reglas.
+Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que este entre a su sección crítica para hacerlo a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando este no tiene intenciones de entrarfootnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón este algoritmo es incorrecto, pero sigamos analizando las siguientes reglas.
 
 Espera limitada:: Por la anterior se produce espera infinita si el proceso 1 no entra a la sección crítica.
 
@@ -223,7 +223,7 @@ states[0] = False
 
 Es sencillo demostrar que cumple el primer requisito de exclusión mutua. Si hay competencia, el primero que ejecute la asignación a +states+ será el que entrará a la sección crítica.
 
-También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. Si _P1_ está en el resto del código entonces +states[1]+ será falso, por lo que no interfiere con _P0_ y éste podrá entrar y salir varias veces sin esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
+También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. Si _P1_ está en el resto del código entonces +states[1]+ será falso, por lo que no interfiere con _P0_ y este podrá entrar y salir varias veces sin esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
 [[first_deadlock]]
 Pero no cumple el requisito de _progreso_, el algoritmo genera interbloqueofootnote:[En el capítulo <<semaphores>> se trata el problema <<deadlocks, interbloqueos>> con mayor profundidad.] si ocurre la siguiente intercalación de instrucciones:
@@ -328,7 +328,7 @@ states[0] = False
 turn = 1                    <2>
 ----
 <1> _P0_ espera si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
-<2> Cuando un proceso sale de su sección crítica cede el turno al otro, si éste estaba esperando podrá continuar.
+<2> Cuando un proceso sale de su sección crítica cede el turno al otro, si este estaba esperando podrá continuar.
 
 El valor de +turn+ es relevante solo en casos de competencia, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
 
@@ -420,7 +420,7 @@ Cada proceso tiene asociado un identificador entero (_ID_) que sirve de índice 
 
 Pero el demonio está en los detalles.
 
-Son procesos independientes que pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando la función +max+, justo antes de almacenar su número se interrumpe y se ejecuta _P1_. Éste acaba de recorrer el array +number+, el máximo que encontró es 0 y almacenará 1 en +number[1]+. Inmediatamente se ejecuta _P1_ y selecciona también 1, como _P0_. El estado de +number+ es el siguiente:
+Son procesos independientes que pueden ser interrumpidos en cualquier momento, por ejemplo cuando recorren el array. Supongamos que _P0_ está ejecutando la función +max+, justo antes de almacenar su número se interrumpe y se ejecuta _P1_. Este acaba de recorrer el array +number+, el máximo que encontró es 0 y almacenará 1 en +number[1]+. Inmediatamente se ejecuta _P1_ y selecciona también 1, como _P0_. El estado de +number+ es el siguiente:
 
 [quote]
 --
@@ -544,4 +544,4 @@ El problema de exclusión mutua es el más básico y mejor modelado de concurren
 
 Este capítulo sirvió de introducción para reconocer los problemas de procesos concurrentes y la terminología técnica básica. Experimentamos que el modelo secuencial de programa al que estamos acostumbrados no sirve cuando se trata de analizar procesos concurrentes.
 
-Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], éstas no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>)-
+Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], estas no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>)-

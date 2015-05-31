@@ -133,7 +133,7 @@ def unlock():
 [[get_and_add_ticket]]
 El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
 
-A diferencia de la implementación con _get&set_, ésta asegura espera limitada: el número que selecciona cada proceso es único y crecientefootnote:[Aunque hay que tener en cuenta que el valor de +number+ llegará a su máximo y rotará.]. Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>. Son muy usados en el núcleo de Linux, aseguran espera limitada y equidad (_fairness_): los procesos entran a la sección crítica en orden FIFO.
+A diferencia de la implementación con _get&set_, esta asegura espera limitada: el número que selecciona cada proceso es único y crecientefootnote:[Aunque hay que tener en cuenta que el valor de +number+ llegará a su máximo y rotará.]. Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>. Son muy usados en el núcleo de Linux, aseguran espera limitada y equidad (_fairness_): los procesos entran a la sección crítica en orden FIFO.
 
 
 ==== _Test&Set_
@@ -450,7 +450,7 @@ void push(node_head *head, node *e) {
 }
 ----
 <1> Al tratarse de una estructura que no es un _registro atómico_, se debe asegurar la copia atómica de +head+ a +orig+.
-<2> +next+ tendrá los datos de +head+ después del _CAS_, en éste se incrementa el valor de +aba+ para indicar una nueva transacción.
+<2> +next+ tendrá los datos de +head+ después del _CAS_, en este se incrementa el valor de +aba+ para indicar una nueva transacción.
 <3> El siguiente del nuevo nodo es el que está ahora en la cabeza.
 <4> Se intenta el intercambio, solo se hará si tanto el puntero al nodo y el entero +aba+ son idénticos a los copiados en +orig+. Si entre la primera instrucción y la comparación en el +while+ el valor de +head+ fue modificado, el valor de +aba+ también habrá cambiado (será mayor), por lo que _CAS_ retornará falso aunque el puntero al nodo sea el mismo.
 

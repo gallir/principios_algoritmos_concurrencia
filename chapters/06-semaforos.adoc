@@ -292,7 +292,7 @@ Consumidores:: Recibe y consume los elementos transmitidos desde los productores
 
 Hay dos tipos de productores-consumidores:
 
-Sincrónicos:: Cuando se produce un elemento, éste debe ser consumido para que el  productor pueda continuar su ejecución.
+Sincrónicos:: Cuando se produce un elemento, este debe ser consumido para que el  productor pueda continuar su ejecución.
 
 Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido. Los productores agregan los elementos a una cola y los consumidores obtienen el primer elemento de esta.
 
@@ -556,7 +556,7 @@ Cada filósofo necesita dos tenedores para comer y solo puede tomar los que tien
 2. Exclusión mutua, un tenedor solo puede ser usado por un filósofo a la vez.
 3. Se debe asegurar _progreso_.
 4. Se debe asegurar _espera limitada_.
-5. Debe ser eficiente. Si no hay competencia por un tenedor, éste debe poder ser usado por uno de sus dos filósofos vecinos.
+5. Debe ser eficiente. Si no hay competencia por un tenedor, este debe poder ser usado por uno de sus dos filósofos vecinos.
 
 Identificamos a los filósofos y tenedores con un índice de 0 a 4 (es decir, de 0 a _N-1_). El tenedor a la izquierda del _filósofo~0~_ será el _tenedor~0~_, el de su derecha el _tenedor~1~_. Así sucesivamente, hasta el último _filósofo~4~_, que a su izquierda tendrá el _tenedor~4~_ y a su derecha el _tenedor~0~_.
 
@@ -651,7 +651,7 @@ Exclusión mutua:: Los recursos solo pueden asignarse a un proceso.
 
 Retención y espera (_hold and wait_):: Un proceso mantiene los recursos ya asignados mientras espera la asignación de otro.
 
-No apropiación (_no preemption_):: No se puede quitar un recurso que está asignado a un proceso, debe ser éste el que lo libere.
+No apropiación (_no preemption_):: No se puede quitar un recurso que está asignado a un proceso, debe ser este el que lo libere.
 
 Espera circular (_circular wait_):: Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
 ****

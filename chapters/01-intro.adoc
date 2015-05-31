@@ -44,11 +44,11 @@ Los procesos pasan a bloqueados porque solicitaron una operación al núcleo (v�
 === _Scheduler_
 La transición de _listos_ a _ejecución_ lo decide el módulo _scheduler_, o _planificador a corto plazo_, del núcleo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos), o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda retener el procesador indefinidamente se usa un reloj que genera interrupciones periódicamente.
 
-Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción y ejecuta al _scheduler_, éste  decide qué proceso se ejecutará a continuación. Así pues, el núcleo es capaz de quitar de ejecución a los procesos aunque no hagan llamadas de sistema, se dice que el planificador es _apropiativo_ (_preemptive_).
+Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción y ejecuta al _scheduler_, este  decide qué proceso se ejecutará a continuación. Así pues, el núcleo es capaz de quitar de ejecución a los procesos aunque no hagan llamadas de sistema, se dice que el planificador es _apropiativo_ (_preemptive_).
 
 El _scheduler_ debe tomar decisiones muy frecuentemente, entre unas pocos cientos a decenas de miles de veces por segundo. Para que la decisión sea muy rápida y eficiente se usan sofisticados algoritmos de colas para que la selección sea de baja complejidad computacional, se busca obtener _O(1)_ (i.e. seleccionar el primer elemento de la cola).
 
-El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Éstas tienen requisitos contradictorios, de los cuales los más importantes son:
+El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Estas tienen requisitos contradictorios, de los cuales los más importantes son:
 
 - Tiempo de respuesta: Los usuarios y algunos programas demandan que el sistema operativo responda rápido a los eventos. Cuando se hace clic en un menú se espera respuesta inmediata, o reproducir un vídeo sin saltos.
 
@@ -143,7 +143,7 @@ En un sistema con un único procesador la ejecución de procesos es una _interca
 .Intercalado exclusivo de procesos _A_, _B_ y _C_
 image::interleaving.png[align="center"]
 
-El _scheduler_ selecciona el proceso que se ejecutará, éste lo hará durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga no se puede conocer a priori, depende de muchos factores internos y externos al sistema, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
+El _scheduler_ selecciona el proceso que se ejecutará, este lo hará durante un período de tiempo denominado _ráfaga de CPU_ (_CPU burst_). La duración de la ráfaga no se puede conocer a priori, depende de muchos factores internos y externos al sistema, fundamentalmente el cuanto que le asigna el _scheduler_, llamadas de sistema del proceso y las interrupciones de dispositivos que pueden generar cambios de estado de procesos.
 
 Las combinaciones de intercalación entre los diferentes procesos es no determinista. Es altamente improbable que se pueda repetir la misma secuencia de intercalaciones entre pares de procesos.
 
@@ -311,7 +311,7 @@ sys     0m0.044s
 <2> El tiempo de _reloj_ es mayor al tiempo acumulado de CPU.
 
 
-Se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, éstas pueden ocurrir tanto en sistemas con un único procesador como con _SMP_. De hecho en Python no hay paralelismo, el intérprete –CPython– crea hilos nativos pero no hay ejecución en paralelo, el _Global Interpreter Lock_ (<<Sampson>>) obliga a _serializar_ cada una de las instrucciones que ejecuta la máquina virtual.
+Se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, estas pueden ocurrir tanto en sistemas con un único procesador como con _SMP_. De hecho en Python no hay paralelismo, el intérprete –CPython– crea hilos nativos pero no hay ejecución en paralelo, el _Global Interpreter Lock_ (<<Sampson>>) obliga a _serializar_ cada una de las instrucciones que ejecuta la máquina virtual.
 
 ****
 Los errores no son resultado exclusivo de la ejecución en varios procesadores, ocurre lo mismo aunque se ejecute en un único procesador, por ejemplo en una Rasperry 1:

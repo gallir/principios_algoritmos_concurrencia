@@ -83,7 +83,7 @@ def lock():
         local = 0
 ----
 
-Las mejoras dependen de la instrucción atómica y las características del sistema de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable (algo menor en el procesador ARM), tanto en tiempos de CPU como en tiempos de retornofootnote:[Se denomina tiempo de retorno al tiempo total que tarda un proceso desde que se creó hasta que acabó. El tiempo de respuesta es el tiempo que transcurre desde que ocurrió un evento que debe ser tratado por el proceso hasta que éste empezó a ejecutarse.].
+Las mejoras dependen de la instrucción atómica y las características del sistema de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable (algo menor en el procesador ARM), tanto en tiempos de CPU como en tiempos de retornofootnote:[Se denomina tiempo de retorno al tiempo total que tarda un proceso desde que se creó hasta que acabó. El tiempo de respuesta es el tiempo que transcurre desde que ocurrió un evento que debe ser tratado por el proceso hasta que este empezó a ejecutarse.].
 
 Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
 
@@ -132,7 +132,7 @@ void backoff(int failures) {
 }
 ----
 
-En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función +backoff+. Ésta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
+En cada iteración fallida del _spinlock_ el proceso incrementa el contador de fallos (+failures+) y llama a la función +backoff+. Esta calcula el límite (+limit+) con desplazamiento de bits. Cada posición desplazada multiplica por dos desplazando el bit 1 hacia la izquierda con un máximo de 12 posiciones, unos 4096 nanosegundos. Luego se calcula el tiempo que esperará con un número aleatorio entre 1 y el límite.
 ****
 
 
@@ -195,7 +195,7 @@ image::optimized-xeon-real.png[align="center"]
 .Tiempos de retorno en ARMv7 de Raspberry 2 cuatro núcleos
 image::optimized-arm7-real.png[align="center"]
 
-Aún en arquitecturas tan diferentes, la cesión del procesador representa una reducción importante de tiempo de CPU y de retorno. La mayor diferencia a favor del _backoff_ ocurre en el Xeon de 16 núcleos. Éste tiene más núcleos que procesos concurrentes, por lo que un _yield_ solo hace que un proceso abandone el procesador para que el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo (depende de los algoritmos de _afinidad de CPU_). También pudo ocurrir que la unidad de tiempo elegida (un nanosegundo) haya sido más adecuada para el Xeon que para el ARM, a pesar de ello se ganan unos pocos milisegundos.
+Aún en arquitecturas tan diferentes, la cesión del procesador representa una reducción importante de tiempo de CPU y de retorno. La mayor diferencia a favor del _backoff_ ocurre en el Xeon de 16 núcleos. Este tiene más núcleos que procesos concurrentes, por lo que un _yield_ solo hace que un proceso abandone el procesador para que el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo (depende de los algoritmos de _afinidad de CPU_). También pudo ocurrir que la unidad de tiempo elegida (un nanosegundo) haya sido más adecuada para el Xeon que para el ARM, a pesar de ello se ganan unos pocos milisegundos.
 
 
 .Cede del procesador
@@ -206,7 +206,7 @@ Las esperas activas ya son suficientemente malas si no son imprescindibles. A me
 
 [[readers_writers]]
 === Lectores-escritores
-En aplicaciones reales, la mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo importante es que éstas sean consistentes. En los ejemplos –un único contador entero– no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño –o para acceder a ficheros o dispositivos externos– hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
+En aplicaciones reales, la mayoría de las operaciones sobre la memoria son lecturas. En estos casos lo importante es que estas sean consistentes. En los ejemplos –un único contador entero– no existe el problema de lectura inconsistente: las palabras de 32 bits son <<atomic_register, registros atómicos>> en las arquitecturas modernas de 32 o más bits, si un proceso lee la variable siempre obtendrá el último valor escrito. Para estructuras de mayor tamaño –o para acceder a ficheros o dispositivos externos– hay que imponer restricciones para que la memoria no sea modificada cuando otros procesos la están leyendo.
 
 La solución de exclusión mutua no es la más adecuada, la _serialización_ de los accesos de solo lectura provoca esperas innecesarias. Una de las relajaciones más importantes a las condiciones de la exclusión mutua es que se permita más de un lector en la sección crítica. Estos algoritmos son conocidos como lectores-escritores (_reader-writer_).
 
@@ -377,7 +377,7 @@ def reader_lock:
 ----
 <1> El lector obtiene su número.
 <2> Espera su turno.
-<3> Cuando entró incrementa el turno de lectores para que pueda entrar el siguiente lector. Éste hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que la suma se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que haya sido incrementada.].
+<3> Cuando entró incrementa el turno de lectores para que pueda entrar el siguiente lector. Este hará lo mismo, así puede haber varios lectores en la sección críticafootnote:[No hace falta que la suma se haga con operaciones atómicas ya que solo un lector puede ejecutarla, el siguiente no entra hasta que haya sido incrementada.].
 
 
 [source, python]
@@ -629,7 +629,7 @@ image::ticket-mcs-clh-real.png[align="center"]
 
 En las arquitecturas modernas no hay demasiada diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio –una palabra más el relleno por proceso– que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
-En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesita. Ésta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
+En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesita. Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
 
 Muchos artículos afirman que _CLH_ es mejor que _MCS_, aunque en los procesadores probados la diferencia es despreciable y en algunos casos es a peorfootnote:[También hay que aclarar que las diferencias sí pueden ser importantes en sistemas con más procesadores.]. La ventaja de _CLH_ es la mayor flexibilidad para gestionar la memoria, puede hacerse en las propias funciones +lock+ y +unlock+ de forma transparente a los procesos.
 

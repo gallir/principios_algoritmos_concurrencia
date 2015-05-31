@@ -477,10 +477,10 @@ def writer_unlock():
 ----
 <1> Señaliza a lectores y escritores.
 
-La última parte –la señalización a +canRead+ y +canWrite+– puede modificarse para dar prioridad a lectores o escritores. Una forma es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+ y si tiene procesos bloqueados se señaliza solo a ella. Lo mismo puede hacerse con +canWrite+ para dar prioridad a los escritores.
+La última parte –la señalización a +canRead+ y +canWrite+– puede modificarse para dar prioridad a lectores o escritores. Una forma de hacerlo es verificar la cola de bloqueados en cada variable de condición. Si se quiere dar prioridad a los lectores se verifica +canRead+ y si tiene procesos bloqueados se señaliza solo a ella. Lo mismo puede hacerse con +canWrite+ para dar prioridad a los escritores.
 
 ===== Sin inanición de escritores
-Aún con los cambios anteriores puede ocurrir inanición de escritores si no dejan de entrar nuevos lectores mientras hay otros en la sección crítica. Se puede solucionar fácilmente verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
+Aún con los cambios anteriores puede ocurrir inanición de escritores si no dejan de llegar nuevos lectores mientras hay otros en la sección crítica. Se puede solucionar verificando si hay algún escritor bloqueado en +canWrite+:footnote:[Cuando se trabaja con monitores y variables de condición es relativamente sencillo agregar nuevas condiciones.]
 
 [source, python]
 ----
@@ -547,7 +547,7 @@ synchronized void writerUnlock() {
 }
 ----
 
-No se puede decidir ni conocer a priori si entrarán los lectores o un escritor. Depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y también depende del _scheduler_ (es no determinista). Al igual que el anterior, este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero.
+No se puede decidir ni conocer a priori si entrarán lectores o un escritor. Depende de cuál se desbloquee y entre primero, no está definido por la política de las colas de espera y depende del _scheduler_. Al igual que el anterior, este algoritmo da prioridad a los lectores. Si se desea que los escritores tengan prioridad se puede agregar un contador de número de escritores esperando y hacer que los lectores se bloqueen en la entrada si este contador es mayor que cero.
 
 Por ejemplo:
 
@@ -567,7 +567,7 @@ synchronized void readerLock() {
 
 Con la solución con semáforos de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> provocados por un diseño descuidado. Planteado de forma correcta, el algoritmo con monitores es mucho más sencillo y menos propenso a sufrir los problemas de semáforos. Debido a la exclusión mutua entre métodos, hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de generar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después de que un hilo fue desbloqueado de su _wait_.
 
-El caso de los filósofos es otro ejemplo notable –como el de barreras– de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica con _mutex_. La excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_) que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos, un problema que ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (+pick+ y +release+ respectivamente).
+El caso de los filósofos es otro ejemplo notable –como el de barreras– de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica. La excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_) que debíamos asegurar que estén fuera de la sección crítica para evitar interbloqueos. Ese problema ya no existe con las variables de condición. Puede diseñarse un monitor para toda la _mesa_, los filósofos deben llamar a sus métodos tomar y soltar los tenedores (+pick+ y +release+ respectivamente).
 
 El algoritmo simplificado en Java es el siguiente (<<monitors_philosophers_java, código completo>>):
 
@@ -594,13 +594,13 @@ class Table {
 
 El array +forks+ mantiene el estado de cada tenedor, +true+ si está disponible. Cada filósofo solicita dos tenedores, el de su izquierda y el de su derecha. El método +pick+ es simple: si ambos están disponibles los toma poniendo en +false+ al estado de los dos, caso contrario llama a +wait+ para bloquearse hasta que sus vecinos liberen los tenedores. La liberación de ambos tenedores (+release+) es aún más sencilla, marca como libres a ambos y señaliza a todos los demás filósofos por si hay bloqueados esperando por algunos o ambos que acaba de liberar.
 
-El algoritmo es correcto, eficiente y no produce interbloqueos porque no hay _retención y espera_ de los tenedores (si un filósofo no puede comer no toma ninguno de los dos tenedores). La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es notable, otra evidencia de la utilidad de monitores.
+El algoritmo es correcto, eficiente y no produce interbloqueos porque no hay _retención y espera_ de los tenedores. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es notable, otra evidencia de la utilidad de monitores.
 
-A pesar de su simplicidad se puede observar otra vez la ineficiencia provocado por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados en esperando por tenedores diferentes. Para minimizar el número de procesos que se despiertan se necesitan diferentes variables de condición pero el monitor nativo de Java no lo permite. Hay que simularlos usando las clases de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
+A pesar de su simplicidad se puede observar otra vez la ineficiencia provocado por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados esperando por tenedores diferentes. Para minimizar el número de procesos que se despiertan se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Hay que simularlas usando las clases de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
 
-El siguiente es el algoritmo simplificado más eficiente con diferentes variables de condición (<<monitors_philosophers2_java, código en Java>>, <<monitors_philosophers_py, código en Python>>). El array +forks+ ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo, inicialmente dos (el de su izquierda y el de su derecha). Cuando un filósofo toma sus dos tenedores decrementa los disponibles de sus vecinos y los incrementa cuando los libera.
+El siguiente es el algoritmo simplificado más eficiente con diferentes variables de condición (<<monitors_philosophers2_java, código en Java>>, <<monitors_philosophers_py, código en Python>>). El array +forks+ ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo, inicialmente dos. Cuando un filósofo toma sus dos tenedores decrementa los disponibles de sus vecinos y los incrementa cuando los libera.
 
-+canEat+ es un array de variables de condición donde se bloqueará cada filósofo que desea comer y no tiene los dos tenedores disponibles. Las variables +left+ y +right+ representan a los vecinos de un filósofo, si éste es el 0 su vecino de la izquierda es 4 y de la derecha el 1footnote:[En Python se calcula con +(i - 1) % N+ y +(i + 1) % N+ respectivamente, pero puede dar valores negativos, no hay un estándar sobre el módulo de número negativos, Python devuelve +N - 1+ pero Java -1, la forma de asegurar es forzando a que sea positivo con +(i + N - 1) % N+.]. Cada variable de condición del array +canEat+ es la cola para cada filósofo, esperan en su cola correspondiente, cuando dejan los tenedores señalizan solo los vecinos que tienen los dos tenedores disponibles.
++canEat+ es un array de variables de condición donde se bloqueará los filósofos que desean comer y no tienen los dos tenedores disponibles. Las variables +left+ y +right+ representan a los vecinos de un filósofo, si este es el 0 su vecino de la izquierda es 4 y de la derecha el 1footnote:[En Python se calcula con +(i - 1) % N+ y +(i + 1) % N+ respectivamente, pero puede dar valores negativos, no hay un estándar sobre el módulo de número negativos, Python devuelve +N - 1+ pero Java -1, la forma de asegurar es forzando a que sea positivo con +(i + N - 1) % N+.]. Cada variable de condición del array +canEat+ es la cola para cada filósofo, esperan en su cola correspondiente, cuando dejan los tenedores señalizan solo los vecinos que tienen los dos tenedores disponibles.
 
 [source, python]
 ----

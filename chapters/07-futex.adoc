@@ -19,7 +19,7 @@ if local != 0:
 <1> Si después del _swap_ +local+ vale cero, no había ningún proceso en la sección crítica.
 <2> Como +local+ no es cero se llama al núcleo del sistema operativo para que lo bloquee.
 
-Naturalmente, es sólo la idea base, el algoritmo completo no puede ser _tan_ sencillo. Se producirán condiciones de carrera entre _swap_ y la llamada al sistema; al no ser atómicas, otro proceso puede haber salido de la sección crítica y el actual quedar bloqueado indefinidamente.
+Naturalmente, es solo la idea base, el algoritmo completo no puede ser _tan_ sencillo. Se producirán condiciones de carrera entre _swap_ y la llamada al sistema; al no ser atómicas, otro proceso puede haber salido de la sección crítica y el actual quedar bloqueado indefinidamente.
 
 === Interfaz FUTEX
 El objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast User-space muTEXes_) de Linux fue facilitar la implementación de este tipo de técnicas para primitivas _bloqueantes_ eficientes sin necesidad de programarlas en el núcleo. A pesar del nombre, FUTEX no solo sirve para semáforos _mutex_, también para una variedad de mecanismos de sincronización.
@@ -90,7 +90,7 @@ struct futex_sem {
     int value;
 };
 ----
-<1> Sólo se usa su dirección como _futex_.
+<1> Solo se usa su dirección como _futex_.
 
 La instrucción atómica _add&get_ se usa para incrementar y decrementar atómicamente el valor del semáforo. Así, el algoritmo de la operación _wait_ es sencillo, prácticamente idéntico a la definición _académica-canónica_ de semáforos.
 
@@ -189,7 +189,7 @@ No obstante, tiene un problema. Aunque las colas de FUTEX son FIFO, esta impleme
 [[drepper_mutex]]
 === _Mutex_ de Drepper
 
-En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>), Ulrich Drepper propone un algoritmo de _mutex_ diferente (<<mutex_drepper_c, código en C>>). En teoría es eficiente, pero tampoco es equitativo y es bastante más complejo, sobre todo para explicarlo en pocas líneas. En el _mutex simple_ anterior se usaban dos variables (+waiters+ y +locked+), en éste se usa un único entero _futex_ que puede tomar tres valores diferentes:
+En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>), Ulrich Drepper propone un algoritmo de _mutex_ diferente (<<mutex_drepper_c, código en C>>). En teoría es eficiente, pero tampoco es equitativo y es bastante más complejo, sobre todo para explicarlo en pocas líneas. En el _mutex simple_ anterior se usaban dos variables (+waiters+ y +locked+), en este se usa un único entero _futex_ que puede tomar tres valores diferentes:
 
 
 - 0: libre

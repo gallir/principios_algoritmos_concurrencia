@@ -179,7 +179,7 @@ Para que el algoritmo funcione correctamente deben especificarse _barreras_ (_fe
 
 . Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
 
-. Ninguna operación de lectura o escritura posterior a la barrera debe ejecutarse antes de ésta.
+. Ninguna operación de lectura o escritura posterior a la barrera debe ejecutarse antes de esta.
 
 Supongamos que deseamos que la asignación de +c+ sea siempre posterior a la asignación de +a+ y +b+, como no hay dependencias detectables por la CPU debemos insertar una barrera entre ellas:
 
