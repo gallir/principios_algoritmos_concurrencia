@@ -45,16 +45,16 @@ La comunicación es asíncrona, los mensajes se depositan en _buzones_ desde don
 ****
 
 === Canales en Go
-En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales, sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
+En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales. Sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
 
 
 Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo:
 
 
-Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidos por la instrucción +go+ –llamadas _goroutines_– hacen que éstas se ejecuten de forma asíncrona, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también puede crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+, la planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
+Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidas por la instrucción +go+ –llamadas _goroutines_– hacen que éstas se ejecuten de forma asíncrona, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_, su coste de creación es muy bajo. Independientemente de las _goroutines_ también se pueden crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+. La planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
-Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son síncronos pero también pueden ser asíncronos si se especifica el tamaño de _buffer_ al momento de la inicialización (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción es mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
+Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo, diseñados también por Rob Pike. Por defecto los canales son síncronos pero también pueden ser asíncronos si se especifica el tamaño de _buffer_ al momento de la inicialización (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier estructura o tipo definido por el programador. La operación de envío o recepción de mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
 
 La siguiente línea crea un canal de tipo entero:
 
@@ -92,13 +92,13 @@ func main() {
 }
 ----
 
-Dado que implementan variantes del modelo _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable –y habitual– la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes, sus diferencias claves son:
+Dado que implementan variantes del modelo _CSP_ y gestionan los _hilos ligeros_ de forma muy similar, es inevitable –y habitual– la comparación entre Erlang y Go. Aunque ambos implementan el modelo _CSP_ derivan de ramas históricas diferentes. Sus diferencias claves son:
 
 - En Erlang como en _CSP_ originalfootnote:[Aunque Hoare planteó la alternativa _atractiva_ (sic) equivalente de nombrar o etiquetar a los canales.] se especifica al proceso receptor. En Go se especifica el canal, cualquier proceso puede recibir o enviar al mismo canal.
 
-- En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso, estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estáticos y la entrega de mensajes es en orden FIFO.
+- En Erlang se pueden enviar diferentes tipos de mensajes a cada proceso.Estos se depositan en un buzón y son recogidos según las reglas especificadas (_guard commands_) en el receptor. Los canales en Go son de tipos estáticos y la entrega de mensajes es en orden FIFO.
 
-- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes, es posible –a veces inevitable– compartir datos vía variables globales (como hemos visto en los ejemplo de capítulos anteriores) o incluso pasando punteros en los mensajes.
+- Erlang sigue el modelo de _actores_, no se permite la compartición de memoria entre los diferentes hilos (_share nothing_ forzado). Aunque en Go se recomienda que toda compartición se haga mediante mensajes, es posible –a veces inevitable– compartir datos vía variables globales (como hemos visto en los ejemplos de capítulos anteriores) o incluso pasando punteros en los mensajes.
 
 El siguiente ejemplo de Erlang define una función anónima que recibe un mensaje y lo imprime por consola. El programa crea un nuevo hilo ligero con +spawn+ y almacena su identificación en +Pid+, posteriormente le envía el mensaje +Hello+ (con el símbolo +!+ como en _CSP_ original de Hoare):
 
@@ -125,7 +125,7 @@ go func() {
 channel <- "Hello"
 ----
 
-Los programas son equivalentes y muy similares, las diferencias fundamentales son la especificación del destinatario del mensaje y que en Erlang no hace falta la creación explícita del canal.
+Los programas son equivalentes y muy similares. Las diferencias fundamentales son la especificación del destinatario del mensaje y que en Erlang no hace falta la creación explícita del canal.
 
 === Barreras
 
