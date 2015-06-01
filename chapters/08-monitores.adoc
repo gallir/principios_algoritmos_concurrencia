@@ -635,6 +635,7 @@ def release():
 Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–. Esta  característica dificulta implementaciones eficientes para multiprocesamiento. No hay muchos lenguajes modernos con el que comparar las diferencias entre semáforos y monitores nativos, pero al menos podemos intentarlo con Java. Es uno de los lenguajes más usado, es eficiente gestionando hilos y su modelo de memoria está bien definido.
 
 
+[[monitor_times_em]]
 ==== Exclusión mutua
 
 Para comparar los tiempos se usaron los programas de ejemplos de _mutex_ en C con POSIX Threads y los tres mecanismos de exclusión mutua de Java: la clase <<mutex_lock, +Lock+>>, <<sem_mutex, +Semaphore+>> y con un método _synchronized_ <<java_monitor, explicado más arriba>>. Para obtener datos más fiables se hicieron con cien millones de iteraciones en lugar de los diez millones de los ejemplos anteriores.
@@ -694,6 +695,7 @@ http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runt
 
 ////
 
+[[monitor_philosophers]]
 ==== Filósofos y variables de condición
 
 En el algoritmo de filósofos se planteó el problema de que con la variable implícita nativa del monitor se despertaban a todos los procesos. La solución fue usar variables explícitas para despertar solo al que corresponde. Pero ¿vale la pena complicar el algoritmo por la mejora que se obtiene?
@@ -702,8 +704,6 @@ Para poder comparar se eliminaron las esperas en _comer_ y _pensar_, cada proces
 
 El gráfico siguiente muestra los tiempos de CPU y real de ambas versiones, solo con monitores nativos (_native_, en azul a la izquierda) y con las variables de condición de la clase +Lock+ (en rojo, a la derecha):
 
-
-[[monitor_philosophers]]
 .Tiempos de ejecución de filósofos
 [caption=""]
 image::philosophers_monitor.png[align="center"]

@@ -31,3 +31,16 @@ _lock-free queues_
 
 === Algoritmos distribuidos
 ////
+
+=== Agradecimientos
+
+
+Ricardo Alberich y Jairo Rocha por acceso al servidor de cálculo de su grupo de investigación.
+
+Marc Pàmpol que me dejó la Raspberry
+Sergio L. Pascual que me ayudó a simplificar el código.
+
+Antonio Pérez, Carles Mateu, Carlos Guadall, David Asorey, David Pinilla, Gerard Ribugent, Javier García, Daniel Matilla, Juan Sosa, "Tzarak" y "Aragon de Mordor" por las pruebas en servidores.
+
+
+Virginia Ramirez Casañez y Marilín Gonzalo por las correcciones.

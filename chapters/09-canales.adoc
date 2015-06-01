@@ -404,7 +404,7 @@ Puede parecer que aparecerán _condiciones de carrera_ porque el envío y recepc
 
 Pero el algoritmo puede optimizarse con una breve modificación en el canal +queue+. Si un proceso en _wait_ ejecuta `s.value <- v` y se interrumpe, el proceso que hace el _signal_ se bloqueará momentáneamente en `s.queue <- Empty{}`, como canal es síncrono no podrá continuar hasta que el primero ejecute `<-s.queue`. Se soluciona haciendo que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.queue = make(chan Empty, 1)`. No cambia el algoritmo, sigue siendo correcto pero la diferencia es notablefootnote:[En el ejemplo de incrementar el contador los tiempos se reducen hasta cuatro veces.].
 
-
+[[channels_philosophers_simple]]
 === Filósofos cenando
 La solución natural con canales asíncronos es definir un array de tantos canales como tenedores (<<channel_philosophers_go, código>>), durante la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
 
@@ -849,22 +849,87 @@ En cualquier de los dos casos, el árbol se habrá unificado.
 [quote]
 +*_A_* <= _B_ <= _C_ <= _D_ <= _E_+
 
-====== Eficiencia
 
-Como curiosidad, los tiempos de ejecución (de reloj) en el mismo ordenador del contador <<go_mutex_go, usando _mutex_>> y los algoritmos distribuidos que acabamos de verfootnote:[Recordad que estamos simulando la _distribución_, todos los procesos y canales son locales.].
+
+[[channels_times]]
+=== Eficiencia de Canales
+
+La comparación de métodos de sincronización disímiles en lenguajes diferentes es complicado y no suelen ser justos. En el caso de Go es peor, si cabe. A diferencia de C o Java usadas en comparaciones anteriores, Go crea hilos ligeros y se planifican con el _scheduler_ interno de las librerías _runtime_.
+
+Los canales, en principio, tienen un mayor coste que los semáforos y monitores. Además de sincronizacón sirven para comunicación, lo que requiere copiar zonas de memoria atómicamente. Podemos verificar si este sobrecoste, como se afirma a menudo, es del todo cierto. Quizás haya sorpresas.
+
+==== Exclusión mutua
+
+El siguiente gráfico es la comparación de mecanismos de exclusión mutua, similar al de <<monitor_times_em, monitores>> y en el mismo ordenador. Se muestran de izquierda a derecha los tiempos de retorno (en segundos) para el contador con el: _mutex_ de POSIX Threads, monitor nativo en Java, el _mutex_ del módulo +sync+ de Go y la implementación de _mutex_ con mensajes.
+
+.Tiempos de ejecución de los diferentes mecanismos de exclusión mutua, Intel
+[caption=""]
+image::channels_mutex.png[align="center"]
+
+La primera sorpresa: la solución de _mutex_ con mensajes en un Intel i5 con cuatro núcleos es más eficiente que la _nativa_ del módulo +sync+. Los resultados son consistentes con todas las ejecuciones.
+
+Como parece más una anomalía ejecuté los mismos programas en una Raspberry 2 (ARMv7 con dos procesadores). Los resultados son diferentes:
+
+.Tiempos de ejecución de los diferentes mecanismos de exclusión mutua, ARMv7
+[caption=""]
+image::channels_mutex_arm.png[align="center"]
+
+El _mutex_ nativo de Go tiene tiempos similares a los de POSIX Threads y Java mientras que la emulación con mensajes es considerablemente menos eficiente. Pruebas con otros procesadores dieron resultados similares, la emulación de _mutex_ con mensajes es entre 5 y 200 % más lento que el nativo del módulo +sync+.
+
+[NOTE]
+====
+En un momento pensé en cambiar el gráfico y poner resultados con otros procesadores, así no necesitaría explicar y matizar con más gráficos. Preferí ser honesto y riguroso: los datos son reales y repetibles. En ninguna de las centenares de pruebas dio un resultado diferente.
+
+El ordenador que generó esos resultados _anómalos_ es un _Thinkpad X1_ con procesador _Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz_, el sistema operativo es Ubuntu 15.04 y la versión 1.3.3 de Go. En Github https://github.com/gallir/concurrencia_source_samples/blob/master/measurements/logs/measures_mutex_go.log[está disponible] el registro de las pruebas usadas para el gráfico. Poco después otra persona obtuvo resultados similares con un i7-4770K y Go 1.4.2 (https://github.com/gallir/concurrencia_source_samples/blob/master/measurements/logs/i7-4770K-go_mutex.png[imagen en Github]).
+====
+
+
+==== Barreras
+
+El siguiente gráfico es también similar a la de <<barriers_monitor_java, monitores>>. Esta vez con semáforos y variables de condición de POSIX Threads, monitor de Java y canales en Go.
+
+.Tiempos de ejecución de barreras, Intel
+[caption=""]
+image::channels_barrier.png[align="center"]
+
+El tiempo de ejecución de Go es considerablemente inferior que los demás. Es otra otra sorpresa porque el contador de procesos se copia con el mensaje, no es una variable estática como en semáforos o Java. Pero no es una anomalía, el patrón se repite en diferentes procesadores y arquitecturas. Por ejemplo en ARMv7 de Raspberry 2:
+
+.Tiempos de ejecución de barreras, ARMv7
+[caption=""]
+image::channels_barrier_arm.png[align="center"]
+
+
+==== Filósofos
+
+El siguiente es el gráfico de tiempos CPU y retorno del algoritmo de filósofos similar a la <<monitor_philosophers, comparativa en monitores>>. Se comparan la solución con <<monitor_philosophers, monitores en Java>> y las dos con canales de este capítulo: el más simple pero que no es óptimo y el último con el _proveedor_ de tenedores.
+
+.Tiempos de ejecución de filósofos
+[caption=""]
+image::channels_philosophers.png[align="center"]
+
+El menos eficiente es el del _proveedor_. Era de esperar porque la asignación de tenedores está centralizado en un único hilo, con mucha competencia se convierte en el cuello de botella. El <<channels_philosophers_simple, primer algoritmo>> es el más eficiente, más que el monitor en Java. Pero en las pruebas con más procesos se comporta peor:
+
+.Tiempos de CPU de 5 a 100 filósofos
+[caption=""]
+image::channels_philosophers_100.png[align="center"]
+
+==== Exclusión mutua distribuida
+
+Como curiosidad final, los tiempos de ejecución (de reloj) en el mismo ordenador del contador <<go_mutex_go, usando _mutex_>> y los algoritmos distribuidosfootnote:[Recordad que estamos simulando la _distribución_, todos los procesos y canales son locales.] de exclusión mutua.
 
 [[distributed_comparison]]
 .Tiempos de ejecución de los algoritmos de EM distribuida
 image::distributed_comparison.png[align="center"]
 
-
 La sobrecarga por la número de mensajes que se envían en el algoritmo de _autorización_ de Ricart-Agrawala es enorme. Los algoritmos de _token passing_ se comportan muy bien considerando que se crean el doble de hilos (ligeros), su lógica es más compleja y que toda la información se copia por mensajesfootnote:[También indica que la implementación de mensajes y el _scheduling_ del _runtime_ de Go es muy eficiente.]
 
 === Recapitulación
 
-La popularización de ordenadores con número masivo de procesadores, servicios en la _nube_, _microservicios_, plataformas para programación distribuida y tolerante fallos, y hasta nuevos lenguajes de programación que lo incluyen como construcción sintáctica hace que el modelo de sincronización y comunicación con canales esté de moda. Pero pocos desarrolladores conocen sus orígenes (el modelo _CSP_) y los mecanismos básicos de sincronización sobre el que se construyen algoritmos y técnicas más complejas. El objetivo de este capítulo fue llenar este hueco de conocimiento y poner en contexto la historia y equivalencia de canales con los demás mecanismos de sincronización de procesos.
+La popularización de ordenadores con número masivo de procesadores, servicios en la _nube_, _microservicios_, plataformas para programación distribuida y tolerante fallos, y hasta nuevos lenguajes de programación que lo incluyen como construcción sintáctica hace que el modelo de sincronización y comunicación con canales esté de moda. Pero pocos desarrolladores conocen sus orígenes (el modelo _CSP_) y los mecanismos básicos de sincronización sobre el que se construyen algoritmos más complejos. El objetivo de este capítulo fue llenar este hueco y poner en contexto la historia y equivalencia de canales con los demás mecanismos de sincronización de procesos.
 
-Hemos visto como con canales se pueden resolver los mismos problemas de concurrencia que resolvimos con semáforos y monitores. En general los tres son equivalente como mecanismos de sincronización en sistemas de memoria compartido, si se tiene uno se pueden implementar los otros (con mayor o menor dificultad). A diferencia de los semáforos y monitores los canales tienen la capacidad adicional de servir para la comunicación entre procesos, también pueden ser usados para procesos independientes sin memoria compartida. Esto implica que también son útiles para procesos distribuidos en diferentes nodos, la brevísima introducción a algoritmos distribuidos sirvió como muestra esta capacidad.
+Con canales se pueden resolver los mismos problemas de concurrencia que resolvimos con semáforos y monitores. En general los tres son equivalente como mecanismos de sincronización en sistemas de memoria compartido, si se tiene uno se pueden implementar los otros (con mayor o menor dificultad).
+
+A diferencia de los semáforos y monitores, los canales tienen la capacidad adicional de servir para la comunicación entre procesos y pueden ser usados para procesos sin memoria compartida. Esto implica que también son útiles para procesos distribuidos en diferentes nodos, la breve introducción a algoritmos distribuidos fue una muestra de esta capacidad.
 
 
 
