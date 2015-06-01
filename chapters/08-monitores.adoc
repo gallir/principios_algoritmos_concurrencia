@@ -694,7 +694,7 @@ http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/9b0ca45cd756/src/share/vm/runt
 
 ////
 
-===== Filósofos y variables de condición
+==== Filósofos y variables de condición
 
 En el algoritmo de filósofos se planteó el problema de que con la variable implícita nativa del monitor se despertaban a todos los procesos. La solución fue usar variables explícitas para despertar solo al que corresponde. Pero ¿vale la pena complicar el algoritmo por la mejora que se obtiene?
 
