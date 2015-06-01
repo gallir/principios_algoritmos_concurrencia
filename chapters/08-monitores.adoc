@@ -596,7 +596,7 @@ class Table {
 
 El array +forks+ mantiene el estado de cada tenedor, +true+ si está disponible. El método +pick+ es simple: si ambos están disponibles los toma poniendo en +false+ al estado de los dos, caso contrario llama a +wait+ para bloquearse hasta que sus vecinos liberen los tenedores. La liberación de ambos tenedores (+release+) consiste en marcarlos como libres y señalizar por si hay filósofos esperando por alguno de los tenedores que acaba de liberar.
 
-El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es eficiente y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es también notable.
+El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es óptimo y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es también notable.
 
 ===== Con variables de condición
 A pesar de su simplicidad se puede observar otra vez la potencial ineficiencia, la _tormenta_ de procesos desbloqueados, provocada por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados esperando por tenedores diferentes. Para evitar despertar a todos se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Se pueden usar las clases de sincronización de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
