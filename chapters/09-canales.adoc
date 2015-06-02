@@ -2,7 +2,7 @@
 == 9. Canales
 image::jrmora/09-canales.jpg[align="center"]
 
-Las construcciones de programación concurrente anteriores –algoritmos, _spinlocks_, semáforos y monitores– funcionan en sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente sirven para comunicación por intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_). Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
+Las construcciones de programación concurrente anteriores –algoritmos, _spinlocks_, semáforos y monitores– solo funcionan en sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente sirven para comunicación por intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_). Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
 
 Comunicación síncrona:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_), el remitente se bloquea en el _send_ hasta que el receptor ejecuta el _receive_. Y viceversa, el receptor se bloquea hasta que el remitente envía el mensaje.
 
@@ -10,7 +10,7 @@ Comunicación asíncrona:: Alternativamente, se puede permitir que el remitente 
 
 Aunque hay sistemas con canales que admiten _multidifusión_ (_broadcast_), en general los mensajes tienen destinatarios. Hay dos formas básicas de especificarlos (_addressing_):
 
-- Identificando explícitamente al proceso receptor (como en Erlang, se indica el _PID_ del receptor).
+- Identificando explícitamente al proceso receptor (como en Erlang, se indica el explícitamente al receptor).
 
 - Identificando al canal. En este caso el canal puede admitir solo un remitente y receptor (también llamado _pipe_, un servicio estándar en Unix), o no imponer restricciones al número de procesos que pueden enviar o recibir (como en Go).
 
