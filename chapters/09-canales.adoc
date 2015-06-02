@@ -20,7 +20,7 @@ Los canales pueden ser de tipo estático (como en Go) o de tipos dinámicos (com
 
 El concepto de canales como mecanismo de sincronización entre procesos fue introducido por Hoare en su artículo seminalfootnote:[De lectura muy recomendada, uno de los artículos de _Ciencias de la Computación_ más relevantes. En solo doce páginas introduce y unifica formal y elegantemente conceptos importantes que dieron origen a varios lenguajes y tecnologías innovadoras.] _Communicating Sequential Processes_ (<<Hoare>>). En él definió un modelo formal, _CSP_, para describir la interacción entre procesos genéricos independientes que no comparten memoria y cuya única forma de comunicación y sincronización es el intercambio de _mensajes_.
 
-La entrada de un proceso es la salida de un anterior, ambos se ejecutan de forma asíncrona y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos: +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
+La entrada de un proceso es la salida de otro, ambos se ejecutan de forma asíncrona y posiblemente en paralelo pero se sincronizarán en los puntos de entrada/salida. _CSP_ define dos operadores entre procesos: +?+ para indicar la entrada de un proceso (equivalente a _receive_) y +!+ para la salida (_send_).
 
 Ejemplos:
 
