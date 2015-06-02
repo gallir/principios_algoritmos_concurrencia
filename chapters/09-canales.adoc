@@ -165,7 +165,7 @@ ch_a <- true        <-ch_a
 <-ch_b              cha_b <- true
 ----
 
-Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales están son síncronos pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales son síncronos pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
 
 [source,go]
 ----
