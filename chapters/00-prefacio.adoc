@@ -13,9 +13,9 @@ Un amigo programador que no estudió informática se encontró con un problema d
 
 Hay buenos libros de texto de Concurrencia, pero además de ser caros –en general superan los 60 €– están muy orientados a la parte formal del problema, no a las aplicaciones prácticas. También suelen usar lenguajes y formalismos poco usados (Promela, Concurrent Pascal, BACI, ADA) que no tienen sentido para un programador que quiere aprender o actualizarse y poder transferir rápidamente esos conocimientos a su lenguaje preferido.
 
-Hay buenos libros de divulgación y actualización (como <<Herlihy12>>), pero además de caros están especializados y orientados a una audiencia más académica. También hay buenos libros orientados a un lenguaje en particular, pero no explican los orígenes y principios fundamentales de Concurrencia.
+Hay buenos libros de divulgación y actualización (como <<Herlihy12>>), pero además de caros están especializados y orientados a una audiencia más académica. También hay buenos libros orientados a un lenguaje en particular, pero no explican los orígenes y principios fundamentales de concurrencia.
 
-No hice un extenso análisis de mercado, no obstante, me di cuenta de que me resultaba imposible recomendar un libro. No encontraba uno que explicase Concurrencia de la forma que consideraba adecuada para un programador interesado en aprender sus fundamentos: riguroso explicando los principios pero sin exagerar con abstracciones formales y académicas.
+No hice un extenso análisis de mercado, no obstante, me di cuenta de que me resultaba imposible recomendar un libro. No encontraba uno que explicase concurrencia de la forma que consideraba adecuada para un programador: riguroso y que explique los principios fundamentales pero sin exagerar con las formalidades académicas.
 
 Casi como una broma respondí ''a ver si tengo que escribirlo en un ebook'', lo que generó inmediatas peticiones para que lo hiciese.
 
@@ -49,7 +49,7 @@ La lectura puede dar la sensación de agobio por la rapidez con que se avanza, a
 Para facilitar la búsqueda da los que quieren profundizar fui cuidadoso con la bibliografía. Aunque intenté referenciar a los artículos científicos originales también me tomé el trabajo de buscarlos en internet y añadir el enlace.
 
 ==== Conocimientos previos requeridos
-No se requieren ni se suponen conocimientos de Concurrencia. Solo se requieren conocimientos de programación, estructuras de datos básicas (pilas, colas, listas), fundamentos muy básicos de programación orientadas a objetos y comprender lo que es un puntero o referencia a memoria.
+No se requieren ni se suponen conocimientos de concurrencia. Solo se requieren conocimientos de programación, estructuras de datos básicas (pilas, colas, listas), fundamentos muy básicos de programación orientadas a objetos y comprender lo que es un puntero o referencia a memoria.
 
 El texto comienza desde los conceptos más básicos y avanza gradual e incrementalmente. No hay conceptos importantes que no se expliquen al menos brevemente. Quizás encuentres algunos que no conoces; si no los expliqué es porque son muy fáciles de encontrar.
 
@@ -77,9 +77,9 @@ Una parte importante del aprendizaje y entrenamiento de cualquier área de conoc
 Tampoco es fácil seleccionar una definición en particular. Muchas veces doy varios sinónimos –en castellano y en inglés– porque no hay un consenso universal ni en la comunidad científica. Algunos términos se usan más en un entorno (como _lock-free_ y _critical section_) y en otros se refieren a lo mismo con palabras diferentes (_deadlock-free_ y _mutual exclusion_ respectivamente), en estos casos inicialmente describo ambos términos en castellano e inglés y los uso indistintamente si se entienden en el contexto.
 
 ==== Para docencia
-No fue la intención original pero este libro cubre completamente, y con algo más, los contenidos de Concurrencia que se suelen dar en las carreras de informática. Hace unos años estos temas eran una parte de las asignaturas de sistemas operativos. Fue en esta área donde primero aparecieron los problemas de Concurrencia, era natural que se explicasen en estas asignaturas.
+No fue la intención original pero este libro cubre completamente, y con algo más, los contenidos de concurrencia que se suelen dar en las carreras de informática. Hace unos años estos temas eran una parte de las asignaturas de sistemas operativos. Fue en esta área donde primero aparecieron los problemas de concurrencia, era natural que se explicasen en estas asignaturas.
 
-Pero el área de concurrencia se amplió y profundizó. Ya tiene peso e importancia por sí mismafootnote:[Algunos consideramos que es clave en la formación, forma parte de los principios fundamentales de la informática.] por lo que ya existen asignaturas específicas de programación concurrente. Este libro cubre todos los temas de Concurrencia que se dan en esas asignaturas y que sería el equivalente a aproximadamente un semestre.
+Pero el área de concurrencia se amplió y profundizó. Ya tiene peso e importancia por sí mismafootnote:[Algunos consideramos que es clave en la formación, forma parte de los principios fundamentales de la informática.] por lo que ya existen asignaturas específicas de programación concurrente. Este libro cubre todos los temas de concurrencia que se dan en esas asignaturas y que sería el equivalente a aproximadamente un semestre.
 
 Una de las carencias más importantes en la docencia de Concurrencia es que no se suelen enseñar temas que avanzaron mucho en los últimos años, como el diseño de algoritmos de _spinlocks_ con instrucciones de hardware, o las interfaces de los sistemas operativos para la programación de primitivas de sincronización como _FUTEX_. Es razonable esa carencia, el tiempo es finito y no suelen estar incluidos en los libros de texto de sistemas operativos ni de programación concurrente. Creo que los dos temas mencionados son complejos –quizás para posgrados- pero importantes, por eso dediqué un capítulo a cada uno de ellos con ejemplos de las técnicas y algoritmos más usados.
 
