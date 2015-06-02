@@ -4,7 +4,7 @@ image::jrmora/09-canales.jpg[align="center"]
 
 Las construcciones de programación concurrente anteriores –algoritmos, _spinlocks_, semáforos y monitores– funcionan en sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente sirven para comunicación por intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_). Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
 
-Comunicación sincronizada:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_). El remitente se bloquea en el _send_ hasta que el receptor ejecuta el _receive_. Y viceversa, el receptor se bloquea hasta que el remitente envía el mensaje.
+Comunicación síncrona:: En este tipo de comunicación se requiere que ambos procesos estén sincronizados (_rendevouz_). El remitente se bloquea en el _send_ hasta que el receptor ejecuta el _receive_. Y viceversa, el receptor se bloquea hasta que el remitente envía el mensaje.
 
 Comunicación asíncrona:: Alternativamente, se puede permitir que el remitente envíe el mensaje y continúe su ejecución sin esperar a que el receptor lo reciba. La comunicación asíncrona requiere que el canal tenga un _buffer_ para almacenar los mensajes (también llamado buzón o _mailbox_). La capacidad del _buffer_ depende del canal pero siempre es finito. Si no hay receptores el _buffer_ acabará llenándose y hará que los remitentes se bloqueen.
 
@@ -52,13 +52,13 @@ Go incluye dos mecanismos para facilitar la programación concurrente y la ejecu
 Hilos ligeros (o _green threads_):: Las llamadas a funciones precedidas por la instrucción +go+ –llamadas _goroutines_– hacen que estas se ejecuten de forma asíncrona, como un hilo independiente. No son hilos nativos del sistema operativo sino una pequeña pila de tamaño variable gestionada y planificada (_scheduling_) internamente por las librerías _runtime_. Independientemente de las _goroutines_ también se pueden crear hilos nativos para ejecución en paralelo. El número de hilos nativos se define con +runtime.GOMAXPROCS+. La planificación y ejecución de las _goroutines_ en los diferentes hilos nativos se hace de forma automática y transparente al programador.
 
 
-Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo. Por defecto los canales son sincronizados pero también pueden ser asíncronos si se especifica el tamaño de _buffer_ cuando se inicializan (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier tipo definido por el programador. La operación de envío o recepción de mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
+Canales:: Los canales son objetos de primer orden, pueden ser pasados como argumentos en funciones, _goroutines_ y hasta en mensajesfootnote:[Por ello se dice que Go también implementa el modelo _cálculo-π_.]. La implementación de canales está directamente inspirado de _CSP_ y con ideas ya usadas en Newsqueak y Limbo. Por defecto los canales son síncronos pero también pueden ser asíncronos si se especifica el tamaño de _buffer_ cuando se inicializan (con +make+). Los canales son de tipo estático, pueden ser tipos nativos o cualquier tipo definido por el programador. La operación de envío o recepción de mensajes tiene la forma +recipiente *<-* origen+, donde +recipiente+ y +origen+ pueden ser indistintamente canales o variables.
 
 La siguiente línea crea un canal de tipo entero:
 
     ch := make(chan int)
 
-El canal +ch+ tiene _buffer_ cero por lo que será un canal sincronizado, si se desea un canal asíncrono hay que especificar el tamaño del _buffer_ en el segundo argumento de +make+:
+El canal +ch+ tiene _buffer_ cero por lo que será un canal síncrono, si se desea un canal asíncrono hay que especificar el tamaño del _buffer_ en el segundo argumento de +make+:
 
     ch := make(chan int, 256)
 
@@ -153,7 +153,7 @@ El código anterior es erróneo, produce interbloqueo. El _runtime_ de Go interr
 fatal error: all goroutines are asleep - deadlock!
 ----
 
-Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tener en cuenta que por defecto ambos canales están sincronizados: _A_ y _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
+Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tener en cuenta que por defecto ambos canales son síncronos: _A_ y _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
 El interbloqueo se produce por una _espera circular_, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envía el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
 
@@ -165,7 +165,7 @@ ch_a <- true        <-ch_a
 <-ch_b              cha_b <- true
 ----
 
-Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales están sincronizados pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales están son síncronos pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
 
 [source,go]
 ----
@@ -521,9 +521,9 @@ func NewMutex() Mutex {
 ==== Solución óptima
 La solución anterior (ya la analizamos <<dining_philosophers_semaphores, con semáforos>>) no asegura que puedan comer todos los filósofos que podrían hacerlo. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
 
-En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal sincronizado para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos tenedores están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo le responderá cuando estos hayan dejado de comer.
+En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal síncrono para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos tenedores están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo le responderá cuando estos hayan dejado de comer.
 
-El mensaje de filósofos al proveedor será una estructura que indica el índice del filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los tenedores) y el canal individual del filósofo (también sincronizado) para recibir la respuestafootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa al proveedor en el mensaje.]:
+El mensaje de filósofos al proveedor será una estructura que indica el índice del filósofo, el estado (+Hungry+ si desea comer y +Thinking+ si es para liberar los tenedores) y el canal individual del filósofo (también síncrono) para recibir la respuestafootnote:[Go permite enviar descriptores de canales en los mensajes por lo que no hace falta que estos sean parte del estado global, cada filósofo crea el suyo y lo pasa al proveedor en el mensaje.]:
 
 [source, go]
 ----
