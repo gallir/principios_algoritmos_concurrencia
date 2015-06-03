@@ -4,13 +4,13 @@ image::jrmora/02-algoritmos.jpg[align="center"]
 
 La exclusión mutua (o _sección crítica_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
 
-Un problema de exclusión mutua –muy genérico y _naïve_– que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
+Un problema de exclusión mutua muy genérico y _naïve_ que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
 
 El mismo problema ocurre con granularidades menores: desde datos en ficheros modificados por varios procesos independientes, la metainformación de los sistemas de ficheros, fragmentos de memoria del navegador web modificados desde diferentes hilos de ejecución, hasta simples variables enteras.
 
 
 === Definición
-La solución formal a este problema fue publicado por Edsger Dijkstra en 1965 (<<Dijkstra65>>). Un conjunto de procesos independientes que pueden ser considerados cíclicos ejecutan en cada ciclo una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_, pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
+La solución formal a este problema fue publicada por Edsger Dijkstra en 1965 (<<Dijkstra65>>). Un conjunto de procesos independientes que pueden ser considerados cíclicos ejecutan en cada ciclo una parte de código que accede y modifica recursos o zonas de memoria compartidas, la _sección crítica_. La intercalación de instrucciones en esas secciones críticas provocan _condiciones de carrera_ que pueden generar resultados erróneos dependiendo de la secuencia de ejecución.
 
 Así se definió el modelo del _problema de la sección crítica_ o _exclusión mutua_. Es el más sencillo y estudiado de los problemas genéricos de concurrencia. Consiste en asegurar la exclusión mutua de la ejecución de esas secciones críticas; mientras se ejecuta una de ellas no se debe permitir la ejecución de las secciones críticas de otros procesos.
 
@@ -52,11 +52,11 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 
 [[four_requisites]]
 .Cuatro requisitos de Dijkstra
-. La solución debe ser _simétrica_, no se permiten soluciones que cambien el comportamiento o la prioridad estática de algún proceso.
+. La solución debe ser _simétrica_: no se permiten soluciones que cambien el comportamiento o la prioridad estática de algún proceso.
 
 . No se deben hacer suposiciones de la _velocidad relativa_ de los procesos, ni se puede suponer que las velocidades sean constantes.
 
-. _Entrada inmediata_ o _no interferencia_, un proceso que se interrumpe en el resto del código no debe interferir ni bloquear a los demás procesos.
+. _Entrada inmediata_ o _no interferencia_: un proceso que se interrumpe en el resto del código no debe interferir ni bloquear a los demás procesos.
 
 . Si varios procesos desean entrar simultáneamente, la decisión en la entrada de la sección crítica debe tomar un número finito de pasos.
 
@@ -66,10 +66,10 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para _N_ procesos, el _algoritmo de la panadería_ de Leslie Lamport (<<Lamport>>).
 
 ****
-Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, tampoco funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
+Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, también porque funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
 ****
 
-El objetivo de estudiar estos algoritmos –y su evolución hasta la solución correcta– es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
+El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
 
 - esperas activas (_busy wait_);
 - interbloqueos (_deadlocks_);
@@ -85,7 +85,7 @@ En todos los algoritmos y técnicas que analizamos asumimos que los programas ti
 
 .Algoritmos distribuidos
 ****
-La alternativa son los algoritmos para procesos que no pueden compartir memoria, se denominan _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de concurrencia, sincronización y consenso pero sus técnicas son más complejas. El intercambio de datos debe hacerse exclusivamente por intercambios de mensajes sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
+La alternativa son los algoritmos para procesos que no pueden compartir memoria, son los _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de concurrencia, sincronización y consenso pero sus técnicas son más complejas. El intercambio de datos debe hacerse exclusivamente por intercambios de mensajes sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
 
 El estudio de algoritmos distribuidos no es el objetivo de este libro, sin embargo, al final del capítulo de <<channels, canales>> hay una breve introducción.
 ****
@@ -124,10 +124,10 @@ while True:
 
 Encontraremos los algoritmos de exclusión mutua en varios intentos con complejidad creciente, asegurando además que se cumplan los tres requisitos de exclusión mutua y los <<four_requisites, cuatro de Dijkstra>>. La primera de estas últimas condiciones dice que los algoritmos deben ser simétricos, implican que el código debe ser el mismo para ambos procesos. No haremos programas diferentes para cada proceso, será el mismo para todos.
 
-Cada uno de los dos procesos está identificado por 0 o 1. Dado que el código de sincronización es idéntico analizaremos la ejecución de solo uno de ellos, la del proceso 0, o _P0_. Desde la perspectiva de _P0_ el _otro_ proceso es el 1 (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores 0 y 1 intercambiados.
+Cada uno de los dos procesos está identificado por 0 y 1. Dado que el código de sincronización es idéntico analizaremos la ejecución de solo uno de ellos, la del proceso 0, o _P0_. Desde la perspectiva de _P0_ el _otro_ proceso es el 1 (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores 0 y 1 intercambiados.
 
 ****
-Se acostumbra a usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención, como ahora solo tratamos con dos procesos usaremos 0 y 1 y nos centraremos desde el punto de vista del proceso _P0_.
+Se acostumbra a usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención. Como ahora solo tratamos con dos procesos usaremos 0 y 1 y nos centraremos desde el punto de vista del proceso _P0_.
 ****
 
 ==== Primer intento
@@ -159,9 +159,9 @@ Cuando la variable +turn+ sea 0 _P0_ podrá entrar a su sección crítica. Al sa
 
 Asegurar exclusión mutua:: Es fácil comprobar que la cumple. La variable +turn+ solo puede tomar uno de entre dos valores. Si los dos procesos están en la sección crítica significa que +turn+ valía cero y uno simultáneamente, sabemos que es imposiblefootnote:[Es imposible aunque se ejecuten en paralelo en procesadores diferentes, todos aseguran consistencia de caché y es un supuesto de los algoritmos de memoria compartida.].
 
-Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que este entre a su sección crítica para hacerlo a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando este no tiene intenciones de entrarfootnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón este algoritmo es incorrecto, pero sigamos analizando las siguientes reglas.
+Progreso:: Supongamos que _P0_ entra a su sección crítica por primera vez, al salir hace +turn = 1+ y al poco tiempo pretende volver a entrar. Como el turno es de _P1_ tendrá que esperar a que este entre a su sección crítica para hacerlo a continuación. Es decir, la entrada de _P0_ está _interferida_ por el otro proceso cuando este no tiene intenciones de entrarfootnote:[O incluso ni siquiera se está ejecutando.]. Solo por esta razón el algoritmo es incorrecto, pero sigamos analizando las siguientes reglas.
 
-Espera limitada:: Por la anterior se produce espera infinita si el proceso 1 no entra a la sección crítica.
+Espera limitada:: Por lo anterior se produce espera infinita si el proceso 1 no entra a la sección crítica.
 
 Entrada inmediata:: Si +turn+ vale 1 pero _P1_ está en el resto del código _P0_ no podrá entrar. Tampoco se cumple.
 
@@ -544,4 +544,4 @@ El problema de exclusión mutua es el más básico y mejor modelado de concurren
 
 Este capítulo sirvió de introducción para reconocer los problemas de procesos concurrentes y la terminología técnica básica. Experimentamos que el modelo secuencial de programa al que estamos acostumbrados no sirve cuando se trata de analizar procesos concurrentes.
 
-Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], estas no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>)-
+Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], que no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>)-
