@@ -4,7 +4,59 @@ image::jrmora/10-fin.jpg[align="center"]
 
 Despedida y mención de temas no tratados pero importantes.
 
+LPorblemas de locks:
 
+- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas.
+- Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos.
+- Es difícil compner llamas múltiples a múltiples objetos en unidades atómicas.
+
+
+Transacción son una serie de pasos ejecutados por un único proceso. Deben ser serializables, parecen ejecutarse secuencialmente en un orden de una a la vez.
+
+
+las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
+
+En software, versionID, global lock, blocking & nonblocking
+
+
+Hardware:
+
+EXPLICITLY TRANSACTIONAL HTMS
+- Optimistic Synchronization, similar al LL/SC.
+- Herlihy and Moss HTM: load-transactional, store-transactional, and load-transactional-exclusive
+- Oklahoma Update: Operación atómica sobre varios registros.
+Advanced Synchronization Facility. Recently, the Advanced Synchronization Facility (ASF) proposal [61] from Advanced Micro Devices takes a similar approach to the explicit HTM systems discussed so far. It introduces a SPECULATE instruction to begin a transaction, along with a COMMIT instruction to mark the end. Control returns implicitly to the SPECULATE instruction if the speculative region aborts, setting the processor flags to indicate that this has occurred. Simple flattened nesting is supported; speculation continues until the outermost COMMIT occurs. ASF proposes the use of a LOCK prefix to be added to memory accesses that should be performed transactionally. In the implementation proposal, ASF proposes the use of dedicated registers, similar to Oklahoma Update, to perform a multi-word compare-and-swap-like operation.
+
+
+
+IMPLICITLY TRANSACTIONAL HTM SYSTEMS
+- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
+
+- Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
+
+
+Intel:
+Intel microprocessors based on the Haswell microarchitecture
+
+Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
+
+Restricted Transactional Memory: xbegin, xend, xabort, ¿xcheck?.
+
+
+IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
+
+IBM S390 tbegin, tend, tabort, etnd
+
+GCC:
+
+https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/x86-specific-memory-model-extensions-for-transactional-memory.html#x86-specific-memory-model-extensions-for-transactional-memory
+The i386 architecture supports additional memory ordering flags to mark lock critical sections for hardware lock elision. These must be specified in addition to an existing memory model to atomic intrinsics.
+
+
+
+__transaction_atomic {
+    count++;
+}
 ////
 === Estructuras concurrentes no bloqueantes
 

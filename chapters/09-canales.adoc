@@ -590,7 +590,7 @@ func canEat(i int) {
 === Paralelismo
 En 1979, poco después de la publicación del artículo del modelo _CSP_, la empresa británica INMOfootnote:[Actualmente STMicroelectronics, http://www.st.com/.] pidió colaboración a Hoare para crear el lenguaje occam para su nueva arquitectura de multiprocesamiento masivo _Transputer_. A principios de la década de 1980 se pensaba que se había llegado al límite de la capacidad de los procesadoresfootnote:[Podían poner más transistores en un chip pero no sabían qué hacer con ellos, luego surgieron las arquitecturas _superescalares_ que permitieron aumentar la potencia de cálculo, lo que también significó la decadencia de _Transputer_.] por lo que diseñaron una arquitectura basada en el modelo _CSP_.
 
-La arquitectura de _Transputer_ consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesasores con canales síncronosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
+La arquitectura de _Transputer_ consistía de procesadores con instrucciones genéricas, 4 KB de RAM incluidas en el chip y cuatro puertos series de alta velocidad. Cada puerto podía usarse para conectar a otros procesadores y así formar arrays de procesadores con canales síncronosfootnote:[Llegaron a fabricar un _switch_ de red de 32x32 procesadores.].
 
 
 [[BOO42]]
@@ -637,7 +637,7 @@ Tal como ya había descrito Hoare, el procedimiento anterior se puede generaliza
 .Array de procesos para multiplicación de matrices
 image::parallel_multiplication.png[align="center"]
 
-Los algoritmo de los cuatro tipos de procesos de la matriz son los siguientes (<<parallel_matrix_multiplication_go, programa completo>>):
+Los algoritmos de los cuatro tipos de procesos de la matriz son los siguientes (<<parallel_matrix_multiplication_go, programa completo>>):
 
 [source, go]
 ----
@@ -878,11 +878,11 @@ Es notable como la abstracción de _árboles virtuales_, representados solo por 
 
 La comparación de métodos de sincronización disímiles en lenguajes diferentes es complicado y no suelen ser justos. En el caso de Go es peor, si cabe. A diferencia de C o Java usadas en comparaciones anteriores, Go crea hilos ligeros y se planifican con el _scheduler_ interno de las librerías _runtime_.
 
-Los canales, en principio, tienen un mayor coste que los semáforos y monitores. Además de sincronizacón sirven para comunicación, lo que requiere copiar zonas de memoria atómicamente. Podemos verificar si este sobrecoste, como se afirma a menudo, es del todo cierto. Quizás haya sorpresas.
+Los canales, en principio, tienen un mayor coste que los semáforos y monitores. Además de sincronización sirven para comunicación, lo que requiere copiar zonas de memoria atómicamente. Podemos verificar si este sobrecoste, como se afirma a menudo, es del todo cierto. Quizás haya sorpresas.
 
 ==== Exclusión mutua
 
-El siguiente gráfico es la comparación de mecanismos de exclusión mutua, similar al de <<monitor_times_em, monitores>> y en el mismo ordenador. Se muestran de izquierda a derecha los tiempos de retorno (en segundos) para el contador con el: _mutex_ de POSIX Threads, monitor nativo en Java, el _mutex_ del módulo +sync+ de Go y la implementación de _mutex_ con mensajesfootnote:[El gŕafico de estas pruebas es sobre un ARM y no sobre el procesador i5-2520M como las demás. Detecté que las optimizaciones del _mutex_ nativo funcionan mal en este procesador y en un i7-4770K que hacía que la emulación con mensajes obtuviese tiempos mejores. Con decenas de pruebas en procesadores diferentes, solo en esos dos se encontró el problema.].
+El siguiente gráfico es la comparación de mecanismos de exclusión mutua, similar al de <<monitor_times_em, monitores>> y en el mismo ordenador. Se muestran de izquierda a derecha los tiempos de retorno (en segundos) para el contador con el: _mutex_ de POSIX Threads, monitor nativo en Java, el _mutex_ del módulo +sync+ de Go y la implementación de _mutex_ con mensajesfootnote:[El gráfico de estas pruebas es sobre un ARM y no sobre el procesador i5-2520M como las demás. Detecté que las optimizaciones del _mutex_ nativo funcionan mal en este procesador y en un i7-4770K que hacía que la emulación con mensajes obtuviese tiempos mejores. Con decenas de pruebas en procesadores diferentes, solo en esos dos se encontró el problema.].
 
 ////
 .Tiempos de ejecución de los diferentes mecanismos de exclusión mutua, Intel
