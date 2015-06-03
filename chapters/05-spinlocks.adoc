@@ -14,19 +14,11 @@ El problema de las soluciones algorítmicas, además de la espera activa, es el 
 
 Pero no todos los procesadores ofrecen las mismas instrucciones. Para obtener el máximo de eficiencia hay que programar para cada arquitectura (como es habitual en el núcleo de los sistemas operativos). Para facilitar la programación y portabilidad, los compiladores incluyen macros (o _intrinsics_) que son traducidas a las operaciones que implementan o simulan esas primitivas; son los que usé para los programas de ejemplofootnote:[Salvo el código en ensamblador con +ldrex/strex+ para ARM.].
 
-
 Analizaremos el comportamiento de cada uno de los _spinlocks_ previos. Luego veremos las técnicas y algoritmos que se desarrollaron para reducir sus ineficiencias.
 
 
-
-[NOTE]
-====
-Uno de los objetivos de este capítulo es analizar la eficiencia relativa de diferentes algoritmos. Recurro a gráficos para poder compararlos y contrastarlos visualmente. Aunque tanta información puede resultar molesta, creo que es importante romper con una costumbre de muchos libros de textos: se hacen afirmaciones rotundas pero sin presentar las mediciones ni el contexto en que fueron tomadas.
-
-Quizás tenían sentido el momento que se diseñaron esos algoritmos, pero los sistemas SMP han evolucionado y mejorado sustancialmente. Las mejoras notables de hace una década hoy pueden ser inexistentes o residuales.
-====
-
-En la siguiente figura se muestran los tiempos de CPU –en segundos– de los algoritmos del capítulo anterior con diferentes procesadores: Intel i5 con cuatro núcleos, Intel Xeon con dos procesadores independientes de ocho núcleos cada uno (16 en total) y Raspberry 2 con ARMv7 de cuatro núcleos.
+=== Comparación de las instrucciones de hardware
+En la siguiente figura se muestran los tiempos de CPU –en segundos– de los algoritmos del capítulo anterior con diferentes procesadores: Intel i5 con cuatro núcleos, Intel Xeon con dos procesadores independientes de ocho núcleos cada uno (16 en total) y Raspberry Pi 2 con ARMv7 de cuatro núcleos.
 
 Cada grupo de barras es una medición diferente. El primero por la izquierda (_none_) son los tiempos sin ningún mecanismo de exclusión mutua; el segundo los tiempos del algoritmo de la panadería; el tercero (_best_) es el más eficiente: el incremento de +counter+ se hace directamente con la instrucción atómica _get&add_. Los siguientes hacia la derecha son los algoritmos con instrucciones de hardware del capítulo anterior _swap_, _get&add_, _TAS_, _get&set_ y _CAS_ respectivamente.
 
@@ -36,7 +28,7 @@ Cada grupo de barras es una medición diferente. El primero por la izquierda (_n
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC y la complejidad de _CAS_.]
+Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry Pi 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC y la complejidad de _CAS_.]
 
 === _Spinlocks_ óptimos
 Las implementaciones anteriores son ineficientes por dos razones:
@@ -166,13 +158,13 @@ image::optimized-intel.png[align="center"]
 .Intel Xeon 16 núcleos
 image::optimized-xeon.png[align="center"]
 
-.ARMv7 Raspberry 2 cuatro núcleos
+.ARMv7 Raspberry Pi 2 cuatro núcleos
 image::optimized-arm7.png[align="center"]
 
 
 Algunos aspectos que vale la pena destacar:
 
-- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, ARMv6 y ARMv7 (de Raspberry 1 y 2 respectivamente), _CAS_ es la más eficiente.
+- El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, ARMv6 y ARMv7 (de Raspberry Pi 1 y 2 respectivamente), _CAS_ es la más eficiente.
 
 - En las plataformas con varios procesadores +sched_yield+ y +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores. La mejora no se debe solo a la reducción de uso de la CPU; también por las reducción de llamadas a instrucciones de sincronización y a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como +for (i = 0; i < limit; i++);+ y verás que se produce también una reducción importante.]. La reducción de la presión al sistema de caché fue el objetivo del estudio de los _spinlocks escalables_ que vemos más adelante.
 
@@ -192,7 +184,7 @@ image::optimized-intel-real.png[align="center"]
 .Tiempos de retorno en Intel Xeon 16 núcleos
 image::optimized-xeon-real.png[align="center"]
 
-.Tiempos de retorno en ARMv7 de Raspberry 2 cuatro núcleos
+.Tiempos de retorno en ARMv7 de Raspberry Pi 2 cuatro núcleos
 image::optimized-arm7-real.png[align="center"]
 
 Aún en arquitecturas tan diferentes, la cesión del procesador representa una reducción importante de tiempo de CPU y de retorno. La mayor diferencia a favor del _backoff_ ocurre en el Xeon de 16 núcleos. Este tiene más núcleos que procesos concurrentes, por lo que un _yield_ solo hace que un proceso abandone el procesador para que el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo (depende de los algoritmos de _afinidad de CPU_). También pudo ocurrir que la unidad de tiempo elegida (un nanosegundo) haya sido más adecuada para el Xeon que para el ARM, a pesar de ello se ganan unos pocos milisegundos.
@@ -525,7 +517,7 @@ En el código C de algunos de los algoritmos se usa `thread_fence` o `store_n` p
 
 Si algunos _caminos_ del protocolo de salida (+unlock+) no ejecutan ninguna instrucción atómica no habrá barreras de memoria. Puede ocurrir que instrucciones de la sección crítica se ejecuten después de haber superado la salida.
 
-Durante las pruebas y validación del código comprobé que en algunos procesadores se manifestaba esta condición de carrera, en particular con el ARMv7 de Raspberry 2. Preferí mostrar la versión simplificada en estas páginas, pero la versión completa y correcta para todas las arquitecturas en el listado del código fuente.
+Durante las pruebas y validación del código comprobé que en algunos procesadores se manifestaba esta condición de carrera, en particular con el ARMv7 de Raspberry Pi 2. Preferí mostrar la versión simplificada en estas páginas, pero la versión completa y correcta para todas las arquitecturas en el listado del código fuente.
 ****
 
 
@@ -617,7 +609,7 @@ Para tomar una decisión informada hice pruebas con diferentes procesadores y ta
 .Diferentes tamaños de relleno
 image::array-paddings.png[align="center"]
 
-En Intel Xeon e i5 los tiempos son constantes, en Raspberry 2 se produce un descenso importante a los 16 y 32 bytes. Para hacer una comparación razonable elegí un relleno de 32 bytes.
+En Intel Xeon e i5 los tiempos son constantes, en Raspberry Pi 2 se produce un descenso importante a los 16 y 32 bytes. Para hacer una comparación razonable elegí un relleno de 32 bytes.
 
 En las dos imágenes a continuación se muestran los tiempos comparados de CPU y tiempo de reloj para los algoritmos _ticket-lock_, _array-lock_, _MCS_ y _CLH_.
 

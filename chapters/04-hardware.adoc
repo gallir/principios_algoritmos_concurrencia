@@ -86,7 +86,7 @@ Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar 
 
 Estudiaremos los algoritmos de exclusión mutua para _N_ procesos con instrucciones de hardware. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
 
-Las instrucciones _LL/SC_ solo pueden ser programadas en ensamblador de algunas arquitecturas. Sus ejemplos están en ese lenguaje, solo funcionan en arquitecturas ARM (incluidas las Raspberry).
+Las instrucciones _LL/SC_ solo pueden ser programadas en ensamblador de algunas arquitecturas. Sus ejemplos están en ese lenguaje, solo funcionan en arquitecturas ARM (incluidas las Raspberry Pi).
 
 Dejando de lado las limitaciones y restricciones prácticas de programar con instrucciones del procesador, es sorprendente la simplicidad de los algoritmos de exclusión mutua con estas primitivas. Sobre todo después de analizar los problemas de los algoritmos sin soporte del hardware.
 
@@ -457,7 +457,7 @@ void push(node_head *head, node *e) {
 
 ==== Load-Link/Store-Conditional (_LL/SC_)
 
-_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplos en algunas de esas arquitecturas –por ejemplo, en Raspberry–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
+_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplos en algunas de esas arquitecturas –por ejemplo, en Raspberry Pi–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
 
 El diseño de _LL/SC_ se basa en dos operacionesfootnote:[+lwarx+/+stwc+ en PowerPC, +ll+/+sc+ en MIPS, +ldrex+/+strex+ en ARM.] que trabajan en cooperación con el sistema de coherencia de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria; la otra a la de almacenar (_store_) en una posición de memoria. La diferencia es que ambas están _enlazadas_, la ejecución de la segunda (_SC_) es condicional: almacena el valor solo si la dirección de memoria no fue modificada desde la ejecución de la primera (_LL_).
 
@@ -576,10 +576,10 @@ Si se conocen las características y posibilidades de _LL/SC_, no es difícil si
 No queda más remedio que programarlas en ensamblador, pero se puede evitar el problema ABA y al mismo tiempo ganar en eficiencia.
 
 
-Los siguientes son los tiempos de ejecución de los algoritmos de pilas concurrentes en Raspberry 1 y 2.
+Los siguientes son los tiempos de ejecución de los algoritmos de pilas concurrentes en Raspberry Pi 1 y 2.
 
 [[free_lock_stack_times]]
-.Tiempos de ejecución de pila concurrente en Raspberry
+.Tiempos de ejecución de pila concurrente en Raspberry Pi
 [caption=""]
 image::free_lock_stacks.png[align="center"]
 

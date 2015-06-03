@@ -891,7 +891,7 @@ image::channels_mutex.png[align="center"]
 
 La primera sorpresa: la solución de _mutex_ con mensajes en un Intel i5 con cuatro núcleos es más eficiente que la _nativa_ del módulo +sync+. Los resultados son consistentes con todas las ejecuciones.
 
-Como parece más una anomalía ejecuté los mismos programas en una Raspberry 2 (ARMv7 con dos procesadores). Los resultados son diferentes:
+Como parece más una anomalía ejecuté los mismos programas en una Raspberry Pi 2 (ARMv7 con dos procesadores). Los resultados son diferentes:
 
 [NOTE]
 ====
@@ -921,7 +921,7 @@ image::channels_barrier.png[align="center"]
 El tiempo de ejecución de Go es considerablemente inferior que los demás. Es sorprendente porque el contador de procesos se copia con el mensaje, no es una variable estática como en semáforos o Java. El patrón se repite en diferentes procesadores y arquitecturas.
 
 ////
-Por ejemplo en ARMv7 de Raspberry 2:
+Por ejemplo en ARMv7 de Raspberry Pi 2:
 
 .Tiempos de ejecución de barreras, ARMv7
 [caption=""]
