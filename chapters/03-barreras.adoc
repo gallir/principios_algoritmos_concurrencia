@@ -74,7 +74,7 @@ Si otro procesador necesita acceder a la misma línea se le envía una copia y s
 
 Si el procesador modifica una línea cuyo estado es _shared_ se la etiqueta como _modified_ para que sea posteriormente copiada a RAM. Se envía un mensaje para que los demás procesadores marquen su copia como _invalid_.
 
-Si debe acceder a datos en una línea etiquetada _invalid_, envía un mensaje de multidifusión (_broadcast_) para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado. Si ninguno la tiene accede a la memoria RAM para obtener la copia.
+Si debe acceder a datos en una línea etiquetada _invalid_, envía un mensaje de multidifusión (_broadcast_) para que el que tenga una copia válida (en estado _exclusive_ o _modified_) le responda con el valor actualizado. Si ninguno la tiene, accede a la memoria RAM para obtener la copia.
 ****
 
 Los sistemas de caché en sistemas _SMP_ aseguran la consistencia de caché. La inconsistencia de caché no es la responsable del mal funcionamiento del algoritmo de exclusión mutua.
@@ -85,7 +85,7 @@ Era importante introducir el tema de la coherencia de caché ya que tiene una en
 
 ===== La sobrecarga del acceso a variables compartidas
 
-La ejecución de procesos es menos eficiente si acceden a las mismas zonas de memoria. Cada modificación de las variables almacenadas en la misma línea –aunque sean direcciones diferentes– obliga al sistema de caché a enviar mensajes de multidifusión para que los demás invaliden sus copias. Esto provoca que por cada acceso a la misma variable se envíen mensajes, y sus respectivas respuestas, para obtener el valor actualizado.
+La ejecución de procesos es menos eficiente si estos acceden a las mismas zonas de memoria. Cada modificación de las variables almacenadas en la misma línea –aunque sean direcciones diferentes– obliga al sistema de caché a enviar mensajes de multidifusión para que los demás invaliden sus copias. Esto provoca que por cada acceso a la misma variable se envíen mensajes, y sus respectivas respuestas, para obtener el valor actualizado.
 
 El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>>, pero la suma la hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
@@ -177,9 +177,9 @@ El procesador puede ejecutarfootnote:[En el ejemplo exagero, esas instrucciones 
 
 Para que el algoritmo funcione correctamente deben especificarse _barreras_ (_fences_ o _barriers_) para asegurar que ciertas instrucciones mantienen su orden respecto a otras. Una instrucción de _barrera general_ indica al procesador:
 
-. Antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes la barrera.
+. Que antes de continuar deben ejecutarse todas las operaciones de lectura y escritura que están antes de la barrera.
 
-. Ninguna operación de lectura o escritura posterior a la barrera debe ejecutarse antes de esta.
+. Que ninguna operación de lectura o escritura posterior a la barrera debe ejecutarse antes de esta.
 
 Supongamos que deseamos que la asignación de +c+ sea siempre posterior a la asignación de +a+ y +b+, como no hay dependencias detectables por la CPU debemos insertar una barrera entre ellas:
 
@@ -220,7 +220,7 @@ Hay diferentes tipos de barreras y varían entre arquitecturas. Las tres tradici
 ==== Uso de barreras
 Debido a la complejidad del diseño y fabricación, los procesadores con ejecución fuera de orden no se popularizaron hasta mediados de la década de 1990 (con la introducción del procesador Power1). Las diferencias entre arquitecturas hicieron que cada una incluyese diferentes tipos de barreras. Así pues, no existen instrucciones estándares ni construcciones sintácticas específicas en la mayoría de lenguajes de programación.
 
-Afortunadamente, el problema está relativamentefootnote:[Sigue siendo un problema que no haya macros estándares para todos los compiladores.] solucionado por los _builtin macros_ de los compiladores, como los del compilador GCC (<<Atomics_C11>>). El compilador define macros que se tratan como funciones normales del programa y cuando genera el código inserta las instrucciones específicas de cada arquitectura. GCC tiene varios _macros atómicos_, algunos de ellos las analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence`.footnote:[Este macro es de las versiones más modernas de GCC, en las antiguas versiones era `__sync_synchronize`.]
+Afortunadamente, el problema está relativamentefootnote:[Sigue siendo un problema que no haya macros estándares para todos los compiladores.] solucionado por los _builtin macros_ de los compiladores, como los del compilador GCC (<<Atomics_C11>>). El compilador define macros que se tratan como funciones normales del programa y cuando genera el código inserta las instrucciones específicas de cada arquitectura. GCC tiene varios _macros atómicos_, algunos de ellos los analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence`.footnote:[Este macro es de las versiones más modernas de GCC, en las antiguas versiones era `__sync_synchronize`.]
 
 Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson ya lo sabemos (<<counter_peterson_c, código completo en C>>):
 
@@ -264,6 +264,6 @@ En el algoritmo de Peterson la solución con barreras es sencilla, pero las solu
 
 En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. Las barreras tienen un coste elevado –varios cientos de ciclos de CPU–, que se suma a la presión introducida al sistema de caché. Desde el punto de vista del programador, la mayor dificultad es saber exactamente dónde hay que insertar el mínimo número de barreras.
 
-La programación con barreras explícitas no es práctica, tiende a producir errores. Hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos  consideran que es un error permitir la ejecución fuera de orden, pero es el precio a pagar por procesadores más rápidos.
+La programación con barreras explícitas no es práctica, ya que tiende a producir errores. Hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos  consideran que es un error permitir la ejecución fuera de orden, pero es el precio a pagar por procesadores más rápidos.
 
-En cualquier caso, no tiene sentido programar mecanismos de sincronización como los vistos sin ayuda de primitivas de hardware que faciliten la programación. Las analizamos en el siguiente capítulo. No solo sirven para solucionar la exclusión mutua, también otros de sincronización y consenso.
+En cualquier caso, no tiene sentido programar mecanismos de sincronización como los vistos sin ayuda de primitivas de hardware que faciliten la programación. Las analizamos en el siguiente capítulo. No solo sirven para solucionar la exclusión mutua, sino también otros problemas de sincronización y consenso.
