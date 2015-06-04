@@ -52,7 +52,9 @@ include::chapters/08-monitores.adoc[]
 
 include::chapters/09-canales.adoc[]
 
-include::chapters/10-fin.adoc[]
+include::chapters/10-transaccional.adoc[]
+
+include::chapters/11-epilogo.adoc[]
 
 include::chapters/a01-bibliografia.adoc[]
 
@@ -69,3 +71,5 @@ include::chapters/a06-code-futex.adoc[]
 include::chapters/a07-code-monitors.adoc[]
 
 include::chapters/a08-code-channels.adoc[]
+
+include::chapters/a09-code-transaccional.adoc[]

@@ -1,4 +1,8 @@
-LPorblemas de locks:
+== Memoria transaccional
+
+
+
+Los problemas de locks:
 
 - Son difíciles de gestionar efectivamente, especialmente en grandes sistemas.
 - Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos.
