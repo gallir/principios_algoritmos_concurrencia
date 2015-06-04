@@ -9,7 +9,7 @@ Lo son, en primer lugar, por los requisitos de almacenamiento. El número de reg
 
 En segundo lugar, si los procesos se ejecutan en un único procesador el avance es tan lento como impredecible, ya que depende del grado de competencia y comportamiento del _scheduler_.
 
-Desde que se comenzó a estudiar el problema de la concurrencia -inicios de la década de 1960- se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
+Desde que se comenzó a estudiar el problema de la concurrencia –inicios de la década de 1960– se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
 
 
 === Inhabilitación de interrupciones
