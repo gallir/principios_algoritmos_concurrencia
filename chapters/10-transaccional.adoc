@@ -1,12 +1,50 @@
-== Memoria transaccional
+== 10. Memoria transaccional
 
 
 
 Los problemas de locks:
 
-- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas.
-- Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos.
-- Es difícil compner llamas múltiples a múltiples objetos en unidades atómicas.
+- Algoritmos de _spinlocks_ complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas.
+
+- Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos y algunos temas académicamente no resueltos (como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos).
+
+- Se usan _mutex_ (o _locks_) globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de granularidades más pequeñas. Esto afecta negativamente al paralelismo.
+
+- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
+
+
+----
+transaction {
+    a = b * x
+}
+----
+
+
+En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
+
+
+
+=== Transacciones en bases de datos
+
+Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible. En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
+
+Las operaciones se ejecutan en paralelo pero están limitadas las interacciones de forma que los resultados no varían si se ejecutaron una después de otra o al revés. Esta propiedad se llama _serialibilidad_. Simplifca el "mundo" del programador.
+
+Las bases de datos tienen las propiedades ACID por atomicidad, consistencia, aislamiento (_isolation_) y durabilidad.
+
+Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros.
+
+Consistencia significa que los datos pasan de un estado consistente a otro. Por ejemplo, se respetan los invariantes, por ejemplo que el resultado de una transferencia bancaria que generó un ingreso en una cuenta también está representado la salida, no puede aparece dinero de más en la suma de ambas.
+
+Durabilidad es que los datos queden permanentemente almacenados en un dispositivo persistente. ¿¿¿¿No se aplica a la memoria transaccional????
+
+
+
+
+
+
+
+
 
 
 Transacción son una serie de pasos ejecutados por un único proceso. Deben ser serializables, parecen ejecutarse secuencialmente en un orden de una a la vez.
@@ -17,7 +55,37 @@ las ejecuciones son especulativas, los cambios son tentativos, si se completa la
 En software, versionID, global lock, blocking & nonblocking
 
 
-Hardware:
+
+.Programación con tinySMT
+[source, c]
+----
+TM_INIT_THREAD;
+
+for (i=0; i < max; i++) {
+    TM_START(0, 1);
+    c = TM_LOAD(&counter[position]);
+    c++;
+    TM_STORE(&counter[position], c);
+    TM_COMMIT;
+}
+
+TM_EXIT_THREAD;
+----
+
+
+==== GCC
+
+[source, c]
+----
+    for (i=0; i < max; i++) {
+        __transaction_atomic {
+            counter[position]++;
+        }
+    }
+----
+
+
+=== Hardware
 
 EXPLICITLY TRANSACTIONAL HTMS
 - Optimistic Synchronization, similar al LL/SC.
@@ -36,7 +104,22 @@ IMPLICITLY TRANSACTIONAL HTM SYSTEMS
 Intel:
 Intel microprocessors based on the Haswell microarchitecture
 
+
+
+==== Hardware lock elision
 Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
+
+
+----
+void lock() {
+    while(exchange_n(&mutex, 1, __ATOMIC_ACQUIRE|__ATOMIC_HLE_ACQUIRE));
+}
+
+void unlock() {
+     store_n(&mutex, 0, __ATOMIC_RELEASE|__ATOMIC_HLE_RELEASE);
+}
+----
+
 
 Restricted Transactional Memory: xbegin, xend, xabort, ¿xcheck?.
 
@@ -45,7 +128,30 @@ IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
 
 IBM S390 tbegin, tend, tabort, etnd
 
+
+[source, c]
+----
+for (i=0; i < max; i++) {
+    if (_xbegin() == _XBEGIN_STARTED) {
+        if (mutex) {
+            _xabort(1);
+        }
+        counter[position]++;
+        _xend();
+    } else {
+        lock();
+        counter[position]++;
+        unlock();
+    }
+}
+----
+
+
 GCC:
+
+
+
+
 
 https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/x86-specific-memory-model-extensions-for-transactional-memory.html#x86-specific-memory-model-extensions-for-transactional-memory
 The i386 architecture supports additional memory ordering flags to mark lock critical sections for hardware lock elision. These must be specified in addition to an existing memory model to atomic intrinsics.
