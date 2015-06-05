@@ -440,7 +440,8 @@ Este algoritmo también es equitativo, los procesos entran en orden FIFO. Solo r
 
 El algoritmo de cola MCSfootnote:[El nombre  MCS son las iniciales de los apellidos los autores.] fue descubiertofootnote:[Siempre tengo la duda –no soy el único– de si a los algoritmos son inventados o descubiertos, uso indistintamente ambas dependiendo e influido por el tipo de algoritmo o lo que leí de otros autores.] en 1991 por John M. Mellor-Crummey y Michael L. Scott (<<MCS1>>). Se considera uno de los algoritmos más importantes e influyentes de exclusión mutua, sus autores recibieron el premio _Edsger W. Dijkstra Prize in Distributed Computing_ de 2006.
 
-Algoritmos derivados, conocidos como _colas no bloqueantes_ (_lock-free queues_), son muy usados en librerías _runtime_ y maquinas virtuales, como en los <<java_monitor, _monitores_ de la máquina virtual de Java>> y en las librerías +java.util.concurrent+ (<<Lea>>).
+Algoritmos derivados, conocidos como _colas sin exclusión mutua_ (_lock-free queues_), son muy usados en librerías _runtime_ y maquinas virtuales, como en los <<java_monitor, _monitores_ de la máquina virtual de Java>> y en las librerías +java.util.concurrent+ (<<Lea>>).
+
 
 Cada proceso hace la espera activa en su propia posición de memoria. En lugar de un array se usa una lista ordenada FIFO. Cada nodo _pertenece_ a un proceso que espera para entrar a la sección crítica. Para implementar MCS se requieren las operaciones atómicas _swap_ y _CAS_. Es rápido, equitativo (FIFO) y no necesita asignación previa de memoria (como en _array-lock_). Los hilos deben pasar como argumento la dirección de un nodo, preferiblemente local para evitar el _false sharing_.
 
@@ -521,13 +522,13 @@ Durante las pruebas y validación del código comprobé que en algunos procesado
 ****
 
 
+[[clh_queue]]
 ==== CLH _Spinlock_ (1993)
 Una par de años después de la publicación del algoritmo de _MCS_, dos grupos descubrieron el _CLH_ de forma independiente: Travis Craig de la Universidad de Washington (<<Craig>>) y Anders Landin y Eric Hagersten del Instituto Sueco de Ciencias de la Computación (<<CLH>>).
 
 Como el _MCS_, este algoritmo también está basado en una cola y es equitativo, pero los punteros son en sentido inverso. Apuntan al proceso con el turno anterior, no al siguiente.
 
 
-[[clh_queue]]
 .Cola CLH
 image::clh.png[align="center"]
 
@@ -668,6 +669,6 @@ A continuación se introdujo el tema de los _spinlocks_ equitativos (_fair_). Es
 
 El primer algoritmo fue _ticket-lock_, basado en las mismas ideas del algoritmo de la panadería. Cada proceso obtiene un _número_ único y creciente que sirve para sincronizar la entrada a la sección crítica mediante un turno que también crece monótonamente. A continuación extendimos este algoritmo para lectores-escritores, que además tiene la propiedad de ser equitativo.
 
-Finalmente, vimos dos algoritmos fundamentales de concurrencia que implementan colas sin esperas (_lock-free queues_), _MCS_ y _CLH_. Ambos son equitativos y escalables, no incrementan la presión sobre el sistema de caché cuando se incrementa el número de procesos. Estos algoritmos funcionan sobre sistemas de caché coherentes, pero hay modificaciones que permiten que sean usados en sistemas no coherentes y en arquitecturas NUMA.
+Finalmente, vimos dos algoritmos fundamentales de concurrencia que implementan _colas sin exclusión mutua_ (_lock-free queues_), _MCS_ y _CLH_. Ambos son equitativos y escalables, no incrementan la presión sobre el sistema de caché cuando se incrementa el número de procesos. Estos algoritmos funcionan sobre sistemas de caché coherentes, pero hay modificaciones que permiten que sean usados en sistemas no coherentes y en arquitecturas NUMA.
 
 A partir del siguiente capítulo veremos construcciones y abstracciones de más alto nivel. Sus objetivos son evitar las esperas activas y facilitar la programación de mecanismos de sincronización más sofisticados que la exclusión mutua.

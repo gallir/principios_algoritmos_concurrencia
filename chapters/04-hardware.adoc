@@ -257,9 +257,22 @@ _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se pre
 Si _A_ y _B_ son valores simples no hay conflictos. Pero si son punteros a estructuras más complejas, como nodos de una pila, un campo de esas estructuras pudo haber cambiado y provocar errores.
 
 [[free_lock_stack]]
-====== Pilas concurrentes sin bloqueo
+====== Pilas concurrentes sin exlusión mutua
 
-Veremos un caso práctico de implementación de _pilas concurrentes sin bloqueo_ (_free-lock stacks_) con _CAS_. La pila es una lista encadenada de nodos del tipo +node+ y tiene dos operaciones: _pop_ y _push_. La estructura +node+ contiene un puntero al siguiente elemento (+next+) y una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+ pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o _payload_, su estructura interna nos es irrelevante):
+Veremos un caso práctico de implementación de _pilas concurrentes sin exclusión mutua_ (_free-lock stacks_) con _CAS_.
+
+
+[NOTE]
+.Estructuras _lock-free_
+====
+Una estructura de datos compartida es _sin exclusion mutua_ (o _lock-free_) si sus operaciones no requieren exclusión mutua.
+
+Existe interés académico por este tipo de estructuras porque permiten paralelizar más eficientemente las operaciones a estructuras esenciales: _hashes_, colas, árboles balanceados, etc. No son problemas sencillos debido a las limitaciones de las primitivas de hardware para manipular registros de tamaño superior a una palabra, lo que obliga a diseñar algoritmos complejos para componer operaciones atómicas. Por ejemplo, todavía se estudia la solución eficiente a una cola _lock-free_ que permita agregar o quitar elementos por ambos extremos.
+
+A continuación implementamos una pila sin exclusión mutua, en el capítulo siguiente veremos colas sin exclusión mutua necesarias para los algoritmos de _spinlocks_ <<mcs_queue, _MCS_>> y <<clh_queue, _CLH_>>.
+====
+
+La pila es una lista encadenada de nodos del tipo +node+ y tiene dos operaciones: _pop_ y _push_. La estructura +node+ contiene un puntero al siguiente elemento (+next+) y una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+ pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o _payload_, su estructura interna nos es irrelevante):
 
 [[struct_node]]
 [source, c]
