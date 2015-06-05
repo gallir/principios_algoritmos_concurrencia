@@ -48,7 +48,7 @@ En cada iteración (o _spin_) los procesos en diferentes procesadores verifican 
 El objetivo de los _spinlocks_ escalables es minimizar el sobrecoste inducido por los _fallos_. La estrategia es que la espera activa de cada proceso se haga sobre posiciones de memoria diferentes.
 ****
 
-Veremos tres técnicas de optimización de _spinlocks_ que se pueden aplicar a cualquier proceso que itere sobre una variable compartida. Comprobaremos que sus mejoras en eficiencia son considerables.
+Veremos tres técnicas de optimización de _spinlocks_ que se pueden aplicar a cualquier espera activa sobre una variable compartida. Comprobaremos que sus mejoras en eficiencia son considerables.
 
 ==== Verificación local
 Se trata de reducir la presión sobre el sistema de coherencia de caché y reducir las llamadas a las relativamente costosas primitivas de sincronización. Antes de ejecutarlas se verifica (o _cortocircuita_) el valor del registro –+mutex+ en los ejemplos–; si vale 1 ya no hace falta continuar con la instrucción atómica. Cuando se usa con _TAS_ esta estrategia es conocida como _TTAS_ o _TATAS_; con _CAS_ se llama _TCAS_.
