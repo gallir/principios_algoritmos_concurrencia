@@ -41,14 +41,14 @@ Aunque en principio son preferibles los _spinlocks_ escalables, antes veremos t�
 
 ._Spinlocks_ escalables
 ****
-Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria caché por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes, independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS1>>, <<Boyd-Wickizer>>).
+Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema sino que el procesador no tiene una copia actualizada en su memoria caché, por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes, independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS1>>, <<Boyd-Wickizer>>).
 
 En cada iteración (o _spin_) los procesos en diferentes procesadores verifican las mismas posiciones de memoria. Cada vez que un proceso cambia el valor se debe invalidar la caché local en cada procesador y propagar el valor actualizado.  El problema se agrava por el <<false_sharing, _false sharing_>>, los datos que se modifican en la sección crítica suelen estar en áreas cercanas a las variables de los _spinlocks_. Cada modificación de esas variables supone un _fallo de caché_ en cada uno de los procesos.
 
 El objetivo de los _spinlocks_ escalables es minimizar el sobrecoste inducido por los _fallos_. La estrategia es que la espera activa de cada proceso se haga sobre posiciones de memoria diferentes.
 ****
 
-Veremos tres técnicas de optimización de _spinlocks_ que se pueden aplicar a cualquier a que itere sobre una variable compartida. Comprobaremos que sus mejoras en eficiencia son considerables.
+Veremos tres técnicas de optimización de _spinlocks_ que se pueden aplicar a cualquier espera activa sobre una variable compartida. Comprobaremos que sus mejoras en eficiencia son considerables.
 
 ==== Verificación local
 Se trata de reducir la presión sobre el sistema de coherencia de caché y reducir las llamadas a las relativamente costosas primitivas de sincronización. Antes de ejecutarlas se verifica (o _cortocircuita_) el valor del registro –+mutex+ en los ejemplos–; si vale 1 ya no hace falta continuar con la instrucción atómica. Cuando se usa con _TAS_ esta estrategia es conocida como _TTAS_ o _TATAS_; con _CAS_ se llama _TCAS_.
@@ -140,7 +140,7 @@ def lock():
         backoff(failures)
 ----
 
-El problema con el _backoff_ es la elección de la unidad de tiempo y el límite de espera, los valores adecuados dependen de las arquitecturas y casos de uso. Si la espera es muy breve podría producir un efecto ping-pong similar a +sched_yield+, pero con una sobrecarga mayor del núcleofootnote:[El proceso pasa de ejecución a bloqueado luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y CPUs inactivas porque todos los procesos están bloqueados.
+El problema con el _backoff_ es la elección de la unidad de tiempo y el límite de espera, los valores adecuados dependen de las arquitecturas y casos de uso. Si la espera es muy breve podría producir un efecto ping-pong similar a +sched_yield+, pero con una sobrecarga mayor del núcleofootnote:[El proceso pasa de ejecución a bloqueado, luego a _listo_ y nuevamente a ejecución en un tiempo muy breve.]. Por el contrario, si la unidad es muy grande producirá demoras innecesarias y CPUs inactivas porque todos los procesos están bloqueados.
 
 Sin embargo, la mejora del _backoff_ es general para todos los procesadores probados, tanto en tiempos de CPU como de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] (en los procesadores Intel la diferencia es importante, en ARM es mínima).
 
@@ -190,7 +190,7 @@ image::optimized-arm7-real.png[align="center"]
 Aún en arquitecturas tan diferentes, la cesión del procesador representa una reducción importante de tiempo de CPU y de retorno. La mayor diferencia a favor del _backoff_ ocurre en el Xeon de 16 núcleos. Este tiene más núcleos que procesos concurrentes, por lo que un _yield_ solo hace que un proceso abandone el procesador para que el _scheduler_ lo lleve inmediatamente a ejecución en otro núcleo (depende de los algoritmos de _afinidad de CPU_). También pudo ocurrir que la unidad de tiempo elegida (un nanosegundo) haya sido más adecuada para el Xeon que para el ARM, a pesar de ello se ganan unos pocos milisegundos.
 
 
-.Cede del procesador
+.Cesión del procesador
 ****
 Las esperas activas ya son suficientemente malas si no son imprescindibles. A menos que se trate de rutinas críticas del núcleo o un sistema de tiempo real medido y calibrado casi al nivel de instrucciones, es conveniente usar _yield_ o _backoff_ exponencial en los _spinlocks_ con mucha competencia. Esta regla es válida aún cuando parezca que sobran procesadores.
 ****
@@ -391,7 +391,7 @@ Es deseable que los _spinlocks_ sean escalables: el número de invalidaciones de
 ==== _Array-lock_
 La solución es que cada proceso tenga su propia posición en un array de _locks_ inicializados a cero; salvo la primera posición que se inicializará con 1 para que el primer proceso pueda entrar. La posición del último proceso en espera está indicada por la variable +tail+ (también inicializada a cero). Cada proceso obtiene su posición con la operación _get&add_ sobre +tail+.
 
-La variable que indica si un proceso puede entrar es booleana, usa un único byte. Para evitar el _false sharing_ hay que separar las posición por varios bytes. Para ello se define una estructura de mayor tamaño, con un campo de un byte para la verificación. La alternativa equivalente es definir un array con posiciones que no se usarán, solo servirán de relleno (_padding_).
+La variable que indica si un proceso puede entrar es booleana, usa un único byte. Para evitar el _false sharing_ hay que separar las posiciones por varios bytes. Para ello se define una estructura de mayor tamaño, con un campo de un byte para la verificación. La alternativa equivalente es definir un array con posiciones que no se usarán, solo servirán de relleno (_padding_).
 
 La siguiente figura es un esquema general del funcionamiento. Las zonas grises del array son las variables booleanas de verificación en el _spinlock_ de cada proceso. Las zonas blancas son el relleno o _padding_. El proceso en verde está en la sección crítica, los amarillos en espera activa en su posición del array.
 
