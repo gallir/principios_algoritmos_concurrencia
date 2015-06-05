@@ -83,7 +83,7 @@ s.signal()
 
 Se inicializa el semáforo a 1, cuando el primer proceso entre a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar, el valor de +value+ será cero, por lo que se bloqueará hasta que el primero ejecute el +signal+.
 
-La solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
+Los programas de ejemplo incluyen la solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
 ==== Sincronización genérica
 El valor del semáforo puede interpretarse como un indicador del _número de recursos_ disponibles –también denominado _permisos_ (_permits_)–, indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En exclusión mutua interesa que solo haya un proceso en la sección crítica, así pues, el valor inicial debe ser 1.
@@ -176,7 +176,7 @@ Los semáforos se obtienen con la función +semget+, que retorna un descriptor d
 
 Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamos en el <<sem_counter_c, primer ejemplo de semáforos en C>>. Es el estándar actual y más usado. Aunque carece de la flexibilidad y operaciones adicionales de los System V, tiene una interfaz más sencilla y más eficiente.
 +
-Se pueden crear de dos tipos, _sin nombre_ (_unnamed_) y _con nombre_ (_named_). El primero es más simple de usar cuando los procesos comparten la memoria, solo hay que declarar una variable del tipo +sem_t+ y luego inicializar el valor del semáforo con +sem_init+. Cuando se necesitan para procesos que no comparten memoria, se los puede crear y/o abrir con la función +sem_open+ usando un nombre similar a ficheros.
+Se pueden crear de dos tipos, _sin nombre_ (_unnamed_) y _con nombre_ (_named_). El primero es más simple de usar cuando los procesos comparten la memoria, solo hay que declarar una variable del tipo +sem_t+ y luego inicializar el valor del semáforo con +sem_init+. Cuando se necesitan para procesos que no comparten memoria, se pueden crear y/o abrir con la función +sem_open+ usando un nombre similar a ficheros.
 
 Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización, entre ellos _mutex_ y variables de condición (las usamos en el capítulo <<monitors>>).
 ****
@@ -185,8 +185,8 @@ Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de s
 
 La sección crítica es una abstracción conveniente y sencilla para resolver la competencia  de recursos, otro problema común es la coordinación del orden de ejecución de operaciones (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota como _P~i~ < Q~j~_. Para que se cumpla esta condición, antes de _Q~j~_ hay que asegurar:
 
-- Continuar la ejecución si _P~i~_ ya se ejecutó.
-- Bloquear a _Q_ si _P~i~_ todavía no se ejecutó, y desbloquearlo una vez que se haya ejecutado.
+- Que continua la ejecución si _P~i~_ ya se ejecutó.
+- Que se bloquea a _Q_ si _P~i~_ todavía no se ejecutó, y se desbloquea una vez que se haya ejecutado.
 
 Para resolverlo se necesita un semáforo (contador o binario) inicializado a cero. Inmediatamente después de _P~i~_, _P_ ejecuta +signal+ sobre dicho semáforo. _Q_ llama a +wait+ inmediatamente antes de _Q~i~_. Los programas serán similares al siguiente ejemplo:
 
@@ -212,7 +212,7 @@ Barrera:: Es un mecanismo de sincronización que obliga a procesos concurrentes 
 
 ===== Barreras binarias
 
-Una barrera binaria es una extensión del ejemplo anterior, donde solo uno de los procesos debía esperar por el otro. En cambio, una barrera hace que ambos deban esperar que el otro acabe una fase para avanzar a la siguiente; además, las barreras pueden usarse cíclicamente.
+Una barrera binaria es una extensión del ejemplo anterior, donde solo uno de los procesos debía esperar por el otro. En cambio, una barrera hace que ambos deban esperar a que el otro acabe una fase para avanzar a la siguiente; además, las barreras pueden usarse cíclicamente.
 
 El algoritmo de barreras para dos procesos es trivial, hacen falta dos semáforos binarios inicializados a cero. El valor de cada semáforo indica si su proceso correspondiente llegó a la _meta_. Cada proceso ejecuta +signal+ en su semáforo para indicar que llegó al final de una fase, y luego +wait+ en el semáforo del otro proceso.
 ----
@@ -319,7 +319,7 @@ while True:
 ===== _Buffer_ infinito
 Aunque no existen las memorias infinitas, ni se puede confiar en que las velocidades relativas de los productores evitarán que el _buffer_ supere un tamaño razonable, es un primer paso para la implementación del algoritmo más general.
 
-Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: +mutex+ para asegurar exclusión mutua al insertar o quitar elementos, uno de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
+Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: un +mutex+ para asegurar exclusión mutua al insertar o quitar elementos, y otro de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
 
 [source, python]
 ----
@@ -426,7 +426,7 @@ En la sección crítica las operaciones _wait_ y _signal_ son ejecutadas por el 
 
 
 ==== Lectores-escritores
-En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un problema también muy habitual, relajar las condiciones de la exclusión mutua con las siguientes condiciones:
+En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un problema también muy habitual, relajando las condiciones de la exclusión mutua con las siguientes condiciones:
 
 - Se permite más de un lector en la sección crítica.
 
@@ -823,7 +823,7 @@ Después de estudiar y hacer simulaciones en la Tierra para asegurarse de que lo
 
 === Recapitulación
 
-Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua, a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, saber cómo se construyen esas soluciones permiten diseñar soluciones correctas y eficientes para muchos problemas de programación concurrente.
+Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua, a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, saber cómo se construyen esas soluciones permite diseñar soluciones correctas y eficientes para muchos problemas de programación concurrente.
 
 Al haber sido el primer –y más usado– método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problema de los filósofos es un clásico. Sirvió para estudiar las diferentes formas de solucionar la sincronización entre procesos, también para reconocer las reglas básicas para evitar los interbloqueos.
 
