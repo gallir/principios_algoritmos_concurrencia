@@ -319,7 +319,7 @@ while True:
 ===== _Buffer_ infinito
 Aunque no existen las memorias infinitas, ni se puede confiar en que las velocidades relativas de los productores evitarán que el _buffer_ supere un tamaño razonable, es un primer paso para la implementación del algoritmo más general.
 
-Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: un +mutex+ para asegurar exclusión mutua al insertar o quitar elementos, y otro de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
+Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: un +mutex+ para asegurar exclusión mutua al insertar o quitar elementos y otro de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
 
 [source, python]
 ----
