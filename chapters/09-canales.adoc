@@ -350,7 +350,7 @@ func (s Sem) Signal() {
 }
 ----
 
-El problema de esta solución es la dimensión del _buffer_ del canal: su tamaño debe ser igual al número máximo de permisos del semáforo (el valor máximo de su valor). De lo contrario las operaciones _signal_ también se bloquearán si está lleno. Si no se requieren valores elevados es una solución razonable, si no es así hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
+El problema de esta solución es la dimensión del _buffer_ del canal: su tamaño debe ser igual al número máximo de permisos del semáforo (el valor máximo que puede tomar el _valor_ del semáforo). De lo contrario las operaciones _signal_ también se bloquearán si está lleno. Si no se requieren valores elevados es una solución razonable, si no es así hay que buscar otra solución que no requiera que la dimensión del canal dependa del valor del semáforo.
 
 
 ==== Tamaño del _buffer_ independiente del valor
@@ -631,7 +631,7 @@ sum := <-east
 west <- sum + first*second
 ----
 
-Tal como ya había descrito Hoare, el procedimiento anterior se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior envían los valores, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda (_result_). Cada multiplicador copia el mensaje recibido del canal _norte_ al canal _sur_ para que procesos de las siguientes filas (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
+Tal como ya había descrito Hoare, el procedimiento anterior se puede generalizar para la multiplicación en paralelo de la matriz completa con nueve _multiplicadores_ (en el centro de la imagen). Los procesos de la fila superior envían los valores, uno a uno, de las filas de la segunda matriz, los resultados parciales lo obtienen los procesos de la columna izquierda (_result_). Cada multiplicador, a su vez, copia el mensaje recibido del canal _norte_ al canal _sur_ para el cálculo de la siguiente fila (se añaden los procesos _sink_ de la fila inferior con el único objetivo de que el algoritmo sea el mismo para todos los multiplicadores).
 
 
 [[parallel_multiplication]]

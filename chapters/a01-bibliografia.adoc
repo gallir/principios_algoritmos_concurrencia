@@ -100,6 +100,8 @@
 
 - [[[Sampson]]] Adrian Sampson. _PyPy and CPython’s Broken Multithreaded Semantics_. 25 October 2012. http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html
 
+- [[[Shavit]]] Nir Shavit, Dan Touitou. _Software transactional memory_. Proceeding PODC '95 Proceedings of the fourteenth annual ACM symposium on Principles of distributed computing, 1995 http://groups.csail.mit.edu/tds/papers/Shavit/ShavitTouitou-podc95.pdf
+
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 
 - [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.

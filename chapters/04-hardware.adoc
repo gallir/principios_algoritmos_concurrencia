@@ -468,7 +468,7 @@ void push(node_head *head, node *e) {
 <3> El siguiente del nuevo nodo es el que está ahora en la cabeza.
 <4> Se intenta el intercambio, solo se hará si tanto el puntero al nodo y el entero +aba+ son idénticos a los copiados en +orig+. Si entre la primera instrucción y la comparación en el +while+ el valor de +head+ fue modificado, el valor de +aba+ también habrá cambiado (será mayor), por lo que _CAS_ retornará falso aunque el puntero al nodo sea el mismo.
 
-
+[[llsc]]
 ==== Load-Link/Store-Conditional (_LL/SC_)
 
 _CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, que es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplo en algunas de esas arquitecturas –por ejemplo, en Raspberry Pi–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
@@ -551,7 +551,7 @@ Aborted
 En una arquitectura con _LL/SC_ hay que implementar el algoritmo directamente con esas instrucciones, pero no hay macros adecuados en GCC. Hay que programar en ensamblador.
 
 
-[[llsc]]
+[[llsc_code]]
 ===== _LL/SC_ en ensamblador nativo
 Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que tenía el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
 

@@ -4,17 +4,30 @@
 
 Los problemas de locks:
 
-- Algoritmos de _spinlocks_ complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas.
+- Producen inversión de prioridades y efecto convoy, interbloqueo es difícil de evitar si se manipulan muchos objetos. Con tantos programas concurrentes es muy costoso tener expertos en concurrencia.
 
 - Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos y algunos temas académicamente no resueltos (como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos).
 
-- Se usan _mutex_ (o _locks_) globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de granularidades más pequeñas. Esto afecta negativamente al paralelismo.
+- El problema de la composición. Algoritmos de _spinlocks_ complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas. En spinlocks <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, no se puede eliminar el elemento de una e insertarla en otra atómicamente, no son _componibles_. Se pueden agregar mecanismos _ad hoc_, como añadir otro spinlock o exclusión mutua adicional pero eso crearía un cuello de botella.
 
-- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
+Es decir no son _componibles_.
+
+
+
+
+
+- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad. Se usan _mutex_ (o _locks_) globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de granularidades más pequeñas. Esto afecta negativamente al paralelismo.
 
 
 Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
+
+Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
+
+atomic {
+    x = q0.deq();
+    q1.enq(x);
+}
 
 
 
@@ -41,12 +54,30 @@ Como las transacciones permiten actualizaciones a diferentes ubicaciones elimina
 Las transacciones son ejecutadas especulativamente, hace cambios tentativos a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta. Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
 
 
-Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
 
-atomic {
-    x = q0.deq();
-    q1.enq(x);
+
+
+
+----
+void push(node **head, node *e) {
+    __transaction_atomic {
+        e->next = *head;
+        *head = e;
+    }
 }
+
+node *pop(node **head) {
+    node *old_head;
+
+    __transaction_atomic {
+        old_head = *head;
+        if (old_head) {
+            *head = old_head->next;
+        }
+    }
+    return old_head;
+}
+----
 
 
 
@@ -77,8 +108,50 @@ Durabilidad es que los datos queden permanentemente almacenados en un dispositiv
 
 === Origenes
 
-La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993. Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones. Janice Stone _et al_ (<<Stone>>) propusieron operaciones atómicas _multi-palabra_ conocidas como _Oklahoma Update_
+La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993. Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos.
 
+Janice Stone _et al_ (<<Stone>>) propusieron primitvas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
+
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) fueron los primeros en proponer la memoria transaccional por software.
+
+
+==== Sistemas
+A simulator is available for ASF, a proposed AMD64 architecture extension for bounded-size transactions [61]. This is based on PTLSim, providing a detailed, cycle-accurate full-system simulation of a multi-core system
+TL2
+CTL
+Deuce STM provee métodos atómicos para Java.
+JVSTM is a Java library that implements a multi-versioned approach to STM that includes
+mechanisms for partial re-execution of failed transactions
+The Sun C++ compiler with Transactional Memory supports a range of STM back-ends, including TL2 [83], SkySTM [188], HyTM [78] and PhTM [193].The compiler is available in binary format, but the runtime system and additional TM implementations are available as source code by request from the Sun Labs Scalable Synchronization Research Group. http://research.sun.com/scalable/
+TinySTM is a word-based STM implementation available from the University of Neuchatel. It is based on the LSA algorithm [262]. A Java LSA implementation is also available. http://tmware.org
+Implementations of TL2 [83] and subsequent algorithms are available for use with Tanger (an earlier version of DTMC). http://mcg.cs.tau.ac.il/projects
+TxOS is a prototype version of Linux that extends the OS to allow composition of system calls into atomic, isolated operations [243]. TxOS supports transactional semantics for a range of resources, including the file system, pipes, signals, and process control. It runs on commodity hardware. http://txos.code.csres.utexas.edu
+
+=== Diseño
+
+==== Control de concurrencia
+
+La ocurrencia del conflicto, la detección y la resolución, ocurren siempre en el mismo orden.
+
+El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, los tres se producen al mismo tiempo. Cada transacción se apropia de los datos y las demás no pueden acceder a ellos.
+
+Con el control optimista la detección y resolución puede ocurrir más tarde. Permite que varias transacciones accedan simultáneamente al mismo dato.
+
+==== Gestión de versiones
+
+- Eager version management [227] o direct update, se modifica directamente en la memoria y se mantiene un undo-log. Requiere que se use control de concurrencia pesimista.
+
+- Lazy version management o _deferred update_ porque las actualizaciones se hacen al momento del commit. Las transacciones mantienen su _redo-log_ privado (en un buffer).
+
+=== Criterios de corrección _correctness_
+
+- Secuencialidad (Serializability):  Las transaccciones deben ser secuenciables, los resultados deben ser idénticos a si se ejecutan en una secuencia. No requiere que se ejecuten en un orden de tiempo real estricto, pueden intercambiarse el orden.
+
+- Secuencialidad estricta: Si una transacción se completa antes que otra su ejecución secuencial debe ocurrir en el mismo orden.
+
+- Linearizabilidad (Linearizability): La operación de lecturas y escritura de toda la transacción debe aparecer en un momento puntual.
+
+- Instantáneas aisladas (Snapshot isolation): Es más débil que linearizabilidad, permite mayor concurrencia. Las lecturas debe ser linearizables antes que las escrituras.
 
 
 Limitaciones de los bloques:
@@ -96,7 +169,7 @@ Single-Lock Atomicity (SLA) for Atomic Blocks
 
 Los problemas de llamadas de sistemas, E/S y transacciones externas
 
-Transacción son una serie de pasos ejecutados por un único proceso. Deben ser serializables, parecen ejecutarse secuencialmente en un orden de una a la vez.
+Transacción son una serie de pasos ejecutados por un único proceso. Deben ser secuenciables, parecen ejecutarse secuencialmente en un orden de una a la vez.
 
 Singh developed a library of join patterns using atomic blocks in STM-Haskell [294].T
 
