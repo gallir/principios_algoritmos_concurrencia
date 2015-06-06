@@ -42,11 +42,16 @@
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
+
+- [[[Harris]]] Tim Harris, James Larus, Ravi Rajwar. _Transactional Memory, 2nd edition_. Synthesis Lectures on Computer Architecture. December 2010. http://www.morganclaypool.com/doi/abs/10.2200/S00272ED1V01Y201006CAC011
+
 - [[[Hart]]] Darren Hart. _A futex overview and update_. Linux Weekly News, 2009. http://lwn.net/Articles/360699/
 
 - [[[Herlihy12]]] Maurice Herlihy, Nir Shavit. _The Art of Multiprocessor Programming_. 2012. ISBN 978-0123973375.
 
 - [[[Herlihy91]]] Maurice Herlihy. _Wait-Free Synchronization_. ACM Transactions on Programming Languages and Systems, 1991. http://cs.brown.edu/~mph/Herlihy91/p124-herlihy.pdf
+
+- [[[Herlihy93]]] Maurice Herlihy, J. Eliot B. Moss. _Transactional memory: architectural support for lock-free data structures_. ISCA ’93: Proc. 20th Annual International Symposium on Computer Architecture. May 1993. http://www.cs.utexas.edu/~pingali/CS395T/2009fa/lectures/herlihy93transactional.pdf
 
 - [[[Hoare]]] C.A.R. Hoare. _Communicating Sequential Processes_. Communications of the ACM, Volume 21 Issue 8, Aug. 1978. http://spinroot.com/courses/summer/Papers/hoare_1978.pdf
 
@@ -66,6 +71,9 @@
 
 - [[[LockLess2]]] _Mutexes and Condition Variables using Futexes_. http://locklessinc.com/articles/mutex_cv_futex/
 
+- [[[Lomet]]] David B. Lomet. _Process structuring, synchronization, and recovery using atomic actions_. ACM Conference on Language Design for Reliable Software, pages 128–137, March 1977. http://dl.acm.org/citation.cfm?id=808319
+
+
 - [[[Mackintosh]]] Alasdair Mackintosh, Olivier Giroux. _C++ Latches and Barriers_. ISO/IEC JTC1 SC22 WG21 N4204, 2014-08-06. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4204.html
 
 - [[[MCS1]]] John M. Mellor-Crummey, Michael L. Scott. _Algorithms for Scalable Synchronization on Shared-Memory Multiprocessors_. ACM Transactions on Computer Systems, 9(1):21-65, Feb. 1991. http://www.cs.rice.edu/~johnmc/papers/tocs91.pdf
@@ -84,6 +92,8 @@
 
 - [[[Railroad]]] _A Treasury of Railroad Folklore_, B.A. Botkin & A.F. Harlow, p. 381.
 
+- [[[Rajwar]]] Ravi Rajwar and James R. Goodman. _Speculative lock elision: enabling highly concurrent multithreaded execution_. In MICRO ’01: Proc. 34th International Symposium on Microarchitecture, pages 294–305, December 2001. http://pages.cs.wisc.edu/~rajwar/papers/micro01.pdf
+
 - [[[Reeves]]] Glenn E Reeves. _What really happened on Mars?_. http://research.microsoft.com/en-us/um/people/mbj/mars_pathfinder/Authoritative_Account.html
 
 - [[[Ricart]]] Glenn Ricart, Ashok A. Agrawala. _An Optimal Algorithm for Mutual Exclusion in Computer Networks_. Communications of the ACM CACM Volume 24 Issue 1, Jan. 1981. http://cs.hbg.psu.edu/comp512.papers/RicartAgrawala-81.pdf
@@ -94,7 +104,9 @@
 
 - [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
 
-- [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
+- [[[Stone]]] Janice M. Stone, Harold S. Stone, Phil Heidelberger, John Turek. _Multiple reservations and the Oklahoma update_. IEEE Parallel & Distributed Technology, 1(4):58–71, November 1993.
+
+- [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9. https://www.cs.auckland.ac.nz/courses/compsci703s1c/resources/OklahomaUpdate.pdf
 
 
 

@@ -229,14 +229,14 @@ También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. 
 Pero no cumple el requisito de _progreso_, el algoritmo genera interbloqueofootnote:[En el capítulo <<semaphores>> se trata el problema <<deadlocks, interbloqueos>> con mayor profundidad.] si ocurre la siguiente intercalación de instrucciones:
 
 ----
-  P0                    P1
-  states[0] = True
-                        states[1] = True
-                        ¿states[0]? -> True
-                        ...
-  ¿states[1]? -> True
-  ...
-         ## DEADLOCK! ##
+P0                    P1
+states[0] = True
+                    states[1] = True
+                    ¿states[0]? -> True
+                    ...
+¿states[1]? -> True
+...
+     ## DEADLOCK! ##
 ----
 
 _P0_ asigna su estado, se interrumpe y se ejecuta _P1_, en la entrada de la sección crítica cambia su estado y luego verifica el de _P0_. Como es verdadero no saldrá del +while+ hasta que _P0_ cambie su estado a falso. Pero _P0_ tampoco saldrá del bucle hasta que _P1_ cambie su estado. Como solo se pueden cambiar después de salir de la sección crítica ninguno de ellos podrá continuar.

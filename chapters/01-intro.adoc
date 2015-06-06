@@ -90,8 +90,9 @@ Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos inde
 
 Además de las ventajas para los programadores, los hilos son más _baratos_ que los procesos. Al no tener que replicar toda la memoria su consumo es menor y, fundamentalmente, los tiempos de creación de nuevos hilos son considerablemente inferiores. Tiene otras ventajas más sutiles, al compartir gran parte de memoria el coste de los cambios de contexto entre hilos es también menor, se invalidan y reemplazan menos entradas de los _TLB_ y líneas de caché.
 
+[NOTE]
 .POSIX Threads
-****
+====
 _POSIX Threads_ (o _Pthreads_) es el estándar POSIX para crear y gestionar hilos en entornos Unix. En Linux están implementadas en la librería _Native POSIX Thread Library_ (_NPTL), ya incluida en _GNU C Library_ (_Glibc_).
 
 La función +pthread_create+ sirve para crear hilos, recibe como argumento la referencia a la función inicial del nuevo hilo. Cuando dicha función acabe el hilo se destruirá, aunque se puede llamar a +pthread_exit+ en cualquier punto de la ejecución.
@@ -99,7 +100,7 @@ La función +pthread_create+ sirve para crear hilos, recibe como argumento la re
 Desde antes de la estandarización de POSIX Thread Linux ofrecía la llamada de sistema +clone+, que puede crear procesos de los dos tipos: los tradicionales como +fork+, o hilos similares a los creados por +pthread_create+ (que de hecho llama a +clone+).
 
 Las librerías POSIX Threads ofrecen también otras facilidades para sincronización de procesos, entre ellas los _mutex_ y _variables de condición_ que estudiaremos y usaremos en capítulos posteriores.
-****
+====
 
 
 ==== Hilos ligeros
@@ -133,6 +134,8 @@ Durante décadas los problemas de concurrencia estuvieron reservados a los desar
 El paralelismo es una forma de ejecutar programas concurrentes. Programación concurrente es una forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
 
 Los problemas de procesos concurrentes no son exclusividad del procesamiento paralelo, también ocurren con un único procesador.
+
+Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa de la correcta composición de componentes no deterministas, el segundo de la eficiencia asintótica de programas con comportamiento determinista.
 ====
 
 
@@ -160,16 +163,13 @@ image::multiprocessing.png[align="center"]
 
 La superposición no complica la resolución de los problemas de sincronización y concurrencia, la intercalación y ejecución no determinista son el origen real de sus riesgos. Los algoritmos de sincronización correctos con intercalación exclusiva también son correctos con superposición. Una solución de exclusión mutua es equivalente y funciona para ambos modos de ejecución: el paralelismo es solo un caso particular de la intercalación.
 
-****
-Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa de la correcta composición de componentes no deterministas, el segundo de la eficiencia asintótica de programas con comportamiento determinista.
-****
-
 
 ==== Los problemas de la intercalación
 Los programadores estamos acostumbrados al modelo de consistencia secuencial de los lenguajes de programación: las instrucciones se ejecutan en el orden especificado en el programa. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>>, veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
+[NOTE]
 .Consistencia secuencial
-****
+====
 Un programa está formado por una secuencia de operaciones atómicas ordenadas, por ejemplo +P+ por +p~0~, p~1~, p~2~+ y +Q+ por +q~0~, q~1~, q~2~+. Una ejecución válida de +P+ y +Q+ es:
 
 [quote]
@@ -192,7 +192,7 @@ Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ 
 --
 
 Si esas instrucciones acceden o modifican variables compartidas los resultados pueden ser diferentes, dependen de la secuencia –no determinista– de ejecución.
-****
+====
 
 La mayoría de lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de ejecución de instrucciones de un programa, con las variable +a+ y +b+ inicializadas a 0:
 
@@ -315,7 +315,8 @@ sys     0m0.044s
 
 Se observa que en todos _perdieron_ hasta más de la mitad de los operaciones. El error se debe a la intercalación de instrucciones, estas pueden ocurrir tanto en sistemas con un único procesador como con _SMP_. De hecho en Python no hay paralelismo, el intérprete –CPython– crea hilos nativos pero no hay ejecución en paralelo, el _Global Interpreter Lock_ (<<Sampson>>) obliga a _serializar_ cada una de las instrucciones que ejecuta la máquina virtual.
 
-****
+[NOTE]
+====
 Los errores no son resultado exclusivo de la ejecución en varios procesadores, ocurre lo mismo aunque se ejecute en un único procesador, por ejemplo en una Raspberry Pi 1:
 
 .Ejecución en un único procesador
@@ -326,7 +327,7 @@ real	0m0.353s
 user	0m0.340s
 sys     0m0.000s
 ----
-****
+====
 
 === Recapitulación
 

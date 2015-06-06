@@ -1,4 +1,4 @@
-== 10. Memoria transaccional
+== 10. Memoria transaccional... en proceso
 
 
 
@@ -13,10 +13,23 @@ Los problemas de locks:
 - Son difíciles de gestionar efectivamente, especialmente en grandes sistemas. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
 
 
+Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
+
+
+bloques:
 ----
 transaction {
     a = b * x
 }
+----
+
+Funciones
+----
+StartTX()
+x = LoadTX(ptr)
+x += 1
+StoreTX(ptr, x)
+CommitTx()
 ----
 
 
@@ -26,29 +39,56 @@ En paralelismo no hay mecanismos de abstracción y composición. Composición es
 
 === Transacciones en bases de datos
 
-Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible. En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
+Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible.
+
+La popularización de los multi cores ha hecho renacer el interés de estas técnicas. Aunque se parecen ambas tienen diferencias. Una involucra acceso a disco, la otra comunicación por red.
+
+
+
+
+
+
+En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
 
 Las operaciones se ejecutan en paralelo pero están limitadas las interacciones de forma que los resultados no varían si se ejecutaron una después de otra o al revés. Esta propiedad se llama _serialibilidad_. Simplifca el "mundo" del programador.
 
 Las bases de datos tienen las propiedades ACID por atomicidad, consistencia, aislamiento (_isolation_) y durabilidad.
 
-Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros.
+Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros. Cuando una transacción acaba correctamente se hace el _commit_, caso contrario la transacción de _aborta_.
 
 Consistencia significa que los datos pasan de un estado consistente a otro. Por ejemplo, se respetan los invariantes, por ejemplo que el resultado de una transferencia bancaria que generó un ingreso en una cuenta también está representado la salida, no puede aparece dinero de más en la suma de ambas.
 
 Durabilidad es que los datos queden permanentemente almacenados en un dispositivo persistente. ¿¿¿¿No se aplica a la memoria transaccional????
 
 
+=== Origenes
+
+La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993. Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones. Janice Stone _et al_ (<<Stone>>) propusieron operaciones atómicas _multi-palabra_ conocidas como _Oklahoma Update_
 
 
 
+Limitaciones de los bloques:
+Problema del deadlock como en barreras
 
+volatile bool flagA = false;
+volatile bool flagB = false;
+// Thread 1 // Thread 2
+atomic {
+    while (!flagA); // 1.1 flagA = true;
+    flagB = true; // 1.2 while (!flagB);
+}
 
+Single-Lock Atomicity (SLA) for Atomic Blocks
 
-
+Los problemas de llamadas de sistemas, E/S y transacciones externas
 
 Transacción son una serie de pasos ejecutados por un único proceso. Deben ser serializables, parecen ejecutarse secuencialmente en un orden de una a la vez.
 
+Singh developed a library of join patterns using atomic blocks in STM-Haskell [294].T
+
+With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
+
+<<Rajwar>>
 
 las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
 
@@ -98,6 +138,7 @@ Advanced Synchronization Facility. Recently, the Advanced Synchronization Facili
 IMPLICITLY TRANSACTIONAL HTM SYSTEMS
 - Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
 
+
 - Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
 
 
@@ -108,6 +149,25 @@ Intel microprocessors based on the Haswell microarchitecture
 
 ==== Hardware lock elision
 Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
+
+Si falla vuelve a ejecutar sin eludir el mutex.
+
+
+
+----
+movl    $1, %eax
+xchgl	mutex(%rip), %eax
+...
+movl    $0, %eax
+----
+
+----
+movl    $1, %eax
+xacquire xchgl  mutex(%rip), %eax
+...
+movl    $0, %eax
+xrelease movl   %eax, mutex(%rip)
+----
 
 
 ----
@@ -121,13 +181,19 @@ void unlock() {
 ----
 
 
-Restricted Transactional Memory: xbegin, xend, xabort, ¿xcheck?.
+=== Hardwate
 
+
+Restricted Transactional Memory: xbegin, xend, xabort, ¿xcheck?.
 
 IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
 
 IBM S390 tbegin, tend, tabort, etnd
 
+
+==== HTM
+
+Siempre debe proveer un camino alternativo.
 
 [source, c]
 ----
@@ -157,7 +223,18 @@ https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/x86-specific-memory-model-extension
 The i386 architecture supports additional memory ordering flags to mark lock critical sections for hardware lock elision. These must be specified in addition to an existing memory model to atomic intrinsics.
 
 
-
 __transaction_atomic {
     count++;
 }
+
+
+=== Tiemps
+
+.Tiempos de ejecución STM
+[caption=""]
+image::tm_software.png[align="center"]
+
+
+.Tiempos de ejecución HTM Intel
+[caption=""]
+image::tm_hardware.png[align="center"]

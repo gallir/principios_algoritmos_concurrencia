@@ -14,7 +14,7 @@ Ilustraciones: Juan Ramón Mora "JRMora"
 
 Foto: _Spaghetti Worlds_, Carl Milner (https://www.flickr.com/photos/62766743@N07/8757888849/[Flickr])
 
-// Corrección: Marilín Gonzalo Airut
+Corrección: Marilín Gonzalo y Juan Sosa
 
 Versión: {revnumber}, {localdate}
 

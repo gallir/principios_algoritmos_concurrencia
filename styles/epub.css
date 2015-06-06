@@ -78,8 +78,8 @@ div.sidebar ul, div.sidebar ol {
   margin-left: 1.6em;
 }
 
-div.sidebar .programlisting, .screen {
-    padding: 0.6em 0.4em !important;
+div.sidebar .programlisting, div.sidebar  .screen {
+    padding: 0.5em 0.4em !important;
 }
 
 div.sidebar, div.tip, div.note, div.warning, div.caution, div.important {
@@ -120,7 +120,7 @@ div.itemizedlist li, div.orderedlist li {
   margin: 0.7em 0 0.7em 0;
   border: 1px solid silver;
   background-color: #f4f4f4;
-  padding: 5px 5px;
+  padding: 0.5em 0.4em;
 }
 
 .literallayout {
@@ -276,6 +276,7 @@ div.bibliomixed p {
 
 div.footnote {
   font-size: 0.95em;
+  border:none;
 }
 
 div.variablelist dd {
@@ -322,7 +323,7 @@ div.chapter, div.footnotes {
 
 /* keep this body statement last */
 html body {
-  font-family: Bookerly, Literata, Georgia, Caecilia, Palatino, serif;
+  font-family: Literata, Georgia, Bookerly, Caecilia, Palatino, serif;
   font-size: medium;
   max-width: 36em;
   /* margin: 0 0.5em 0 0.5em; */

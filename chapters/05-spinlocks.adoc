@@ -81,7 +81,7 @@ Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<
 
 ==== Ceder el procesador
 
-Si un proceso debe continuar en la espera activa, no tiene sentido volver a comparar inmediatamente si la variable cambió de valor. El tiempo es muy breve, la probabilidad de que la sección crítica se haya liberado es muy baja. En un sistema con un único procesador es aún peor, se seguirá consumiendo CPU hasta que finalice el cuanto y no se dejará avanzar a otro proceso.
+Si un proceso debe continuar en la espera activa, no tiene sentido volver a comparar inmediatamente si la variable cambió de valor. El tiempo es muy breve, la probabilidad de que la sección crítica se haya liberado es muy baja. En un sistema con un único procesador es aún peor, se seguirá consumiendo CPU hasta que finalice el _cuanto_ y no se dejará avanzar a otro proceso.
 
 Lo más lógico es ceder el procesador para dar más tiempo a que el proceso en la sección crítica avance. Una opción es usar la llamada de sistema +sched_yield+, el núcleo quita de ejecución al proceso y lo mueve a la cola de listos.
 
