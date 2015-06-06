@@ -14,15 +14,16 @@ La _imagen de memoria_ es la memoria física ocupada por el código y datos del 
 
 Las _tablas de control de procesos_ son estructuras variadas y complejas con información de estado de cada proceso. Por ejemplo, los valores de los registros del procesador cuando el proceso fue interrumpido, tablas de páginas, de entrada-salida, información de propiedad, estadísticas de uso, etc.
 
-
-****
+[NOTE]
+.Creación de procesos en Unix
+====
 La forma estándar de crear proceso en Unix es la llamada de sistema +fork+:
 
 [quote]
 +pid = fork();+
 
 Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó. El nuevo proceso es _hijo_ del original y ambos continúan su ejecución independientemente. La imagen de memoria y las tablas de control del hijo son copiasfootnote:[Se usa la técnica _copy-on-write_ (_COW_) para evitar copiar toda la memoria, se copia bajo demanda solo aquellas páginas modificadas por alguno de los procesos. Se consigue más eficiencia y ahorro de memoria RAM.] de las de padre. La única forma de diferenciarlos es por el valor de retorno de la llamada, en el ejemplo almacenado en la variable +pid+. Si +pid+ vale cero se trata del proceso _hijo_, si es mayor que cero es el proceso _padre_.
-****
+====
 
 
 === Estados de procesos

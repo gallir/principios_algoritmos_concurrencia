@@ -60,9 +60,10 @@ Java agrega automáticamente las operaciones _lock_ y _unlock_ sobre el _mutex_ 
 
 En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. La especificación +synchronized+ especifica que el hilo debe obtener el _lock_ para ejecutar el método. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_.
 
-****
+[NOTE]
+====
 Una clase cuyos métodos públicos están todos declarados como _synchronized_ se denomina _monitor Java_. Aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
-****
+====
 
 Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un _mutex_ global que resguarda a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Cada instancia ejecuta sus métodos independientemente de las demás. Esto significa, por ejemplo, que no hay exclusión mutua si varias instancias modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
 
@@ -652,8 +653,9 @@ Puede sorprender que todos los tiempos de Java sean considerablemente inferiores
 
 Los demás tiempos en Java son muy similares, no sorprende, ya que comparten código e infraestructura de la máquina virtual. La clase +Lock+ es la que mejor resultados obtiene porque está optimizada para exclusión mutua. Pero los tres mecanismos son muy similares en eficiencia.
 
+[NOTE]
 .Implementación de monitor nativo en Java
-****
+====
 La eficiencia de la exclusión mutua de los monitores en Java se debe a la implementación sofisticada de la máquina virtual con técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librerías de hilos estándares de cada sistema operativo). La entrada a la sección crítica de métodos o bloques _synchronized_ está gestionado por tres colas diferentes, un hilo puede estar solo en una de ellas:
 
 . _cxq_ (cola de competencia _contention queue_): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) entran primero a esta cola libre de bloqueos usando la instrucción atómica _CAS_, el _spinlock_ está optimizado con <<spin_then_block, _spin/park_>>. La cola tiene varios productores –los hilos que desean entrar al monitor– y un único consumidor que los mueve a la siguiente cola.
@@ -663,7 +665,7 @@ La eficiencia de la exclusión mutua de los monitores en Java se debe a la imple
 . _OnDeck_: Para cada monitor solo puede haber un proceso en _OnDeck_, es el que puede entrar al monitor.
 
 Los hilos bloqueados en el +wait+ del monitor se añaden a la cola _WaitSet_, el +notify+ o +notifyAll+ simplemente transfieren el o los hilos de esta cola a _cxq_ o _EntryList_.
-****
+====
 
 
 ==== Barreras con semáforos vs. monitor
@@ -683,7 +685,7 @@ La mayor parte de la sincronización se hace dentro de una sección crítica, co
 
 Este ejemplo muestra otra vez las ventajas de los monitores. Facilitan el diseño de algoritmos más sencillos y menos propenso a errores y, con el uso apropiado, son más eficientes.
 
-[NOTE]
+[TIP]
 ====
 En algunos casos merece la pena diseñar e implementar los algoritmos con el _patrón_ de monitores, aún en lenguajes que no tienen construcciones sintácticas o soporte nativo de monitores.
 ====

@@ -35,12 +35,13 @@ Enviar el contenido de las variables _x_ e _y_ al proceso _DIV_:
 
 El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para la empresa británica INMOS, diseñadora de los procesadores _Transputer_. Con el tiempo se desarrolló una rama de lenguajes siguiendo este modelo: _Erlang_ (Armstrong, Virding y Williams, 1986), _Newsqueak_ (Rob Pike, 1988), _Concurrent ML_ (John Reppy, 1993), _Alef_ (Phil Winterbottom, 1995) y _Limbo_ (Dorward, Pike y Winterbottom, 1996). Erlang es el más exitoso de todos ellos, sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje. Si no es por una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
+[NOTE]
 .Erlang
-****
+====
 Erlang fue diseñado en Ericcson para sus sistemas concurrentes de alta disponibilidad. No comparte estado entre los diferentes hilos de ejecución. Los canales, como en _CSP_, son la única forma de comunicación y sincronización.
 
 La comunicación es asíncrona, los mensajes se depositan en _buzones_ desde donde son recogidos por la especificación de patrones en el receptor (similar a los _guard commands_ de Dijkstra, también parte de _CSP_). Por todas estas características se dice que Erlang sigue el modelo de _actores_ (<<Agha>>).
-****
+====
 
 === Canales en Go
 En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales. Sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.

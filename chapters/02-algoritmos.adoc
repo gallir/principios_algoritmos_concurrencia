@@ -65,9 +65,10 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 === Algoritmos de exclusión mutua
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para _N_ procesos, el _algoritmo de la panadería_ de Leslie Lamport (<<Lamport>>).
 
-****
+[NOTE]
+====
 Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, también porque funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
-****
+====
 
 El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
 
@@ -83,12 +84,13 @@ Este conocimiento no tiene un interés puramente académico. Es útil para apren
 
 En todos los algoritmos y técnicas que analizamos asumimos que los programas tienen acceso a variables en memoria compartida, es decir, variables cuyos valores serán accesibles directa e inmediatamente por los demás procesos. Por ello se denominan _algoritmos de memoria compartida_.
 
+[NOTE]
 .Algoritmos distribuidos
-****
+====
 La alternativa son los algoritmos para procesos que no pueden compartir memoria, son los _algoritmos distribuidos_. Los sistemas distribuidos también deben resolver problemas de concurrencia, sincronización y consenso pero sus técnicas son más complejas. El intercambio de datos debe hacerse exclusivamente por intercambios de mensajes sujetos a errores por pérdida, ordenamiento, _timeouts_, modificaciones, etc.
 
 El estudio de algoritmos distribuidos no es el objetivo de este libro, sin embargo, al final del capítulo de <<channels, canales>> hay una breve introducción.
-****
+====
 
 ==== Convenciones de programación
 
@@ -126,9 +128,10 @@ Encontraremos los algoritmos de exclusión mutua en varios intentos con compleji
 
 Cada uno de los dos procesos está identificado por 0 y 1. Dado que el código de sincronización es idéntico analizaremos la ejecución de solo uno de ellos, la del proceso 0, o _P0_. Desde la perspectiva de _P0_ el _otro_ proceso es el 1 (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores 0 y 1 intercambiados.
 
-****
+[NOTE]
+====
 Se acostumbra a usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención. Como ahora solo tratamos con dos procesos usaremos 0 y 1 y nos centraremos desde el punto de vista del proceso _P0_.
-****
+====
 
 ==== Primer intento
 La idea base es que el valor de una variable entera, +turn+, indica qué proceso puede entrar a la sección crítica. Esta variable es atómicafootnote:[Más adelante estudiaremos las propiedades de las variables atómicas, por ahora es suficiente indicar que en este tipo de variables el valor leído es siempre el último escrito.] y puede tomar solo los valores 0 y 1 que indican a qué proceso le corresponde el turno. Inicializamos +turn+ con cero pero puede tomar cualquiera de los dos valores.
@@ -150,10 +153,11 @@ critical_section()
 turno = 1
 ----
 
+[NOTE]
 .Espera activa
-****
+====
 Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable, se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU, pero a veces inevitable cuando no se pueden usar otras primitivas de sincronización. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
-****
+====
 
 Cuando la variable +turn+ sea 0 _P0_ podrá entrar a su sección crítica. Al salir de ella ejecutará el posprotocolo que consiste solo en dar el turno a _P1_. El problema del algoritmo es obvio, pero por ser la primera vez lo analizaremos en detalle comprobando el cumplimiento de cada requisito.
 
@@ -270,11 +274,12 @@ states[0] = False
 Si ambos procesos entran simultáneamente al bucle de entrada, en algún momento –por ejemplo– _P1_ pondrá a falso +states[1]+ y se interrumpirá y _P0_ podrá entrar a su sección crítica. _P1_ cambiará +states[1]+ otra vez a verdadero y volverá a quedar esperando en el bucle, pero _P0_ ya estará en la sección crítica. Cuando _P0_ salga pondrá su estado a falso y _P1_ podrá entrar.
 
 
-****
+[NOTE]
+====
 Es lógico pensar que entre las instrucciones de asignación a `states[0]` se puede hacer algo para aumentar la probabilidad de que uno de los procesos pueda entrar, por ejemplo, bloqueando al proceso unos pocos milisegundos con un +sleep+ o cediendo el procesadorfootnote:[Estudiamos la cesión de procesador y _exponential backoff_ <<exponential_backoff, más adelante>>.]. Una técnica así puede servir para mejorar el rendimiento si no hubiese soluciones mejores –las hay–, pero formalmente son equivalentes.
 
 Además, dado que son muy pocas las instrucciones atómicas del procesador involucradas –unas diez– la probabilidad de que uno de ellos se interrumpa entre ambas asignaciones es bastante elevada. La velocidad de los procesadores haría que ocurriese en pocos nanosegundos.
-****
+====
 
 Analicemos si se cumplen los requisitos:
 
@@ -496,9 +501,10 @@ number[i] = 0
 <3> Se indica que ya acabó la selección.
 <4> Si el proceso _j_ está seleccionando se le espera porque podría corresponderle el turno.
 
-****
+[NOTE]
+====
 Se puede consultar y probar el <<counter_bakery, código en C>> de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio del <<barriers, siguiente capítulo>>.
-****
+====
 
 ////
 Separador para que no lo incluya en la lista anterior :-O

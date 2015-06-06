@@ -87,7 +87,7 @@ div.sidebar, div.tip, div.note, div.warning, div.caution, div.important {
   /*border-radius: 5px;*/
   /*font-size: 90%;*/
   padding: 0.5em 0.5em !important;
-  page-break-inside: avoid;
+  /*page-break-inside: avoid;*/
 }
 
 div.tip h3, div.note h3, div.warning h3, div.caution h3, div.important h3, div.sidebar p.title {
@@ -204,6 +204,7 @@ div.author h3 {
 
 p {
   margin: 4px 0 6px 0;
+  text-indent: 0;
 }
 
 p + p {

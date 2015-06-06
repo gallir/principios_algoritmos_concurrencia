@@ -51,8 +51,9 @@ Como observamos en el algoritmo de la panadería, el número de registros necesa
 Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema operativo de tener varios procesos activos en memoria e intercalar su ejecución.] se diseñaron instrucciones atómicas que permitieron implementar algoritmos más seguros y eficientes. Estas primitivas pueden ser expresadas como abstracciones, denominadas genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ pueden implementarse como construcciones de lenguajes o instrucciones de procesador, sus propiedades son similares.
 
 [[consensus]]
+[NOTE]
 .Registros RMW no triviales
-****
+====
 Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
 
 _CAS_ es la más potente de la lista. <<Herlihy91, Herlihy>> demostró que pertenece a la clase de _consenso N_ (o _infinito_). En palabras del autor (<<Herlihy12>>):
@@ -61,7 +62,7 @@ _CAS_ es la más potente de la lista. <<Herlihy91, Herlihy>> demostró que perte
 _CAS_ es a la computación asíncrona el equivalente de las máquinas de Turing de la computación secuencial.
 
 Afortunadamente, todos los procesadores implementan _CAS_ o una equivalente en capacidad de consenso: _load-linked/store-conditional_ (o _LL/SC_, disponible en las arquitecturas PowerPC, MIPS, Alpha y ARM).
-****
+====
 
 Hay varios tipos de instrucciones que implementan registros _RMW_, las disponibles en la mayoría de procesadores son:
 
@@ -610,8 +611,9 @@ Simular _LL/SC_ con _CAS_ o _TAS_ es más complicado –si no imposible–, por 
 
 Los _spinlocks_ basados en instrucciones por hardware son fundamentales, se requieren algoritmos más eficientes y construcciones más sofisticadas, como lectores-escritores. Son los temas del siguiente capítulo.
 
+[NOTE]
 .Por las dudas
-****
+====
 En todos los ejemplos de exclusión mutua, la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una operación aritmética tan simple también sufre los problemas de concurrencia. No obstante, espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para incrementar una variable compartida, se puede hacer de forma directa y óptima con _get&add_ o _add&get_.
 
 Por ejemplo en  C:
@@ -631,4 +633,4 @@ for i := 0; i < max; i++ {
     c = atomic.AddInt32(&counter, 1)
 }
 ----
-****
+====

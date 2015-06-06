@@ -146,7 +146,9 @@ mutex.unlock()
 ...
 ----
 
-****
+[NOTE]
+._Mutex_ de POSIX Threads
+====
 En C se pueden usar los _mutex_ de las librerías POSIX Threads. Las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código>>).
 
 En <<sem_lock_java, Java se puede usar>> la clase +ReentrantLock+ de +java.util.concurrent.locks+.
@@ -158,14 +160,15 @@ for i in range(MAX_COUNT/THREADS):
     with mutex:
         counter += 1
 ----
-****
+====
 
 ==== Semáforos fuertes y débiles
 Cada semáforo tiene asociado una cola de procesos bloqueados y la política de gestión de esta cola es fundamental. Si la cola es FIFO, aseguran espera limitada y equidad; estos semáforos se denominan _semáforos fuertes_. Por el contrario, se denominan _semáforos débiles_ (_weak semaphores_) si los procesos se seleccionan aleatoriamente.
 
 
+[NOTE]
 .Semáforos en Unix y Linux
-****
+====
 Semáforos System V:: Este sistema, parte del módulo IPC (_Inter Process Communication_) del UNIX System V, fue el estándar de facto durante muchos años y siguen disponibles en las últimas versiones de Linux y Solaris. Tiene una interfaz (_API_) poco elegante, ineficiente e innecesariamente compleja para los usos más habituales. Se usa cada vez menos desde la definición del estándar _POSIX Semaphores_ de 2001.
 +
 Los semáforos se obtienen con la función +semget+, que retorna un descriptor de un array de semáforos (puede ser de tamaño uno). Se inicializan y destruyen con +semctl+. Las operaciones _wait_ y _signal_ se hacen con +semop+. Ambas pueden incrementar o decrementar el valor de cada semáforo del array con valores a discreción, no solo 1 o -1; y hay que especificar siempre un array de valores y el índice al que se aplica cada operación. Esta es la complejidad innecesaria para realizar operaciones simples, pero tiene características interesantes:
@@ -179,7 +182,7 @@ Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamo
 Se pueden crear de dos tipos, _sin nombre_ (_unnamed_) y _con nombre_ (_named_). El primero es más simple de usar cuando los procesos comparten la memoria, solo hay que declarar una variable del tipo +sem_t+ y luego inicializar el valor del semáforo con +sem_init+. Cuando se necesitan para procesos que no comparten memoria, se pueden crear y/o abrir con la función +sem_open+ usando un nombre similar a ficheros.
 
 Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización, entre ellos _mutex_ y variables de condición (las usamos en el capítulo <<monitors>>).
-****
+====
 
 === Sincronización de orden de ejecución
 
@@ -277,9 +280,10 @@ def barrier(n):
 <5> Si llegaron todos, comienza nuevamente el ciclo de _llegadas_.
 
 
-****
+[NOTE]
+====
 Algunos lenguajes implementan barreras similares en sus librerías de concurrencia. En Java y Ruby la clase +CyclicBarrier+, en Go el tipo +WaitGroup+ de +sync+, en Python +threading.Event+ puede adaptarse fácilmente para el mismo propósito. Hay una propuesta de estandarización de la misma construcción para ISO C++ (<<Mackintosh>>) juntamente con _Latches_ (mecanismo que bloquea a los procesos hasta que su contador se hace cero).
-****
+====
 
 
 ==== Productores-consumidores
@@ -293,7 +297,7 @@ Consumidores:: Recibe y consume los elementos transmitidos desde los productores
 
 Hay dos tipos de productores-consumidores:
 
-Sincrónicos:: Cuando se produce un elemento, este debe ser consumido para que el  productor pueda continuar su ejecución.
+Síncronos:: Cuando se produce un elemento, este debe ser consumido para que el  productor pueda continuar su ejecución.
 
 Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido. Los productores agregan los elementos a una cola y los consumidores obtienen el primer elemento de esta.
 
@@ -409,9 +413,10 @@ while True:
 ----
 <1> Incrementa el semáforo para que un productor pueda añadir otro elemento.
 
-****
+[NOTE]
+====
 El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles. La mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo, la clase +ArrayBlockingQueue+ en Java, +Queue+ en Python (+queue+ partir de Python 3) y Ruby. Los mensajes nativos de Go son productores-consumidores que pueden ser síncronos o asíncronos (los estudiamos en el capítulo <<channels>>).
-****
+====
 
 ===== Semáforos partidos
 La técnica de sincronización anterior con dos semáforos se denomina _semáforos partidos_ (_split semaphores_). Se llaman así cuando se usan dos o más semáforos cuya suma es una constante, en este caso el invariante es:
@@ -520,9 +525,10 @@ def writer_unlock():
 
 La mayor ineficiencia de este algoritmo está en la entrada de lectores, se hacen dos _wait_ sobre dos semáforos, +entry+ y +mx+. En 2013, Vlad Popov y Oleg Mazonka propusieron un algoritmo más eficiente (<<Popov>>), los lectores solo hacen _wait_ sobre un semáforo (el <<rw_lock_fair_faster_py, código completo en Python>>).
 
-****
+[NOTE]
+====
 POSIX Threads ofrece lectores-escritores con las funciones +pthread_rwlock_*+, en Java la clase +ReentrantReadWriteLock+, en Go el tipo +RWMutex+ del paquete +sync+.
-****
+====
 
 [[dining_philosophers]]
 === El problema de los filósofos cenando
@@ -644,8 +650,9 @@ get(b)          get(a)
 
 Ambos procesos quedarán esperando a que el otro libere uno de los recursos, pero el otro no lo hará porque tampoco puede avanzar. No hay _progreso_, se produce un bucle en el _grafo de asignación de recursos_. Es lo mismo que puede pasar con el algoritmo anterior de los filósofos, se dice que hay una _espera circular_.
 
+[IMPORTANT]
 .Condiciones necesarias para interbloqueo
-****
+====
 Para que se puedan producir interbloqueos deben cumplirse las siguientes condiciones necesarias:
 
 Exclusión mutua:: Los recursos solo pueden asignarse a un proceso.
@@ -655,7 +662,7 @@ Retención y espera (_hold and wait_):: Un proceso mantiene los recursos ya asig
 No apropiación (_no preemption_):: No se puede quitar un recurso que está asignado a un proceso, debe ser este el que lo libere.
 
 Espera circular (_circular wait_):: Se produce un bucle, un ciclo cerrado de procesos esperando por recursos asignados a otros. Esta condición es derivada de la segunda, sin _retención y espera_ no se puede producir una _espera circular_ (pero la retención y espera no implica que sí se produce).
-****
+====
 
 Para prevenir interbloqueos es suficiente que el algoritmo evite que se presente alguna de las condiciones.
 
@@ -763,8 +770,9 @@ Dado que no se cumplen dos de las condiciones necesarias, no pueden producirse _
 [[priority_inheritance]]
 === Inversión de prioridades
 
+[NOTE]
 .Un bug marciano
-****
+====
 El día 4 de julio de 1997 el _Mars Pathfinder_ aterrizó en Marte, se desplegó la nave que sirvió para el viaje y aterrizaje –el _SpaceCraft_– y a las pocas horas empezó a enviar datos y fotos en alta calidad. Unos días después se detectaron reinicios continuos del ordenador al intentar enviar a la tierra datos meteorológicos y científicos. Los reinicios eran ordenados por la tarea _bc_sched_, responsable de verificar que las demás tareas se ejecutan correctamente.
 
 El procesador era un Power1/RS6000 de IBM, conectado a un bus VME con interfaces para la cámara, la radio y un bus 1553. El bus 1553 tenía dos partes, una usada para navegación espacial (aceleradores, válvulas, sensor solar y escáner de estrellas) y otra para el aterrizaje (acelerómetro y radar de altitud) y los instrumentos científicos: el ASI/MET. El bus 1553, heredado de la sonda Cassini, tenía un modo de funcionamiento síncrono simple: el software controlador y toma de datos se planificaban exactamente cada 0.125 segundos (8 Hz).
@@ -785,7 +793,7 @@ El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxW
 Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_. El problema era siempre el mismo: _bc_dist_ no completaba su ejecución en el tiempo previsto. Después de 18 horas de simulaciones descubrieron la causa: por la cantidad inesperada de datos que se recogía, el sistema estaba más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a un _mutex_ dentro de las funciones del +pipe+, pero no alcanzaba a salir porque el núcleo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_, de mayor prioridad, también hacía un _wait_ al mismo _mutex_ pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
 
 Así, _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_.
-****
+====
 
 La inversión de prioridades es un problema que se puede presentar en todos los mecanismos de exclusión mutua en sistemas de multiprogramación con prioridades. Supongamos tres procesos con diferentes prioridades, _H_ de mayor prioridad, _I_ de prioridad intermedia y _L_ de menor prioridad.
 
@@ -815,11 +823,13 @@ Friends don't let friends use priority inheritance.
 Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es de programas erróneos, no una cuestión que deba resolver el núcleo. En 2006 Ingo Molnar consiguió introducir soporte para herencia de prioridades en la interfaz FUTEXfootnote:[La estudiamos en el capítulo <<futex>>.] (<<Molnar>>), usada para implementar los semáforos POSIX y los mecanismos de sincronización de POSIX Threads, las GLibc fueron adaptadas rápidamentefootnote:[El atributo  +PTHREAD_PRIO_INHERIT+ en la función +pthread_mutexattr_setprotocol+, POSIX Threads también soporta _priority ceiling_ con +PTHREAD_PRIO_PROTECT+ y la función +pthread_mutexattr_setprioceiling+.].
 
 
-****
+[NOTE]
+.El _parche_
+====
 VxWorks permitía configurar en una variable global si se habilitaba o no la _herencia de prioridades_ en los semáforos. Los ingenieros de la NASA habían preferido no arriesgar y la dejaron deshabilitada.
 
 Después de estudiar y hacer simulaciones en la Tierra para asegurarse de que los efectos colaterales no eran negativos, se preparó el _parche_ y se envió a la nave en Marte. El problema se resolvió y la misión fue un éxito (<<Reeves>>).
-****
+====
 
 === Recapitulación
 

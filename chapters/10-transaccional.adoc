@@ -14,14 +14,9 @@ Los problemas de locks:
 
 
 Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
+En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
 
 
-bloques:
-----
-transaction {
-    a = b * x
-}
-----
 
 Funciones
 ----
@@ -32,8 +27,27 @@ StoreTX(ptr, x)
 CommitTx()
 ----
 
+bloques:
+----
+transaction {
+    a = b * x
+}
+----
 
-En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
+La palabra clave transaction es similar a synchronized en Java, pero mientras synchronized adquiere un _lock_ específico, atomic lo es respecto a todos los demás bloques atómicos.
+
+Como las transacciones permiten actualizaciones a diferentes ubicaciones eliminan la necesidad de comparaciones múltiples en los spinlocks.
+
+Las transacciones son ejecutadas especulativamente, hace cambios tentativos a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta. Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
+
+
+Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
+
+atomic {
+    x = q0.deq();
+    q1.enq(x);
+}
+
 
 
 
@@ -123,6 +137,14 @@ TM_EXIT_THREAD;
         }
     }
 ----
+
+
+Transactional Execution Facility included with the
+   IBM zEnterprise zEC12 processor has been added.
+The libitm library has
+   been modified to add a HTM fastpath that automatically uses POWER's
+   HTM hardware instructions when it is executing on a HTM enabled
+   processor.
 
 
 === Hardware
