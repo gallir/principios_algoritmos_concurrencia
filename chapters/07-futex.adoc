@@ -28,7 +28,7 @@ Las librerías _Native POSIX Thread Libraries_ (_NPTL_, implementan el estándar
 
 Aunque no impone restricciones, la interfaz FUTEX no fue diseñada para ser usada por programadores de aplicaciones, sino por los de librerías y máquinas virtuales. Requiere instrucciones de hardware y ni siquiera exporta una función, hay que recurrir a la función de bajo nivel +syscall+.
 
-La base de la interfaz (<<Franke>>, <<Hart>>, <<Drepper>>, <<LockLess1>>) es una variable entera llamada _futex_. Los procesos deben especificar la dirección de dicha variable, puede ser cualquiera válida y accesible, no hay requisitos especiales. Su dirección física es usada por el núcleo como clave para la tabla de _hashing_ de las colas de bloqueados en cada _futex_.
+La base de la interfaz (<<Franke>>, <<Hart>>, <<Drepper>>, <<LockLess1>>) es una variable entera llamada _futex_. Los procesos deben especificar la dirección de dicha variable, puede ser cualquiera que sea válida y accesible, no hay requisitos especiales. Su dirección física es usada por el núcleo como clave para la tabla de _hashing_ de las colas de bloqueados en cada _futex_.
 
 Los programas pueden consultar y modificar la variable _futex_ –es una variable entera _normal_– para tomar decisiones de sincronización. Por ejemplo, para usarla con cualquiera de las primitivas de hardware explicadas en <<hardware>>. El núcleo también usa el valor de _futex_, lo compara con un argumento que recibe en la operación de bloqueo (idea que recuerda a las instrucciones _TAS_ y _CAS_).
 
@@ -41,7 +41,7 @@ La interacción entre el proceso de usuario y el núcleo se lleva a cabo mediant
 
     syscall(__NR_futex, ptr, FUTEX_OP, val1, timeout, *ptr2, val3);
 
-Donde `__NR_futex` es el identificador de llamada de sistema de FUTEXfootnote:[Definido en +/usr/include/asm-generic/unistd.h+.], +ptr+ es la dirección de la variable _futex_, +_FUTEX_OP_+ es una de las operaciones explicados a continuación, los siguientes son parámetros adicionales que dependen de la operación indicada en +FUTEX_OP+.
+Donde `__NR_futex` es el identificador de llamada de sistema de FUTEXfootnote:[Definido en +/usr/include/asm-generic/unistd.h+.], +ptr+ es la dirección de la variable _futex_, +_FUTEX_OP_+ es una de las operaciones explicadas a continuación, los siguientes son parámetros adicionales que dependen de la operación indicada en +FUTEX_OP+.
 
 
 ==== Operaciones
@@ -51,7 +51,7 @@ Las operaciones que se pueden especificar en +syscall+ son las siguientes:
 
 +FUTEX_WAKE+:: Desbloquea a uno o más procesos según lo indicado por +val1+. Retorna el número de procesos desbloqueados.
 
-+FUTEX_CMP_REQUEUE+:: Es una composición de las operación +FUTEX_WAKE+, footnote:[Reemplaza a la obsoleta +FUTEX_REQUEUE+ que no hacía la comparación del valor del _futex_ y provocaba condiciones de carrera.], permite despertar a un número de procesos y además evitar el efecto _tormenta_. Los procesos que no fueron desbloqueados son movidos a otra cola especificado por la dirección de +ptr2+. Esos procesos pueden ser tratados de forma normal como procesos bloqueados en otro _futex_. Se usa, por ejemplo, para la implementación de variables de condición (usadas en el capítulo <<monitors>>).
++FUTEX_CMP_REQUEUE+:: Es una composición de las operación +FUTEX_WAKE+ footnote:[Reemplaza a la obsoleta +FUTEX_REQUEUE+ que no hacía la comparación del valor del _futex_ y provocaba condiciones de carrera.], permite despertar a un número de procesos y además evitar el efecto _tormenta_. Los procesos que no fueron desbloqueados son movidos a otra cola especificada por la dirección de +ptr2+. Esos procesos pueden ser tratados de forma normal como procesos bloqueados en otro _futex_. Se usa, por ejemplo, para la implementación de variables de condición (usadas en el capítulo <<monitors>>).
 
 +FUTEX_WAIT_BITSET+, +FUTEX_WAKE_BITSET+:: Son equivalentes a +FUTEX_WAIT+ y +FUTEX_WAKE+, pero permiten especificar con una máscara hasta 32 colas diferentes para el mismo _futex_.
 
@@ -80,7 +80,7 @@ La implementación de semáforos generales con FUTEX es trivial (<<futex_semapho
 
 3. Al ejecutar el _signal_ se verifica el valor de retorno para asegurar que se pudo despertar a un proceso.
 
-Con estas precauciones es posible evitar el bucle de verificación de que el proceso pudo ser bloqueado por +FUTEX_WAIT+.footnote:[Hay que tener en cuenta que +futex_wait+ es una llamada de sistema que antes de bloquear al proceso verifica que el valor del _futex_ sea igual a +val1+.] Para que esta comparación nunca _falle_ se usa una campo adicional (+futex+) que no se modifica (i.e. es _inmutable_).
+Con estas precauciones es posible evitar el bucle de verificación de que el proceso pudo ser bloqueado por +FUTEX_WAIT+.footnote:[Hay que tener en cuenta que +futex_wait+ es una llamada de sistema que antes de bloquear al proceso verifica que el valor del _futex_ sea igual a +val1+.] Para que esta comparación nunca _falle_ se usa un campo adicional (+futex+) que no se modifica (i.e. es _inmutable_).
 
 La estructura de datos tiene dos campos, +value+ para almacenar el valor del semáforo y +futex+ como variable _futex_ inmutable. La definición (en C) es la siguiente:
 
@@ -147,7 +147,7 @@ El campo +locked+ se usa como variable binaria, si vale 0 no hay procesos en la 
 
 ==== _lock_
 
-Si después del _swap_ el campo +locked+ es cero significa que no hay competencia, podrá entrar directamente sin intervención del núcleo. En caso contrario, se incrementa _tentativamente_ el contador de procesos en espera y se llama a +futex_wait+, que comparará si valor de +locked+ sigue siendo 1. Si no es así, el proceso que estaba en la sección crítica ya salió, por lo que se debe volver al principio del bucle después de restablecer el valor de +waiters+.
+Si después del _swap_ el campo +locked+ es cero significa que no hay competencia, podrá entrar directamente sin intervención del núcleo. En caso contrario, se incrementa _tentativamente_ el contador de procesos en espera y se llama a +futex_wait+, que comparará si el valor de +locked+ sigue siendo 1. Si no es así, el proceso que estaba en la sección crítica ya salió, por lo que se debe volver al principio del bucle después de restablecer el valor de +waiters+.
 
 Si el proceso fue bloqueado en +futex_wait+, cuando se despierte decrementará +waiters+ y volverá al principio del bucle para verificar que efectivamente puede entrar.
 
@@ -262,7 +262,7 @@ def lock(futex):
         turn = futex.turn
 ----
 <1> Cada proceso selecciona un número creciente único.
-<2> Espera que sea su turno, en caso contrario se bloquea.
+<2> Espera a que sea su turno, en caso contrario se bloquea.
 
 En _unlock_ es imposible despertar únicamente al proceso al que le toca el siguiente turno. Hay que despertar a todos y que cada uno verifique si le corresponde continuar (ya lo hacen en el _lock_, están dentro del bucle mientras +number != turn+).
 
@@ -409,7 +409,7 @@ struct barrier {
 };
 ----
 
-- +lock+: Se usa como _mutex_ para asegurar exclusión mutua interna. Se puede usar un entero o un puntero a cualquier estructura, es la variable _futex_ para las funciones +lock+ y +unlock+ (reusadas del código de <<drepper_mutex>>).
+- +lock+: Se usa como _mutex_ para asegurar exclusión mutua interna. Se puede usar un entero o un puntero a cualquier estructura, es la variable _futex_ para las funciones +lock+ y +unlock+ (igual que en el código de <<drepper_mutex>>).
 
 - +phase+: Indica la fase actual, comenzará desde cero y se incrementa con cada fase.
 
