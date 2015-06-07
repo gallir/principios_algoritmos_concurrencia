@@ -3,7 +3,7 @@
 
 image::jrmora/04-hardware.jpg[align="center"]
 
-Hemos visto algoritmos que solucionan la exclusión mutua sin soporte especial de hardware, solo requieren _registros atómicos_ (las variables enteras compartidas). Son _spinlocks_ pero sin uso práctico, son muy ineficientes.
+Hemos visto algoritmos que solucionan la exclusión mutua sin soporte especial de hardware, solo requieren _registros atómicos_ (las variables enteras compartidas)footnote:[Salvo el algoritmo de la panadería, este no requiere registros que aseguren atomicidad de lecturas y escrituras. Aunque no pueda asegurar espera limitada también asegura exclusión mutua con registros que retornan valores erróneos, como los registros _seguros_ que se estudian más adelante (<<Lamport15>>).]. Son _spinlocks_ pero sin uso práctico, son muy ineficientes.
 
 Lo son, en primer lugar, por los requisitos de almacenamiento. El número de registros necesarios –tamaño de arrays– es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. En sistemas _SMP_ esto implica una sobrecarga importante, el sistema de coherencia de caché debe mantener la consistencia de zonas extensas de memoria.
 
@@ -200,7 +200,7 @@ Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<g
 [[em_cas]]
 ==== _Compare&Swap_
 
-_CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
+Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XA para solucionar las limitaciones de _test&set_ en operaciones complejas como actualización de colas (<<Gifford>>). Actualmente _CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
 
 Registro (_register_):: La dirección de memoria cuyo valor se comparará y a la que se asignará un nuevo valor, si corresponde.
 

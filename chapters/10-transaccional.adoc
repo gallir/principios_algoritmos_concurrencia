@@ -1,37 +1,86 @@
-== 10. Memoria transaccional... en proceso
+== 10. Memoria transaccional
+
+Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. El objetivo es simplificar la programación y la eficiencia de programas concurrentes aumentando el paralelismo. Para acceder a registros compartidos los programadores usan el concepto de _transacción_ conocida desde hace tiempo en las bases de de datos ACID.
+
+Desde el punto de vista del programador las transacciones se ejecutan como secuencialmente y de forma aislada. Las complejidades del control de concurrencia quedan ocultos al programador.
+
+
+=== Los problemas de secciones críticas y _locks_
+
+Las transacciones están muy relacionadas con la exclusión mutua. Vimos dos tipos de mecanismos para resolverla, los _spinlocks_ con primtivas atómicas y las soluciones bloqueantes. Ambos tienen problemas de eficiencia y de programación.
+
+- La exclusión mutua reduce en nivel de paralelismo, las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce al capacidad de ejecutar hilos en paralelo.
+
+- Para evitar los cuellos de botella de las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atomicas del procesador. Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se deben trabajar con registros mayores o con un mayor número de ellos. Hay algunos temas académicamente todavia no resueltos eficientemente, como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos.
+
+- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso es interrumpido por haber acabado su _cuanto_. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no puedan entrar a la sección crítica. El efecto convoy cuando se acumulan los procesos en espera se acumulan, aún después que el proceso interrumpido haya liberado el _lock_ toma un tiempo vaciar la cola de listos.
+
+- Los interbloqueos son difíciles de evitar si se manipulan muchos objetos. Aunque hay técnicas y reglas conocidas (<<deadlocks>>), con el incremento del número y tamaño de los programas concurrentes el modelo ya no es sustentable (<<Herlihy12>>).
+
+- Los algoritmos de exclusión mutua y basados en primitivas no son _componibles_. Los  algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas, pero no se pueden componer. En spinlocks <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como una  exclusión mutua adicional pero crea otro cuelo de botella.
+
+- Son difíciles de gestionar efectivamente, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades muy pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de trabajar a granularidades más detalladas, no se puede saber de antemano qué ramas del árbol o qué partes de la tabla se modificarán. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
+
+El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. El los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
+
+Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware. En el software también se está avanzando muy rápido. Se está acabando con la definción de la definición del estándar para C y C++ de memoria transacciona. El compilador Gcc incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8. Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18. Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
+
+
+=== Transacciones en bases de datos
+
+Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible.
+
+La popularización de los multi cores ha hecho renacer el interés de estas técnicas. Aunque se parecen ambas tienen diferencias. Una involucra acceso a disco, la otra comunicación por red.
+
+
+En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
+
+Las operaciones se ejecutan en paralelo pero están limitadas las interacciones de forma que los resultados no varían si se ejecutaron una después de otra. Esta propiedad se llama _secuencialidad_. Simplifca el "mundo" del programador.
+
+Las bases de datos tienen las propiedades ACID por atomicidad, consistencia, aislamiento (_isolation_) y durabilidad.
+
+Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros. Cuando una transacción acaba correctamente se hace el _commit_, caso contrario la transacción de _aborta_.
+
+Consistencia significa que los datos pasan de un estado consistente a otro. Por ejemplo, se respetan los invariantes, por ejemplo que el resultado de una transferencia bancaria que generó un ingreso en una cuenta también está representado la salida, no puede aparece dinero de más en la suma de ambas.
+
+Durabilidad es que los datos queden permanentemente almacenados en un dispositivo persistente. ¿¿¿¿No se aplica a la memoria transaccional????
 
 
 
-Los problemas de locks:
-
-- Producen inversión de prioridades y efecto convoy, interbloqueo es difícil de evitar si se manipulan muchos objetos. Con tantos programas concurrentes es muy costoso tener expertos en concurrencia.
-
-- Las primitivas atómicas solo trabajan con una palabra a la vez, resulta en algoritmos complejos y algunos temas académicamente no resueltos (como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos).
-
-- El problema de la composición. Algoritmos de _spinlocks_ complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas. En spinlocks <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, no se puede eliminar el elemento de una e insertarla en otra atómicamente, no son _componibles_. Se pueden agregar mecanismos _ad hoc_, como añadir otro spinlock o exclusión mutua adicional pero eso crearía un cuello de botella.
-
-Es decir no son _componibles_.
-
-
-
-
-
-- Son difíciles de gestionar efectivamente, especialmente en grandes sistemas. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad. Se usan _mutex_ (o _locks_) globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de granularidades más pequeñas. Esto afecta negativamente al paralelismo.
+////
+Like mutual exclusion, TM is a concurrency control mechanism. TM aims to simplify shared memory
+parallel programming by moving the complexity of shared memory management away from the
+programmer’s view and placing it under the control of the implementation of the TM.
+To access shared memory variables using TM, programmers use a transaction, which is a sequence of
+operations that execute in isolation from other transactions. From a programmer perspective, transactions
+behave as if they were executed one at a time, with no two transactions ever running concurrently. In
+order to improve performance, TM subsystems often execute transactions concurrently when possible. In
+particular, transactions that do not conflict (that is, they do not concurrently access the same location of
+memory where at least one of the accesses is a write) are typically executed concurrently by the TM
+subsystem.
+////
 
 
-Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
-En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
 
-Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
 
-atomic {
-    x = q0.deq();
-    q1.enq(x);
-}
+
+
+=== Origenes
+
+La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transaccionesfue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993.
+
+Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
+
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron por primera vez una implementación de memoria transaccional por software.
+
+
+
 
 
 
 Funciones
+Transacciones explícitas.
+
 ----
 StartTX()
 x = LoadTX(ptr)
@@ -40,22 +89,65 @@ StoreTX(ptr, x)
 CommitTx()
 ----
 
+
+----
+do {
+    StartTx();
+    ...
+} while (!CommitTx());
+----
+
 bloques:
 ----
 transaction {
-    a = b * x
+    x = x + 1;
 }
 ----
+
+
 
 La palabra clave transaction es similar a synchronized en Java, pero mientras synchronized adquiere un _lock_ específico, atomic lo es respecto a todos los demás bloques atómicos.
 
 Como las transacciones permiten actualizaciones a diferentes ubicaciones eliminan la necesidad de comparaciones múltiples en los spinlocks.
 
+
+El modelo de transacción más usado es el _single-lock atomicity_ (_SLA_). En este se compara los resultados como si los bloques se hubiesen ejecutado con exclusión mutua global.
+
+
+
 Las transacciones son ejecutadas especulativamente, hace cambios tentativos a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta. Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
 
+Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
+En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
+
+==== GCC
+
+[source, c]
+----
+    for (i=0; i < max; i++) {
+        __transaction_atomic {
+            counter[position]++;
+        }
+    }
+----
 
 
+Transactional Execution Facility included with the
+   IBM zEnterprise zEC12 processor has been added.
+The libitm library has
+   been modified to add a HTM fastpath that automatically uses POWER's
+   HTM hardware instructions when it is executing on a HTM enabled
+   processor.
 
+
+==== Composición
+
+Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
+
+atomic {
+    x = q0.deq();
+    q1.enq(x);
+}
 
 
 ----
@@ -82,50 +174,23 @@ node *pop(node **head) {
 
 
 
-=== Transacciones en bases de datos
-
-Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible.
-
-La popularización de los multi cores ha hecho renacer el interés de estas técnicas. Aunque se parecen ambas tienen diferencias. Una involucra acceso a disco, la otra comunicación por red.
-
-
-
-
-
-
-En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
-
-Las operaciones se ejecutan en paralelo pero están limitadas las interacciones de forma que los resultados no varían si se ejecutaron una después de otra o al revés. Esta propiedad se llama _serialibilidad_. Simplifca el "mundo" del programador.
-
-Las bases de datos tienen las propiedades ACID por atomicidad, consistencia, aislamiento (_isolation_) y durabilidad.
-
-Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros. Cuando una transacción acaba correctamente se hace el _commit_, caso contrario la transacción de _aborta_.
-
-Consistencia significa que los datos pasan de un estado consistente a otro. Por ejemplo, se respetan los invariantes, por ejemplo que el resultado de una transferencia bancaria que generó un ingreso en una cuenta también está representado la salida, no puede aparece dinero de más en la suma de ambas.
-
-Durabilidad es que los datos queden permanentemente almacenados en un dispositivo persistente. ¿¿¿¿No se aplica a la memoria transaccional????
-
-
-=== Origenes
-
-La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993. Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos.
-
-Janice Stone _et al_ (<<Stone>>) propusieron primitvas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
-
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) fueron los primeros en proponer la memoria transaccional por software.
 
 
 ==== Sistemas
 A simulator is available for ASF, a proposed AMD64 architecture extension for bounded-size transactions [61]. This is based on PTLSim, providing a detailed, cycle-accurate full-system simulation of a multi-core system
-TL2
+
+TL2 (<<Dice>>)
+
 CTL
 Deuce STM provee métodos atómicos para Java.
+////
 JVSTM is a Java library that implements a multi-versioned approach to STM that includes
 mechanisms for partial re-execution of failed transactions
 The Sun C++ compiler with Transactional Memory supports a range of STM back-ends, including TL2 [83], SkySTM [188], HyTM [78] and PhTM [193].The compiler is available in binary format, but the runtime system and additional TM implementations are available as source code by request from the Sun Labs Scalable Synchronization Research Group. http://research.sun.com/scalable/
 TinySTM is a word-based STM implementation available from the University of Neuchatel. It is based on the LSA algorithm [262]. A Java LSA implementation is also available. http://tmware.org
 Implementations of TL2 [83] and subsequent algorithms are available for use with Tanger (an earlier version of DTMC). http://mcg.cs.tau.ac.il/projects
 TxOS is a prototype version of Linux that extends the OS to allow composition of system calls into atomic, isolated operations [243]. TxOS supports transactional semantics for a range of resources, including the file system, pipes, signals, and process control. It runs on commodity hardware. http://txos.code.csres.utexas.edu
+////
 
 === Diseño
 
@@ -154,6 +219,8 @@ Con el control optimista la detección y resolución puede ocurrir más tarde. P
 - Instantáneas aisladas (Snapshot isolation): Es más débil que linearizabilidad, permite mayor concurrencia. Las lecturas debe ser linearizables antes que las escrituras.
 
 
+
+
 Limitaciones de los bloques:
 Problema del deadlock como en barreras
 
@@ -173,11 +240,21 @@ Transacción son una serie de pasos ejecutados por un único proceso. Deben ser 
 
 Singh developed a library of join patterns using atomic blocks in STM-Haskell [294].T
 
-With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
 
-<<Rajwar>>
 
-las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
+
+=== Software
+
+////
+• Software is more flexible than hardware and permits the implementation of a wider variety of
+more sophisticated algorithms.
+• Software is easier to modify and evolve than hardware.
+• STMs can integrate more easily with existing systems and language features, such as garbage
+collection.
+• STMs have fewer intrinsic limitations imposed by fixed-size hardware structures, such as
+caches.
+
+////
 
 En software, versionID, global lock, blocking & nonblocking
 
@@ -200,43 +277,59 @@ TM_EXIT_THREAD;
 ----
 
 
-==== GCC
-
-[source, c]
-----
-    for (i=0; i < max; i++) {
-        __transaction_atomic {
-            counter[position]++;
-        }
-    }
-----
-
-
-Transactional Execution Facility included with the
-   IBM zEnterprise zEC12 processor has been added.
-The libitm library has
-   been modified to add a HTM fastpath that automatically uses POWER's
-   HTM hardware instructions when it is executing on a HTM enabled
-   processor.
 
 
 === Hardware
 
-EXPLICITLY TRANSACTIONAL HTMS
+==== Transacciones explícitas
+
 - Optimistic Synchronization, similar al LL/SC.
 - Herlihy and Moss HTM: load-transactional, store-transactional, and load-transactional-exclusive
 - Oklahoma Update: Operación atómica sobre varios registros.
+
+////
 Advanced Synchronization Facility. Recently, the Advanced Synchronization Facility (ASF) proposal [61] from Advanced Micro Devices takes a similar approach to the explicit HTM systems discussed so far. It introduces a SPECULATE instruction to begin a transaction, along with a COMMIT instruction to mark the end. Control returns implicitly to the SPECULATE instruction if the speculative region aborts, setting the processor flags to indicate that this has occurred. Simple flattened nesting is supported; speculation continues until the outermost COMMIT occurs. ASF proposes the use of a LOCK prefix to be added to memory accesses that should be performed transactionally. In the implementation proposal, ASF proposes the use of dedicated registers, similar to Oklahoma Update, to perform a multi-word compare-and-swap-like operation.
+////
 
 
-
+////
 IMPLICITLY TRANSACTIONAL HTM SYSTEMS
-- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
-
 
 - Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
 
+- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
 
+
+With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
+
+<<Rajwar>>
+
+las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
+
+
+
+SOFTWARE CONTROLLED CACHE COHERENCE
+
+RTM
+FlexTM
+////
+
+Programmable Data Isolation (PDI) Con este sistema el software tiene el control de qué direcciones de memoria participan en la transacción y deben ser controlados por el sistema de cache. Se requieren dos intrucciones TLoad y TStore.
+
+Este sistema requiere
+
+
+
+Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+
+IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
+
+IBM S390 tbegin, tend, tabort, etnd
+
+
+
+
+=== Intel
 Intel:
 Intel microprocessors based on the Haswell microarchitecture
 
@@ -276,19 +369,14 @@ void unlock() {
 ----
 
 
-=== Hardwate
-
-
-Restricted Transactional Memory: xbegin, xend, xabort, ¿xcheck?.
-
-IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
-
-IBM S390 tbegin, tend, tabort, etnd
-
-
-==== HTM
+==== RTM
 
 Siempre debe proveer un camino alternativo.
+Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+
+
+
+
 
 [source, c]
 ----
@@ -323,7 +411,7 @@ __transaction_atomic {
 }
 
 
-=== Tiemps
+=== Tiempos
 
 .Tiempos de ejecución STM
 [caption=""]
@@ -333,3 +421,21 @@ image::tm_software.png[align="center"]
 .Tiempos de ejecución HTM Intel
 [caption=""]
 image::tm_hardware.png[align="center"]
+
+
+=== Recapitulación
+
+La investigación en el área de memoria transaccional está muy activa.
+
+Es una nueva abstracción de programación, hay elaboradas técnicas de sincronización como +retry+ y +orElse+.
+
+Los diseñadores de lenguajes necesitan implementar nuevas construcciones sintácticas y definir con precisión su semántica.
+
+El problema es como hacer coexistir con código existente, las transacciones deben coexistir con código no transaccional durante muchos años.
+
+La eficiencia juega un papel importante, STM no puede alcanzar las eficiencia que se puede alcanzar por hardware, deben ejecutar más instrucciones y hacer llamadas que perjudican a la predicción. Pero es más maleable y permite experimentar con algoritmos más complejos.
+
+
+Por otro lado los fabricantes de procesadores tienen limitaciones en cuanto a los algoritmos que pueden implementar y que deben ser validados y probados extensaivamente antes de fabricar, no se puede cambiar la arquitectura y crea dependencia y problemas de compatibilidad en el futuro. Lo que hace que ya sean obsoletos al salir.
+
+Lo más probable es que la solución continúe por soluciones híbridas y que los compiladores y _runtimes_ sean los responsables de ocultar los detalles a los programadores.

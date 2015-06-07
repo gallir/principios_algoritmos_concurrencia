@@ -30,7 +30,11 @@
 
 - [[[Craig]]] Travis S. Craig. _Building FIFO and Priority-Queuing Spin Locks from Atomic Swap_. Technical Report 93-02-02, University of Washington, 1993. ftp://ftp.cs.washington.edu/tr/1993/02/UW-CSE-93-02-02.pdf
 
-- [[[Dice]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the Java™ Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
+////
+- [[[Dice01]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the Java(TM) Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
+////
+
+- [[[Dice]]] D. Dice, O. Shalev, and N. Shavit. Transactional Locking II. In the Proceedings of the 20th International Symposium on Distributed Computing (DISC), Stockholm, Sweeden, Sept. 2006. http://www.disco.ethz.ch/lectures/fs11/seminar/paper/johannes-2-1.pdf
 
 - [[[Dijkstra35]]] E. W. Dijkstra. _Over de sequentialiteit van procesbeschrijvingen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD35.html
 
@@ -42,6 +46,7 @@
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
+- [[[Gifford]]] David Giffor, Alfred Spector. _Case Study: IBM's Systema/360-370 Architecture_. Communications of the ACM, Volume 30, Number 4, 1987. http://lambda.csail.mit.edu/~chet/papers/others/s/spector/spector87ibm.pdf
 
 - [[[Harris]]] Tim Harris, James Larus, Ravi Rajwar. _Transactional Memory, 2nd edition_. Synthesis Lectures on Computer Architecture. December 2010. http://www.morganclaypool.com/doi/abs/10.2200/S00272ED1V01Y201006CAC011
 
@@ -62,6 +67,8 @@
 - [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM, 1986.
 
 - [[[Lamport3]]] Leslie Lamport. _A Fast Mutual Exclusion Algorithm_. ACM Transactions on Computer Systems, Vol. 5, February 1987. http://research.microsoft.com/en-us/um/people/lamport/pubs/fast-mutex.ps
+
+- [[[Lamport15]]] Leslie Lamport. _Turing Lecture: The Computer Science of Concurrency: The Early Years_. Communications of the ACM, Vol. 58 No. 6, Pages 71-76, 2015. http://cacm.acm.org/magazines/2015/6/187316-turing-lecture-the-computer-science-of-concurrency/fulltext
 
 - [[[Lampson]]] Butler W. Lampson, David D. Redell. _Experience with processes and monitors in Mesa_. Communications of the ACM. Volume 23 Issue 2, Feb. 1980. http://dl.acm.org/citation.cfm?id=358824
 
