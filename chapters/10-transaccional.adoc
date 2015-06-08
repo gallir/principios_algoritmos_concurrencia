@@ -1,5 +1,7 @@
 == 10. Memoria transaccional
 
+image::jrmora/10-transaccional.jpg[align="center"]
+
 Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. El objetivo es simplificar la programación y la eficiencia de programas concurrentes aumentando el paralelismo. Para acceder a registros compartidos los programadores usan el concepto de _transacción_ conocida desde hace tiempo en las bases de de datos ACID.
 
 Desde el punto de vista del programador las transacciones se ejecutan como secuencialmente y de forma aislada. Las complejidades del control de concurrencia quedan ocultos al programador.
@@ -28,19 +30,19 @@ El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguie
 
 Los sistemas de memoria transaccional todavía están en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
 
-En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
+En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones (_HTM_) para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, _efecto convoy_ y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
 
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software. En 2006, Nir Shavit con Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas a TinySMT (<<Felber>>). TinySTM es una de las librerías más populares y eficientes actualmentefootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.].
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software (_STM_). En 2006, Nir Shavit con Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas a TinySMT (<<Felber>>). TinySTM es una de las librerías _STM_ más populares y eficientes actualmentefootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.].
 
-En los últimos años se ha producido un avance notable en sistemas de memria transaccional por hardware y software. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_).
+En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware y software. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_).
 
-En software también se está avanzando rápidamente. El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar sistemas de transacciones aún sin soportre de hardware. Además de las librerías de memoria transaccional por software (_STM_) se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
+El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar memoria transaccional aún sin soportre de hardware. Además de las librerías _STM_ se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
 
 
 [NOTE]
 .Transacciones de bases de datos
 ====
-Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, esta especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
+Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, esta especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
 
 Las operaciones dentro de transacciones se ejecutan en concurrentemente y en paralelo con otras operaciones, pero las interacciones limitadas de forma que los resultados no varían si se ejecutaron una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
 
@@ -125,6 +127,88 @@ for (i=0; i < max; i++) {
 }
 ----
 
+
+=== Implementación
+
+==== Gestión de versiones
+
+Los sistemas de memoria transaccional deben gestionar las escrituras tentativas que se hacen en las transacciones, la _gestión de versiones_. Hay dos modelos:
+
+- Actualizacón directa (o _eager version management_): se modifica directamente en la dirección de memoria original y se mantiene un _undo-log_ para restaurar los valores si la transacción es abortada. Este modelo requiere el control de concurrencia pesimista.
+
+- Actualización retrasada (_lazy version management_ o _deferred update_): las actualizaciones se hacen al momento del commit. Las transacciones mantienen un _redo-log_  privado. El _redo-log_ puede ubicarse una copia en memoria, _buffers_ de escritura, líneas de caché de acceso exclusivo, o en registros adicionales (_renamed registers_).
+
+==== Control de concurrencia
+
+Cada transacción mantiene un conjunto de registros _leídos_ y _escritos_, estos son usados para detectar y solucionar los conflictos. Se diferencian tres eventos:
+
+1. Ocurrencia: Ocurre un conflicto cuando dos transacciones hacen operaciones conflictivas sobre las mismas regiones de datos, por ejemplo dos escrituras.
+
+2. Detección: El conflicto es detectado cuando el sistema de memoria transaccional determina que hay un conflicto.
+
+3. Resolución: El conflicto se resuelve cando el sistema de memoria transaccional toma una acción para evitar el conflicto. Puede abortar o retrasar una de las transacciones.
+
+Los tres eventos pueden ocurrir en diferentes momentos pero siempre en el mismo orden. hay dos modelos de control dependiendo del momento en que ocurre la detección:
+
+- El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen al mismo tiempo. Cada transacción se apropia de los datos, como en una sección crítica, y las demás no pueden acceder a ellos.
+
+- Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y por lo tanto avanzar en su ejecución simultáneamente hasta que el conflicto es detectado. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
+
+El control optimista es el más usado porque permite mayores niveles de concurrencia. Pero si la tasa de conflictos es elevada produce ejecuciones inútiles, en casos como este es mejor usar control pesimista para impedir que las transacciones sigan avanzando. También se pueden usar técnicas mixtas.
+
+El control optimista debe considerar otras cuestiones:
+
+- Granularidad del conflicto. Puede tratarse a nivel de palabras, objetos (tamaños superiores o estructuras más complejas) o líneas de caché (en implementaciones por hardware).
+
+- El instante de la detección del conflicto.
+
+    * Si se hace al acceder a los datos se denomina _detección temprana_ (_early conflict detection_).
+    * El sistema puede hacer validaciones en varios instantes durante la transacción para verificar si no hubo conflictos.
+    * Si se en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
+
+- El tipo de acceso que es tratado como conflicto. Puede hacer entre transacciones concurrentes activas (_tenttivos_) o entre las activas y las ya finalizadas.
+
+==== Memoria transaccional por software (_STM_)
+
+Los sistemas _STM_ son implementaciones por software que pueden ejecutarse en cualquier procesador. Implican una penalización importante por el control que debe hacer en cada lectura y escritura, además de las validaciones antes de hacer el _commit_. Sin embargo los _STM_ tienen importantes ventajas
+
+- El software es más flexible que el hardware, evoluciona más rápido y permite implementar una mayor variedad de algoritmos.
+
+- No está limitado por las estructuras de palabras del hardware, puede implementar transacciones a nivel de objetos con estructuras más complejas.
+
+- Naturalmente permiten las transacciones con llamadas explícitas pero son fácilmente integrables en los lenguajes. Estos pueden generar el código necesario (_instrumentación_) para las llamadas a las funciones.
+
+Los componentes fundamentales de las librerías _STM_ son:
+
+- Descriptor de la transacción. Es la estructura de datos que mantiene la información de estado de cada transacción.
+
+- _Undo-log_ o _redo-log_. Depende del sistema de versiones que use el sistema debe mantener uno u otro.
+
+- Conjuntos de registros leídos (_read-set_) y escritos (_write-set_): mantienen las direcciones que fueron leídas y escritas, normalmente acompañadas de un número de versión (que puede ser local o global).
+
+- Estructuras comunes. Son los datos necesarios para detectar conflictos entre diferentes transacciones y hacer operaciones atómicas con sus estructuras de datos. Por ejemplo, el _spinlock_ o array de _spinlocks_, número de versión global, etc.
+
+
+===== Llamadas explícitas
+
+[source, c]
+----
+for (i=0; i < max; i++) {
+    TM_START(0, 0);         <1>
+    c = stm_load_int(&counter);
+    c++;
+    stm_store_int(&counter, c);
+    TM_COMMIT;              <2>
+}
+----
+<1> Un macro de conveniencia que abre un bloque, llama a stm_start y salva el contexto.
+<2> Otro macro de conveniencia, llama a +stm_commit+ y cierra el bloque.
+
+
+
+===== Instrumentación del compilador
+
+
 El compilador agregará las llamadas explícitas a funciones de las librería de memoria transaccional _libitm_. En el fragmento siguiente se ven las llamadas de inicio y fin de transacción como las de lectura y escritura del entero de cuatro bytes:
 
 [source]
@@ -141,70 +225,18 @@ call    _ITM_commitTransaction
 La librería _libitm_ está incluida en GCC, las funciones son parte de las librerías compartidas del _runtime_ de gcc, no se incluyen en el programa compilado. Esta librería incluye una implementación de memoria transaccional por software compatible con el ABI de Intel. Permite implementar otros algoritmos vía _plugins_ y seleccionar cuál usar al momento de al ejecución. Desde la versión 4.8 soporta y detecta en tiempo de ejecución la memoria transaccional por hardware de Intel, PowerPC e IBM 390.
 
 
-=== Implementación
-
-==== Gestión de versiones
-
-- Eager version management [227] o direct update, se modifica directamente en la memoria y se mantiene un undo-log. Requiere que se use control de concurrencia pesimista.
-
-- Lazy version management o _deferred update_ porque las actualizaciones se hacen al momento del commit. Las transacciones mantienen su _redo-log_ privado (en un buffer).
-
-=== Control de concurrencia
-
-Ocurre un conflicto cuando dos transacciones hacen operaciones conflictivas sobre las mismas regiones de datos, por ejemplo dos escrituras.
-
-El conflicto es detectado cuando el sistema de memoria transaccional determina que hay un conflicto.
-
-El conflicto se resuelve cando el sistema de memoria transaccional toma una acción para evitar el conflicto. Puede abortar o retrasar una de las transacciones.
-
-Los tres eventos -ocurrencia del conflicto, la detección y resolución– pueden ocurrir en diferentes momentos pero siempre en el mismo orden.
-
-EL _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen al mismo tiempo. Cada transacción se apropia de los datos, como en una sección crítica, y las demás no pueden acceder a ellos.
-
-Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y por lo tanto avanzar en su ejecución simultáneamente hasta que el conflicto es detectado. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
-
-El control optimista es el más usado porque permite mayores niveles de concurrencia. Pero si la tasa de conflictos es elevada produce ejecuciones inútiles, en casos como este es mejor usar control pesimista para impedir que las transacciones sigan avanzando. También se pueden usar técnicas mixtas.
-
-El control optimista debe considerar otras cuestiones:
-
-- Granularidad del conflicto. Puede tratarse a nivel de palabras, objetos (tamaños superiores o estructuras más complejas) o líneas de caché (en implementaciones por hardware).
-
-- El instante de la detección del conflicto. Se se hace al acceder a los datos se denomina _detección temprana_ (_early conflict detection_). Si se en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
-
-- El tipo de acceso que es tratado como conflicto. Puede hacer solo entre transacciones concurrentes activas o entre las activas y las ya finalizadas.
 
 
 
 
 
-
-
-
-
-Como las transacciones permiten actualizaciones a diferentes ubicaciones eliminan la necesidad de comparaciones múltiples en los spinlocks.
-
-
-
-
-
+////
 Las transacciones son ejecutadas especulativamente, hace cambios tentativos a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta. Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
 
 Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
+////
 
-
-[source, c]
-----
-for (i=0; i < max; i++) {
-    TM_START(0, 0);         <1>
-    c = stm_load_int(&counter);
-    c++;
-    stm_store_int(&counter, c);
-    TM_COMMIT;              <2>
-}
-----
-<1> Un macro de conveniencia que abre un bloque, llama a stm_start y salva el contexto.
-<2> Otro macro de conveniencia, llama a +stm_commit+ y cierra el bloque.
 
 
 
