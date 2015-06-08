@@ -2,10 +2,38 @@
 
 == Memoria transaccional
 
+=== STM
 
+==== _Mutex_ tinySTM
+[[tm_mutex_tinystm_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/mutex_tinystm.c[mutex_tinystm.c]
+[source,go]
+----
+include::../code/transactional/mutex_tinystm.c[]
+----
+
+==== _Mutex_ gcc con libitm
 [[tm_mutex_gcc_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/mutex_transaction.c[mutex_transaction.c]
 [source,go]
 ----
 include::../code/transactional/mutex_transaction.c[]
+----
+
+=== HTM
+
+==== _Mutex_ HLE
+[[tm_mutex_hle_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_hle.c[mutex_hle.c]
+[source,go]
+----
+include::../code/transactional/intel/mutex_hle.c[]
+----
+
+==== _Mutex_ RTM
+[[tm_mutex_rtm_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_rtm.c[mutex_rtm.c]
+[source,go]
+----
+include::../code/transactional/intel/mutex_rtm.c[]
 ----

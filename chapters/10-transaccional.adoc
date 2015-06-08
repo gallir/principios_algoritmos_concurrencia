@@ -121,7 +121,7 @@ Desde la versión 4.7 GCC (2011) permite especificar bloques atómicos con semá
 ._Mutex_ con GCC
 ----
 for (i=0; i < max; i++) {
-    __transaction_atomic { <1>
+    __transaction_atomic {
         counter++;
     }
 }
@@ -190,6 +190,8 @@ Los componentes fundamentales de las librerías _STM_ son:
 
 
 ===== Llamadas explícitas
+
+<<tm_mutex_tinystm_c>>
 
 [source, c]
 ----

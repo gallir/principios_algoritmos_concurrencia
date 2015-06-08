@@ -19,7 +19,7 @@ No hice un extenso análisis de mercado, no obstante, me di cuenta de que me res
 
 Casi como una broma respondí ''a ver si tengo que escribirlo en un ebook'', lo que generó inmediatas peticiones para que lo hiciese.
 
-Así es como surgió este libro: no sabía en lo que me metía. Pensé que lo podría hacer en tres meses con menos de 20 000 palabras, pero acabó teniendo más de 55 000 además de las 22 000 líneas de código en cinco lenguajes diferentes escritos exclusivamente para este libro.
+Así es como surgió este libro: no sabía en lo que me metía. Pensé que lo podría hacer en tres meses con menos de 20 000 palabras, pero acabó teniendo más de 60 000 además de las 10 000 líneas de código en cinco lenguajes diferentes escritos exclusivamente para este libro.
 
 Creo que en el libro logro explicar, con ejemplos en lenguajes modernos y populares, lo que considero fundamental de los principios y algoritmos claves de concurrencia. Es una opinión subjetiva, cada lector tendrá la suya, y quejas de por qué no incluí esa característica tan especial de su lenguaje preferido. Es muy difícil rebatir este tipo de cuestiones. Se necesitaría un ensayo filosófico y seguiría siendo discutible, pero cuento con la ventaja de haber enseñado estos temas durante dos décadas. No solo sé lo que me ha costado dominar ciertos temas, también lo que cuesta transmitir y hacer _captar_ las sutilezas de la programación concurrente.
 
