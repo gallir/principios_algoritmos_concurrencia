@@ -34,7 +34,7 @@
 - [[[Dice01]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the Java(TM) Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
 ////
 
-- [[[Dice]]] D. Dice, O. Shalev, and N. Shavit. Transactional Locking II. In the Proceedings of the 20th International Symposium on Distributed Computing (DISC), Stockholm, Sweeden, Sept. 2006. http://www.disco.ethz.ch/lectures/fs11/seminar/paper/johannes-2-1.pdf
+- [[[Dice]]] D. Dice, O. Shalev, and N. Shavit. _Transactional Locking II_. Proceedings of the 20th International Symposium on Distributed Computing (DISC), Stockholm, Sweeden, Sept. 2006. http://www.disco.ethz.ch/lectures/fs11/seminar/paper/johannes-2-1.pdf
 
 - [[[Dijkstra35]]] E. W. Dijkstra. _Over de sequentialiteit van procesbeschrijvingen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD35.html
 
@@ -43,6 +43,8 @@
 - [[[Dijkstra74]]] E. W. Dijkstra. _Over seinpalen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 
 - [[[Drepper]]] Ulrich Drepper. _Futexes Are Tricky_, Red Hat Inc., 2011. http://www.akkadia.org/drepper/futex.pdf
+
+- [[[Felber]]] Pascal Felber, Christof Fetzer, Torvald Riegel. _Dynamic Performance Tuning of Word-Based Software Transactional Memory_. PPoPP '08 Proceedings of the 13th ACM SIGPLAN Symposium on Principles and practice of parallel programming, Pages 237-246, 2008. http://se.inf.tu-dresden.de/pubs/papers/felber2008tinystm.pdf
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
@@ -111,7 +113,7 @@
 
 - [[[Sampson]]] Adrian Sampson. _PyPy and CPython’s Broken Multithreaded Semantics_. 25 October 2012. http://homes.cs.washington.edu/~asampson/blog/parallelpypy.html
 
-- [[[Shavit]]] Nir Shavit, Dan Touitou. _Software transactional memory_. Proceeding PODC '95 Proceedings of the fourteenth annual ACM symposium on Principles of distributed computing, 1995 http://groups.csail.mit.edu/tds/papers/Shavit/ShavitTouitou-podc95.pdf
+- [[[Shavit]]] Nir Shavit, Dan Touitou. _Software transactional memory_. PODC '95 Proceedings of the fourteenth annual ACM symposium on Principles of distributed computing, 1995 http://groups.csail.mit.edu/tds/papers/Shavit/ShavitTouitou-podc95.pdf
 
 - [[[Shiftehfar]]] Reza Shiftehfar. _Priority Inversion Problem and Mars Pathfinder_. http://blog.shiftehfar.org/?p=207
 

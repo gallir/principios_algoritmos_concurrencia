@@ -23,7 +23,18 @@ Las transacciones están muy relacionadas con la exclusión mutua. Vimos dos tip
 
 El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. El los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
 
-Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_). En software también se está avanzando muy rápido. Además de las librerías de memoria transaccional por software (_STM_) se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
+
+=== Orígenes
+
+Los sistemas de memoria transaccional todavía están en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
+
+En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
+
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software. En 2006, Nir Shavit con Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas a TinySMT (<<Felber>>). TinySTM es una de las librerías más populares y eficientes actualmentefootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.].
+
+En los últimos años se ha producido un avance notable en sistemas de memria transaccional por hardware y software. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_).
+
+En software también se está avanzando rápidamente. El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar sistemas de transacciones aún sin soportre de hardware. Además de las librerías de memoria transaccional por software (_STM_) se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
 
 
 [NOTE]
@@ -50,29 +61,6 @@ La popularización de los _multicores_ ha hecho renacer el interés por estas t�
 
 
 === Transacciones
-
-La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993.
-
-Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
-
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software. Más
-
-
-
-////
-Like mutual exclusion, TM is a concurrency control mechanism. TM aims to simplify shared memory
-parallel programming by moving the complexity of shared memory management away from the
-programmer’s view and placing it under the control of the implementation of the TM.
-To access shared memory variables using TM, programmers use a transaction, which is a sequence of
-operations that execute in isolation from other transactions. From a programmer perspective, transactions
-behave as if they were executed one at a time, with no two transactions ever running concurrently. In
-order to improve performance, TM subsystems often execute transactions concurrently when possible. In
-particular, transactions that do not conflict (that is, they do not concurrently access the same location of
-memory where at least one of the accesses is a write) are typically executed concurrently by the TM
-subsystem.
-////
-
-
 
 Las operaciones básicas para gestión de transacciones:
 
@@ -150,7 +138,45 @@ call    _ITM_WU4
 call    _ITM_commitTransaction
 ----
 
-La librería _libitm_ está incluida en GCC, las funciones son parte de las librerías compartidas del _runtime_ de gcc, no se incluyen en el código. Esta librería incluye una implementación de memoria transaccional por software compatible con el ABI de Intel. Permite implementar otros algoritmos vía _plugins_ y seleccionar cuál usar al momento de al ejecución. Desde la versión 4.8 soporta y detecta en tiempo de ejecución la memoria transaccional por hardware de Intel, PowerPC e IBM 390.
+La librería _libitm_ está incluida en GCC, las funciones son parte de las librerías compartidas del _runtime_ de gcc, no se incluyen en el programa compilado. Esta librería incluye una implementación de memoria transaccional por software compatible con el ABI de Intel. Permite implementar otros algoritmos vía _plugins_ y seleccionar cuál usar al momento de al ejecución. Desde la versión 4.8 soporta y detecta en tiempo de ejecución la memoria transaccional por hardware de Intel, PowerPC e IBM 390.
+
+
+=== Implementación
+
+==== Gestión de versiones
+
+- Eager version management [227] o direct update, se modifica directamente en la memoria y se mantiene un undo-log. Requiere que se use control de concurrencia pesimista.
+
+- Lazy version management o _deferred update_ porque las actualizaciones se hacen al momento del commit. Las transacciones mantienen su _redo-log_ privado (en un buffer).
+
+=== Control de concurrencia
+
+Ocurre un conflicto cuando dos transacciones hacen operaciones conflictivas sobre las mismas regiones de datos, por ejemplo dos escrituras.
+
+El conflicto es detectado cuando el sistema de memoria transaccional determina que hay un conflicto.
+
+El conflicto se resuelve cando el sistema de memoria transaccional toma una acción para evitar el conflicto. Puede abortar o retrasar una de las transacciones.
+
+Los tres eventos -ocurrencia del conflicto, la detección y resolución– pueden ocurrir en diferentes momentos pero siempre en el mismo orden.
+
+EL _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen al mismo tiempo. Cada transacción se apropia de los datos, como en una sección crítica, y las demás no pueden acceder a ellos.
+
+Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y por lo tanto avanzar en su ejecución simultáneamente hasta que el conflicto es detectado. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
+
+El control optimista es el más usado porque permite mayores niveles de concurrencia. Pero si la tasa de conflictos es elevada produce ejecuciones inútiles, en casos como este es mejor usar control pesimista para impedir que las transacciones sigan avanzando. También se pueden usar técnicas mixtas.
+
+El control optimista debe considerar otras cuestiones:
+
+- Granularidad del conflicto. Puede tratarse a nivel de palabras, objetos (tamaños superiores o estructuras más complejas) o líneas de caché (en implementaciones por hardware).
+
+- El instante de la detección del conflicto. Se se hace al acceder a los datos se denomina _detección temprana_ (_early conflict detection_). Si se en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
+
+- El tipo de acceso que es tratado como conflicto. Puede hacer solo entre transacciones concurrentes activas o entre las activas y las ya finalizadas.
+
+
+
+
+
 
 
 
@@ -158,7 +184,6 @@ La librería _libitm_ está incluida en GCC, las funciones son parte de las libr
 Como las transacciones permiten actualizaciones a diferentes ubicaciones eliminan la necesidad de comparaciones múltiples en los spinlocks.
 
 
-El modelo de transacción más usado es el _single-lock atomicity_ (_SLA_). En este se compara los resultados como si los bloques se hubiesen ejecutado con exclusión mutua global.
 
 
 
@@ -181,14 +206,6 @@ for (i=0; i < max; i++) {
 <1> Un macro de conveniencia que abre un bloque, llama a stm_start y salva el contexto.
 <2> Otro macro de conveniencia, llama a +stm_commit+ y cierra el bloque.
 
-
-
-Transactional Execution Facility included with the
-   IBM zEnterprise zEC12 processor has been added.
-The libitm library has
-   been modified to add a HTM fastpath that automatically uses POWER's
-   HTM hardware instructions when it is executing on a HTM enabled
-   processor.
 
 
 ==== Composición
@@ -243,21 +260,7 @@ Implementations of TL2 [83] and subsequent algorithms are available for use with
 TxOS is a prototype version of Linux that extends the OS to allow composition of system calls into atomic, isolated operations [243]. TxOS supports transactional semantics for a range of resources, including the file system, pipes, signals, and process control. It runs on commodity hardware. http://txos.code.csres.utexas.edu
 ////
 
-=== Diseño
 
-==== Control de concurrencia
-
-La ocurrencia del conflicto, la detección y la resolución, ocurren siempre en el mismo orden.
-
-El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, los tres se producen al mismo tiempo. Cada transacción se apropia de los datos y las demás no pueden acceder a ellos.
-
-Con el control optimista la detección y resolución puede ocurrir más tarde. Permite que varias transacciones accedan simultáneamente al mismo dato.
-
-==== Gestión de versiones
-
-- Eager version management [227] o direct update, se modifica directamente en la memoria y se mantiene un undo-log. Requiere que se use control de concurrencia pesimista.
-
-- Lazy version management o _deferred update_ porque las actualizaciones se hacen al momento del commit. Las transacciones mantienen su _redo-log_ privado (en un buffer).
 
 === Criterios de corrección _correctness_
 
