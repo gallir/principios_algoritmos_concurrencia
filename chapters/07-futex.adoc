@@ -58,6 +58,7 @@ Las operaciones que se pueden especificar en +syscall+ son las siguientes:
 +FUTEX_LOCK_PI+, +FUTEX_UNLOCK_PI+:: Son las extensiones de Ingo Molnar (<<Molnar>>) para herencia de prioridades comentadas en <<priority_inheritance>>. _Lock_ bloquea a un proceso si el valor del _futex_ no es cero y lo inserta en la cola de bloqueados ordenada por prioridad de mayor a menor. Al proceso que está en la sección crítica (es _propietario del lock_) le asigna la mayor prioridad de todos los que esperan.
 
 [NOTE]
+.Llamadas de sistema
 ====
 La función +syscall+ para +FUTEX_WAIT+:
 

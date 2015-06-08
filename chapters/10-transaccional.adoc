@@ -23,7 +23,7 @@ Las transacciones están muy relacionadas con la exclusión mutua. Vimos dos tip
 
 - Son difíciles de gestionar efectivamente, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades muy pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de trabajar a granularidades más detalladas, no se puede saber de antemano qué ramas del árbol o qué partes de la tabla se modificarán. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
 
-El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. El los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
+El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. Durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
 
 
 === Orígenes
@@ -68,7 +68,7 @@ Las operaciones básicas para gestión de transacciones:
 
 - Iniciar transacción, +StartTx+.
 - Confirmar la transacción, +CommitTx+.
-- Abortar la transacción actua, +AbortTX+.
+- Abortar la transacción actual, +AbortTX+.
 
 Y para acceso a datos:
 
@@ -129,6 +129,10 @@ for (i=0; i < max; i++) {
 
 
 === Implementación
+Mientras los _mutex_ son pesismistas, las transacciones son optimistas. Las transacciones son ejecutadas especulativamente, hace cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta.
+
+Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
+
 
 ==== Gestión de versiones
 
@@ -160,15 +164,15 @@ El control optimista debe considerar otras cuestiones:
 
 - Granularidad del conflicto. Puede tratarse a nivel de palabras, objetos (tamaños superiores o estructuras más complejas) o líneas de caché (en implementaciones por hardware).
 
-- El instante de la detección del conflicto.
+- El instante de la detección del conflicto:
 
     * Si se hace al acceder a los datos se denomina _detección temprana_ (_early conflict detection_).
-    * El sistema puede hacer validaciones en varios instantes durante la transacción para verificar si no hubo conflictos.
-    * Si se en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
+    * El sistema puede hacer validaciones en varios instantes durante la transacción para verificar si hay conflictos.
+    * Si se hace en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
 
 - El tipo de acceso que es tratado como conflicto. Puede hacer entre transacciones concurrentes activas (_tenttivos_) o entre las activas y las ya finalizadas.
 
-==== Memoria transaccional por software (_STM_)
+=== Memoria transaccional por software (_STM_)
 
 Los sistemas _STM_ son implementaciones por software que pueden ejecutarse en cualquier procesador. Implican una penalización importante por el control que debe hacer en cada lectura y escritura, además de las validaciones antes de hacer el _commit_. Sin embargo los _STM_ tienen importantes ventajas
 
@@ -186,12 +190,18 @@ Los componentes fundamentales de las librerías _STM_ son:
 
 - Conjuntos de registros leídos (_read-set_) y escritos (_write-set_): mantienen las direcciones que fueron leídas y escritas, normalmente acompañadas de un número de versión (que puede ser local o global).
 
-- Estructuras comunes. Son los datos necesarios para detectar conflictos entre diferentes transacciones y hacer operaciones atómicas con sus estructuras de datos. Por ejemplo, el _spinlock_ o array de _spinlocks_, número de versión global, etc.
+- Estructuras comunes. Son los datos necesarios para detectar conflictos entre diferentes transacciones y hacer operaciones atómicas con sus estructuras de datos. Por ejemplo,  array de _spinlocks_ para secciones críticas internas, número de versión global, árbol de dependencias gobales, etc.
 
 
-===== Llamadas explícitas
+==== Llamadas explícitas
 
-<<tm_mutex_tinystm_c>>
+En general las librerías se programan con llamadas explícitas. Veremos el ejemplo con la librería _tinySMT_ (están incluidas en el repositorio de Github).
+
+El procedimiento es iniciar las librerías al inicio del programa (+stm_init+) y al inicio de cada hilo que las usará (+stm_init_thread+). Se inician las transacciones con +stm_start+ y se hace el _commit_ con +stm_commit+. Los ejemplos de la librería tienen ejemplos de macros de conveniencia para facilitar la programación, usamos los de inicio (+TM_START+) y fin de transacción (TM_COMMIT+).
+
+Dentro de las transacciones no se deben acceder directamente a los registros u objetos compartidos, deben usar las funciones para lectura y escritura. En ese caso como se trata de un entero usamos +stm_load_int+ y +stm_store_int+.
+
+El siguiente es el código para el contador (el <<tm_mutex_tinystm_c, código completo>>):
 
 [source, c]
 ----
@@ -208,24 +218,133 @@ for (i=0; i < max; i++) {
 
 
 
-===== Instrumentación del compilador
+==== Instrumentación del compilador
 
+No es práctica programar con funciones explícitas, mejor hacerlo en bloques (<<tm_mutex_gcc_c, código completo>>):
 
-El compilador agregará las llamadas explícitas a funciones de las librería de memoria transaccional _libitm_. En el fragmento siguiente se ven las llamadas de inicio y fin de transacción como las de lectura y escritura del entero de cuatro bytes:
+[source, c]
+----
+transaction {
+    counter += 1;
+}
+----
+
+El compilador puede hacer la _instrumentación_ del código. Consiste en detectar dónde se leen y escriben variables compartidas e insertar las llamadas a las funciones de las librerías. En el ejemplo el GCC insertará el siguiente código:
+
 
 [source]
 ----
 call    _ITM_beginTransaction
 ...
-call    _ITM_RU4
+call    _ITM_RU4    <1>
 ...
-call    _ITM_WU4
+call    _ITM_WU4    <2>
 ...
 call    _ITM_commitTransaction
 ----
+<1> Función para leer +counter+, un entero de cuatro bytes.
+<2> Función para escribir +counter+.
 
-La librería _libitm_ está incluida en GCC, las funciones son parte de las librerías compartidas del _runtime_ de gcc, no se incluyen en el programa compilado. Esta librería incluye una implementación de memoria transaccional por software compatible con el ABI de Intel. Permite implementar otros algoritmos vía _plugins_ y seleccionar cuál usar al momento de al ejecución. Desde la versión 4.8 soporta y detecta en tiempo de ejecución la memoria transaccional por hardware de Intel, PowerPC e IBM 390.
 
+Esas funciones son parte del estándar _ABI_ (_Application Binary Interface_) _Intel® Transactional Memory Compiler and Runtime Application Binary Interface_ (<<IntelABI>>) que define las funciones de librerías _STM_. El objetivo es que un programa ejecutable pueda usar diferentes librerías seleccionadas en el momento de la ejecución. Las librerias más populares _STM_ implementan este estándar.
+
+GCC incluye su propia librería de memoria transaccional: _libitm_. Las funciones están implementadas en las librerías _runtime_ y se cargan dinámicamente, pero puede usarse cualquier otra compatible con _ITM_.
+
+=== Memoria transaccional por hardware (_HTM_)
+
+Aunque _STM_ son muy flexibles tienen mucha sobrecarga, cada lectura y asignación implica llamadas a funciones que a su vez ejecutan algoritmos complejos. Puede hacerse más eficiente en el hardware, aunque está por ahora mucho más limitado que el software. hay dos tipos básicos de sistemas _HTM_:
+
+Sistemas transaccionales explícitos:: El procesador tiene instrucciones adicionales de acceso a memoria que indican que dichas direcciones deben tratarse como parte de una transacción, por ejemplo +load_transactional+ o +store_transactional+. Este tipo de sistemas da mayor libertad y flexibilidad al programador, pero requiere adaptación de todas las librerías para el cambio de las instrucciones. No es una buena solución si se desea mantener compatibilidad. Las propuestas de _Oklahoma Update_  (<<Stone>>) y _Advanced Synchronization Facility_ eran de este tipo.
+
+Sistemas implícitos::
+
+
+
+- Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
+
+
+
+Desde la versión 4.8 _libitm_ detecta las extensiones de _HTM_ de hardware de Intel y desde 4.9 de los procesadores PowerPC e IBM S/390 y los usa en el _fastpath_
+
+
+Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+
+IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
+
+IBM S390 tbegin, tend, tabort, etnd
+
+
+
+==== _Hardware Lock Elision_
+Intel microprocessors based on the Haswell microarchitecture
+
+Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
+
+Si falla vuelve a ejecutar sin eludir el mutex.
+
+
+- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
+
+
+With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
+
+<<Rajwar>>
+
+las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
+
+
+
+----
+movl    $1, %eax
+xchgl	mutex(%rip), %eax
+...
+movl    $0, %eax
+----
+
+----
+movl    $1, %eax
+xacquire xchgl  mutex(%rip), %eax
+...
+movl    $0, %eax
+xrelease movl   %eax, mutex(%rip)
+----
+
+
+----
+void lock() {
+    while(exchange_n(&mutex, 1, __ATOMIC_ACQUIRE|__ATOMIC_HLE_ACQUIRE));
+}
+
+void unlock() {
+     store_n(&mutex, 0, __ATOMIC_RELEASE|__ATOMIC_HLE_RELEASE);
+}
+----
+
+
+==== _Restricted Transactional Memory_
+
+Siempre debe proveer un camino alternativo.
+Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+
+
+
+
+[source, c]
+----
+for (i=0; i < max; i++) {
+    if (_xbegin() == _XBEGIN_STARTED) {
+        if (mutex) {
+            _xabort(1);
+        }
+        counter[position]++;
+        _xend();
+    } else {
+        lock();
+        counter[position]++;
+        unlock();
+    }
+}
+----
 
 
 
@@ -233,9 +352,6 @@ La librería _libitm_ está incluida en GCC, las funciones son parte de las libr
 
 
 ////
-Las transacciones son ejecutadas especulativamente, hace cambios tentativos a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta. Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
-
-Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
 ////
 
@@ -331,38 +447,11 @@ Singh developed a library of join patterns using atomic blocks in STM-Haskell [2
 
 
 
-=== Software
 
-////
-• Software is more flexible than hardware and permits the implementation of a wider variety of
-more sophisticated algorithms.
-• Software is easier to modify and evolve than hardware.
-• STMs can integrate more easily with existing systems and language features, such as garbage
-collection.
-• STMs have fewer intrinsic limitations imposed by fixed-size hardware structures, such as
-caches.
-
-////
-
-En software, versionID, global lock, blocking & nonblocking
 
 
 
 .Programación con tinySMT
-[source, c]
-----
-TM_INIT_THREAD;
-
-for (i=0; i < max; i++) {
-    TM_START(0, 1);
-    c = TM_LOAD(&counter[position]);
-    c++;
-    TM_STORE(&counter[position], c);
-    TM_COMMIT;
-}
-
-TM_EXIT_THREAD;
-----
 
 
 
@@ -381,18 +470,6 @@ Advanced Synchronization Facility. Recently, the Advanced Synchronization Facili
 
 
 ////
-IMPLICITLY TRANSACTIONAL HTM SYSTEMS
-
-- Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
-
-- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
-
-
-With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
-
-<<Rajwar>>
-
-las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
 
 
 
@@ -417,72 +494,6 @@ IBM S390 tbegin, tend, tabort, etnd
 
 
 
-=== Intel
-Intel:
-Intel microprocessors based on the Haswell microarchitecture
-
-
-
-==== Hardware lock elision
-Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
-
-Si falla vuelve a ejecutar sin eludir el mutex.
-
-
-
-----
-movl    $1, %eax
-xchgl	mutex(%rip), %eax
-...
-movl    $0, %eax
-----
-
-----
-movl    $1, %eax
-xacquire xchgl  mutex(%rip), %eax
-...
-movl    $0, %eax
-xrelease movl   %eax, mutex(%rip)
-----
-
-
-----
-void lock() {
-    while(exchange_n(&mutex, 1, __ATOMIC_ACQUIRE|__ATOMIC_HLE_ACQUIRE));
-}
-
-void unlock() {
-     store_n(&mutex, 0, __ATOMIC_RELEASE|__ATOMIC_HLE_RELEASE);
-}
-----
-
-
-==== RTM
-
-Siempre debe proveer un camino alternativo.
-Restricted Transactional Memory: xbegin, xend, xabort, xtest.
-
-
-
-
-
-[source, c]
-----
-for (i=0; i < max; i++) {
-    if (_xbegin() == _XBEGIN_STARTED) {
-        if (mutex) {
-            _xabort(1);
-        }
-        counter[position]++;
-        _xend();
-    } else {
-        lock();
-        counter[position]++;
-        unlock();
-    }
-}
-----
-
 
 GCC:
 
@@ -493,10 +504,6 @@ GCC:
 https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/x86-specific-memory-model-extensions-for-transactional-memory.html#x86-specific-memory-model-extensions-for-transactional-memory
 The i386 architecture supports additional memory ordering flags to mark lock critical sections for hardware lock elision. These must be specified in addition to an existing memory model to atomic intrinsics.
 
-
-__transaction_atomic {
-    count++;
-}
 
 
 === Tiempos
