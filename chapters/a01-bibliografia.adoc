@@ -62,6 +62,10 @@
 
 - [[[Hoare1]]] C.A.R. Hoare. _Monitors: An Operating System Structuring Concept_. Communications of the ACM,  Vol. 17 Number 10, October 1974. http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.73.8853&rep=rep1&type=pdf
 
+- [[[IntelSTM]]] _Intel® C++ STM Compiler, Prototype Edition_. https://software.intel.com/en-us/articles/intel-c-stm-compiler-prototype-edition
+
+- [[[Kleen]]] Andi Kleen. _Lock elision in the GNU C library_. January 30, 2013. https://lwn.net/Articles/534758/
+
 - [[[Lamport]]] Leslie Lamport. _A New Solution of Dijkstra's Concurrent Programming Problem_. 1974, http://research.microsoft.com/en-us/um/people/lamport/pubs/bakery.pdf
 
 - [[[Lamport2]]] Leslie Lamport. _The mutual exclusion problem - Part I: A theory of interprocess communication_. Journal of the ACM, 1986.
@@ -115,9 +119,12 @@
 
 - [[[Stone]]] Janice M. Stone, Harold S. Stone, Phil Heidelberger, John Turek. _Multiple reservations and the Oklahoma update_. IEEE Parallel & Distributed Technology, 1(4):58–71, November 1993.
 
+- [[[Tabatabai]]] Ali-Reza Adl-Tabatabai, Tatiana Shpeisman, Justin Gottschlich. _Draft Specification of Transactional Language Constructs for C++_. Transactional Memory Specification Drafting Group. February 3, 2012. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3725.pdf
+
+
 - [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9. https://www.cs.auckland.ac.nz/courses/compsci703s1c/resources/OklahomaUpdate.pdf
 
-
+- [[[TransactionGCC]]] _Transactional Memory in GCC_. https://gcc.gnu.org/wiki/TransactionalMemory
 
 
 ////

@@ -23,27 +23,39 @@ Las transacciones están muy relacionadas con la exclusión mutua. Vimos dos tip
 
 El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. El los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
 
-Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware. En el software también se está avanzando muy rápido. Se está acabando con la definción de la definición del estándar para C y C++ de memoria transacciona. El compilador Gcc incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8. Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18. Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
+Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_). En software también se está avanzando muy rápido. Además de las librerías de memoria transaccional por software (_STM_) se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
 
 
-=== Transacciones en bases de datos
+[NOTE]
+.Transacciones de bases de datos
+====
+Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, esta especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
 
-Las base de datos son capaces de trabajar concurrentemente y en paralelo desde hace tiempo, ejecutan varias consultas simultáneamente cuando es posible.
+Las operaciones dentro de transacciones se ejecutan en concurrentemente y en paralelo con otras operaciones, pero las interacciones limitadas de forma que los resultados no varían si se ejecutaron una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
 
-La popularización de los multi cores ha hecho renacer el interés de estas técnicas. Aunque se parecen ambas tienen diferencias. Una involucra acceso a disco, la otra comunicación por red.
+Las bases de datos tienen las propiedades ACID por _atomicidad_, _consistencia_, _aislamiento_ (_isolation_) y _durabilidad_.
+
+- Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros de los cambios que se hizo _tentativamente_. Cuando una transacción acaba correctamente se hace el _commit_ haciendo visible los cambios, caso contrario la transacción de _aborta_.
+
+- Consistencia significa que los datos pasan de un estado consistente a otro. Se respetan los invariantes, por ejemplo, el resultado de una transferencia bancaria que generó un ingreso en una cuenta también incluye la extracción desde otra.
+
+- Aislamiento implica que no hay interferencias entre transacciones. Los cambios realizados por las operaciones de una transacción no son visibles no afectan al resultado de otras en curso.
+
+- Durabilidad asegura que si una transacción acaba correctamente (con _commit_) sus datos están almacenados en el dispositivo de almacenamiento persistente.
+====
+
+////
+La popularización de los _multicores_ ha hecho renacer el interés por estas técnicas. Ambas son muy similares pero tienen sus diferencias. Las bases de datos involucran acceso a disco, las transacciones en memoria involucran comunicación de mensajes entre los diferentes procesadores y sistemas de cache.
+////
 
 
-En corazón del sistema es la transacción, espeficica una secuencia de operaciones (una composición) como si fuese la única accediendo a la base de datos.
+=== Transacciones
 
-Las operaciones se ejecutan en paralelo pero están limitadas las interacciones de forma que los resultados no varían si se ejecutaron una después de otra. Esta propiedad se llama _secuencialidad_. Simplifca el "mundo" del programador.
+La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993.
 
-Las bases de datos tienen las propiedades ACID por atomicidad, consistencia, aislamiento (_isolation_) y durabilidad.
+Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
 
-Atomicidad significa que el conjunto de operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no debe dejar rastros. Cuando una transacción acaba correctamente se hace el _commit_, caso contrario la transacción de _aborta_.
-
-Consistencia significa que los datos pasan de un estado consistente a otro. Por ejemplo, se respetan los invariantes, por ejemplo que el resultado de una transferencia bancaria que generó un ingreso en una cuenta también está representado la salida, no puede aparece dinero de más en la suma de ambas.
-
-Durabilidad es que los datos queden permanentemente almacenados en un dispositivo persistente. ¿¿¿¿No se aplica a la memoria transaccional????
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software. Más
 
 
 
@@ -62,34 +74,40 @@ subsystem.
 
 
 
+Las operaciones básicas para gestión de transacciones:
 
+- Iniciar transacción, +StartTx+.
+- Confirmar la transacción, +CommitTx+.
+- Abortar la transacción actua, +AbortTX+.
 
+Y para acceso a datos:
 
-=== Origenes
+- Leer, +Type ReadTx(Type *address)+.
+- Escribir, +WriteTx(Type *address, Type value)+.
 
-La memoria transaccional está en su infancia. La primera propuesta para usar la idea de transaccionesfue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido hasta 1993.
+Así una transacción simple para la operación sobre el contador de los ejemplos esfootnote:[Los nombres de las funciones son genéricos, uso los mismos que se suelen encontrar en la bibliografía.]:
 
-Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, efecto convoy y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
-
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron por primera vez una implementación de memoria transaccional por software.
-
-
-
-
-
-
-Funciones
-Transacciones explícitas.
-
+[source, c]
 ----
-StartTX()
-x = LoadTX(ptr)
-x += 1
-StoreTX(ptr, x)
-CommitTx()
+StartTX();
+c = LoadTX(&counter);
+c += 1;
+StoreTX(&counter, c);
+CommitTx();
 ----
 
+Este tipo de construcción se denomina _transacciones explícitas_. Pero los compiladores pueden tener construcciones de uso más simple para el programador, los _bloques atómicos_:
 
+[source, c]
+----
+transaction {
+    counter += 1;
+}
+----
+
+En este caso se mejora la calidad del código y se facilita la tarea del programdor. El compilador es responsable de insertar las llamadas a las funciones de memoria transaccional. El bloque atómico es equivalente a las siguientes funciones explícitas:
+
+[source, c]
 ----
 do {
     StartTx();
@@ -97,16 +115,45 @@ do {
 } while (!CommitTx());
 ----
 
-bloques:
+[NOTE]
+====
+La construcción con la palabra clave +transaction+ es similar a +synchronized+ en Java o a +atomic+ en C\++. Pero mientras estas últimas introducen un _mutex_ que se aplica a otros métodos de la misma instancia, +transaction+ es global y permite la ejecución concurrente.
+====
+
+
+Algunos compiladores ya incluyen construcciones sintácticas como esa, como el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>). Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas (`__transaction_relaxed`) y más estrictas (`__transaction_atomic`).
+
+==== Bloques atómicos con GCC
+
+Desde la versión 4.7 GCC (2011) permite especificar bloques atómicos con semántica similar a la del borrador de C/C++ (<<TransactionGCC>>). El siguiente ejemplo es la implementación del contador con memoria transaccional (<<tm_mutex_gcc_c, código completo>>)footnote:[Puede usarse también `__transaction_relaxed`, pero con gcc 4.9 no encontré diferencia en el código ensamblador generado.]:
+
+[source, c]
+._Mutex_ con GCC
 ----
-transaction {
-    x = x + 1;
+for (i=0; i < max; i++) {
+    __transaction_atomic { <1>
+        counter++;
+    }
 }
 ----
 
+El compilador agregará las llamadas explícitas a funciones de las librería de memoria transaccional _libitm_. En el fragmento siguiente se ven las llamadas de inicio y fin de transacción como las de lectura y escritura del entero de cuatro bytes:
+
+[source]
+----
+call    _ITM_beginTransaction
+...
+call    _ITM_RU4
+...
+call    _ITM_WU4
+...
+call    _ITM_commitTransaction
+----
+
+La librería _libitm_ está incluida en GCC, las funciones son parte de las librerías compartidas del _runtime_ de gcc, no se incluyen en el código. Esta librería incluye una implementación de memoria transaccional por software compatible con el ABI de Intel. Permite implementar otros algoritmos vía _plugins_ y seleccionar cuál usar al momento de al ejecución. Desde la versión 4.8 soporta y detecta en tiempo de ejecución la memoria transaccional por hardware de Intel, PowerPC e IBM 390.
 
 
-La palabra clave transaction es similar a synchronized en Java, pero mientras synchronized adquiere un _lock_ específico, atomic lo es respecto a todos los demás bloques atómicos.
+
 
 Como las transacciones permiten actualizaciones a diferentes ubicaciones eliminan la necesidad de comparaciones múltiples en los spinlocks.
 
@@ -120,16 +167,20 @@ Las transacciones son ejecutadas especulativamente, hace cambios tentativos a ob
 Los _mutex_ son pesismistas, las transacciones optimistas y tentativas.
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
 
-==== GCC
 
 [source, c]
 ----
-    for (i=0; i < max; i++) {
-        __transaction_atomic {
-            counter[position]++;
-        }
-    }
+for (i=0; i < max; i++) {
+    TM_START(0, 0);         <1>
+    c = stm_load_int(&counter);
+    c++;
+    stm_store_int(&counter, c);
+    TM_COMMIT;              <2>
+}
 ----
+<1> Un macro de conveniencia que abre un bloque, llama a stm_start y salva el contexto.
+<2> Otro macro de conveniencia, llama a +stm_commit+ y cierra el bloque.
+
 
 
 Transactional Execution Facility included with the
@@ -413,12 +464,17 @@ __transaction_atomic {
 
 === Tiempos
 
-.Tiempos de ejecución STM
+.Tiempos de ejecución lectores-escritores
+[caption=""]
+image::tm_rw.png[align="center"]
+
+
+.Tiempos de ejecución STM Intel i5
 [caption=""]
 image::tm_software.png[align="center"]
 
 
-.Tiempos de ejecución HTM Intel
+.Tiempos de ejecución HTM Intel Xeon
 [caption=""]
 image::tm_hardware.png[align="center"]
 

@@ -1,3 +1,11 @@
 [appendix]
 
 == Memoria transaccional
+
+
+[[tm_mutex_gcc_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/mutex_transaction.c[mutex_transaction.c]
+[source,go]
+----
+include::../code/transactional/mutex_transaction.c[]
+----
