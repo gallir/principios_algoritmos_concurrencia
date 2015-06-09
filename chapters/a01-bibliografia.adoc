@@ -6,6 +6,8 @@
 
 - [[[Agrawala]]] Glenn Ricart, Ashok A. Agrawala. _Author's Response to ''On Mutual Exclusion in Computer Networks by Carvalho and Roucairol''_. Communications of the ACM, 26(2), 1983.
 
+- [[[AMDHTM]]] _Advanced Synchronization Facility Proposed Architectural Specification_. Advanced Micro Devices. March 2009. http://developer.amd.com/wordpress/media/2013/09/45432-ASF_Spec_2.1.pdf
+
 - [[[Atomics_C11]]] _Built-in functions for memory model aware atomic operations_. https://gcc.gnu.org/onlinedocs/gcc-4.9.2/gcc/_005f_005fatomic-Builtins.html#_005f_005fatomic-Builtins
 
 - [[[Atomics]]] _GCC Built-in functions for atomic memory access_. https://gcc.gnu.org/onlinedocs/gcc-4.4.3/gcc/Atomic-Builtins.html
@@ -121,12 +123,12 @@
 
 - [[[Stallings]]] William Stallings. _Operating Systems: Internals and Design Principles_ (8th Edition), 2014.
 
-- [[[Stone]]] Janice M. Stone, Harold S. Stone, Phil Heidelberger, John Turek. _Multiple reservations and the Oklahoma update_. IEEE Parallel & Distributed Technology, 1(4):58–71, November 1993.
+- [[[Stone]]] Janice M. Stone, Harold S. Stone, Phil Heidelberger, John Turek. _Multiple reservations and the Oklahoma update_. IEEE Parallel & Distributed Technology, 1(4):58–71, November 1993. https://www.cs.auckland.ac.nz/courses/compsci703s1c/resources/OklahomaUpdate.pdf
 
 - [[[Tabatabai]]] Ali-Reza Adl-Tabatabai, Tatiana Shpeisman, Justin Gottschlich. _Draft Specification of Transactional Language Constructs for C++_. Transactional Memory Specification Drafting Group. February 3, 2012. http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3725.pdf
 
 
-- [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9. https://www.cs.auckland.ac.nz/courses/compsci703s1c/resources/OklahomaUpdate.pdf
+- [[[Taunbenfeld]]] Gaudi Taunbenfeld. _Synchronization Algorithms and Concurrent Programming_. Pearson Education 2006. ISBN 978-0-13-197259-9.
 
 - [[[TransactionGCC]]] _Transactional Memory in GCC_. https://gcc.gnu.org/wiki/TransactionalMemory
 

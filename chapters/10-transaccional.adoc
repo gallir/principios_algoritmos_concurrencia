@@ -36,7 +36,7 @@ En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por prim
 
 En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware y software. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_).
 
-El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar memoria transaccional aún sin soportre de hardware. Además de las librerías _STM_ se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
+El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar memoria transaccional aún sin soporte de hardware. Además de las librerías _STM_ se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
 
 
 [NOTE]
@@ -131,7 +131,7 @@ for (i=0; i < max; i++) {
 === Implementación
 Mientras los _mutex_ son pesismistas, las transacciones son optimistas. Las transacciones son ejecutadas especulativamente, hace cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta.
 
-Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre.
+Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre y permiten la composición de transacciones.
 
 
 ==== Gestión de versiones
@@ -170,7 +170,7 @@ El control optimista debe considerar otras cuestiones:
     * El sistema puede hacer validaciones en varios instantes durante la transacción para verificar si hay conflictos.
     * Si se hace en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
 
-- El tipo de acceso que es tratado como conflicto. Puede hacer entre transacciones concurrentes activas (_tenttivos_) o entre las activas y las ya finalizadas.
+- El tipo de acceso que es tratado como conflicto. Se puede hacer entre transacciones concurrentes activas (_tentativas_) o entre las activas y las ya finalizadas.
 
 === Memoria transaccional por software (_STM_)
 
@@ -254,24 +254,45 @@ GCC incluye su propia librería de memoria transaccional: _libitm_. Las funcione
 
 Aunque _STM_ son muy flexibles tienen mucha sobrecarga, cada lectura y asignación implica llamadas a funciones que a su vez ejecutan algoritmos complejos. Puede hacerse más eficiente en el hardware, aunque está por ahora mucho más limitado que el software. hay dos tipos básicos de sistemas _HTM_:
 
-Sistemas transaccionales explícitos:: El procesador tiene instrucciones adicionales de acceso a memoria que indican que dichas direcciones deben tratarse como parte de una transacción, por ejemplo +load_transactional+ o +store_transactional+. Este tipo de sistemas da mayor libertad y flexibilidad al programador, pero requiere adaptación de todas las librerías para el cambio de las instrucciones. No es una buena solución si se desea mantener compatibilidad. Las propuestas de _Oklahoma Update_  (<<Stone>>) y _Advanced Synchronization Facility_ eran de este tipo.
+Sistemas explícitos:: El procesador tiene instrucciones adicionales de acceso a memoria que indican que dichas direcciones deben tratarse como parte de una transacción, por ejemplo +load_transactional+ o +store_transactional+. Este tipo de sistemas da mayor libertad y flexibilidad al programador, pero requiere adaptación de todas las librerías para el cambio de las instrucciones. No es una buena solución si se desea mantener compatibilidad. Las propuestas de _Oklahoma Update_ (<<Stone>>) y _Advanced Synchronization Facility_ eran de este tipo, aunque ninguno de ellos llegó a fabricarse.
 
-Sistemas implícitos::
+Sistemas implícitos:: Este tipo de procesador solo requiere que se indiquen los límites de la transacción, como +tbegin+ y +tend+. Todos los accesos entre ambas instrucciones son tratados como transaccionales. El primer diseño de procesador de este tipo fue Rock de Sun, cuya fabricación en serie fue cancelada. Los procesadores Intel, PowerPC y S390 implementan este mecanismos en sus procesadores lanzados recientemente.
 
-
-
-- Rock HTM. Rock HTM is an implicitly transactional HTM designed for a modern processor from Sun. However, Rock HTM requires the level two (L2) cache to track all store addresses inside the transaction.
+Sistemas híbridos:: En estos sistemas el procesador implementa instrucciones para ayudar a acelerar a sistemas _STM_.
 
 
+==== Intel TSX, IBM PowerPC y S390
 
-Desde la versión 4.8 _libitm_ detecta las extensiones de _HTM_ de hardware de Intel y desde 4.9 de los procesadores PowerPC e IBM S/390 y los usa en el _fastpath_
+En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_, se comercializa desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /prco/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con HTML se comercializa desde 2014.
+
+El sistema _HTM_ de las tres arquitecturas son muy similares, son sistemas de transacciones implícitos y ofrecen instrucciones muy similares:
+
+[cols="h,m,m,m", options="header"]
+|===
+|           | Intel     | PowerPC   | S390
+| _begin_   | xbegin    | tbegin    | tbegin
+| _commit_  | xend      | tend      | tend
+| _abort_   | xabort    | tabort    | tabort
+| _check_   | xtest     | tcheck    | etnd
+|===
 
 
-Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+Desde la versión 4.8 _libitm_ usa las extensiones de _HTM_ de hardware de Intel. Gracias a las similitudes entre sus sistemas e instrucciones, desde la versión 4.9 también soporta a los procesadores PowerPC e IBM S390. Si detecta soporte de hardware primero intenta la transacción con el procesador (el _fastpath_), si este no pudo finalizarla la resuelve por software.
 
-IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
 
-IBM S390 tbegin, tend, tabort, etnd
+==== Detección de conflictos
+
+Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memorias leídas y escritas. Con las protocolos de coherencia de caché modernos no es complicado (ver <<mesi_protocol>>), cada línea de caché de donde se lee o se escribe una posición es marcada como exclusiva para el procesador donde se ejecuta la transacción. Este debe mantener qué líneas de caché fueron solo leídas y cuáles escritas.
+
+La implementación por hardware tiene limitaciones e impone restricciones. A diferencia de _STM_ que puede implementar transacciones de objetos, en hardware solo con bytes y palabras. La cantidad máxima de memoria accedida durante una transacción está limitada por el tamaño de la caché, si se supera su tamaño la transacción se abortará. La granularidad de la detección de conflictos es de una línea de caché por lo que puede sufrir problemas de <<false_sharing, _false sharing_>> (se abortará la transacción si desde otro procesador se modifica una posición diferente pero que está en la misma línea de caché de una variable en la transacción).
+
+Las transacciones se abortan en cuanto se detecten conflictos en la caché, por eso los sistemas de hardware son de _detección temprana_. El _rollback_ de una transacción no es tampoco un gran problema en procesadores modernos. Los procesadores usan actualización retrasada con dos mecanismos:
+
+- La caché se pone en modo _write-back_ y no se vuelca a memoria RAM a menos que la transacción finalice, en caso contrario sencillamente se marcan como inválidas todas las líneas escritasfootnote:[Intel no publicó detalles de su arquitectura TSX pero se asegura que usa la caché L1 de cada núcleo como _buffer privado_ y en su documentación dicen que no se puede poner la caché en modo _write-back_.].
+
+- Se usa _renombrado de registros_. Los procesadores tienen más registros físicos de los usados por los programas, sus _nombre_ son dinámicos (se usan mecanismos de _hashing_). En estos casos los registros usados durante la transacción simplemente se descartan.
+
+Las transacciones también pueden ser abortadas si ocurren cambios de contexto, interrupciones del procesador, llamadas a operaciones de E/S. Para ayudar al software a detectar la razón del aborto devuelven un valor en un registro, este indica posibles causas, por ejemplo: error temporal (se puede reintentar), señales, pausa, interrupción, fallo de página, etc.
 
 
 
@@ -393,24 +414,7 @@ node *pop(node **head) {
 
 
 
-
-==== Sistemas
-A simulator is available for ASF, a proposed AMD64 architecture extension for bounded-size transactions [61]. This is based on PTLSim, providing a detailed, cycle-accurate full-system simulation of a multi-core system
-
-TL2 (<<Dice>>)
-
-CTL
-Deuce STM provee métodos atómicos para Java.
 ////
-JVSTM is a Java library that implements a multi-versioned approach to STM that includes
-mechanisms for partial re-execution of failed transactions
-The Sun C++ compiler with Transactional Memory supports a range of STM back-ends, including TL2 [83], SkySTM [188], HyTM [78] and PhTM [193].The compiler is available in binary format, but the runtime system and additional TM implementations are available as source code by request from the Sun Labs Scalable Synchronization Research Group. http://research.sun.com/scalable/
-TinySTM is a word-based STM implementation available from the University of Neuchatel. It is based on the LSA algorithm [262]. A Java LSA implementation is also available. http://tmware.org
-Implementations of TL2 [83] and subsequent algorithms are available for use with Tanger (an earlier version of DTMC). http://mcg.cs.tau.ac.il/projects
-TxOS is a prototype version of Linux that extends the OS to allow composition of system calls into atomic, isolated operations [243]. TxOS supports transactional semantics for a range of resources, including the file system, pipes, signals, and process control. It runs on commodity hardware. http://txos.code.csres.utexas.edu
-////
-
-
 
 === Criterios de corrección _correctness_
 
@@ -421,7 +425,7 @@ TxOS is a prototype version of Linux that extends the OS to allow composition of
 - Linearizabilidad (Linearizability): La operación de lecturas y escritura de toda la transacción debe aparecer en un momento puntual.
 
 - Instantáneas aisladas (Snapshot isolation): Es más débil que linearizabilidad, permite mayor concurrencia. Las lecturas debe ser linearizables antes que las escrituras.
-
+////
 
 
 
@@ -449,60 +453,6 @@ Singh developed a library of join patterns using atomic blocks in STM-Haskell [2
 
 
 
-
-
-.Programación con tinySMT
-
-
-
-
-=== Hardware
-
-==== Transacciones explícitas
-
-- Optimistic Synchronization, similar al LL/SC.
-- Herlihy and Moss HTM: load-transactional, store-transactional, and load-transactional-exclusive
-- Oklahoma Update: Operación atómica sobre varios registros.
-
-////
-Advanced Synchronization Facility. Recently, the Advanced Synchronization Facility (ASF) proposal [61] from Advanced Micro Devices takes a similar approach to the explicit HTM systems discussed so far. It introduces a SPECULATE instruction to begin a transaction, along with a COMMIT instruction to mark the end. Control returns implicitly to the SPECULATE instruction if the speculative region aborts, setting the processor flags to indicate that this has occurred. Simple flattened nesting is supported; speculation continues until the outermost COMMIT occurs. ASF proposes the use of a LOCK prefix to be added to memory accesses that should be performed transactionally. In the implementation proposal, ASF proposes the use of dedicated registers, similar to Oklahoma Update, to perform a multi-word compare-and-swap-like operation.
-////
-
-
-////
-
-
-
-SOFTWARE CONTROLLED CACHE COHERENCE
-
-RTM
-FlexTM
-////
-
-Programmable Data Isolation (PDI) Con este sistema el software tiene el control de qué direcciones de memoria participan en la transacción y deben ser controlados por el sistema de cache. Se requieren dos intrucciones TLoad y TStore.
-
-Este sistema requiere
-
-
-
-Restricted Transactional Memory: xbegin, xend, xabort, xtest.
-
-IBM Power PC, Transactional Memory, tbegin, tend, tabort, tcheck
-
-IBM S390 tbegin, tend, tabort, etnd
-
-
-
-
-
-GCC:
-
-
-
-
-
-https://gcc.gnu.org/onlinedocs/gcc-4.8.4/gcc/x86-specific-memory-model-extensions-for-transactional-memory.html#x86-specific-memory-model-extensions-for-transactional-memory
-The i386 architecture supports additional memory ordering flags to mark lock critical sections for hardware lock elision. These must be specified in addition to an existing memory model to atomic intrinsics.
 
 
 

@@ -44,12 +44,19 @@ El código del algoritmo de Peterson fue compilado sin optimizaciones, aún con 
 
 Los accesos a memoria RAM pueden tomar cientos de ciclos de procesador. Para reducir estas diferencias de velocidad los procesadores usan una jerarquía de hasta tres niveles de memoria caché: _L1_, _L2_ y _L3_. El nivel L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada núcleo y L3 es compartido por los núcleos en un mismo chip.
 
-Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas puede almacenar temporalmente de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente, los siguientes accesos se hacen directamente a la caché sin necesidad de acceder a la RAM. Las líneas de caché modificadas  se _marcan_ como tal para luego ser volcadas a la memoria RAM.
+Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas puede almacenar temporalmente de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente, los siguientes accesos se hacen directamente a la caché sin necesidad de acceder a la RAM. Las líneas de caché modificadas  se _marcan_ como tal para luego ser volcadas a la memoria RAM si el sistema es _write-back_ (si la copia a memoria se hace inmediatamente y antes de dar por finalizada la instrucción se denomina _write-through_).
 
 
 [NOTE]
+.Asociación de caché
 ====
-Se  usan varios mecanismos de _asociación_ para traducir de una dirección de memoria física a la línea correspondiente de la caché. En _direct mapping_ la asociación entre segmentos de direcciones de memoria y sus líneas correspondientes están predeterminadas. En sistemas de _hashing_ y asociatividad con _memoria direccionable por contenido_, cada línea puede almacenar cualquier posición alineada de memoria RAM.
+Se  usan varios mecanismos de _asociación_ para traducir de una dirección de memoria física a la línea correspondiente de la caché.
+
+En _direct mapping_ la asociación entre segmentos de direcciones de memoria y sus líneas correspondientes están predeterminadas.
+
+En sistemas de _hashing_ y asociatividad con _memoria direccionable por contenido_ cada línea puede almacenar cualquier posición alineada de memoria RAM.
+
+Los sistemas de caché más usados son los denominados _N-ways_, _N_ significa que un bloque de memoria puede ser almacenado en _N_ líneas diferentes.
 ====
 
 Las arquitecturas _SMP_ deben mantener coherentes las copias de la memoria caché en cada procesador. Cada arquitectura puede o no garantizar la _coherencia de caché_; la buena noticia es que la mayoría de sistemas _SMP_ la aseguran.
@@ -65,6 +72,7 @@ image::intel-quickpath.png[align="center"]
 
 Para mantener la consistencia entre las diferentes copias de caché se usan algoritmos como _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_) y derivadosfootnote:[Por ejemplo _MESIF_ en Intel, F por _forward_.].
 
+[[mesi_protocol]]
 [NOTE]
 .Protocolo _MESI_
 ====
