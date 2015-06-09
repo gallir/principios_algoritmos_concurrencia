@@ -149,7 +149,7 @@ mutex.unlock()
 [NOTE]
 ._Mutex_ de POSIX Threads
 ====
-En C se pueden usar los _mutex_ de las librerías POSIX Threads. Las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código>>).
+En C se pueden usar los _mutex_ de las librerías POSIX Threads. Las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código fuente>>).
 
 En <<sem_lock_java, Java se puede usar>> la clase +ReentrantLock+ de +java.util.concurrent.locks+.
 

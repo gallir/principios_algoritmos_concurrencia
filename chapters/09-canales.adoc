@@ -156,7 +156,7 @@ fatal error: all goroutines are asleep - deadlock!
 
 Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tener en cuenta que por defecto ambos canales son síncronos: _A_ y _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
-El interbloqueo se produce por una _espera circular_, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envía el propio. Por ejemplo (<<barrier_2p_sync_go, código>>):
+El interbloqueo se produce por una _espera circular_, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envía el propio. Por ejemplo (<<barrier_2p_sync_go, código fuente>>):
 
 [source,go]
 ----
@@ -166,7 +166,7 @@ ch_a <- true        <-ch_a
 <-ch_b              cha_b <- true
 ----
 
-Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales son síncronos pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código>>):
+Para evitar las soluciones asimétricas hay que recurrir a canales asíncronos. Por defecto los canales son síncronos pero se puede especificar el tamaño del _buffer_, en este caso es suficiente con tamaño 1 (<<barrier_2p_async_go, código fuente>>):
 
 [source,go]
 ----
@@ -185,7 +185,7 @@ En los ejemplos de sincronización de este capítulo –y en aplicaciones reales
 
 ==== Barreras generales
 
-Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] se aprovechan las dos capacidades de los mensajes: sincronización y comunicación. En las soluciones con semáforos usamos dos: uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo, pero en lugar de variables compartidas –sujetas a los problemas de condiciones de carrera– el contador estará almacenado en un mensaje que se copiará entre los procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código>>).
+Para este algoritmofootnote:[No sé si alguien lo diseñó o publicó antes, no lo he visto, lo escribí desde cero para este libro.] se aprovechan las dos capacidades de los mensajes: sincronización y comunicación. En las soluciones con semáforos usamos dos: uno para contabilizar los procesos que faltan por llegar a la meta y el otro para los que ya habían salido para comenzar la siguiente fase. También usaremos dos canales con el mismo objetivo, pero en lugar de variables compartidas –sujetas a los problemas de condiciones de carrera– el contador estará almacenado en un mensaje que se copiará entre los procesos: cada uno lo recogerá, actualizará y volverá a enviar (<<barrier_go, código fuente>>).
 
 Se requieren dos canales de tipo entero, +arrival+ y +departure+, y una variable +n+. Esta última es inmutable, se inicializa con el número de procesos a sincronizar. Definimos la estructura +Barrier+ con estos tres componentes:
 
@@ -259,7 +259,7 @@ Como la recepción y envío son operaciones atómicas no hace falta recurrir a n
 
 Los canales son productores-consumidores por diseño, no hay que hacer nada especial. Los mensajes pueden ser los elementos que se añaden o quitan del _buffer_. Si el canal no tiene _buffer_ la comunicación es síncrona, los productores siempre se bloquean hasta que un consumidor esté preparado para recibir. Si por el contrario se le asigna un _buffer_ funciona exactamente como el modelo de productores-consumidores con _buffer limitado_.
 
-La interacción es así de sencilla (<<producer_consumer_go, código>>):
+La interacción es así de sencilla (<<producer_consumer_go, código fuente>>):
 
 [source,go]
 ----
@@ -284,7 +284,7 @@ Si el _buffer_ del canal está lleno los productores se bloquearán hasta que lo
 
 [[channels_mutex]]
 === Mutex
-La implementación de _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a las usadas por los monitores en la máquina virtual de Java.] también es sencilla (<<channel_mutex_go, código>>). Inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
+La implementación de _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a las usadas por los monitores en la máquina virtual de Java.] también es sencilla (<<channel_mutex_go, código fuente>>). Inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
 
 [source,go]
 ----
@@ -324,7 +324,7 @@ func Unlock() {
 
 === Semáforos
 
-Para semáforos generales se puede usar la misma idea que con la primera versión anterior de _mutex_ (<<channel_semaphore_go, código>>), cada mensaje representa un permiso. Solo hace falta una cola que hay que iniciar con tantos mensajes como el valor inicial del semáforo:
+Para semáforos generales se puede usar la misma idea que con la primera versión anterior de _mutex_ (<<channel_semaphore_go, código fuente>>), cada mensaje representa un permiso. Solo hace falta una cola que hay que iniciar con tantos mensajes como el valor inicial del semáforo:
 
 [source,go]
 ----
@@ -357,7 +357,7 @@ El problema de esta solución es la dimensión del _buffer_ del canal: su tamañ
 
 Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usamos el canal +queue+ para mantener la cola de bloqueados.
 
-La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código>>):
+La estructura e inicialización es la siguiente (<<channel_semaphore2_go, código fuente>>):
 
 [source, go]
 ----
@@ -415,7 +415,7 @@ Se puede hacer que el canal +queue+ tenga un _buffer_ pequeño, por ejemplo `s.q
 
 [[channels_philosophers_simple]]
 === Filósofos cenando
-La solución natural con canales asíncronos es definir un array de canales, uno para cada tenedor (<<channel_philosophers_go, código>>). Durante la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
+La solución natural con canales asíncronos es definir un array de canales, uno para cada tenedor (<<channel_philosophers_go, código fuente>>). Durante la inicialización se deposita un mensaje en cada uno de ellos indicando su disponibilidad:
 
 [source, go]
 ----
@@ -461,7 +461,7 @@ El algoritmo anterior solo funciona con canales asíncronos. En el modelo _CSP_ 
 .Filósofos en _CSP_
 image::hoare_philosophers.png[align="center"]
 
-La solución es más sencilla de lo que parece (<<channel_philosophers_sync_go, código>>). Hay que hacer como propuso Hoare, crear un proceso adicional para cada tenedor (+fork+). El algoritmo de los filósofos no requiere cambios. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por su canal:
+La solución es más sencilla de lo que parece (<<channel_philosophers_sync_go, código fuente>>). Hay que hacer como propuso Hoare, crear un proceso adicional para cada tenedor (+fork+). El algoritmo de los filósofos no requiere cambios. Cada proceso +fork+ no requiere de ninguna computación adicional, solo recibe y envía mensajes por su canal:
 
 .Proceso para el tenedor _i_
 [source,go]

@@ -92,13 +92,15 @@ Los sistemas de caché en sistemas _SMP_ aseguran la consistencia de caché. La 
 [NOTE]
 ====
 Era importante introducir el tema de la coherencia de caché ya que tiene una enorme influencia en el rendimiento de programas concurrentes en sistemas _SMP_.
+
+También es importante conocerla para comprender el funcionamiento de la _memoria transaccional por hardware_ que vemos en el capítulo <<tm>>.
 ====
 
 ===== La sobrecarga del acceso a variables compartidas
 
 La ejecución de procesos es menos eficiente si estos acceden a las mismas zonas de memoria. Cada modificación de las variables almacenadas en la misma línea –aunque sean direcciones diferentes– obliga al sistema de caché a enviar mensajes de multidifusión para que los demás invaliden sus copias. Esto provoca que por cada acceso a la misma variable se envíen mensajes, y sus respectivas respuestas, para obtener el valor actualizado.
 
-El siguiente programa (<<counter_local_c, código>>) es lógicamente equivalente al contador <<counter_c, original>>, pero la suma la hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
+El siguiente programa (<<counter_local_c, código fuente>>) es lógicamente equivalente al contador <<counter_c, original>>, pero la suma la hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
 [source,c]
 ----

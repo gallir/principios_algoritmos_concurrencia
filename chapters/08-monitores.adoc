@@ -721,7 +721,7 @@ Los resultados son contraintuitivos, a medida que aumenta el número de hilos la
 
 === Recapitulación
 
-Los semáforos no proveen una construcción estructura que encapsule métodos y variables modificadas concurrentemente. Los _monitores_ se diseñaron para eliminar esta carencia, son una abstracción más estructurada que facilita el diseño de algoritmos de sincronización. No todos los lenguajes implementan la definición original de Hoare, pero prácticamente todos ofrecen los mecanismos para implementarlos metodológicamente: _mutex_ y variables de condición.
+Los semáforos no proveen una construcción estructurada que encapsule métodos y variables modificadas concurrentemente. Los _monitores_ se diseñaron para solventar esta deficiencia, son una abstracción más estructurada que facilita el diseño de algoritmos de sincronización. No todos los lenguajes implementan la definición original de Hoare, pero prácticamente todos ofrecen los mecanismos para implementarlos metodológicamente: _mutex_ y variables de condición.
 
 En este capítulo hemos visto cómo diseñar algoritmos de sincronización basados tanto en monitores implementados a nivel sintáctico –como en Java– como los construidos por el programador. Puede parecer que la serialización impuesta por los monitores provocan ineficiencias importantes, pero vimos que no siempre es así. En algunos problemas –como las barreras– los monitores no solo permiten algoritmos concurrentes más simples, también más eficientes.
 

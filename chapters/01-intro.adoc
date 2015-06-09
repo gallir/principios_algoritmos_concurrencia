@@ -94,7 +94,7 @@ Además de las ventajas para los programadores, los hilos son más _baratos_ que
 [NOTE]
 .POSIX Threads
 ====
-_POSIX Threads_ (o _Pthreads_) es el estándar POSIX para crear y gestionar hilos en entornos Unix. En Linux están implementadas en la librería _Native POSIX Thread Library_ (_NPTL), ya incluida en _GNU C Library_ (_Glibc_).
+_POSIX Threads_ (o _Pthreads_) es el estándar POSIX para crear y gestionar hilos en entornos Unix. En Linux están implementadas en la librería _Native POSIX Thread Library_ (_NPTL_), ya incluida en _GNU C Library_ (_Glibc_).
 
 La función +pthread_create+ sirve para crear hilos, recibe como argumento la referencia a la función inicial del nuevo hilo. Cuando dicha función acabe el hilo se destruirá, aunque se puede llamar a +pthread_exit+ en cualquier punto de la ejecución.
 

@@ -1,40 +1,40 @@
+[[tm]]
 == 10. Memoria transaccional
 
 image::jrmora/10-transaccional.jpg[align="center"]
 
-Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. El objetivo es simplificar la programación y la eficiencia de programas concurrentes aumentando el paralelismo. Para acceder a registros compartidos los programadores usan el concepto de _transacción_ conocida desde hace tiempo en las bases de de datos ACID.
+Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. Sus objetivos son simplificar la programación y aumentar el paralelismo de los programas cocurrentes. Para acceder a registros compartidos se usa el mismo concepto de _transacción_ conocida desde hace tiempo en las bases de datos ACID. Desde el punto de vista del programador las transacciones se ejecutan secuencialmente y aisladas unas de otras, las complejidades del control de concurrencia quedan ocultos al programador.
 
-Desde el punto de vista del programador las transacciones se ejecutan como secuencialmente y de forma aislada. Las complejidades del control de concurrencia quedan ocultos al programador.
-
+Las transacciones están íntimamente relacionadas con la exclusión mutua. En capítulos anteriores estudiamos los dos tipos de mecanismos para resolverla: los _spinlocks_ con primitivas atómicas y las soluciones bloqueantes. Pero ambos tienen problemas: limitaciones importantes como soporte a la programación concurrente cada vez más relevante y de eficiencia para la ejecucion en paralelo en sistemas _SMP_.
 
 === Los problemas de secciones críticas y _locks_
 
-Las transacciones están muy relacionadas con la exclusión mutua. Vimos dos tipos de mecanismos para resolverla, los _spinlocks_ con primtivas atómicas y las soluciones bloqueantes. Ambos tienen problemas de eficiencia y de programación.
+- La exclusión mutua reduce el nivel de paralelismo, las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce al capacidad de ejecutar hilos en paralelo.
 
-- La exclusión mutua reduce en nivel de paralelismo, las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce al capacidad de ejecutar hilos en paralelo.
+- Para evitar los cuellos de botella de las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atomicas. Pero estas primitivas solo trabajan con una palabra, por lo que requieren algoritmos más complejos cuando se deben trabajar con registros de mayor tamaño. Hay algunos temas académicamente todavia no resueltos eficientemente, como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos.
 
-- Para evitar los cuellos de botella de las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atomicas del procesador. Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se deben trabajar con registros mayores o con un mayor número de ellos. Hay algunos temas académicamente todavia no resueltos eficientemente, como las lista de doble entrada con posibilidad de añadir o extraer por ambos extremos.
-
-- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso es interrumpido por haber acabado su _cuanto_. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no puedan entrar a la sección crítica. El efecto convoy cuando se acumulan los procesos en espera se acumulan, aún después que el proceso interrumpido haya liberado el _lock_ toma un tiempo vaciar la cola de listos.
+- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso es interrumpido por haber acabado su _cuanto_. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no puedan entrar a la sección crítica. El efecto convoy cuando los procesos en espera se acumulan, aún después de que el proceso interrumpido haya liberado el _lock_ toma un tiempo vaciar la cola de procesos en espera.
 
 - Los interbloqueos son difíciles de evitar si se manipulan muchos objetos. Aunque hay técnicas y reglas conocidas (<<deadlocks>>), con el incremento del número y tamaño de los programas concurrentes el modelo ya no es sustentable (<<Herlihy12>>).
 
-- Los algoritmos de exclusión mutua y basados en primitivas no son _componibles_. Los  algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas, pero no se pueden componer. En spinlocks <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como una  exclusión mutua adicional pero crea otro cuelo de botella.
+- Los algoritmos de exclusión mutua y basados en primitivas no son _componibles_. Los  algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas, pero no se pueden componer. En <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, pero no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como una  exclusión mutua adicional pero crea otro cuello de botella.
 
-- Son difíciles de gestionar efectivamente, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades muy pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras complejas como hashing o árboles balanceados por la complicación de trabajar a granularidades más detalladas, no se puede saber de antemano qué ramas del árbol o qué partes de la tabla se modificarán. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
+- Son difíciles de gestionar efectivamente, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades muy pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras complejas (como _hashing_ o árboles balanceados) por la complicación de trabajar a granularidades más detalladas: no se puede saber de antemano qué ramas del árbol o qué partes de la tabla se modificarán. Lo que desea el programador es indicar cuál es la sección crítica y que el sistema se encargue de controlar la granularidad.
 
-El futuro parece ser un mayor aumento de núcleos y procesadores y por consiguiente un crecimiento de los programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones. Durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
+Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria de que los modelos actuales de exclusión mutua tienen demasiadas limitaciones.
+
+Durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales.
 
 
-=== Orígenes
+=== Veinte años de historia
 
 Los sistemas de memoria transaccional todavía están en su infancia. La primera propuesta para usar la idea de transacciones fue de David Lomet en 1977 (<<Lomet>>) pero no propuso ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
 
-En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones para soporte de hardware de transacciones (_HTM_) para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, _efecto convoy_ y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ (_Read-and-Reserve/Write-if-Reserved_) conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero a diferencia es esta permite reservar más de una palabra.
+En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones de soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridaddes, _efecto convoy_ y los interbloqueos. El mismo año, Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multi-palabra_ conocidas como _Oklahoma Update_. La propuesta está basada en la misma idea de LL/SC (<<llsc>>) pero permite reservar más de una palabra.
 
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez una implementación de memoria transaccional por software (_STM_). En 2006, Nir Shavit con Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas a TinySMT (<<Felber>>). TinySTM es una de las librerías _STM_ más populares y eficientes actualmentefootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.].
+En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez el uso práctico de memoria transaccional por software (_STM_). En 2006, Nir Shavit, Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas a TinySMT (<<Felber>>). TinySTM es una de las librerías _STM_ más populares y eficientesfootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.].
 
-En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware y software. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con soporte de memoria transaccional por hardware (_HTM_).
+En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware y software. En 2009 Sun presentó las primeras evaluaciones de la memoria transaccional por hardware (_HTM_) del unidades de preproducción de su procesador UltraSPARC Rock. Los procesadores del supercomputador BleeGene incluyeron soporte _HTM_ en 2011. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con _HTM_.
 
 El desarrollo de nuevos algoritmos y la compilación optimizada de los compiladores hace que tenga sentido usar memoria transaccional aún sin soporte de hardware. Además de las librerías _STM_ se está acabando con la definición de la definición del estándar para C y C++ de memoria transaccional (<<Tabatabai>>). El compilador GCC incluye soporte para memoria transaccional de software desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads ya usan el soporte de hardware desde la versión Glibc 2.18 (<<Kleen>>). Desarrolladores del núcleo Linux empezaron a desarrollar soporte de memoria transaccional por hardware desde 2013.
 
@@ -59,11 +59,33 @@ Las bases de datos tienen las propiedades ACID por _atomicidad_, _consistencia_,
 
 
 === Transacciones
+Como en bases de datos ACID, una transacción son una serie de pasos ejecutados por un único proceso. Las transacciones concurrentes deben ser _secuenciables_, desde el punto de vista del programador parecen ejecutarse secuencialmente. El resultado de la ejecución de dos transacciones concurrentes es equivalente a una ejecución secuencial entre ellas.
+
+Mientras los _mutex_ y _spinlocks_ son pesismistas, las transacciones son optimistas y pueden ser ejecutadas en paralelo. Las transacciones son ejecutadas especulativamente, hace cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ definitivo de los cambios que se hacen visibles a los demás procesos.
+
+Si se detecta un conflicto en los datos la transacción se aborta y no quedan rastros de las modificaciones _tentativas_ que se hicieron a las variables compartidas.
+
+==== Ventajas
+
+Granularidad:: Las transacciones detectan y resuelven con granularidades más pequeñas. Se pueden recorrer estructuras complejas (árboles, grafos, tablas de _hashing_, etc.) o manipular muchos objetos sin que el programador deba preocuparse de optimizar la exclusión mutua. Basta que especifique las transacciones a niveles más elevados, las transacciones se ejecutarán en paralelo y se detectarán los conflictos con granularidades pequeñas.
+
+Composición:: Las construcciones con transacciones pueden componerse para hacer atómicas un conjunto de operaciones independientes. Por ejemplo eliminar elementos de una estructura y añadirlas a otras. Las diferentes operaciones se incluyen dentro de una misma transacción. Estas operaciones eran imposibles con _spinlocks_ sin mecanismos adicionales y más complejos o costosos (como agregar otro _spinlock_).
+
+No producen interbloqueos:: Salvo casos extremos, como esperas activas dentro de una transacción, no producen interbloqueo. Sus composiciones tampoco.
+
+Mayor paralelismo:: La no necesitar exclusión mutua todos los procesos pueden ejecutarse en paralelo en diferemtes procesadores.
+
+
+Pero las transacciones no son un panacea, los programadores aún pueden provocar  interbloqueos o definir transacciones imposibles de finalizar sin conflictos.
+O incluso olvidarse de hacer el _commit_ de una transacción. Para evitar este tipo de errores se especificaron contrucciones sintácticas como los _bloques atómicos_.
+
+
+==== Funciones y bloques atómicos
 
 Las operaciones básicas para gestión de transacciones:
 
 - Iniciar transacción, +StartTx+.
-- Confirmar la transacción, +CommitTx+.
+- Confirmar la transacción (_commit_), +CommitTx+.
 - Abortar la transacción actual, +AbortTX+.
 
 Y para acceso a datos:
@@ -82,7 +104,7 @@ StoreTX(&counter, c);
 CommitTx();
 ----
 
-Este tipo de construcción se denomina _transacciones explícitas_. Pero los compiladores pueden tener construcciones de uso más simple para el programador, los _bloques atómicos_:
+Este tipo de construcciones se denominan _transacciones explícitas_. Pero los compiladores pueden ofrecer construcciones de uso más simple para el programador, los _bloques atómicos_:
 
 [source, c]
 ----
@@ -91,7 +113,7 @@ transaction {
 }
 ----
 
-En este caso se mejora la calidad del código y se facilita la tarea del programdor. El compilador es responsable de insertar las llamadas a las funciones de memoria transaccional. El bloque atómico es equivalente a las siguientes funciones explícitas:
+En este caso se mejora la calidad del código y se facilita la tarea del programador. El compilador es responsable de insertar las llamadas a las funciones de memoria transaccional (_instrumentación_). El bloque atómico es equivalente a las siguientes funciones explícitas:
 
 [source, c]
 ----
@@ -107,7 +129,7 @@ La construcción con +transaction+ es similar a +synchronized+ en Java o a +atom
 ====
 
 
-Algunos compiladores ya incluyen construcciones sintácticas como esa, como el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>). Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas  y más estrictasfootnote:[`__transaction_relaxed` y  `__transaction_atomic` respectivamente.].
+Algunos compiladores ya incluyen construcciones sintácticas de bloques, el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>) y GCC. Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas  y más estrictasfootnote:[`__transaction_relaxed` y  `__transaction_atomic` respectivamente.].
 
 ==== Bloques atómicos con GCC
 
@@ -122,12 +144,6 @@ for (i=0; i < max; i++) {
     }
 }
 ----
-
-
-=== Implementación
-Mientras los _mutex_ son pesismistas, las transacciones son optimistas. Las transacciones son ejecutadas especulativamente, hace cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ definitivo. Si no, se aborta.
-
-Las transacciones pueden ser anidadas, son útiles porque pueden ser abortadas sin abortar al padre y permiten la composición de transacciones.
 
 
 ==== Gestión de versiones
@@ -167,6 +183,10 @@ El control optimista debe considerar otras cuestiones:
     * Si se hace en el momento del _commit_ se denomina _detección tardía_ (_lazy conflict detection_).
 
 - El tipo de acceso que es tratado como conflicto. Se puede hacer entre transacciones concurrentes activas (_tentativas_) o entre las activas y las ya finalizadas.
+
+
+
+
 
 === Memoria transaccional por software (_STM_)
 
@@ -216,7 +236,7 @@ for (i=0; i < max; i++) {
 
 ==== Instrumentación del compilador
 
-No es práctica programar con funciones explícitas, mejor hacerlo en bloques (<<tm_mutex_gcc_c, código completo>>):
+No es práctico programar con funciones explícitas, mejor hacerlo en bloques (<<tm_mutex_gcc_c, código completo>>):
 
 [source, c]
 ----
@@ -225,7 +245,7 @@ transaction {
 }
 ----
 
-El compilador puede hacer la _instrumentación_ del código. Consiste en detectar dónde se leen y escriben variables compartidas e insertar las llamadas a las funciones de las librerías. En el ejemplo el GCC insertará el siguiente código:
+El compilador puede hacer la _instrumentación_ del código. Consiste en detectar dónde se leen y escriben variables compartidas e insertar las llamadas a las funciones de la librería. En el ejemplo el GCC insertará el siguiente código:
 
 
 [source]
@@ -299,7 +319,7 @@ Las transacciones también pueden ser abortadas si ocurren cambios de contexto, 
 
 _TSX_ es el nombe de las extensiones _HTM_ de Intel para su arquitectura Haswell. Incluye dos interfaces con mecaninismos diferentes:
 
-- _Restricted Transactional Memory_  o _RTM_.
+- _Restricted Transactional Memory_ o _RTM_.
 - _Hardware Lock Elision_ o _HLE_.
 
 _TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> para detectar conflictos. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64), esta caché es compartida en las CPU con _hypethreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
@@ -411,7 +431,26 @@ La probabilidad de que una transacción falle no es baja, ocurrirá siempre en u
 
 Para evitar este efecto hay que verificar el código de error de la transacción y reintentarla un número limitado de veces. El procesador indica la razón del fallo, incluso da pistas de si vale la pena reintentar (con el código +_XABORT_RETRY+).
 
-En el <<tm_mutex_rtm_c, código de ejemplo>> se puede ver el código completo. Se reintenta la transacción hasta 10 veces si el procesador indica que vale la pena, si se abortó explícitamente por el valor de +mutex+ o si el código de error es 0.
+El siguiente es el código simplificado de cómo queda la función de entrada con _RTM_:
+
+[source, c]
+----
+void rtm_lock() {
+    int c = 0, st = 0;
+
+    while (c < 10 && CAN_TRY) {
+        if ((st = _xbegin()) == _XBEGIN_STARTED) {
+            if (! mutex) return;
+            _xabort(0xff);
+        }
+        c++;
+    }
+    lock();
+}
+----
+
+En el <<tm_mutex_rtm_c, código de ejemplo>> se puede ver el código completo. Se reintenta la transacción hasta 10 veces si el valor del estado (+st+) indica que puede reintentarse, si se abortó explícitamente por el valor de +mutex+ o si el código de error es 0.
+
 
 En el siguiente gráfico se puede observar una comparación de tiempos de CPU y retorno del algoritmo de lectores-escritores con _spinlock_, _RTM_ simple y _RTM_ con reintentos (<<tm_rw_rtm_c, código fuente>>) de la transacción.
 
@@ -419,7 +458,9 @@ En el siguiente gráfico se puede observar una comparación de tiempos de CPU y 
 [caption=""]
 image::tm_retry.png[align="center"]
 
-La diferencia de tiempos de CPU y retorno son considerables. Para aprovechar la eficiencia de _HTM_ hay que usar las técnicas y patrones apropiadas.
+La diferencia de tiempos de CPU y retorno son considerables. Para aprovechar la eficiencia de _HTM_ hay que ser muy cuidadoso. Las transacciones pueden abortar por muchos motivos además de conflictos de datos, hay que verificar cuál fue la razón para tomar la decisión de reintentar o pasar a la alternativa de _spinlocks_ o _mutex_.
+
+
 
 ////
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
@@ -474,7 +515,7 @@ node *pop(node **head) {
 - Linearizabilidad (Linearizability): La operación de lecturas y escritura de toda la transacción debe aparecer en un momento puntual.
 
 - Instantáneas aisladas (Snapshot isolation): Es más débil que linearizabilidad, permite mayor concurrencia. Las lecturas debe ser linearizables antes que las escrituras.
-////
+
 
 
 
@@ -493,11 +534,11 @@ Single-Lock Atomicity (SLA) for Atomic Blocks
 
 Los problemas de llamadas de sistemas, E/S y transacciones externas
 
-Transacción son una serie de pasos ejecutados por un único proceso. Deben ser secuenciables, parecen ejecutarse secuencialmente en un orden de una a la vez.
+
 
 Singh developed a library of join patterns using atomic blocks in STM-Haskell [294].T
 
-
+////
 
 
 
