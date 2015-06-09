@@ -91,6 +91,7 @@ Las instrucciones _LL/SC_ solo pueden ser programadas en ensamblador de algunas 
 
 Dejando de lado las limitaciones y restricciones prácticas de programar con instrucciones del procesador, es sorprendente la simplicidad de los algoritmos de exclusión mutua con estas primitivas. Sobre todo después de analizar los problemas de los algoritmos sin soporte del hardware.
 
+[[get_and_set_alg]]
 ==== _Get&Set_
 Se usa una variable global +mutex+ inicializada a cero que indica que no hay procesos en la sección crítica. En el preprotocolo se almacena 1 y se verifica si el valor anterior era 0 (es decir, no había ningún proceso en la sección crítica). Si es diferente a cero, esperará en un bucle hasta que lo sea.
 

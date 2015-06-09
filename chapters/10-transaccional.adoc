@@ -57,10 +57,6 @@ Las bases de datos tienen las propiedades ACID por _atomicidad_, _consistencia_,
 - Durabilidad asegura que si una transacción acaba correctamente (con _commit_) sus datos están almacenados en el dispositivo de almacenamiento persistente.
 ====
 
-////
-La popularización de los _multicores_ ha hecho renacer el interés por estas técnicas. Ambas son muy similares pero tienen sus diferencias. Las bases de datos involucran acceso a disco, las transacciones en memoria involucran comunicación de mensajes entre los diferentes procesadores y sistemas de cache.
-////
-
 
 === Transacciones
 
@@ -107,11 +103,11 @@ do {
 
 [NOTE]
 ====
-La construcción con la palabra clave +transaction+ es similar a +synchronized+ en Java o a +atomic+ en C\++. Pero mientras estas últimas introducen un _mutex_ que se aplica a otros métodos de la misma instancia, +transaction+ es global y permite la ejecución concurrente.
+La construcción con +transaction+ es similar a +synchronized+ en Java o a +atomic+ en C++. Pero mientras estas últimas introducen un _mutex_ que se aplica a otros métodos de la misma instancia, `transaction` es global y permite la ejecución concurrente.
 ====
 
 
-Algunos compiladores ya incluyen construcciones sintácticas como esa, como el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>). Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas (`__transaction_relaxed`) y más estrictas (`__transaction_atomic`).
+Algunos compiladores ya incluyen construcciones sintácticas como esa, como el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>). Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas  y más estrictasfootnote:[`__transaction_relaxed` y  `__transaction_atomic` respectivamente.].
 
 ==== Bloques atómicos con GCC
 
@@ -197,7 +193,7 @@ Los componentes fundamentales de las librerías _STM_ son:
 
 En general las librerías se programan con llamadas explícitas. Veremos el ejemplo con la librería _tinySMT_ (están incluidas en el repositorio de Github).
 
-El procedimiento es iniciar las librerías al inicio del programa (+stm_init+) y al inicio de cada hilo que las usará (+stm_init_thread+). Se inician las transacciones con +stm_start+ y se hace el _commit_ con +stm_commit+. Los ejemplos de la librería tienen ejemplos de macros de conveniencia para facilitar la programación, usamos los de inicio (+TM_START+) y fin de transacción (TM_COMMIT+).
+El procedimiento es iniciar las librerías al inicio del programa (+stm_init+) y al inicio de cada hilo que las usará (+stm_init_thread+). Se inician las transacciones con +stm_start+ y se hace el _commit_ con +stm_commit+. Los ejemplos de la librería tienen ejemplos de macros de conveniencia para facilitar la programación, usamos los de inicio (+TM_START+) y fin de transacción (+TM_COMMIT+).
 
 Dentro de las transacciones no se deben acceder directamente a los registros u objetos compartidos, deben usar las funciones para lectura y escritura. En ese caso como se trata de un entero usamos +stm_load_int+ y +stm_store_int+.
 
@@ -265,7 +261,7 @@ Sistemas híbridos:: En estos sistemas el procesador implementa instrucciones pa
 
 En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_, se comercializa desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /prco/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con HTML se comercializa desde 2014.
 
-El sistema _HTM_ de las tres arquitecturas son muy similares, son sistemas de transacciones implícitos y ofrecen instrucciones muy similares:
+El sistema _HTM_ de las tres arquitecturas son muy similares (_RTM_ en Intel), son sistemas de transacciones implícitos y ofrecen instrucciones muy similares:
 
 [cols="h,m,m,m", options="header"]
 |===
@@ -294,33 +290,26 @@ Las transacciones se abortan en cuanto se detecten conflictos en la caché, por 
 
 Las transacciones también pueden ser abortadas si ocurren cambios de contexto, interrupciones del procesador, llamadas a operaciones de E/S. Para ayudar al software a detectar la razón del aborto devuelven un valor en un registro, este indica posibles causas, por ejemplo: error temporal (se puede reintentar), señales, pausa, interrupción, fallo de página, etc.
 
+=== Programación con Intel TSX
 
+_TSX_ es el nombe de las extensiones _HTM_ de Intel, incluyen dos tipos diferente: _RTM_ (_Restricted Transactional Memory_) es el descrito anteriormente y otra muy interesante, _Hardwre Lock Elision_ o _HLE_.
 
-==== _Hardware Lock Elision_
-Intel microprocessors based on the Haswell microarchitecture
+==== _HLE_
 
-Hardware Lock Elision: xaquire/xrelease, usan los mismo prfijos que REPNE/REPE y sin ignorados si no se soporta.
+_HLE_ está basado en el trabajo de Ravi Rajwarfootnote:[Posteriormente Intel contrató a Ravi Rajwar.] y James R. Goodman publicado en 2001 (<<Rajwar>>). La idea es creativa, sencilla y permite que los programas compilados para _HLE_ funcionen en procesadores antiguos.
 
-Si falla vuelve a ejecutar sin eludir el mutex.
-
-
-- Speculative Lock Elision. to roll back register state, The SLE implementation uses the store buffer to hold updates performed transactionally
-
-
-With speculative lock elision (SLE), critical sections execute speculatively with TM-like techniques being used to dynamically detect conflicts between them. If there is a conflict between speculative critical sections then one or other of the critical sections can be re-executed, or the implementation can fall back to non-speculative execution and actually acquire the lock in question. Conflicts between speculative and non-speculative critical sections can be detected by having speculative sections monitor that the locks they acquire are currently available.
-
-<<Rajwar>>
-
-las ejecuciones son especulativas, los cambios son tentativos, si se completa la transacción se hace el _commit_.
-
-
+Los _mutex_ con _spinlocks_, por ejemplo con <<get_and_set_alg, _get&set_>> tienen el siguiente aspecto:
 
 ----
 movl    $1, %eax
-xchgl	mutex(%rip), %eax
+xchgl	mutex(%rip), %eax   <1>
 ...
-movl    $0, %eax
+movl    $0, mutex(%rip)     <2>
 ----
+<1> Hace el intercambio con +mutex+, lo pone en 1.
+<2> Libera el _mutex_.
+
+_HLE_ provee dos prefijos nuevos, +xaquire+ y +xrelease+. Estos prefijos se agregan a las instrucciones de entrada a la sección crítica (+xchgl+ en este caso) y en la salida, como en el siguiente código:
 
 ----
 movl    $1, %eax
@@ -330,19 +319,23 @@ movl    $0, %eax
 xrelease movl   %eax, mutex(%rip)
 ----
 
+Cuando el procesador ejecuta la primera vez la asignación a +xchgl+ y encuentre el prefijo +xacquire+ elidefootnote:[Es la traducción de _elision_, un verbo válido en castellano, se dice así a la supresión de vocales o de palabras completas.] la asignación y ejecuta como una transacción hasta el +xrelease+. Si hay conflicto vuelve a ejecutar desde el +xacquire+ pero esta vez asignando la instrucción +xchgl+.
+
+GCC incluye la opción `__ATOMIC_HLE_ACQUIRE` para sus macros atómicos. El código simplificado para el _lock_ y _unlock_ es el siguiente (<<tm_mutex_hle_c, código completo>>):
 
 ----
 void lock() {
-    while(exchange_n(&mutex, 1, __ATOMIC_ACQUIRE|__ATOMIC_HLE_ACQUIRE));
+    while(exchange_n(&mutex, 1, __ATOMIC_HLE_ACQUIRE));
 }
 
 void unlock() {
-     store_n(&mutex, 0, __ATOMIC_RELEASE|__ATOMIC_HLE_RELEASE);
+     store_n(&mutex, 0, __ATOMIC_HLE_RELEASE);
 }
 ----
 
+Los _opcodes_ de ambos prefijos son los mismos que +repne+ y +repe+, que son ignorados por los procesadores sin soporte _HLE_.
 
-==== _Restricted Transactional Memory_
+==== _RTM_
 
 Siempre debe proveer un camino alternativo.
 Restricted Transactional Memory: xbegin, xend, xabort, xtest.

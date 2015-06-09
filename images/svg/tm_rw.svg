@@ -50,28 +50,28 @@
  <path fill="rgb(0,69,134)" stroke="none" d="M 6965,4252 L 7914,4252 7914,2423 6965,2423 6965,4252 Z"/>
  <path fill="rgb(0,69,134)" stroke="none" d="M 4118,4252 L 5067,4252 5067,3348 4118,3348 4118,4252 Z"/>
  <path fill="rgb(0,69,134)" stroke="none" d="M 1270,4252 L 2219,4252 2219,564 1270,564 1270,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 13609,4252 L 14558,4252 14558,2576 13609,2576 13609,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 10761,4252 L 11710,4252 11710,1305 10761,1305 10761,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 7915,4252 L 8864,4252 8864,3275 7915,3275 7915,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 5067,4252 L 6016,4252 6016,3555 5067,3555 5067,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 2219,4252 L 3169,4252 3169,826 2219,826 2219,4252 Z"/>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="1584" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">spinlock</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="4419" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">tinySTM</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="6644" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">GCC transaction</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="10047" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">Intel HLE</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="12869" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">Intel RTM</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="4373"><tspan fill="rgb(0,0,0)" stroke="none">0</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3933"><tspan fill="rgb(0,0,0)" stroke="none">1</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3494"><tspan fill="rgb(0,0,0)" stroke="none">2</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3054"><tspan fill="rgb(0,0,0)" stroke="none">3</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="2615"><tspan fill="rgb(0,0,0)" stroke="none">4</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="2175"><tspan fill="rgb(0,0,0)" stroke="none">5</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="1736"><tspan fill="rgb(0,0,0)" stroke="none">6</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="1296"><tspan fill="rgb(0,0,0)" stroke="none">7</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="857"><tspan fill="rgb(0,0,0)" stroke="none">8</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="418"><tspan fill="rgb(0,0,0)" stroke="none">9</tspan></tspan></tspan></text>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 13609,4252 L 14558,4252 14558,3723 13609,3723 13609,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 10761,4252 L 11710,4252 11710,1070 10761,1070 10761,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 7915,4252 L 8864,4252 8864,3255 7915,3255 7915,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 5067,4252 L 6016,4252 6016,3548 5067,3548 5067,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 2219,4252 L 3169,4252 3169,960 2219,960 2219,4252 Z"/>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="1584" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">spinlock</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="4419" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">tinySTM</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="6644" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">GCC transaction</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="10047" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">Intel HLE</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="12869" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">Intel RTM</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="4373"><tspan fill="rgb(0,0,0)" stroke="none">0</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3933"><tspan fill="rgb(0,0,0)" stroke="none">1</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3494"><tspan fill="rgb(0,0,0)" stroke="none">2</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="3054"><tspan fill="rgb(0,0,0)" stroke="none">3</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="2615"><tspan fill="rgb(0,0,0)" stroke="none">4</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="2175"><tspan fill="rgb(0,0,0)" stroke="none">5</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="1736"><tspan fill="rgb(0,0,0)" stroke="none">6</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="1296"><tspan fill="rgb(0,0,0)" stroke="none">7</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="857"><tspan fill="rgb(0,0,0)" stroke="none">8</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="361" y="418"><tspan fill="rgb(0,0,0)" stroke="none">9</tspan></tspan></tspan></text>
  <path fill="rgb(0,69,134)" stroke="none" d="M 15615,2356 L 15509,2356 15509,2145 15720,2145 15720,2356 15615,2356 Z"/>
  <path fill="rgb(255,66,14)" stroke="none" d="M 15615,2853 L 15509,2853 15509,2642 15720,2642 15720,2853 15615,2853 Z"/>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="15820" y="2370"><tspan fill="rgb(0,0,0)" stroke="none">I5 (STM)</tspan></tspan></tspan></text>
- <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans, sans-serif" font-size="353px" font-weight="400"><tspan class="TextPosition" x="15820" y="2867"><tspan fill="rgb(0,0,0)" stroke="none">Xeon (HTM)</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="15820" y="2370"><tspan fill="rgb(0,0,0)" stroke="none">I5 (STM)</tspan></tspan></tspan></text>
+ <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="15820" y="2867"><tspan fill="rgb(0,0,0)" stroke="none">Xeon (HTM)</tspan></tspan></tspan></text>
 </svg>

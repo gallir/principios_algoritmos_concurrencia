@@ -42,11 +42,11 @@
  <path fill="rgb(0,69,134)" stroke="none" d="M 7070,4252 L 8007,4252 8007,891 7070,891 7070,4252 Z"/>
  <path fill="rgb(0,69,134)" stroke="none" d="M 4260,4252 L 5196,4252 5196,2384 4260,2384 4260,4252 Z"/>
  <path fill="rgb(0,69,134)" stroke="none" d="M 1449,4252 L 2386,4252 2386,2389 1449,2389 1449,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 13627,4252 L 14564,4252 14564,2854 13627,2854 13627,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 10817,4252 L 11753,4252 11753,3102 10817,3102 10817,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 8007,4252 L 8944,4252 8944,3256 8007,3256 8007,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 5196,4252 L 6133,4252 6133,2882 5196,2882 5196,4252 Z"/>
- <path fill="rgb(255,66,14)" stroke="none" d="M 2386,4252 L 3323,4252 3323,3579 2386,3579 2386,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 13627,4252 L 14564,4252 14564,3171 13627,3171 13627,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 10817,4252 L 11753,4252 11753,3159 10817,3159 10817,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 8007,4252 L 8944,4252 8944,3260 8007,3260 8007,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 5196,4252 L 6133,4252 6133,3085 5196,3085 5196,4252 Z"/>
+ <path fill="rgb(255,66,14)" stroke="none" d="M 2386,4252 L 3323,4252 3323,3287 2386,3287 2386,4252 Z"/>
  <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="1751" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">spinlock</tspan></tspan></tspan></text>
  <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="4548" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">tinySTM</tspan></tspan></tspan></text>
  <text class="TextShape"><tspan class="TextParagraph" font-family="Liberation Sans" font-size="353px" font-weight="400"><tspan class="TextPosition" x="6737" y="4820"><tspan fill="rgb(0,0,0)" stroke="none">GCC transaction</tspan></tspan></tspan></text>
