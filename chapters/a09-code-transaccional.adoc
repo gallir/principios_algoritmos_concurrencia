@@ -22,7 +22,7 @@ include::../code/transactional/mutex_transaction.c[]
 
 === HTM
 
-==== _Mutex_ HLE
+==== _Mutex_ _HLE_
 [[tm_mutex_hle_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_hle.c[mutex_hle.c]
 [source,go]
@@ -30,10 +30,26 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/
 include::../code/transactional/intel/mutex_hle.c[]
 ----
 
-==== _Mutex_ RTM
+==== _Mutex_ _RTM_
 [[tm_mutex_rtm_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_rtm.c[mutex_rtm.c]
 [source,go]
 ----
 include::../code/transactional/intel/mutex_rtm.c[]
+----
+
+==== Lectores-escritores _HLE_
+[[tm_rw_hle_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/rw_hle.c[rw_hle.c]
+[source,go]
+----
+include::../code/transactional/intel/rw_hle.c[]
+----
+
+==== Lectores-escritores _RTM_
+[[tm_rw_rtm_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/rw_rtm.c[rw_rtm.c]
+[source,go]
+----
+include::../code/transactional/intel/rw_rtm.c[]
 ----

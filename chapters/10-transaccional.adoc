@@ -140,7 +140,7 @@ Los sistemas de memoria transaccional deben gestionar las escrituras tentativas 
 
 ==== Control de concurrencia
 
-Cada transacción mantiene un conjunto de registros _leídos_ y _escritos_, estos son usados para detectar y solucionar los conflictos. Se diferencian tres eventos:
+Cada transacción mantiene un conjunto de registros _leídos_ (_read-set_) y _escritos_ (_write-set_) que son usados para detectar y solucionar los conflictos. Se diferencian tres eventos:
 
 1. Ocurrencia: Ocurre un conflicto cuando dos transacciones hacen operaciones conflictivas sobre las mismas regiones de datos, por ejemplo dos escrituras.
 
@@ -263,6 +263,11 @@ En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_, se comercia
 
 El sistema _HTM_ de las tres arquitecturas son muy similares (_RTM_ en Intel), son sistemas de transacciones implícitos y ofrecen instrucciones muy similares:
 
+- Intel: +xbegin+, +xend+, +xabort+, +xtest+.
+- PowerPC: +tbegin+, +tend+, +tabort+, +tcheck+.
+- S390: +tbegin+, +tend+, +tabort+, +etnd+.
+
+////
 [cols="h,m,m,m", options="header"]
 |===
 |           | Intel     | PowerPC   | S390
@@ -271,20 +276,20 @@ El sistema _HTM_ de las tres arquitecturas son muy similares (_RTM_ en Intel), s
 | _abort_   | xabort    | tabort    | tabort
 | _check_   | xtest     | tcheck    | etnd
 |===
-
+////
 
 Desde la versión 4.8 _libitm_ usa las extensiones de _HTM_ de hardware de Intel. Gracias a las similitudes entre sus sistemas e instrucciones, desde la versión 4.9 también soporta a los procesadores PowerPC e IBM S390. Si detecta soporte de hardware primero intenta la transacción con el procesador (el _fastpath_), si este no pudo finalizarla la resuelve por software.
 
 
 ==== Detección de conflictos
 
-Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memorias leídas y escritas. Con las protocolos de coherencia de caché modernos no es complicado (ver <<mesi_protocol>>), cada línea de caché de donde se lee o se escribe una posición es marcada como exclusiva para el procesador donde se ejecuta la transacción. Este debe mantener qué líneas de caché fueron solo leídas y cuáles escritas.
+Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memorias leídas (_read-set_) y modificadas (_write-set_). Con las protocolos de coherencia de caché modernos no es complicado, cada línea de caché de donde se lee o se escribe una posición es marcada como exclusiva para el procesador donde se ejecuta la transacción. Este debe mantener qué líneas de caché fueron solo leídas y cuáles escritas.
 
 La implementación por hardware tiene limitaciones e impone restricciones. A diferencia de _STM_ que puede implementar transacciones de objetos, en hardware solo con bytes y palabras. La cantidad máxima de memoria accedida durante una transacción está limitada por el tamaño de la caché, si se supera su tamaño la transacción se abortará. La granularidad de la detección de conflictos es de una línea de caché por lo que puede sufrir problemas de <<false_sharing, _false sharing_>> (se abortará la transacción si desde otro procesador se modifica una posición diferente pero que está en la misma línea de caché de una variable en la transacción).
 
 Las transacciones se abortan en cuanto se detecten conflictos en la caché, por eso los sistemas de hardware son de _detección temprana_. El _rollback_ de una transacción no es tampoco un gran problema en procesadores modernos. Los procesadores usan actualización retrasada con dos mecanismos:
 
-- La caché se pone en modo _write-back_ y no se vuelca a memoria RAM a menos que la transacción finalice, en caso contrario sencillamente se marcan como inválidas todas las líneas escritasfootnote:[Intel no publicó detalles de su arquitectura TSX pero se asegura que usa la caché L1 de cada núcleo como _buffer privado_ y en su documentación dicen que no se puede poner la caché en modo _write-back_.].
+- Las líneas de caché modificadas se ponen en modo _write-back_ y no se vuelcan a memoria RAM a menos que la transacción finalice, en caso contrario sencillamente se marcan como inválidas todas las líneas escritasfootnote:[Intel no publicó detalles de su arquitectura TSX pero se sabe que usa la caché L1 de cada núcleo como _buffer privado_ y en la documentación se explica que no se puede poner la caché en modo _write-back_.].
 
 - Se usa _renombrado de registros_. Los procesadores tienen más registros físicos de los usados por los programas, sus _nombre_ son dinámicos (se usan mecanismos de _hashing_). En estos casos los registros usados durante la transacción simplemente se descartan.
 
@@ -292,9 +297,21 @@ Las transacciones también pueden ser abortadas si ocurren cambios de contexto, 
 
 === Programación con Intel TSX
 
-_TSX_ es el nombe de las extensiones _HTM_ de Intel, incluyen dos tipos diferente: _RTM_ (_Restricted Transactional Memory_) es el descrito anteriormente y otra muy interesante, _Hardwre Lock Elision_ o _HLE_.
+_TSX_ es el nombe de las extensiones _HTM_ de Intel para su arquitectura Haswell. Incluye dos interfaces con mecaninismos diferentes:
 
-==== _HLE_
+- _Restricted Transactional Memory_  o _RTM_.
+- _Hardware Lock Elision_ o _HLE_.
+
+_TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> para detectar conflictos. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64), esta caché es compartida en las CPU con _hypethreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
+
+Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y se la marca como _exclusiva_, ahora está en el _read-set_. Si la variable se modifica se marca su línea de caché como _modificada_, ahora está en el _write-set_. Si la se ejecuta +xend+ se llegó al final de la transacción sin conflicto, se hace el _commit_ poniendo los bits _T_ en cero. Ahora todas la líneas modificadas son visibles a los demás procesadores.
+
+Si CPU0 está en una transacción y desde CPU1 se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a CPU0. Si esa línea de caché está marcada como _modificada_ CPU0 detecta el conflicto y aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. CPU1 leerá el valor que sin modificar que estaba en memoria RAM. Lo mismo ocurre si CPU1 intenta escribir a una dirección que está en el _read-set_ de CPU0 (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
+
+La solución es sencilla y está integrada en el sistema de caché, pero una transacción que está a punto de finalizar puede ser forzada a abortar por acceso de otra que acaba de comenzar. O incluso por lecturas de variables modificadas desde otras CPU que no están en una transacción.
+
+
+==== _Hardware Lock Elision_
 
 _HLE_ está basado en el trabajo de Ravi Rajwarfootnote:[Posteriormente Intel contrató a Ravi Rajwar.] y James R. Goodman publicado en 2001 (<<Rajwar>>). La idea es creativa, sencilla y permite que los programas compilados para _HLE_ funcionen en procesadores antiguos.
 
@@ -335,35 +352,74 @@ void unlock() {
 
 Los _opcodes_ de ambos prefijos son los mismos que +repne+ y +repe+, que son ignorados por los procesadores sin soporte _HLE_.
 
-==== _RTM_
+==== _Restricted Transactional Memory_
 
-Siempre debe proveer un camino alternativo.
-Restricted Transactional Memory: xbegin, xend, xabort, xtest.
+Se denomina _restringido_ porque no están permitidas todas las instrucciones, algunas causan el aborto de la transacción, como +cpuid+, +pause+, operaciones de punto flotante o MMX, instrucciones que causan cambios de privilegios, etc.
 
+_RTM_ usa tres funciones, +xbegin+ para comenzar la transacción, +xabort+ para abortarla explícitamente y +xend+ para el _commit_. No se asegura _progreso_ (las transacciones podrían abortar siempre) por lo que no se puede hacer un bucle infinito, hay que proveer un camino alternativo. Este suele ser la llamada a un _spinlock_ o _mutex_ para asegurar exclusión mutua.
 
-
+El patrón de programación con un _spinlock_ para exclusión mutua es el siguiente (usando los _intrinsics_ de Intel para GCC):
 
 [source, c]
 ----
-for (i=0; i < max; i++) {
-    if (_xbegin() == _XBEGIN_STARTED) {
-        if (mutex) {
-            _xabort(1);
-        }
-        counter[position]++;
-        _xend();
-    } else {
-        lock();
-        counter[position]++;
-        unlock();
+if (_xbegin() == _XBEGIN_STARTED) { <1>
+    if (mutex) {
+        _xabort(0xff);              <2>
     }
+    /* critical section */
+    _xend();                        <3>
+} else {
+    lock();                         <4>
+    /* critical section */
+    unlock();
 }
 ----
+<1> Se verifica si la transacción fue iniciada y finalizó sin conflictos.
+<2> Agrega +mutex+ al _read-set_ de la transacción (abortará si se modifica desde otra CPU) y verifica su valor, si es diferente a cero hay otro proceso en la sección crítica por lo que se aborta inmediatamente.
+<3> Hace el _commit_.
+<4> Si la transacción fue abortada se usa el camino alternativo con el _spinlock_.
+
+Por claridad, no repetir código y para mantener las mismas llamadas que para _mutex_ se pueden separar en funciones equivalentes a _lock_ y _unlock_.
+
+[source, c]
+----
+void rtm_lock() {
+    if (_xbegin() == _XBEGIN_STARTED) {
+        if (! mutex) return;    <1>
+        _xabort(0xff);
+    }
+    lock();                     <2>
+}
+
+void rtm_unlock() {
+    if (! mutex)
+        _xend();
+    else
+        unlock();               <3>
+}
+----
+<1> Si +mutex+ está en cero puede continuar con la transacción.
+<2> Se usará el _spinlock_ porque la transacción fue abortada.
+<3> Si +mutex+ es diferente a cero se usó el _spinlock_, hay que liberarlo.
 
 
+===== Efecto convoy
 
+Aunque el patrón anterior aparece en todos los ejemplos de uso de _RTM_ tiene serios problemas de eficiencia. Reproduce el efecto convoy de los _spinlocks_.
 
+La probabilidad de que una transacción falle no es baja, ocurrirá siempre en un bucle con mucha competencia. Incluso por fallos espurios o insuficiencia temporal de memoria caché. Cuando eso ocurre se ejecuta la entrada con _spinlock_, las siguientes transacciones también abortarán porque +mutex+ no es cero y se acumulará la cola de procesos que abortaron sus transacciones.
 
+Para evitar este efecto hay que verificar el código de error de la transacción y reintentarla un número limitado de veces. El procesador indica la razón del fallo, incluso da pistas de si vale la pena reintentar (con el código +_XABORT_RETRY+).
+
+En el <<tm_mutex_rtm_c, código de ejemplo>> se puede ver el código completo. Se reintenta la transacción hasta 10 veces si el procesador indica que vale la pena, si se abortó explícitamente por el valor de +mutex+ o si el código de error es 0.
+
+En el siguiente gráfico se puede observar una comparación de tiempos de CPU y retorno del algoritmo de lectores-escritores con _spinlock_, _RTM_ simple y _RTM_ con reintentos (<<tm_rw_rtm_c, código fuente>>) de la transacción.
+
+.Lectores-escritores con y sin reintentos de la transacción
+[caption=""]
+image::tm_retry.png[align="center"]
+
+La diferencia de tiempos de CPU y retorno son considerables. Para aprovechar la eficiencia de _HTM_ hay que usar las técnicas y patrones apropiadas.
 
 ////
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
