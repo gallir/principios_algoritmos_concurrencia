@@ -215,6 +215,10 @@ p + p > strong {
     margin-left: -1em;
 }
 
+dd p {
+    text-indent: 0;    
+}
+
 .blockquote > p > code {
     font-style: normal;
     font-size: 1em;

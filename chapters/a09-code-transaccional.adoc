@@ -20,6 +20,25 @@ https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/
 include::../code/transactional/mutex_transaction.c[]
 ----
 
+
+==== Lectores-escritores con tinySTM
+[[tm_rw_tinystm_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/rw_tinystm.c[rw_tinystm.c]
+[source,go]
+----
+include::../code/transactional/rw_tinystm.c[]
+----
+
+
+==== Lectores-escritores con +transaction_atomic+
+[[tm_rw_transaction_c]]
+https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/rw_transaction.c[rw_transaction.c]
+[source,go]
+----
+include::../code/transactional/rw_transaction.c[]
+----
+
+
 === HTM
 
 ==== _Mutex_ _HLE_

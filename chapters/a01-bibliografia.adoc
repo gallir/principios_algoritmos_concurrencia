@@ -101,7 +101,9 @@
 
 - [[[Molnar]]] Ingo Molnar. _PI-futex: -V1. Lightweight userspace priority inheritance_. http://lwn.net/Articles/177111/
 
-- [[[Neilsen]]] Mitchell L. Neilsen , Masaaki Mizuno. _A Dag-Based Algorithm for Distributed Mutual Exclusion_. IEEE 11th International Conference on Distributed Computing Systems, 1991. http://www.it.iitb.ac.in/~deepak/deepak/courses/seminar/00148689.pdf
+- [[[Neilsen]]] Mitchell L. Neilsen, Masaaki Mizuno. _A Dag-Based Algorithm for Distributed Mutual Exclusion_. IEEE 11th International Conference on Distributed Computing Systems, 1991. http://www.it.iitb.ac.in/~deepak/deepak/courses/seminar/00148689.pdf
+
+- [[[Papamarcos]]] Mark S. Papamarcos, Janak H. Patel. _A low-overhead coherence solution for multiprocessors with private cache memories_. ISCA '84 Proceedings of the 11th annual international symposium on Computer architecture, 1984.  http://dl.acm.org/citation.cfm?id=808204
 
 - [[[Peterson]]] G. L. Peterson. _Myths About the Mutual Exclusion Problem_, Information Processing Letters 12(3) 1981, 115–116.
 

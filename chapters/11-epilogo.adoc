@@ -7,68 +7,80 @@ Despedida y mención de temas no tratados pero importantes.
 
 === Fechas
 
-1963
+1963::
 Algoritmo de exclusión mutua para dos procesos del matemático holandés Theodorus Jozef Dekker.
 
-1965
-E. W. Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), invent en problema de los filósofos cenando, trabaja con la idea de semáforos (<<Dijkstra35>>).
+1965::
+Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, trabaja con la idea de semáforos (<<Dijkstra35>>).
 
-1973
-C.A.R. Hoare formaliza el concepto de monitores (<<Hoare1>>).
-IBM 370/XA implementa la instrucción _compare&swap_.
+1973::
+Hoare formaliza el concepto de monitores (<<Hoare1>>).
++
+IBM implementa la instrucción _compare&swap_ en su arquitectura 370/XA.
 
-1974
+1974::
 Leslie Lamport publica el algoritmo de la panadería (<<Lamport>>).
-E. W. Dijkstra publica la formalización de semáforos inventados años atras (<<Dijkstra74>>).
++
+Dijkstra publica la formalización de semáforos inventados años atras (<<Dijkstra74>>).
 
-1977
+1977::
 David Lomet propone el uso de transacciones para programación concurrente (<<Lomet>>)
 
-1978
-C.A.R. Hoare publica _Communicating Sequential Processes_ (<<Hoare>>).
+1978::
+Hoare publica el modelo de _Communicating Sequential Processes_ (<<Hoare>>) que serviría de base para el lenguaje occam, Erlang, Go y arquitecturas de procesamiento en paralelo.
 
-1981
-G. L. Peterson publica una solución más simple del algoritmo de Dekker (<<Peterson>>).
+1981::
+Peterson publica una solución más simple del algoritmo de Dekker (<<Peterson>>).
++
+Glenn Ricart y Ashok Agrawala publican el algoritmo de exclusión mutua distribuida basado en la idea del algoritmo de la panadería (<<Ricart>>).
 
-1983
+
+1983::
 David May de INMOS y Tony Hoare desarrollan el lenguaje _occam_ para la arquitectura Transputer.
++
+Glenn Ricart y Ashok Agrawala publican el algoritmo de exclusión mutua distribuida basada en paso de testigo (<<Agrawala>>, <<Carvalho>>).
 
-1984
-Mark Papamarcos	y Janak Patel publican el protocolo MESI.
+1984::
+Mark Papamarcos	y Janak Patel publican el protocolo MESI (<<Papamarcos>>).
 
-1986
+1986::
 Joe Armstrong, Robert Virding y Mike Williams de Ericcson desarrollan Erlang basado en ideas de _CSP_.
 
-1991
+1991::
 Maurice Herlihy demuestra la capacidad de _consenso infinita_ de la instrucción _compare&swap_ (Herlihy91).
++
 John M. Mellor-Crummey y Michael L. Scott publican el _spinlock_ MCS (<<MCS1>>).
++
+Mitchell  Neilsen y Masaaki Mizuno publican un algoritmo de paso de testigo más eficiente basado en árboles de cobertura virtuales (<<Neilsen>>).
 
 
-1993
+1993::
 Maurice Herlihy y Eliot Moss proponen soluciones de hardware para memoria transaccional (_HTM_) (<<Herlihy93>>).
-
++
 Travis Craig (<<Craig>>) y Anders Landin y Eric Hagersten (<<CLH>>) inventan de manera independiente el algoritmo de _spinlocks_ _CLH_.
 
 
-1995
+1995::
 Nir Shavit y Dan Touitou (<<Shavit>>) propusieron y demostraron por primera vez el uso práctico de memoria transaccional por software (_STM_).
++
+Sun publica el lenguaje Java diseñado por James Gosling, Mike Sheridan y Patrick Naughton que implementa monitores.
 
-2001
-Ravi Rajwar y James R. Goodman publican _Speculative lock elision: enabling highly concurrent multithreaded execution_ (<<Rajwar>>( que luego se implementó en Intel _HLE_.
+2001::
+Ravi Rajwar y James R. Goodman publican el algoritno _Speculative Lock Elision_ que luego se usará en Intel _HLE_ (<<Rajwar>>)
 
-2009
-Sun Microsistem publica datos de evaluaciones de _HTM_ para su procesador UltraSPARC Rock.
+2009::
+Sun Microsystem publica datos de evaluaciones de _HTM_ de los prototipos del procesador UltraSPARC Rock.
 
-2010
-Google publica el lenguaje Go diseñado por  Robert Griesemer, Rob Pike y Ken Thompson.
+2010::
+Google publica el lenguaje Go diseñado por Robert Griesemer, Rob Pike y Ken Thompson.
 
-2011
+2011::
 BlueGene de IBM soporta _HTM_.
 
-2012
+2012::
 Intel anuncia la arquitectura Haswell con soporte _HTM_.
 
-2013-2014
+2013-2014::
 Se comercializan procesadores Intel, PowerPC y S390 con soporte _HTM_.
 
 === Agradecimientos
