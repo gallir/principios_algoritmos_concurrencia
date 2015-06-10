@@ -211,7 +211,7 @@ Los componentes fundamentales de las librerías _STM_ son:
 
 ==== Llamadas explícitas
 
-En general las librerías se programan con llamadas explícitas. Veremos el ejemplo con la librería _tinySMT_ (están incluidas en el repositorio de Github).
+En general las librerías se programan con llamadas explícitas. Veremos el ejemplo con la librería _tinySMT_ (están incluidas en el repositorio de los ejemplos en Github).
 
 El procedimiento es iniciar las librerías al inicio del programa (+stm_init+) y al inicio de cada hilo que las usará (+stm_init_thread+). Se inician las transacciones con +stm_start+ y se hace el _commit_ con +stm_commit+. Los ejemplos de la librería tienen ejemplos de macros de conveniencia para facilitar la programación, usamos los de inicio (+TM_START+) y fin de transacción (+TM_COMMIT+).
 
@@ -326,7 +326,7 @@ _TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> 
 
 Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y se la marca como _exclusiva_, ahora está en el _read-set_. Si la variable se modifica se marca su línea de caché como _modificada_, ahora está en el _write-set_. Si la se ejecuta +xend+ se llegó al final de la transacción sin conflicto, se hace el _commit_ poniendo los bits _T_ en cero. Ahora todas la líneas modificadas son visibles a los demás procesadores.
 
-Si CPU0 está en una transacción y desde CPU1 se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a CPU0. Si esa línea de caché está marcada como _modificada_ CPU0 detecta el conflicto y aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. CPU1 leerá el valor que sin modificar que estaba en memoria RAM. Lo mismo ocurre si CPU1 intenta escribir a una dirección que está en el _read-set_ de CPU0 (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
+Si _CPU0_ está en una transacción y desde _CPU1_ se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a _CPU0_. Si esa línea de caché está marcada como _modificada_ _CPU0_ detecta el conflicto y aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. _CPU1_ leerá el valor que sin modificar que estaba en memoria RAM. Lo mismo ocurre si _CPU1_ intenta escribir a una dirección que está en el _read-set_ de _CPU0_ (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
 
 La solución es sencilla y está integrada en el sistema de caché, pero una transacción que está a punto de finalizar puede ser forzada a abortar por acceso de otra que acaba de comenzar. O incluso por lecturas de variables modificadas desde otras CPU que no están en una transacción.
 
@@ -431,25 +431,27 @@ La probabilidad de que una transacción falle no es baja, ocurrirá siempre en u
 
 Para evitar este efecto hay que verificar el código de error de la transacción y reintentarla un número limitado de veces. El procesador indica la razón del fallo, incluso da pistas de si vale la pena reintentar (con el código +_XABORT_RETRY+).
 
-El siguiente es el código simplificado de cómo queda la función de entrada con _RTM_:
+El siguiente es el código simplificado de cómo queda la función +rtm_lock+ (<<tm_mutex_rtm_c, código completo>>):
 
 [source, c]
 ----
-void rtm_lock() {
-    int c = 0, st = 0;
+int c = 0, st = 0;
 
-    while (c < 10 && CAN_TRY) {
-        if ((st = _xbegin()) == _XBEGIN_STARTED) {
-            if (! mutex) return;
-            _xabort(0xff);
-        }
-        c++;
+while (c < 10 && CAN_TRY) {
+    if ((st = _xbegin()) == _XBEGIN_STARTED) {
+        if (! mutex) return;
+        _xabort(0xff);
     }
-    lock();
+    c++;
 }
+lock();
 ----
 
-En el <<tm_mutex_rtm_c, código de ejemplo>> se puede ver el código completo. Se reintenta la transacción hasta 10 veces si el valor del estado (+st+) indica que puede reintentarse, si se abortó explícitamente por el valor de +mutex+ o si el código de error es 0.
+Se reintenta la transacción hasta 10 veces si se cumple algunas de las siguientes condiciones:
+
+- el valor del estado (+st+) indica que puede reintentarse (+status & _XABORT_RETRY+);
+- si se abortó explícitamente por el valor de +mutex+ (+_XABORT_CODE(status) > 0+)
+- o si el código de error es 0.
 
 
 En el siguiente gráfico se puede observar una comparación de tiempos de CPU y retorno del algoritmo de lectores-escritores con _spinlock_, _RTM_ simple y _RTM_ con reintentos (<<tm_rw_rtm_c, código fuente>>) de la transacción.
@@ -464,47 +466,7 @@ La diferencia de tiempos de CPU y retorno son considerables. Para aprovechar la 
 
 ////
 En paralelismo no hay mecanismos de abstracción y composición. Composición es la capacidad de juntar dos entidades para forma una más compleja.
-////
 
-
-
-
-==== Composición
-
-Mover un objeto de una cola a otra de forma atómica es imposible con monitores, sin embargo es trivial con transacciones.
-
-atomic {
-    x = q0.deq();
-    q1.enq(x);
-}
-
-
-----
-void push(node **head, node *e) {
-    __transaction_atomic {
-        e->next = *head;
-        *head = e;
-    }
-}
-
-node *pop(node **head) {
-    node *old_head;
-
-    __transaction_atomic {
-        old_head = *head;
-        if (old_head) {
-            *head = old_head->next;
-        }
-    }
-    return old_head;
-}
-----
-
-
-
-
-
-////
 
 === Criterios de corrección _correctness_
 
@@ -539,7 +501,6 @@ Los problemas de llamadas de sistemas, E/S y transacciones externas
 Singh developed a library of join patterns using atomic blocks in STM-Haskell [294].T
 
 ////
-
 
 
 

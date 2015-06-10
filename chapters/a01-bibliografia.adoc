@@ -40,7 +40,7 @@
 
 - [[[Dijkstra35]]] E. W. Dijkstra. _Over de sequentialiteit van procesbeschrijvingen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD35.html
 
-- [[[Dijkstra65]]] E. W. Dijkstra. _Solution of a Problem in Concurrent Programming Control_. Communications of the ACM Volume 8 Issue 9, Sept. 1965. http://dl.acm.org/citation.cfm?doid=365559.365617
+- [[[Dijkstra65]]] E. W. Dijkstra. _Solution of a Problem in Concurrent Programming Control_. Communications of the ACM Volume 8 Issue 9, Sept. 1965. http://www.di.ens.fr/~pouzet/cours/systeme/bib/dijkstra.pdf
 
 - [[[Dijkstra74]]] E. W. Dijkstra. _Over seinpalen_. http://www.cs.utexas.edu/users/EWD/transcriptions/EWD00xx/EWD74.html
 
