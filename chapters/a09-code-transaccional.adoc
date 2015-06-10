@@ -30,7 +30,7 @@ include::../code/transactional/rw_tinystm.c[]
 ----
 
 
-==== Lectores-escritores con +transaction_atomic+
+==== Lectores-escritores con _transaction_atomic_
 [[tm_rw_transaction_c]]
 https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/rw_transaction.c[rw_transaction.c]
 [source,go]
