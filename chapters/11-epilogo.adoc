@@ -11,7 +11,7 @@ Despedida y mención de temas no tratados pero importantes.
 Algoritmo de exclusión mutua para dos procesos del matemático holandés Theodorus Jozef Dekker.
 
 1965::
-Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidr, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
+Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
 
 1973::
 Hoare formaliza el concepto de monitores (<<Hoare1>>).
@@ -75,7 +75,7 @@ Sun publica el lenguaje Java –implementa monitores- diseñado por James Goslin
 2001::
 Ravi Rajwar y James R. Goodman publican el algoritno _Speculative Lock Elision_ que luego se usará en Intel _HLE_ (<<Rajwar>>).
 
-2002:
+2002::
 Hubertus Franke, Rusty Russell y Matthew Kirkwood diseñan _FUTEX_ para Linux (<<Franke>>).
 
 2006::
