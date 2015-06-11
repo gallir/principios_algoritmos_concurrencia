@@ -20,9 +20,11 @@
 
 - [[[Boyd-Wickizer]]] Silas Boyd-Wickizer, M. Frans Kaashoek, Robert Morris, and Nickolai Zeldovich. _Non-scalable locks are dangerous_. MIT CSAIL. http://pdos.csail.mit.edu/papers/linux:lock.pdf
 
-- [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM
+- [[[Brinch]]] Per Brinch-Hansen. _Monitors and Concurrent Pascal: A Personal History_. 2nd ACM History of programming languages, ISBN:0-201-89502-1, Pages 121-172, 1996. http://brinch-hansen.net/papers/1993a.pdf
 
 - [[[Carvalho]]] O.S.F Carvalho, Tracy Camp. _On mutual exclusion in computer networks_. Communications of the ACM, 26(2), 1983.
+
+- [[[Chaudhry]]] Shailender Chaudhry _et al_.  _Rock: A High-Performance Sparc CMT Processor_. IEEE Micro Volume: 29, Issue: 2. March-April 2009.  http://dl.acm.org/citation.cfm?id=1550516
 
 - [[[CLH]]] Peter Magnusson, Anders Landin, Erik Hagersteny. _Queue Locks on Cache Coherent Multiprocessors_.  IPPS 1994: 165-171.
 
@@ -31,10 +33,6 @@
 - [[[Corbet2]]] Jonathan Corbet. _Improving ticket spinlocks_. http://lwn.net/Articles/531254/
 
 - [[[Craig]]] Travis S. Craig. _Building FIFO and Priority-Queuing Spin Locks from Atomic Swap_. Technical Report 93-02-02, University of Washington, 1993. ftp://ftp.cs.washington.edu/tr/1993/02/UW-CSE-93-02-02.pdf
-
-////
-- [[[Dice01]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the Java(TM) Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
-////
 
 - [[[Dice]]] D. Dice, O. Shalev, and N. Shavit. _Transactional Locking II_. Proceedings of the 20th International Symposium on Distributed Computing (DISC), Stockholm, Sweeden, Sept. 2006. http://www.disco.ethz.ch/lectures/fs11/seminar/paper/johannes-2-1.pdf
 
@@ -50,7 +48,7 @@
 
 - [[[Franke]]] Hubertus Franke, Rusty Russell, Matthew Kirkwood. _Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux_. https://www.kernel.org/doc/ols/2002/ols2002-pages-479-495.pdf
 
-- [[[Gifford]]] David Giffor, Alfred Spector. _Case Study: IBM's Systema/360-370 Architecture_. Communications of the ACM, Volume 30, Number 4, 1987. http://lambda.csail.mit.edu/~chet/papers/others/s/spector/spector87ibm.pdf
+- [[[Gifford]]] David Giffor, Alfred Spector. _Case Study: IBM's System/360-370 Architecture_. Communications of the ACM, Volume 30, Number 4, 1987. http://lambda.csail.mit.edu/~chet/papers/others/s/spector/spector87ibm.pdf
 
 - [[[Harris]]] Tim Harris, James Larus, Ravi Rajwar. _Transactional Memory, 2nd edition_. Synthesis Lectures on Computer Architecture. December 2010. http://www.morganclaypool.com/doi/abs/10.2200/S00272ED1V01Y201006CAC011
 
@@ -146,4 +144,8 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.21.8571&rep=rep1&type=p
 Conference on the History of Programming Languages, Cambridge, MA, April 1993 http://brinch-hansen.net/papers/1993a.pdf
 
 // Axioms for Concurrent Objects  http://pdf.aminer.org/000/546/306/axioms_for_concurrent_objects.pdf<
+////
+
+////
+- [[[Dice01]]] David Dice. _Implementing Fast Java Monitors with Relaxed-Locks_. Proceedings of the Java(TM) Virtual Machine Research and Technology Symposium, 2001. https://www.usenix.org/legacy/events/jvm01/full_papers/dice/dice.pdf
 ////
