@@ -303,7 +303,7 @@ Desde la versión 4.8 _libitm_ detecta y usa automáticamente las extensiones de
 
 ==== Detección de conflictos
 
-Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memoria leídas (_read-set_) y modificadas (_write-set_). Con los protocolos modernos de coherencia de caché no es complicado. Cada línea accedida durante una transacción es marcada como _exclusiva_ por el procesador, si además se escribe en ella es etiquetada como _modificadas_.
+Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memoria leídas (_read-set_) y modificadas (_write-set_). Con los protocolos modernos de coherencia de caché no es complicado. Cada línea accedida durante una transacción es marcada como _exclusiva_ por el procesador, si además se escribe en ella es etiquetada como _modificada_.
 
 La implementación por hardware tiene limitaciones e impone restricciones. A diferencia de las librerías _STM_ que pueden implementar transacciones de objetos, en hardware solo es posible con bytes y palabras. La cantidad máxima de memoria accedida durante una transacción está limitada por el tamaño de la caché, si el de los datos lo supera la transacción se abortará. La granularidad de la detección de conflictos es de una línea de caché por lo que puede sufrir problemas de <<false_sharing, _false sharing_>>. Es decir, se abortará la transacción si desde otro procesador se modifica una posición diferente pero que comparte línea de caché.
 
