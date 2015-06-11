@@ -5,13 +5,13 @@ image::jrmora/10-transaccional.jpg[align="center"]
 
 Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. Sus objetivos son simplificar la programación y aumentar el paralelismo de los programas concurrentes. Para acceder a registros compartidos se usa el mismo concepto de _transacción_ conocida desde hace tiempo en las bases de datos ACID. Desde el punto de vista del programador las transacciones se ejecutan secuencialmente y aisladas unas de otras, las complejidades del control de concurrencia son invisibles.
 
-Las transacciones están íntimamente relacionadas con las secciones críticas. En capítulos anteriores estudiamos dos tipos de mecanismos para resolverla: los _spinlocks_ con espera activa y las soluciones bloqueantes con semáforos y monitores. Pero estas soluciones tienen limitaciones importantes.
+Las transacciones están íntimamente relacionadas con las secciones críticas. En capítulos anteriores estudiamos dos tipos de mecanismos para resolverlas: los _spinlocks_ con espera activa y las soluciones bloqueantes con semáforos y monitores. Pero estas soluciones tienen limitaciones importantes.
 
 === Limitaciones de la sección crítica
 
 - La exclusión mutua reduce la capacidad de paralelismo. Las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce al capacidad de ejecutar hilos en otros procesadores.
 
-- Para evitar los cuellos de botella generados por las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atómicas del procesador (fundamentalmente _CAS_). Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se deben trabajar con objetos de mayor tamaño.
+- Para evitar los cuellos de botella generados por las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atómicas del procesador (fundamentalmente _CAS_). Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se debe trabajar con objetos de mayor tamaño.
 
 - Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso en la sección crítica es interrumpido. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no puedan entrar a la sección crítica; el efecto convoy cuando los procesos en espera se acumulan, aún después de que el proceso interrumpido haya liberado la sección crítica toma un tiempo vaciar la cola de procesos en espera.
 
@@ -19,7 +19,7 @@ Las transacciones están íntimamente relacionadas con las secciones críticas. 
 
 - Los basados en primitivas atómicas no son _componibles_. Los  algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas. En <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, pero no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como exclusión mutua adicional, pero crean otro cuello de botella.
 
-- Son difíciles de gestionar efectivamente, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras sofisticadas (como _hashing_ o árboles balanceados) porque reducir la granularidad de las secciones críticas es una tarea compleja, tediosa, propensa a errores y difícil de validar. Lo que desea el programador es indicar la sección crítica general y que el sistema se encargue de controlar la granularidad.
+- Son difíciles de gestionar de manera efectiva, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras sofisticadas (como _hashing_ o árboles balanceados) porque reducir la granularidad de las secciones críticas es una tarea compleja, tediosa, propensa a errores y difícil de validar. Lo que desea el programador es indicar la sección crítica general y que el sistema se encargue de controlar la granularidad.
 
 Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria de que las herramientas actuales  tienen demasiadas limitaciones para cubrir las necesidades que se avecinan.
 
@@ -41,7 +41,7 @@ Además de los desarrollos en _STM_ y _HTM_ se hicieron esfuerzos importantes pa
 [NOTE]
 .Transacciones de bases de datos
 ====
-Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, esta especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
+Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, que especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
 
 Las operaciones dentro de transacciones se ejecutan concurrentemente y en paralelo pero las interacciones están limitadas de forma que los resultados no varían si se ejecutan una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
 
@@ -58,7 +58,7 @@ Las bases de datos tienen las propiedades ACID, por _atomicidad_, _consistencia_
 
 
 === Transacciones
-Como en bases de datos ACID, una transacción es una serie de instrucciones de acceso a memoria ejecutados por un único proceso. Las transacciones concurrentes deben ser _secuenciables_, desde el punto de vista del programador parecen ejecutarse secuencialmente. El resultado de la ejecución de dos transacciones concurrentes es equivalente a una ejecución secuencial.
+Como en bases de datos ACID, una transacción es una serie de instrucciones de acceso a memoria ejecutadas por un único proceso. Las transacciones concurrentes deben ser _secuenciables_, desde el punto de vista del programador parecen ejecutarse secuencialmente. El resultado de la ejecución de dos transacciones concurrentes es equivalente a una ejecución secuencial.
 
 Mientras los _mutex_ y _spinlocks_ son pesimistas, las transacciones son optimistas y pueden ser ejecutadas especulativamente en paralelo. Las transacciones hacen cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ que hace visible los cambios a los demás procesos.
 
@@ -165,7 +165,7 @@ Cada transacción mantiene un conjunto de registros _leídos_ (_read-set_) y _es
 
 Los tres eventos pueden ocurrir en diferentes momentos pero siempre en el mismo orden. Hay dos modelos de control dependiendo del momento en que ocurre la detección:
 
-- El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen al simultáneamente. Al inicio de cada transacción el proceso se _apropia_ de los datos, como en una sección crítica, y los demás no pueden acceder a ellos.
+- El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen simultáneamente. Al inicio de cada transacción el proceso se _apropia_ de los datos, como en una sección crítica, y los demás no pueden acceder a ellos.
 
 - Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y por lo tanto pueden avanzar hasta que el conflicto es detectado. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
 
@@ -213,7 +213,7 @@ En general las librerías se programan con llamadas explícitas, veremos ejemplo
 
 El procedimiento general es inicializar la librería al principio del programa (+stm_init+) y en cada hilo que la usará (+stm_init_thread+). Las transacciones se inician con +stm_start+ y se hace el _commit_ con +stm_commit+. Los ejemplos de la librería incluyen macros de conveniencia para facilitar la programación, en los ejemplos usamos los de inicio (+TM_START+) y fin de transacción (+TM_COMMIT+).
 
-Dentro de las transacciones no se deben acceder directamente a los registros u objetos compartidos, deben usarse las funciones para lectura y escritura. En nuestro caso, se trata de un entero, usamos +stm_load_int+ y +stm_store_int+.
+Dentro de las transacciones no se debe acceder directamente a los registros u objetos compartidos, sino que deben usarse las funciones para lectura y escritura. En nuestro caso, se trata de un entero, usamos +stm_load_int+ y +stm_store_int+.
 
 El siguiente es el código resumido para incrementar el contador compartido (<<tm_mutex_tinystm_c, código completo>>):
 
@@ -234,7 +234,7 @@ for (i=0; i < max; i++) {
 
 ==== Instrumentación del compilador
 
-No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción; y de no acceder directamente a las variables compartidas sino usar las funciones específicas para leer o almacenar. Cualquier omisión pueden provocar fallos graves difíciles de detectar.
+No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción; y de no acceder directamente a las variables compartidas sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
 
 Es mucho más conveniente una construcción sintáctica que delimite claramente qué instrucciones son las que están en una transacción y que sea el compilador el responsable de detectar qué accesos necesitan ser controlados. Para ello se definen los _bloques atómicos_, como el siguiente ejemplo (<<tm_mutex_gcc_c, código completo>>):
 
@@ -272,14 +272,14 @@ Aunque las librerías _STM_ son muy flexibles imponen una sobrecarga a la ejecuc
 
 Hay dos tipos básicos de sistemas _HTM_:
 
-Sistemas explícitos:: El procesador tiene instrucciones adicionales de acceso a memoria para indicar qué direcciones deben tratarse como parte de una transacción, por ejemplo +load_transactional+ o +store_transactional+. Estos sistemas dam mayor libertad y flexibilidad al programador pero requieren adaptación de todas las librerías para que usen las nuevas instrucciones. No es la mejor solución si se desea mantener compatibilidad con los programas más antiguos. Las propuestas _Oklahoma Update_ (<<Stone>>) y _Advanced Synchronization Facility_ eran de este tipo, aunque ninguno de ellas llegó a fabricarse.
+Sistemas explícitos:: El procesador tiene instrucciones adicionales de acceso a memoria para indicar qué direcciones deben tratarse como parte de una transacción, por ejemplo +load_transactional+ o +store_transactional+. Estos sistemas dan mayor libertad y flexibilidad al programador pero requieren adaptación de todas las librerías para que usen las nuevas instrucciones. No es la mejor solución si se desea mantener compatibilidad con los programas más antiguos. Las propuestas _Oklahoma Update_ (<<Stone>>) y _Advanced Synchronization Facility_ eran de este tipo, aunque ninguno de ellas llegó a fabricarse.
 
 Sistemas implícitos:: Solo requieren que se indiquen los límites de la transacción, como +tbegin+ y +tend+. Todos los accesos a variables compartidas entre ambas instrucciones son tratados como transaccionales. El primer procesador de este tipo fue el UltraSPARC Rock de Sun. Los procesadores Intel, PowerPC y S390 implementan este mecanismo en sus procesadores con soporte de _HTM_.
 
 
 ==== Intel TSX, IBM PowerPC y S390
 
-En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_ y comenzó a  comercializarla desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /prco/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con _HTM_ se comercializan desde 2014.
+En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_ y comenzó a  comercializarla desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /proc/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con _HTM_ se comercializan desde 2014.
 
 Los sistemas _HTM_ de las tres arquitecturas son similares (_RTM_ en Intel), implementan transacciones implícitas y ofrecen instrucciones casi idénticas:
 
@@ -303,7 +303,7 @@ Desde la versión 4.8 _libitm_ detecta y usa automáticamente las extensiones de
 
 ==== Detección de conflictos
 
-Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memorias leídas (_read-set_) y modificadas (_write-set_). Con los protocolos modernos de coherencia de caché no es complicado. Cada línea accedida durante una transacción es marcada como _exclusiva_ por el procesador, si además escribe son etiquetadas como _modificadas_.
+Para detectar conflictos el procesador debe mantener el conjunto de posiciones de memoria leídas (_read-set_) y modificadas (_write-set_). Con los protocolos modernos de coherencia de caché no es complicado. Cada línea accedida durante una transacción es marcada como _exclusiva_ por el procesador, si además se escribe en ella es etiquetada como _modificada_.
 
 La implementación por hardware tiene limitaciones e impone restricciones. A diferencia de las librerías _STM_ que pueden implementar transacciones de objetos, en hardware solo es posible con bytes y palabras. La cantidad máxima de memoria accedida durante una transacción está limitada por el tamaño de la caché, si el de los datos lo supera la transacción se abortará. La granularidad de la detección de conflictos es de una línea de caché por lo que puede sufrir problemas de <<false_sharing, _false sharing_>>. Es decir, se abortará la transacción si desde otro procesador se modifica una posición diferente pero que comparte línea de caché.
 
@@ -324,9 +324,9 @@ _TSX_ es el nombre de las extensiones _HTM_ de Intel para su arquitectura Haswel
 
 _TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> para detectar conflictos. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64) con 32 KB en total, pero es compartida en los núcleos con _hyperthreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
 
-Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y se la marca como _exclusiva_, ahora está en el _read-set_. Si la variable se modifica se marca su línea de caché como _modificada_, ahora está en el _write-set_. Si se llega al final de la transacción sin conflictos se ponen los bits _T_ en cero por lo que  todas la líneas modificadas son visibles a los demás procesadores.
+Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y es marcada como _exclusiva_ (ahora está en el _read-set_). Si la variable se modifica se marca su línea de caché como _modificada_ (ahora está en el _write-set_). Si se llega al final de la transacción sin conflictos se ponen los bits _T_ en cero por lo que  todas la líneas modificadas son visibles a los demás procesadores.
 
-Si _CPU0_ está en una transacción y desde _CPU1_ se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a la _CPU0_ inmediatamente. Si esa línea de caché está marcada como _modificada_ se aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. _CPU1_ leerá el valor sin modificar en la memoria RAM. Lo mismo ocurre si _CPU1_ intenta escribir a una dirección que está en el _read-set_ de _CPU0_ (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
+Si _CPU0_ está en una transacción y desde _CPU1_ se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a la _CPU0_ inmediatamente. Si esa línea de caché está marcada como _modificada_ se aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. _CPU1_ leerá el valor sin modificar en la memoria RAM. Lo mismo ocurre si _CPU1_ intenta escribir en una dirección que está en el _read-set_ de _CPU0_ (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
 
 La solución es técnicamente simple, eficiente y está integrada en el sistema de caché, pero una transacción que está a punto de finalizar puede ser forzada a abortar por acceso de otra que acaba de comenzar. O incluso por lecturas de variables modificadas desde otras CPU que no están en una transacción.
 
@@ -374,9 +374,9 @@ Los _opcodes_ de ambos prefijos son los mismos que +repne+ y +repe+ y son ignora
 
 ==== _Restricted Transactional Memory_
 
-Se denomina _restringida_ porque no están permitidas todas las instrucciones, algunas causan el aborto de la transacción: +cpuid+, +pause+, operaciones de punto flotante, MMX, instrucciones que causan cambios de privilegios, etc.
+Se denomina _restringida_ porque no están permitidas todas las instrucciones. Algunas causan el aborto de la transacción: +cpuid+, +pause+, operaciones de punto flotante, MMX, instrucciones que causan cambios de privilegios, etc.
 
-_RTM_ tiene tres funciones fundamentales, +xbegin+ para comenzar la transacción, +xabort+ para abortarla explícitamente y +xend+ para el _commit_. No se asegura _progreso_ (las transacciones podrían abortar siempre) por lo que no se la puede llamar indefinidamente dentro de un bucle, hay que proveer un camino alternativo. Este suele ser la llamada a un _spinlock_ o _mutex_.
+_RTM_ tiene tres funciones fundamentales, +xbegin+ para comenzar la transacción, +xabort+ para abortarla explícitamente y +xend+ para el _commit_. No se asegura _progreso_ (las transacciones podrían abortar siempre) por lo que no puede ser llamada indefinidamente dentro de un bucle, hay que proveer un camino alternativo. Este suele ser la llamada a un _spinlock_ o _mutex_.
 
 El patrón de programación con un _spinlock_ para exclusión mutua es el siguiente (se usan los _intrinsics_ de Intel para GCC):
 
@@ -395,7 +395,7 @@ if (_xbegin() == _XBEGIN_STARTED) { <1>
 }
 ----
 <1> Se verifica si la transacción fue iniciada y finalizó sin conflictos.
-<2> Agrega +mutex+ al _read-set_ de la transacción (abortará si se modifica desde otra CPU) y verifica su valor, si es diferente a cero hay otro proceso en la sección crítica por lo que se aborta inmediatamente.
+<2> Agrega +mutex+ al _read-set_ de la transacción (abortará si se modifica desde otra CPU) y verifica su valor. Si es diferente a cero hay otro proceso en la sección crítica por lo que se aborta inmediatamente.
 <3> Hace el _commit_.
 <4> Si la transacción fue abortada se usa el camino alternativo con el _spinlock_.
 
@@ -569,10 +569,10 @@ Hay un consenso de que las herramientas y mecanismos tradicionales no sirven par
 
 El problema es cómo compatibilizar las nuevas aplicaciones con código existente, las transacciones deben coexistir con código no transaccional durante muchos años. Los diseñadores de lenguajes deben implementar nuevas construcciones sintácticas y definir con precisión su semántica (como el tratamiento de excepciones y señales).
 
-Uno de los objetivos es mejorar el rendimiento de las aplicaciones por lo que la eficiencia juega un papel importante. Los sistemas _STM_ no pueden alcanzar las eficiencia que se puede alcanzar por hardware pero es más maleable y permite experimentar con algoritmos más complejos.
+Uno de los objetivos es mejorar el rendimiento de las aplicaciones por lo que la eficiencia juega un papel importante. Los sistemas _STM_ no pueden alcanzar la eficiencia que se puede alcanzar por hardware pero es más maleable y permite experimentar con algoritmos más complejos.
 
 Por otro lado los fabricantes de procesadores tienen limitaciones en cuanto a los algoritmos que pueden implementar, estos además deben ser validados y probados extensivamente antes de lanzar la producción masiva: no se puede cambiar la arquitectura y crear dependencias y problemas de compatibilidad en el futuro. Esto hace que cuando los procesadores salen al mercado ya son casi obsoletos.
 
 Los procesadores con soporte _HTM_ son todavía jóvenes y una parte pequeña del total, queda por ver cuánto aportan a la eficiencia de las aplicaciones de uso real. De todas formas, hace solo tres años no había procesadores con soporte _HTM_ en el mercado, ahora ya hay tres arquitecturas que seguramente mejorarán mucho en eficiencia en los próximos años.
 
-Es probable que se opten por soluciones híbridas y que los compiladores y librerías _runtime_ sean los responsables de ocultar detalles y asegurar compatibilidad. La librería _libitm_ integrada en GCC es todavía muy joven –con mucho por mejorar– pero ya se aprecian las ventajas de código instrumentado por el compilador que además es capaz de aprovechar el soporte de hardware.
+Es probable que se opte por soluciones híbridas y que los compiladores y librerías _runtime_ sean los responsables de ocultar detalles y asegurar compatibilidad. La librería _libitm_ integrada en GCC es todavía muy joven –con mucho por mejorar– pero ya se aprecian las ventajas de código instrumentado por el compilador que además es capaz de aprovechar el soporte de hardware.
