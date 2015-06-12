@@ -135,7 +135,7 @@ sys     0m0.000s
 [NOTE]
 ._False sharing_
 ====
-Si se iterará frecuentemente (_spinning_) sobre variables compartidas, es mejor asegurarse de que no comparten la misma línea de caché. Las variables han de ser _distantes_ –por ejemplo, locales de cada hilo– para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes aunque sean variables diferentes.
+Si se iterará frecuentemente (_spinning_) sobre variables compartidas, es mejor asegurarse de que no comparten la misma línea de caché. Las variables han de ser _distantes_ para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes aunque sean variables diferentes.
 ====
 
 
@@ -276,7 +276,7 @@ En el algoritmo de Peterson la solución con barreras es sencilla, pero las solu
 
 === Recapitulación
 
-En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. Las barreras tienen un coste elevado –varios cientos de ciclos de CPU–, que se suma a la presión introducida al sistema de caché. Desde el punto de vista del programador, la mayor dificultad es saber exactamente dónde hay que insertar el mínimo número de barreras.
+En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. Las barreras tienen un coste elevado –varios cientos de ciclos de CPU– que se suma a la presión introducida al sistema de caché. Desde el punto de vista del programador, la mayor dificultad es saber exactamente dónde hay que insertar el mínimo número de barreras.
 
 La programación con barreras explícitas no es práctica, ya que tiende a producir errores. Hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos  consideran que es un error permitir la ejecución fuera de orden, pero es el precio a pagar por procesadores más rápidos.
 
