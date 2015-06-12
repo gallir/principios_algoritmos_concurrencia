@@ -6,7 +6,7 @@ Las soluciones de exclusión mutua anteriores tienen en común una espera activa
 
 Tiene sentido usarlos si se cumple una de las siguientes condiciones:
 
-La sección crítica es muy breve y la competencia es relativamente baja:: Los _spinlocks_ se emplean en rutinas críticas de los sistemas operativos; también para implementar mecanismos de sincronización más abstractos y sin esperas activas. Tienen en común que sus secciones críticas son breves, y que no pueden o no tienen acceso a otros tipos de mecanismos.
+La sección crítica es muy breve y la competencia es relativamente baja:: Los _spinlocks_ se emplean en rutinas críticas de los sistemas operativos y para implementar mecanismos de sincronización sin esperas activas. Tienen en común que sus secciones críticas son breves y que no pueden o no tienen acceso a otros tipos de mecanismos.
 
 Los procesos se ejecutan en paralelo:: Mientras unos están en sus _spinlocks_ otros pueden avanzar y salir de la sección crítica. Los _spinlocks_ permiten evitar mayores pérdidas de tiempo ocasionadas por llamadas de sistema o cambios de estado de procesos. No obstante, si hay más procesos concurrentes que CPUs se llega a una situación similar a la de un único procesador: los procesos avanzarán muy lentamente. En estos casos quizás tiene más sentido utilizar construcciones sin esperas activas.
 
@@ -28,7 +28,7 @@ Cada grupo de barras es una medición diferente. El primero por la izquierda (_n
 [caption=""]
 image::times-hardware.png[align="center"]
 
-Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry Pi 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC y la complejidad de _CAS_.]
+Los algoritmos de exclusión mutua imponen un sobrecoste importantefootnote:[Como era de esperar, el algoritmo de la panadería es el menos eficiente.] que no es uniforme en todos los procesadores. En Intel i5 y Xeon de 16 núcleos los que mejores tiempo obtienen son _get&set_ y _TAS_, en Raspberry Pi 2 es casi un empate entre _CAS_ y _get&add_. Puede observarse también que con _CAS_ el procesador ARM tiene resultados mejores que los más potentes procesadores Intel. Sorprendente, dado que Intel tiene _CAS_ nativo (+cmpxhg+) pero en ARM se emula con _LL/SC_.footnote:[También muestra las buenas propiedades de LL/SC y la complejidad de _CAS_.]
 
 === _Spinlocks_ óptimos
 Las implementaciones anteriores son ineficientes por dos razones:
@@ -291,11 +291,11 @@ Para evitarlo hay que usar algoritmos que aseguran que los procesos entran a la 
 
 ==== _Ticket-lock_
 [[ticket_lock]]
-Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _get&add_>>. La idea es la misma que el algoritmo de la panadería, solo que la obtención del número se hace con esta operación atómica. Así se evita que los procesos puedan seleccionar el mismo número.
+Una solución sencilla la hemos descubierto al introducir la instrucción <<get_and_add_ticket, _get&add_>>. La idea es la misma que el algoritmo de la panadería solo que la obtención del número se hace con esta operación atómica. Así se evita que los procesos puedan seleccionar el mismo número.
 
 Se usan dos variables: la secuencia creciente de números y el turno. Un proceso obtiene su número y luego espera por su turno. Cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
 
-El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits: 16 bits para +turn+ y +number+ respectivamente. Con ejecuciones extensas, número y turno llegarán hasta 2^16^ y rotarán.
+El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits: 16 bits para +turn+ y +number+ respectivamente. Con ejecuciones extensas número y turno llegarán hasta 2^16^ y rotarán.
 
 [source, c]
 ----
@@ -623,7 +623,7 @@ image::ticket-mcs-clh.png[align="center"]
 .Tiempos de retorno
 image::ticket-mcs-clh-real.png[align="center"]
 
-En las arquitecturas modernas no hay demasiada diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio –una palabra más el relleno por proceso– que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
+En las arquitecturas modernas no hay demasiada diferencia entre _ticket-lock_ y _array-lock_, de hecho en Intel Xeon esta última es peor. Además, _array-lock_ necesita más espacio –una palabra más el relleno por cada proceso concurrente– que hay que reservar desde el principio (como en el algoritmo de la panadería), mientras que _ticket-lock_ solo requiere una palabra.
 
 En general _MCS_ y _CLH_ son los más eficientes en tiempos de CPU, pero la diferencia no es considerable. Como _array-lock_, también requieren más espacio: un nodo por cada proceso activo, aunque la asignación puede ser dinámica y solo cuando se necesita. Esta es una de las razones por la que _ticket-lock_ sigue siendo el _spinlock_ preferido en el núcleo de Linux.
 
@@ -662,7 +662,7 @@ http://ftp.cs.rochester.edu/u/scott/papers/2001_PPoPP_Timeout.pdf
 
 === Recapitulación
 
-Comenzamos con las optimizaciones básicas a _spinlocks_ construidos con las instrucciones de hardware de capítulo anterior. La primera fue agregar un control _local_ a la variable compartida para evitar consumir ciclos con instrucciones más complejas. Esta solución no requiere nada especial, ni cambia el estado del proceso.
+Comenzamos con las optimizaciones básicas a _spinlocks_ construidos con las instrucciones de hardware de capítulo anterior. La primera fue agregar un control _local_ a la variable compartida para evitar consumir ciclos con instrucciones más complejas. Esta solución no requiere nada especial ni cambia el estado del proceso.
 
 A continuación vimos dos optimizaciones que sí cambian el estado del proceso, son adecuadas cuando se puede permitir que el proceso en el _spinlock_ abandone el procesadorfootnote:[No suele ser el caso en rutinas del núcleo del sistema operativo o gestores de interrupciones.]. Ambas soluciones mejoran mucho la eficiencia, tanto en tiempos de CPU como de retorno.
 
