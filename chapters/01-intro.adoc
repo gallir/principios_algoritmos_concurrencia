@@ -17,12 +17,12 @@ Las _tablas de control de procesos_ son estructuras variadas y complejas con inf
 [NOTE]
 .Creación de procesos en Unix
 ====
-La forma estándar de crear proceso en Unix es la llamada de sistema +fork+:
+La forma estándar de crear procesos en Unix es la llamada de sistema +fork+:
 
 [quote]
 +pid = fork();+
 
-Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó. El nuevo proceso es _hijo_ del original y ambos continúan su ejecución independientemente. La imagen de memoria y las tablas de control del hijo son copiasfootnote:[Se usa la técnica _copy-on-write_ (_COW_) para evitar copiar toda la memoria, se copia bajo demanda solo aquellas páginas modificadas por alguno de los procesos. Se consigue más eficiencia y ahorro de memoria RAM.] de las de padre. La única forma de diferenciarlos es por el valor de retorno de la llamada, en el ejemplo almacenado en la variable +pid+. Si +pid+ vale cero se trata del proceso _hijo_, si es mayor que cero es el proceso _padre_.
+Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó. El nuevo proceso es _hijo_ del original y ambos continúan su ejecución independientemente. La imagen de memoria y las tablas de control del hijo son copiasfootnote:[Se usa la técnica _copy-on-write_ (_COW_) para evitar copiar toda la memoria, se copia bajo demanda solo aquellas páginas modificadas por alguno de los procesos. Se consigue más eficiencia y ahorro de memoria RAM.] de las del padre. La única forma de diferenciarlos es por el valor de retorno de la llamada, en el ejemplo almacenado en la variable +pid+. Si +pid+ vale cero se trata del proceso _hijo_, si es mayor que cero es el proceso _padre_.
 ====
 
 
@@ -30,7 +30,7 @@ Esta llamada de sistema crea un proceso idéntico al proceso que la ejecutó. El
 
 Durante su ciclo de vida los procesos pasan por tres estados básicos:
 
-- Ejecución: El proceso se está ejecutando en una CPU. Hay, como máximo, un proceso en ejecución por cada procesador.
+- Ejecución: El proceso se está ejecutando en una CPU. Hay como máximo un proceso en ejecución por cada procesador.
 
 - Listos para ejecutar (o simplemente _listos_): El proceso no se está ejecutando pero puede hacerlo inmediatamente. El núcleo mantiene colas de los procesos ordenadas por diferentes criterios (prioridad, tiempo de ejecución, afinidad a un procesador, etc.).
 
@@ -49,7 +49,7 @@ Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en L
 
 El _scheduler_ debe tomar decisiones muy frecuentemente, entre unos pocos cientos a decenas de miles de veces por segundo. Para que la decisión sea muy rápida y eficiente se usan sofisticados algoritmos de colas para que la selección sea de baja complejidad computacional, se busca obtener _O(1)_ (i.e. seleccionar el primer elemento de la cola).
 
-El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Estas tienen requisitos contradictorios, de los cuales los más importantes son:
+El rendimiento y _velocidad aparente_ del sistema depende en gran medida de las decisiones del planificador. Estas tienen requisitos contradictorios, los más importantes son:
 
 - Tiempo de respuesta: Los usuarios y algunos programas demandan que el sistema operativo responda rápido a los eventos. Cuando se hace clic en un menú se espera respuesta inmediata, o reproducir un vídeo sin saltos.
 
@@ -69,7 +69,7 @@ Es el procedimiento de almacenar el estado del proceso en ejecución y restaurar
 
 1. Guardar los registros del procesador para restaurarlos cuando el proceso vuelva a ejecución.
 
-2. Marcar como inválidas las entradas de caché de las tablas de página (los _TLB_, _Translation Lookaside Buffer_). También se deben copiar las entradas modificadasfootnote:[El procesador marca en bits especiales del _TLB_ las entradas de las páginas accedidas o modificadas. Esos bits deben ser copiados a sus correspondientes entradas en las tablas de página en memoria.] a sus correspondientes entradas de las tablas de página del proceso (_TLB flushing_).
+2. Marcar como inválidas las entradas de caché de las tablas de página (los _TLB_, _Translation Lookaside Buffer_). También se deben copiar las entradas modificadasfootnote:[El procesador marca en bits especiales del _TLB_ las entradas de las páginas accedidas o modificadas. Esos bits deben ser copiados a sus correspondientes entradas en las tablas de página en memoria.] a sus correspondientes posiciones de las tablas de página del proceso (_TLB flushing_).
 
 3. Restaurar los registros del procesador y tablas de páginas del proceso que se ejecutará a continuación.
 
@@ -79,7 +79,7 @@ El _scheduler_ está diseñado y en constante evolución para tomar en cuenta es
 
 === Hilos
 
-Los procesos tradicionales no comparten ni tienen acceso a la memoria de los demásfootnote:[Por requisitos de seguridad, privacidad y protección de la memoria.], salvo que usen mecanismos ad hoc para compartirlafootnote:[Como el +shmget+ del estándar System V, o el estándar más moderno +mmap+.]. A principios de la década de 1980 se empezaron a desarrollar programas, sobre todo interactivos, más complejos y que requerían responder a una multitud de eventos diferentesfootnote:[Por ejemplo en un procesador de texto, hay que responder al teclado, otro módulo que se encarga de la paginación, otro del corrector ortográfico, etc.].
+Los procesos tradicionales no comparten ni tienen acceso a la memoria de los demásfootnote:[Por requisitos de seguridad, privacidad y protección de la memoria.], salvo que usen mecanismos _ad hoc_ para compartirlafootnote:[Como el +shmget+ del estándar System V, o el estándar más moderno +mmap+.]. A principios de la década de 1980 se empezaron a desarrollar programas, sobre todo interactivos, más complejos y que requerían responder a una multitud de eventos diferentesfootnote:[Por ejemplo en un procesador de texto, hay que responder al teclado, otro módulo que se encarga de la paginación, otro del corrector ortográfico, etc.].
 
 Este tipo de programación se denomina _dirigida por eventos_ (_event driven_), se seleccionan los diferentes eventos dentro de un bucle y se llama a las funciones correspondientes. Los programas son más complejos de estructurar y depurar. Para aliviar esta complejidad surgieron dos conceptos hoy muy vigentes y se encuadran en lo que conocemos como _programación concurrente_.
 
@@ -98,14 +98,14 @@ _POSIX Threads_ (o _Pthreads_) es el estándar POSIX para crear y gestionar hilo
 
 La función +pthread_create+ sirve para crear hilos, recibe como argumento la referencia a la función inicial del nuevo hilo. Cuando dicha función acabe el hilo se destruirá, aunque se puede llamar a +pthread_exit+ en cualquier punto de la ejecución.
 
-Desde antes de la estandarización de POSIX Thread Linux ofrecía la llamada de sistema +clone+, que puede crear procesos de los dos tipos: los tradicionales como +fork+, o hilos similares a los creados por +pthread_create+ (que de hecho llama a +clone+).
+Antes de la estandarización de POSIX Threads Linux ofrecía la llamada de sistema +clone+, que puede crear procesos de los dos tipos: los tradicionales como +fork+, o hilos similares a los creados por +pthread_create+ (que de hecho llama a +clone+).
 
 Las librerías POSIX Threads ofrecen también otras facilidades para sincronización de procesos, entre ellas los _mutex_ y _variables de condición_ que estudiaremos y usaremos en capítulos posteriores.
 ====
 
 
 ==== Hilos ligeros
-Antes de que los sistemas operativos diesen soporte estándar para la creación de hilos (como POSIX Thread en Unix o +clone+ en Linux), algunos lenguajes y máquinas virtuales los simulaban con sus propios _schedulers_ a nivel de aplicación. Los casos más conocidos son los hilos ligeros en la máquina virtual de Erlang, _sparks_ en Haskell, y la antigua emulación de hilos en la máquina virtual de Java conocida como _green threads_.
+Antes de que los sistemas operativos diesen soporte estándar para la creación de hilos (como POSIX Threads en Unix o +clone+ en Linux), algunos lenguajes y máquinas virtuales los simulaban con sus propios _schedulers_ a nivel de aplicación. Los casos más conocidos son los hilos ligeros en la máquina virtual de Erlang, _sparks_ en Haskell, y la antigua emulación de hilos en la máquina virtual de Java conocida como _green threads_.
 
 Algunos lenguajes usan hilos ligeros para evitar el coste de creación y _scheduling_ de los hilos nativos del sistema operativo. En Go se denominan _goroutines_, crea hilos con muy pocas instrucciones y consumo de memoria de pocos kilobytes. Otros lenguajes suelen incluir esta funcionalidad en sus módulos de programación asíncrona footnote:[_Asyncio_ en Python, _Fibers_ en Ruby, Javascript usa esencialmente hilos ligeros aunque los _web workers_ hacen que la máquina virtual cree hilos nativos.].
 
@@ -121,7 +121,7 @@ La necesidad de programar módulos asíncronos que respondan a diferentes evento
 Es la composición de módulos que se ejecutan independientemente, de forma asíncrona y no determinista.
 ====
 
-La programación concurrente tiene ventajas, pero no son gratuitas. La compartición de recursos –fundamentalmente memoria– tiene riesgos y puede provocar errores difíciles de detectar y depurar. Debido al carácter naturalmente asíncrono y no determinista de la ejecución de procesos, ya no es posible tratar a los procesos concurrentes como una ejecución secuencial de instrucciones.
+La programación concurrente tiene ventajas, pero no son gratuitas. La compartición de recursos –fundamentalmente memoria– tiene riesgos y puede provocar errores difíciles de detectar y depurar. Debido al carácter naturalmente asíncrono y no determinista de la ejecución de procesos ya no es posible tratar a los procesos concurrentes como una ejecución secuencial de instrucciones.
 
 El interés de soluciones para los problemas de concurrencia no es nuevo. Surgió con la aparición de los primeros _monitores_ –los predecesores del núcleo de los modernos sistemas operativos– a principios de la década de 1960. De hecho, el núcleo es una composición compleja de módulos independientes que deben responder –de forma asíncrona– a una enorme diversidad de eventosfootnote:[Interacción con dispositivos, interrupciones de hardware, llamadas de sistema, etc.] que pueden generar inconsistencias en las estructuras internasfootnote:[Muchas de las _pantallas azules_ y los _kernel panics_ son el resultado de problemas de concurrencia no resueltos.].
 
@@ -142,7 +142,7 @@ Los estudios de concurrencia y paralelismo son diferentes. El primero se ocupa d
 
 
 === Intercalación
-En un sistema operativo moderno, la ejecución secuencial de un proceso puede ser interrumpida en cualquier momento entre dos instrucciones del procesador; las responsables son las interrupciones de hardware. Cuando el procesador recibe una interrupción ejecuta una función (_interrupt handler_) predeterminada por la tabla de interrupciones. Una vez finalizado el tratamiento de dicha interrupción, el _scheduler_ decide qué proceso se ejecutará a continuación. Puede elegir al mismo que estaba antes, o a cualquier otro proceso en la cola de _listos para ejecutar_.
+En un sistema operativo moderno, la ejecución secuencial de un proceso puede ser interrumpida en cualquier momento entre dos instrucciones del procesador; las responsables son las interrupciones de hardware. Cuando el procesador recibe una interrupción ejecuta una función (_interrupt handler_) predeterminada por la tabla de interrupciones. Una vez finalizado el tratamiento de dicha interrupción el _scheduler_ decide qué proceso se ejecutará a continuación. Puede elegir al mismo que estaba antes, o a cualquier otro proceso en la cola de _listos para ejecutar_.
 
 En un sistema con un único procesador la ejecución de procesos es una _intercalación exclusiva_.
 
@@ -195,7 +195,7 @@ Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ 
 Si esas instrucciones acceden o modifican variables compartidas los resultados pueden ser diferentes, dependen de la secuencia –no determinista– de ejecución.
 ====
 
-La mayoría de lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de ejecución de instrucciones de un programa, con las variable +a+ y +b+ inicializadas a 0:
+La mayoría de lenguajes de programación están diseñados para especificar y ejecutar las instrucciones secuencialmente. Tomemos la siguiente secuencia de ejecución de instrucciones de un programa, con las variable +a+ y +b+ inicializadas a cero:
 
 [source, python]
 ----

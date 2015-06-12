@@ -73,3 +73,8 @@ include::chapters/a07-code-monitors.adoc[]
 include::chapters/a08-code-channels.adoc[]
 
 include::chapters/a09-code-transaccional.adoc[]
+
+[NOTE]
+====
+Disculpas si has llegado hasta aquí saltando el código fuente pantalla por pantalla, pero tenía que hacerlo. Era la única forma de no obligar al lector a estar conectado a internet para leer los programas completos.
+====

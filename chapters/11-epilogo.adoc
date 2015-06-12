@@ -2,26 +2,27 @@
 
 image::jrmora/11-fin.jpg[align="center"]
 
-Despedida y mención de temas no tratados pero importantes.
+[quote]
+Nos cuesta reconocer que ignoramos más de lo que conocemos. También nuestra historia y las personas que la hicieron posible.
 
 
-=== Fechas
+=== Cincuenta años de historias de personas
 
 1963::
-Algoritmo de exclusión mutua para dos procesos del matemático holandés Theodorus Jozef Dekker.
+El matemático holandés Theodorus Jozef Dekker inventa un algoritmo de exlusión mutua para dos procesos.
 
 1965::
-Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
+Edsger W. Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
 
 1973::
-Hoare formaliza el concepto de monitores (<<Hoare1>>).
+Charles Antony Richard Hoare, más conocido como _Tony_, formaliza el concepto de monitores (<<Hoare1>>).
 +
-IBM implementa la instrucción _compare&swap_ en su arquitectura 370/XA.
+Ingenieros de IBM diseñan e implementan la instrucción _compare&swap_ en la arquitectura 370/XA.
 
 1974::
 Leslie Lamport publica el algoritmo de la panadería (<<Lamport>>).
 +
-Dijkstra publica la formalización de semáforos inventados años atras (<<Dijkstra74>>).
+Edsger Dijkstra publica la formalización de semáforos inventados años atras (<<Dijkstra74>>).
 +
 Per Brinch Hansen diseña y desarrolla _Concurrent Pascal_, el primer lenguaje con monitores (<<Brinch>>).
 
@@ -29,10 +30,10 @@ Per Brinch Hansen diseña y desarrolla _Concurrent Pascal_, el primer lenguaje c
 David Lomet propone el uso de transacciones para programación concurrente (<<Lomet>>)
 
 1978::
-Hoare publica el modelo de _Communicating Sequential Processes_ (<<Hoare>>) que serviría de base para el lenguaje occam, Erlang, Go y arquitecturas de procesamiento en paralelo.
+Tony Hoare publica el modelo de _Communicating Sequential Processes_ (<<Hoare>>) que serviría de base para el lenguaje occam, Erlang, Go y arquitecturas de procesamiento en paralelo.
 
 1981::
-Peterson publica una solución más simple del algoritmo de Dekker (<<Peterson>>).
+Gary L. Peterson publica una solución más simple del algoritmo de Dekker (<<Peterson>>).
 +
 Glenn Ricart y Ashok Agrawala publican el algoritmo de exclusión mutua distribuida basado en la idea del algoritmo de la panadería (<<Ricart>>).
 
@@ -56,7 +57,7 @@ Maurice Herlihy demuestra la capacidad de _consenso infinita_ de la instrucción
 +
 John M. Mellor-Crummey y Michael L. Scott publican el _spinlock_ MCS (<<MCS1>>).
 +
-Mitchell  Neilsen y Masaaki Mizuno publican un algoritmo de paso de testigo más eficiente basado en árboles de cobertura virtuales (<<Neilsen>>).
+Mitchell Neilsen y Masaaki Mizuno publican un algoritmo de paso de testigo más eficiente basado en árboles de cobertura virtuales (<<Neilsen>>).
 
 
 1993::
@@ -71,6 +72,7 @@ Janice Stone _et al_ proponen primitivas de hardware atómicas conocidas como _O
 Nir Shavit y Dan Touitou (<<Shavit>>) demuestran el uso práctico de memoria transaccional por software (_STM_).
 +
 Sun publica el lenguaje Java –implementa monitores- diseñado por James Gosling, Mike Sheridan y Patrick Naughton.
+
 
 2001::
 Ravi Rajwar y James R. Goodman publican el algoritno _Speculative Lock Elision_ que luego se usará en Intel _HLE_ (<<Rajwar>>).
@@ -99,15 +101,22 @@ Se comercializan los procesadores Intel Haswell.
 2014::
 Se comercializan los procesadores PowerPC y S390 con soporte _HTM_.
 
+
+
 === Agradecimientos
 
+A Juan Sosa, Marilín Gonzalo y Virginia Ramirez por sus buenas sugerencias y correcciones.
 
-Ricardo Alberich y Jairo Rocha por acceso al servidor de cálculo de su grupo de investigación.
+A Ricardo Alberich y Jairo Rocha del _Departament de Matemàtiques i Informàtica_ de la _Universitat de les Illes Balears_ por darme acceso al servidor de cálculo de su grupo de investigación.
 
-Marc Pàmpols que me dejó la Raspberry
-Sergio L. Pascual que me ayudó a simplificar el código.
+A Bernat Cabezas y APSL –empresa a la que me incorporaré en setiembre– por dejarme usar sus servidores con procesadores Intel Haswell para las pruebas de memoria transaccional.
 
-Antonio Pérez, Carles Mateu, Carlos Guadall, David Asorey, David Pinilla, Gerard Ribugent, Javier García, Daniel Matilla, Juan Sosa, "Tzarak" y "Aragon de Mordor" por las pruebas en servidores.
+A Marc Pàmpols que me dio acceso remoto a una Raspberry Pi 2 mientras esperaba la mía.
 
+A Sergio L. Pascual que me ayudó con las pruebas y a simplificar el código ensamblador para procesadores ARM.
 
-Virginia Ramirez Casañez y Marilín Gonzalo por las correcciones.
+A Antonio Pérez, Carles Mateu, Carlos Guadall, David Asorey, David Pinilla, Gerard Ribugent, Javier García, Daniel Matilla, Juan Sosa, _Tzarak_ y _Aragon de Mordor_ por hacer pruebas y mediciones en sus servidores.
+
+A mi familia, que tuvo que aguantar un zombi en casa durante siete meses.
+
+Al lector.
