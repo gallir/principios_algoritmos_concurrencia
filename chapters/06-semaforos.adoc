@@ -81,7 +81,7 @@ s.signal()
 ...
 ----
 
-Se inicializa el semáforo a 1, cuando el primer proceso entre a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar, el valor de +value+ será cero, por lo que se bloqueará hasta que el primero ejecute el +signal+.
+Cuando el primer proceso entre a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar, el valor de +value+ será cero, por lo que se bloqueará hasta que el primero ejecute el +signal+.
 
 Los programas de ejemplo incluyen la solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
 
@@ -248,7 +248,7 @@ Después de +do_phase+ cada proceso esperará a que los demás hayan llegado al 
 
 Estas barreras no pueden implementarse igual que las binarias. Los semáforos son recursos _costosos_, requieren colas y tiempos relativamente elevados para la inicialización. No tiene sentido tener un array de _N_ semáforos y hacer _N_ operaciones de _wait_ y _signal_. Hay que solucionarlo con un número limitado de semáforos, y que no requiera que el número de operaciones de cada proceso sea proporcional al número de procesos concurrentes.
 
-El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&add_ o similares como _add&get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se cuentan con este tipo de operaciones atómicas, hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java>>):
+El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&add_ o similares como _add&get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se dispone de este tipo de operaciones atómicas, hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java>>):
 
 [[alg_barriers]]
 [source, python]
@@ -713,7 +713,7 @@ Con cinco filósofos pueden comer hasta dos. Sin embargo, con la secuencia anter
 [[dining_philosophers_semaphores]]
 ==== Solución óptima
 
-Para obtener la solución óptima hay que cambiar el enfoque, en vez de un problema de exclusión mutua hay que tratarlo como una sincronización de orden de instrucciones. Cuando un filósofo desea comer verifica el estado de sus dos vecinos; si ninguno de los dos está comiendo, podrá comer él. En caso contrario, tendrá que esperar que los vecinos le notifiquen cuando hayan dejado de comer.
+Para obtener la solución óptima hay que cambiar el enfoque, en vez de un problema de exclusión mutua hay que tratarlo como una sincronización de orden de instrucciones. Cuando un filósofo desea comer verifica el estado de sus dos vecinos; podrá comer si ninguno de los dos está comiendo. En caso contrario, tendrá que esperar que los vecinos le notifiquen cuando liberen los tenedores.
 
 Se usa el array +status+ para indicar el estado de cada filósofo: pensando (+THINKING+), que pretende comer (con _hambre_, +HUNGRY+) y comiendo (+EATING+). El array +sync+ de semáforos para sincronizar entre los filósofos, y el semáforo +mutex+ para asegurar exclusión mutua cuando se verifica y manipula el array +status+.
 
@@ -835,7 +835,7 @@ Después de estudiar y hacer simulaciones en la Tierra para asegurarse de que lo
 
 Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua, a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, saber cómo se construyen esas soluciones permite diseñar soluciones correctas y eficientes para muchos problemas de programación concurrente.
 
-Al haber sido el primer –y más usado– método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problema de los filósofos es un clásico. Sirvió para estudiar las diferentes formas de solucionar la sincronización entre procesos, también para reconocer las reglas básicas para evitar los interbloqueos.
+Al haber sido el primer –y más usado– método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problema de los filósofos es un clásico. Fue útil para estudiar las diferentes formas de solucionar la sincronización entre procesos y para reconocer las reglas básicas para eludir los interbloqueos.
 
 Finalmente analizamos el fenómeno que se presenta por la compleja interacción de procesos en los sistemas operativos modernos, especialmente en los de _tiempo real_: la inversión de prioridades.
 
