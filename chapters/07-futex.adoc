@@ -26,7 +26,7 @@ El objetivo de la interfaz FUTEXfootnote:[man 7 futex] (_Fast User-space muTEXes
 
 Las librerías _Native POSIX Thread Libraries_ (_NPTL_, implementan el estándar _POSIX Threads_ en Linux) y las de semáforos POSIX –ambas incluidas en las GLibc– usan FUTEX con varias optimizaciones a nivel de usuario, de allí su excelente rendimiento. En este capítulo veremos unas de esas técnicas de optimización, esperas activas limitadas (o _spin-then-block_).
 
-Aunque no impone restricciones, la interfaz FUTEX no fue diseñada para ser usada por programadores de aplicaciones, sino por los de librerías y máquinas virtuales. Requiere instrucciones de hardware y ni siquiera exporta una función, hay que recurrir a la función de bajo nivel +syscall+.
+Aunque no impone restricciones, la interfaz FUTEX no fue diseñada para ser usada por programadores de aplicaciones, sino por los de librerías y máquinas virtuales. Requiere programar con instrucciones de hardware y ni siquiera exporta una función, hay que recurrir a la función de bajo nivel +syscall+.
 
 La base de la interfaz (<<Franke>>, <<Hart>>, <<Drepper>>, <<LockLess1>>) es una variable entera llamada _futex_. Los procesos deben especificar la dirección de dicha variable, puede ser cualquiera que sea válida y accesible, no hay requisitos especiales. Su dirección física es usada por el núcleo como clave para la tabla de _hashing_ de las colas de bloqueados en cada _futex_.
 
