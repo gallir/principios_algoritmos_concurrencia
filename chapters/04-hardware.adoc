@@ -7,15 +7,15 @@ Hemos visto algoritmos que solucionan la exclusión mutua sin soporte especial d
 
 Lo son, en primer lugar, por los requisitos de almacenamiento. El número de registros necesarios –tamaño de arrays– es proporcional al número máximo de procesos concurrentesfootnote:[Está demostrado (<<Herlihy12>>) que dichos algoritmos son óptimos en cuestión de espacio]. En sistemas _SMP_ esto implica una sobrecarga importante, el sistema de coherencia de caché debe mantener la consistencia de zonas extensas de memoria.
 
-En segundo lugar, si los procesos se ejecutan en un único procesador el avance es tan lento como impredecible, ya que depende del grado de competencia y comportamiento del _scheduler_.
+En segundo lugar, si los procesos se ejecutan en un único procesador el avance es tan lento como impredecible ya que depende del grado de competencia y comportamiento del _scheduler_.
 
 Desde que se comenzó a estudiar el problema de la concurrencia –inicios de la década de 1960– se buscaron soluciones por hardware que permitiesen implementar algoritmos más eficientes y seguros.
 
 
 === Inhabilitación de interrupciones
-Si el problema fundamental es el intercalado provocado por las interrupciones, ¿por qué no deshabilitarlas? Aunque se recurre a este mecanismo en casos muy concretos en el núcleofootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.], no es una solución genérica segura. Si un proceso puede deshabilitar las interrupciones, entonces puede tomar el control del sistema: se anula la cualidad de apropiativo del _scheduler_. No es una solución aceptable para _procesos de usuarios_.
+Si el problema fundamental es el intercalado provocado por las interrupciones, ¿por qué no deshabilitarlas? Aunque se recurre a este mecanismo en casos muy concretos en el núcleofootnote:[Como +local_irq_disable()+ o +local_irq_enable()+ en Linux.], no es una solución genérica segura. Si un proceso puede deshabilitar las interrupciones también puede tomar el control del sistema: se anula la cualidad de apropiativo del _scheduler_. No es una solución aceptable para _procesos de usuarios_.
 
-Inhabilitar interrupciones presenta dificultades aún en el núcleo del sistema operativo. Existe el riesgo de perderlas y la complicación para hacerlo en todos los procesadores. Además, por la dificultad de deshabilitar interrupciones simultáneamente en varios procesadores, tampoco se previene el efecto de intercalación: la memoria puede ser modificada por un procesador sin las interrupciones inhabilitadas.
+Inhabilitar interrupciones presenta dificultades aún en el núcleo del sistema operativo. Existe el riesgo de perderlas y la complicación para hacerlo en todos los procesadores. Además, por la dificultad de deshabilitar interrupciones simultáneamente en varios procesadores tampoco se previene el efecto de intercalación: la memoria puede ser modificada por un procesador sin las interrupciones inhabilitadas.
 
 === Sincronización por hardware
 Se desarrollaron alternativas a nivel del procesador, las _primitivas de sincronización de hardware_. Son instrucciones que leen y modifican el valor de uno o varios registros sin ser interrumpidas. También aseguran coherencia de caché e introducen barreras de memoria para mantener el orden parcial de instrucciones.
@@ -31,10 +31,10 @@ Hay diferentes tipos de registros, cada uno con diferentes _propiedades de consi
 
 [[safe_register]]
 ==== Registros _seguros_
-Los registros con propiedades de consistencia más débiles son los _registros seguros_ (o _safe registers_). El nombre es un accidente histórico, son muy inseguros (<<Herlihy12>>). Estos registros solo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario podrá devolver cualquier valor aceptable en el rango del registro. Por ejemplo, si es un único byte y hay procesos concurrentes que escriben solo 0 o 1, el _get_ de un registro _seguro_ puede devolver valores entre 0 y 255 ya que todos están en el rango de ocho bits.
+Los registros con propiedades de consistencia más débiles son los _registros seguros_ (o _safe registers_). El nombre es un accidente histórico, son muy inseguros (<<Herlihy12>>). Estos registros solo aseguran que se retorna el último valor escrito si no hay operaciones _get_ y _write_ concurrentes, caso contrario pueden devolver cualquier valor aceptable en el rango del registro. Por ejemplo, si es un único byte y hay procesos concurrentes que escriben solo 0 o 1, el _get_ de un registro _seguro_ puede devolver valores entre 0 y 255 ya que todos están en el rango de ocho bits.
 
 ==== Registros regulares
-En el siguiente nivel están los _registros regulares_. Una operación de lectura con escrituras concurrentes puede retornar alguno de los valores recientemente escritos. En un caso de concurrencia similar al anterior, el _get_ de este tipo de registros devolvería solo 0 o 1. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_), porque aseguran que devolverán el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
+En el siguiente nivel están los _registros regulares_. Una operación de lectura con escrituras concurrentes puede retornar alguno de los valores recientemente escritos. En un caso de concurrencia similar al anterior, el _get_ de este tipo de registros devolvería solo 0 o 1. Se dice que estos registros proveen _consistencia por inactividad_ (_quiescent consistency_) porque aseguran que devolverán el mismo valor después de un período de inactividad entre el último _write_ y el siguiente _get_.
 
 [[atomic_register]]
 ==== Registros atómicos
@@ -46,7 +46,7 @@ Los registros que devuelven el último valor escrito se denominan _registros at�
 
 [[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
-Como observamos en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos concurrentes. Además, como las esperas activas recorren muchos registros, se introduce presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de procesos son ineficientes e inseguras.
+Como observamos en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos concurrentes. Además, como las esperas activas recorren muchos registros se introduce presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de procesos son ineficientes e inseguras.
 
 Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema operativo de tener varios procesos activos en memoria e intercalar su ejecución.] se diseñaron instrucciones atómicas que permitieron implementar algoritmos más seguros y eficientes. Estas primitivas pueden ser expresadas como abstracciones, denominadas genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ pueden implementarse como construcciones de lenguajes o instrucciones de procesador, sus propiedades son similares.
 
@@ -80,7 +80,7 @@ Hay varios tipos de instrucciones que implementan registros _RMW_, las disponibl
 - _compare&swap_: Compara el valor del registro con otro, si son iguales asigna uno nuevo y retorna el anterior.
 
 
-Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar la programación y portabilidad los compiladores proveen macros, o _intrinsics_, más abstractos. Estos macros generan la secuencia de instrucciones nativas para cada arquitecturafootnote:[Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*`, pero en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria de C11 y C++11.], los programadores no se deben preocupar de programar en ensamblador para cada arquitecturafootnote:[En el núcleo Linux no se usan macros, ya que lo haría dependiente del compilador y tampoco generan el código más eficiente. Se programa en ensamblador _empotrado_ para cada arquitectura.].
+Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar la programación y portabilidad los compiladores proveen macros, o _intrinsics_, más abstractos. Estos macros generan la secuencia de instrucciones nativas para cada arquitecturafootnote:[Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*`, pero en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria de C11 y C++11.] así los desarrolladores no se deben preocupar de programar en ensamblador para cada arquitecturafootnote:[En el núcleo Linux no se usan macros, ya que lo haría dependiente del compilador y tampoco generan el código más eficiente. Se programa en ensamblador _empotrado_ para cada arquitectura.].
 
 
 === Exclusión mutua con registros _Read-Modify-Write_
@@ -201,7 +201,7 @@ Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<g
 [[em_cas]]
 ==== _Compare&Swap_
 
-Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XA para solucionar las limitaciones de _test&set_ en operaciones complejas como actualización de colas (<<Gifford>>). Actualmente _CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
+Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XAfootnote:[Inventada por Charlie Salisbury, se dice que se llamó inicialmente CAS por sus iniciales y posteriormente se buscó _compare and swap_.] para solucionar las limitaciones de _test&set_ en operaciones complejas como actualización de colas (<<Gifford>>). Actualmente _CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
 
 Registro (_register_):: La dirección de memoria cuyo valor se comparará y a la que se asignará un nuevo valor, si corresponde.
 
@@ -259,7 +259,7 @@ _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se pre
 Si _A_ y _B_ son valores simples no hay conflictos. Pero si son punteros a estructuras más complejas, como nodos de una pila, un campo de esas estructuras pudo haber cambiado y provocar errores.
 
 [[free_lock_stack]]
-====== Pilas concurrentes sin exlusión mutua
+====== Pilas concurrentes sin exclusión mutua
 
 Veremos un caso práctico de implementación de _pilas concurrentes sin exclusión mutua_ (_free-lock stacks_) con _CAS_.
 
@@ -267,7 +267,7 @@ Veremos un caso práctico de implementación de _pilas concurrentes sin exclusi�
 [NOTE]
 .Estructuras _lock-free_
 ====
-Una estructura de datos compartida es _sin exclusion mutua_ (o _lock-free_) si sus operaciones no requieren exclusión mutua.
+Una estructura de datos compartida es _sin exclusión mutua_ (o _lock-free_) si sus operaciones no requieren exclusión mutua.
 
 Existe interés académico por este tipo de estructuras porque permiten paralelizar más eficientemente las operaciones a estructuras esenciales: _hashes_, colas, árboles balanceados, etc. No son problemas sencillos debido a las limitaciones de las primitivas de hardware para manipular registros de tamaño superior a una palabra, lo que obliga a diseñar algoritmos complejos para componer operaciones atómicas. Por ejemplo, todavía se estudia la solución eficiente a una cola _lock-free_ que permita agregar o quitar elementos por ambos extremos.
 
@@ -542,7 +542,7 @@ Las instrucciones _LL/SC_ tienen algunos problemas que afectan al _avance_. El r
 
 La recomendación general es que el fragmento de código dentro de una sección exclusiva sea breve y que se minimicen las escrituras a memoria.
 
-La principal ventaja de las instrucciones _LL/SC_ es que no sufren el problema ABA: el primer cambio -de _A_ a _B_- ya invalidará el _store_ condicional posterior. Cuando analizamos el problema ABA, vimos cómo se puede reproducir el problema con un <<cas_double_stack, par de colas>> que intercambian sus nodos. El programa usa el macro atómico para _CAS_, cuando se compila para ARM se emula esa operación, también con sus problemas. Así, a pesar de que en ARM se traduce a operaciones _LL/SC_, también provoca los mismos errores:
+La principal ventaja de las instrucciones _LL/SC_ es que no sufren el problema ABA: el primer cambio -de _A_ a _B_- ya invalidará el _store_ condicional posterior. Cuando analizamos el problema ABA vimos cómo se puede reproducir el problema con un <<cas_double_stack, par de colas>> que intercambian sus nodos. El programa usa el macro atómico para _CAS_, cuando se compila para ARM se emula esa operación, también con sus problemas. Así, a pesar de que en ARM se traduce a operaciones _LL/SC_, también provoca los mismos errores:
 
 ----
 *** Error in `./stack_cas_malloc': double free or corruption (fasttop): 0x75300468 ***
@@ -604,18 +604,18 @@ Con un único núcleo del ARMv6 la implementación con _LL/SC nativo_ es más de
 
 === Recapitulación
 
-En este capítulo hemos visto las instrucciones por hardware esenciales para construir _spinlock_ eficientes. Analizamos varias de ellas, desde las más básicas hasta las más potentes: _CAS_ y _LL/SC_. Además de la exclusión mutua, vimos el uso de las primitivas _RMW_ para resolver problemas más sofisticados, como las pilas concurrentes sin bloqueo. También estudiamos el problema ABA y su solución, _CAS etiquetado_.
+En este capítulo hemos visto las instrucciones por hardware esenciales para construir _spinlock_ eficientes. Analizamos varias de ellas, desde las más básicas hasta las más potentes: _CAS_ y _LL/SC_. Además de la exclusión mutua vimos el uso de las primitivas _RMW_ para resolver problemas más sofisticados, como las pilas concurrentes sin bloqueo. También estudiamos el problema ABA y su solución, _CAS etiquetado_.
 
-No hay instrucciones de hardware unificadas para todas las arquitecturas, ni tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_, que traducen o emulan los registros _RMW_ representados por el macro.
+No hay instrucciones de hardware unificadas para todas las arquitecturas, ni tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_ que traducen o emulan los registros _RMW_ representados por el macro.
 
-Simular _LL/SC_ con _CAS_ o _TAS_ es más complicado –si no imposible–, por lo que GCC no incluye macros para _LL/SC_. Tuvimos que recurrir a ensamblador para poder usarlas en procesadores ARM.
+Simular las instrucciones_LL/SC_ con _CAS_ o _TAS_ es más complicado –si no imposible– por lo que GCC no incluye macros para emularlas. Tuvimos que recurrir a ensamblador para poder usarlas en procesadores ARM.
 
 Los _spinlocks_ basados en instrucciones por hardware son fundamentales, se requieren algoritmos más eficientes y construcciones más sofisticadas, como lectores-escritores. Son los temas del siguiente capítulo.
 
 [NOTE]
 .Por las dudas
 ====
-En todos los ejemplos de exclusión mutua, la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una operación aritmética tan simple también sufre los problemas de concurrencia. No obstante, espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para incrementar una variable compartida, se puede hacer de forma directa y óptima con _get&add_ o _add&get_.
+En todos los ejemplos de exclusión mutua la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una operación aritmética tan simple también sufre los problemas de concurrencia. No obstante, espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para incrementar una variable compartida. Se puede hacer de forma directa y óptima con _get&add_ o _add&get_.
 
 Por ejemplo en  C:
 
