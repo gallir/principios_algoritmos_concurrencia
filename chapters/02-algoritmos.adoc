@@ -67,10 +67,10 @@ Empezaremos analizando los problemas de algoritmos simples para dos procesos has
 
 [NOTE]
 ====
-Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, también porque funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capitulos posteriores estudiaremos estos problemas y sus soluciones.
+Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, también porque no funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capítulos posteriores estudiaremos estos problemas y sus soluciones.
 ====
 
-El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer y razonar sobre los problemas de los programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
+El objetivo de estudiar estos algoritmos y su evolución hasta la solución correcta es aprender a reconocer los problemas de la programación concurrente, conocer las reglas fundamentales para el diseño de los algoritmos de exclusión mutua, las formas y reglas para verificar si son correctos; y aprender los conceptos y terminología básica:
 
 - esperas activas (_busy wait_);
 - interbloqueos (_deadlocks_);
@@ -130,7 +130,7 @@ Cada uno de los dos procesos está identificado por 0 y 1. Dado que el código d
 
 [NOTE]
 ====
-Se acostumbra a usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención. Como ahora solo tratamos con dos procesos usaremos 0 y 1 y nos centraremos desde el punto de vista del proceso _P0_.
+Se acostumbra a usar +i+ para identificar al proceso que se analiza y +j+ para identificar a los _otros_. Más adelante usaremos la misma convención. Como ahora solo tratamos con dos procesos usaremos 0 y 1 y centraremos el análisis desde el punto de vista del proceso _P0_.
 ====
 
 ==== Primer intento
@@ -156,7 +156,7 @@ turno = 1
 [NOTE]
 .Espera activa
 ====
-Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable, se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU, pero a veces inevitable cuando no se pueden usar otras primitivas de sincronización. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
+Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable, se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU, pero a veces es inevitable cuando no se pueden usar otras primitivas de sincronización. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
 ====
 
 Cuando la variable +turn+ sea 0 _P0_ podrá entrar a su sección crítica. Al salir de ella ejecutará el posprotocolo que consiste solo en dar el turno a _P1_. El problema del algoritmo es obvio, pero por ser la primera vez lo analizaremos en detalle comprobando el cumplimiento de cada requisito.
@@ -310,7 +310,7 @@ Aunque este algoritmo tiene problemas estamos muy cerca de una solución que cum
 
 ==== Algoritmo de Dekker (1963)
 
-El problema del algoritmo anterior reside en la indefinición dentro del bucle, se puede usar otra variable, +turn+, que decida de quién es el turno. Como en el primer intento, pero se hará solo en caso de competencia. Si ambos procesos entran al bucle, el valor de +turn+ decidirá inmediatamente qué proceso entra y cuál espera.
+El problema del algoritmo anterior reside en la indefinición dentro del bucle, se puede usar otra variable, +turn+, que decida de quién es el turno. Como en el primer intento, pero se hará solo en caso de competencia. Si ambos procesos entran al bucle el valor de +turn+ decidirá qué proceso entra y cuál espera.
 
 El algoritmo queda de la siguiente forma:
 
@@ -335,7 +335,7 @@ turn = 1                    <2>
 <1> _P0_ espera si no es su turno, su estado se mantendrá en falso y _P1_ podrá entrar a la sección crítica.
 <2> Cuando un proceso sale de su sección crítica cede el turno al otro, si este estaba esperando podrá continuar.
 
-El valor de +turn+ es relevante solo en casos de competencia, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le asigne su turno.
+El valor de +turn+ es relevante solo en casos de competencia, el proceso diferente al valor de +turn+ quedará esperando hasta que el otro haya salido de la sección crítica y le transfiera turno.
 
 Este algoritmo cumple todos los requisitos de los algoritmos de exclusión mutua, se puede demostrar que las esperas son limitadas:
 
@@ -383,7 +383,7 @@ Para que haya dos procesos en la sección crítica y por la condición +states[j
 
 Progreso::
 
-Si hay competencia el valor de +turn+ decide qué proceso continúa, como +turn+ puede valer solo 1 o 0, uno y solo uno de los dos siempre podrá continuar. Si no hay competencia, el proceso que pretende entrar lo hará inmediatamente porque el valor de +states+ para el otro será falso.
+Si hay competencia el valor de +turn+ decide qué proceso continúa, como +turn+ puede valer solo 1 o 0, uno y solo uno de los dos podrá continuar. Si no hay competencia, el proceso que pretende entrar lo hará inmediatamente porque el valor de +states+ para el otro será falso.
 
 Espera limitada::
 
@@ -550,4 +550,4 @@ El problema de exclusión mutua es el más básico y mejor modelado de concurren
 
 Este capítulo sirvió de introducción para reconocer los problemas de procesos concurrentes y la terminología técnica básica. Experimentamos que el modelo secuencial de programa al que estamos acostumbrados no sirve cuando se trata de analizar procesos concurrentes.
 
-Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], que no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>)-
+Vimos los requisitos que deben cumplirse para asegurar exclusión mutua, y los algoritmos que cumplen con esas condiciones. Pero estos algoritmos no funcionan en las arquitecturas modernasfootnote:[Por eso en el código hay barreras de memoria explícitas.], que no aseguran la consistencia secuencial que supusimos para los algoritmos vistos. Este tema se trata en el siguiente capítulo (<<barriers>>).
