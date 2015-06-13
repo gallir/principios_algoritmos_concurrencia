@@ -11,7 +11,7 @@ El código fuente está disponible en https://github.com/gallir/concurrencia_sou
 
 
 
-Ricardo Galli en Ingeniero y Doctor en informática. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame.
+Ricardo Galli es Ingeniero y Doctor en informática. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame.
 
 //////
 

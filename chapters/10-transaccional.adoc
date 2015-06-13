@@ -128,7 +128,7 @@ La construcción con +transaction+ es similar a +synchronized+ en Java o a +atom
 ====
 
 
-Algunos compiladores ya incluyen construcciones sintácticas de bloques, el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>) y GCC. Para C/C\++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas y más estrictasfootnote:[`__transaction_relaxed` y  `__transaction_atomic` respectivamente.].
+Algunos compiladores ya incluyen construcciones sintácticas de bloques, el compilador _Intel C\++ STM Compiler_ (<<IntelSTM>>) y GCC. Para C/C++ se está trabajando en el borrador de la especificación (<<Tabatabai>>), permitirá dos tipos de transacciones: relajadas y más estrictasfootnote:[`__transaction_relaxed` y  `__transaction_atomic` respectivamente.].
 
 ==== Bloques atómicos con GCC
 
