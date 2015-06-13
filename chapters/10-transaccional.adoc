@@ -75,7 +75,7 @@ No producen interbloqueos:: Salvo errores del programador, como esperas activas 
 Mayor paralelismo:: Al no requerir exclusión mutua todos los procesos pueden ejecutarse en paralelo en diferentes procesadores.
 
 
-Pero las transacciones no son un panacea, los programadores aún pueden provocar  interbloqueos o definir transacciones imposibles de finalizar sin conflictos.
+Pero las transacciones no son la panacea, los programadores aún pueden provocar interbloqueos o definir transacciones imposibles de finalizar sin conflictos.
 O incluso olvidarse de hacer el _commit_ de una transacción. Para reducir este tipo de errores se especificaron construcciones sintácticas como los _bloques atómicos_.
 
 
