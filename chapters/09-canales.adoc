@@ -44,7 +44,7 @@ La comunicación es asíncrona, los mensajes se depositan en _buzones_ desde don
 ====
 
 === Canales en Go
-En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike, y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales. Sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
+En 2010 Google publicó la primera versión estable del lenguaje Go diseñado por Robert Griesemer, Rob Pike y Ken Thompson. Es un lenguaje moderno, software librefootnote:[Como todos los que usé en los ejemplos de este libro.], implementa el modelo _CSP_ con canales. Sus operaciones y la creación de hilos ligeros son construcciones sintácticas. Además permite la ejecución en paralelo especificando el número de hilos nativos del sistema operativo (_threads_) que pueden crearse. Estas características favorecen la especificación compacta y legible de los algoritmos, por ello todos los ejemplos de este capítulo están en Go.
 
 
 Go incluye dos mecanismos para facilitar la programación concurrente y la ejecución en paralelo:
@@ -131,7 +131,7 @@ Los programas son equivalentes y muy similares. Las diferencias fundamentales so
 Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
 
 ==== Barreras binarias
-Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse. _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa.
+Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse: _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa.
 
 La solución con semáforos requería dos, con canales es similar. La primera idea suele ser que cada proceso envíe un mensaje a su canal en cuanto llegue al punto de sincronización y a continuación espere un mensaje en el canal del otro proceso. Por ejemplo:
 
@@ -154,7 +154,7 @@ El código anterior es erróneo, produce interbloqueo. El _runtime_ de Go interr
 fatal error: all goroutines are asleep - deadlock!
 ----
 
-Es un error habitual cuando no se tiene experiencia con sincronización con canales: no tener en cuenta que por defecto ambos canales son síncronos: _A_ y _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
+Un error habitual cuando no se tiene experiencia con sincronización con canales es no tener en cuenta que por defecto ambos canales son síncronos: _A_ y _B_ se bloquean al enviar el mensaje y ninguno de ellos podrá continuar hasta que el otro haya recibido el mensaje (<<railroad_quote>>).
 
 El interbloqueo se produce por una _espera circular_, muy similar a la que analizamos con el interbloqueo de los filósofos (<<deadlocks>>). Se puede evitar haciendo que las operaciones no sigan el mismo orden, uno de los procesos recibe primero el mensaje del otro y luego envía el propio. Por ejemplo (<<barrier_2p_sync_go, código fuente>>):
 
@@ -502,7 +502,7 @@ func NewMutex() Mutex {
 }
 ----
 
-Dado que no podemos hacerlo con canales síncronos se requiere otro proceso. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>)footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]:
+No es posible hacer lo mismo con canales síncronos, se requiere un proceso adicional. Se puede hacer que el propio constructor inicie el nuevo proceso sin necesidad de modificar la implementación de las otras funciones (<<channel_mutex_sync_go, código completo>>)footnote:[Uso función anónima con clausura, de lectura y comprensión más sencilla.]:
 
 [source,go]
 ----
@@ -520,7 +520,7 @@ func NewMutex() Mutex {
 <1> Se lanza una _goroutine_, la función es anónima y aprovecha de la clausura para hacer referencia al mismo canal +m+.
 
 ==== Solución óptima
-La solución anterior (ya la analizamos <<dining_philosophers_semaphores, con semáforos>>) no asegura que puedan comer todos los filósofos que podrían hacerlo. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
+La solución anterior no asegura que puedan comer todos los filósofos que podrían hacerlo, ya analizamos el problema <<dining_philosophers_semaphores, con semáforos>>. Se puede implementar una solución óptima similar a la de semáforos pero adaptada a canales (<<channel_philosophers_provider_go, código completo>>).
 
 En vez de solicitar los tenedores individualmente habrá un proceso _proveedor_ (+provider+) para toda la mesa, este proceso usará un único canal síncrono para recibir los mensajes de todos los filósofos. Estos enviarán mensajes indicando si quieren tomar o soltar los tenedores. El proveedor verificará el estado de los filósofos vecinos, si ambos tenedores están libres le responderá con un mensaje para que continúe. Si alguno de sus vecinos está comiendo le responderá cuando estos hayan dejado de comer.
 
@@ -551,7 +551,7 @@ Cuando libera los tenedores envía otro mensaje similar pero con el estado +Thin
 provider <- Request{id: i, c: myCh, status: Thinking}
 ----
 
-El proveedor mantiene un array que contiene el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ de los mensajes. El proceso está en un bucle infinito recibiendo mensajes desde su canal +provider+. Cuando recibe uno lo copia al array de estados y verifica el estado del mensaje que acaba de recibir:
+El proveedor mantiene un array que contiene el estado de los filósofos y su canal de comunicación. Inicialmente cada posición es una copia de la estructura +Request+ de los mensajes. El proceso está en un bucle recibiendo mensajes desde su canal +provider+. Cuando recibe uno lo copia al array de estados y verifica el estado del mensaje que acaba de recibir:
 
 1. Si es +Hungry+ llama a la función +canEat+, esta función responderá con un mensaje al canal del filósofo si puede comer.
 
@@ -600,7 +600,7 @@ image::B0042.jpg[width="300", align="center"]
 
 Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran. También se desarrollaron y portaron varios sistemas operativos como _Minix_, _Paros_ y _Trollius_. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales, posteriormente desapareció, posiblemente por la aparición de microprocesadores más potentes y económicos. O, como asegura David May –uno sus fundadores–, por el desconocimiento general de concurrencia de los programadores de la época.
 
-Aunque ya no existe, su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicacion con 12 nodos vecinos y hasta 12 Gbits/seg.]
+Aunque ya no existe, su arquitectura influyó notablemente en el desarrollo de los chips para tratamiento digital de señales, la supercomputación basada en _clusters_ y hasta la conocida _Blue Gene_ de IBM que soporta miles de procesadores conectados por canales de alta velocidadfootnote:[Está basada en la arquitectura QCDOC, originalmente soportaba canales de comunicación con 12 nodos vecinos y hasta 12 Gbits/seg.]
 
 
 ==== Multiplicación de matrices en paralelo
@@ -617,12 +617,12 @@ Cada elemento de la matriz resultante puede ser calculado independientemente. Po
 [[element_multiplication]]
 image::element_multiplication.png[align="center"]
 
-El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplican un elemento de cada matriz, lo añaden a la suma parcial recibida desde otro proceso y envían el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
+El cálculo se puede descomponer en diferentes procesos _multiplicadores_ comunicados por canales. Cada uno de ellos multiplica un elemento de cada matriz, lo añade a la suma parcial recibida desde otro proceso y envía el resultado al siguiente multiplicador. Para matrices de 3x3 se necesitan tres procesos por fila inicializados con los valores de una fila de la primera matriz ([4, 5, 6]). Del canal _norte_ (_north_)footnote:[Recordad que cada procesador de _Transputer_ tiene cuatro puertos, para ubicarlos en el diagrama los llamamos _norte_, _este_, _sur_ y _oeste_.] reciben un elemento de la fila correspondiente a la segunda matriz ([2, 1, 2]):
 
 [[col_row_multiplication]]
 image::col_row_multiplication.png[align="center"]
 
-Para obtener el resultado final en el procesador de la columna izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal del _este_ y lo envía en su canal del _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial, así el algoritmo de los multiplicadores es el mismo para todos:
+Para obtener el resultado final en el procesador de la columna izquierda cada proceso multiplica el valor inicial por el que le llegó desde el _norte_, lo suma al resultado desde el canal _este_ y lo envía por su canal _oeste_. El proceso _zero_ de la columna de la derecha únicamente envía ceros para iniciar la suma parcial, así el algoritmo de los multiplicadores es el mismo para todos:
 
 [source, go]
 ----
@@ -735,7 +735,7 @@ Al tratarse de exclusión mutua usamos las funciones +Lock+ y +Unlock+, son el p
 
 ===== Algoritmo de Ricart-Agrawala (1981)
 
-Es uno de los algoritmos distribuidos más sencillos de interpretar, el proceso que desea entrar a la sección crítica debe recibir la autorización de todos los demás (<<distributed_me1_go, código fuente>>). Para ello envía un mensaje a los demás y espera la respuesta de cada uno (cada entrada requiere _2(n-1)_ mensajes). Estos solo responderán si no hay competencia y no están en la sección crítica, o el número del remitente es menor. Como en el algoritmo de la panadería, el turno de entrada se asigna por un número creciente.
+Es uno de los algoritmos distribuidos más sencillos de interpretar, el proceso que desea entrar a la sección crítica debe recibir la autorización de todos los demás (<<distributed_me1_go, código fuente>>). Para ello envía un mensaje a los demás y espera la respuesta de cada uno (cada entrada requiere _2(n-1)_ mensajes). Estos solo responderán si no hay competencia y no están en la sección crítica, o si el número del proceso remitente es menor. Como en el algoritmo de la panadería, el turno de entrada se asigna por un número creciente.
 
 Cada nodo mantiene la siguiente información:
 
@@ -795,7 +795,7 @@ for i := 0; i < n; i++ {
 <1> Hay que asegurar exclusión mutua para evitar condiciones de carreras con +receiver+.
 <2> Envía la respuesta a los que están pendientes de respuesta. Fueron añadidos a +deferred+ por +receiver+.
 
-El hilo +receiver+ se ejecuta de manera asíncrona esperando peticiones de los otros procesos, los mensajes incluyen el identificador del proceso y el número que seleccionaron (con en la panadería, puede haber números repetidos). Cuando recibe una petición responde inmediatamente si el proceso local no desea entrar a la sección crítica o el número del proceso remoto es menor. En caso contrario agrega el identificador del proceso remoto a la cola +deferred+ para que se le envíe la respuesta desde +Unlock+.
+El hilo +receiver+ se ejecuta de manera asíncrona esperando peticiones de los otros procesos, los mensajes incluyen el identificador del proceso y el número que seleccionaron (como en el algoritmo de la panadería, puede haber números repetidos). Cuando recibe una petición responde inmediatamente si el proceso local no desea entrar a la sección crítica o el número del proceso remoto es menor. En caso contrario agrega el identificador del proceso remoto a la cola +deferred+ para que se le envíe la respuesta desde +Unlock+.
 
 ._Receiver_
 [source, go]
@@ -872,7 +872,7 @@ En cualquier de los dos casos, el árbol se habrá unificado.
 
 El algoritmo de Neilsen-Mizuno es muy abstracto y difícil de entenderlo inicialmente, pero su programación es muy sencilla y, como veremos más adelante, también muy eficiente: compite en eficiencia con los algoritmos de memoria compartida.
 
-Es notable como la abstracción de _árboles virtuales_, representados solo por una variable en cada nodo, reduce la complejidad e información que hay que transmitir. Este tipo de técnicas son muy comunes en algoritmos distribuidos. Me pareció importante explicarlas; los mismos conceptos e ideas pueden ser usados para programas concurrentes, sobre todo si se usan canales y se pretende no compartir memoria (_share nothing_).
+Es notable como la abstracción de _árboles virtuales_, representados solo por una variable en cada nodo, reduce la complejidad e información que hay que transmitir. Este tipo de técnicas son muy comunes en algoritmos distribuidos. Me pareció importante explicarlas, los algoritmos distribuidos con un caso especial de concurrencia; los mismos conceptos e ideas pueden ser usados para programas concurrentes, sobre todo si se usan canales y se pretende no compartir memoria (_share nothing_).
 
 [[channels_times]]
 === Eficiencia de Canales
