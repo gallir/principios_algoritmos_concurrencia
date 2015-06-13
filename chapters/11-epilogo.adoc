@@ -10,7 +10,7 @@ Nos cuesta reconocer que ignoramos más de lo que conocemos. También que descon
 El matemático holandés Theodorus Jozef Dekker inventa un algoritmo de exclusión mutua para dos procesos.
 
 1965::
-Edsger W. Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
+Edsger W. Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor y trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
 
 1973::
 Charles Antony Richard Hoare, más conocido como _Tony_, formaliza el concepto de monitores (<<Hoare1>>).
@@ -20,7 +20,7 @@ Charles Antony Richard Hoare, más conocido como _Tony_, formaliza el concepto d
 1974::
 Leslie Lamport publica el algoritmo de la panadería (<<Lamport>>).
 +
-Edsger Dijkstra publica la formalización de semáforos inventados años atras (<<Dijkstra74>>).
+Edsger Dijkstra publica la formalización de semáforos inventados años atrás (<<Dijkstra74>>).
 +
 Per Brinch Hansen diseña y desarrolla _Concurrent Pascal_, el primer lenguaje con monitores (<<Brinch>>).
 
@@ -63,7 +63,7 @@ Travis Craig (<<Craig>>) y Anders Landin y Eric Hagersten (<<CLH>>) inventan de 
 +
 Maurice Herlihy y Eliot Moss proponen soluciones de hardware para memoria transaccional (_HTM_) (<<Herlihy93>>).
 +
-Janice Stone, Harold Stone, Phil Heidelberger y John Turekproponen proponen primitivas de hardware atómicas conocidas como _Oklahoma Update_ (<<Stone>>).
+Janice Stone, Harold Stone, Phil Heidelberger y John Turek proponen primitivas de hardware atómicas conocidas como _Oklahoma Update_ (<<Stone>>).
 
 
 1995::
