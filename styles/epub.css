@@ -216,7 +216,7 @@ p + p > strong {
 }
 
 dd p {
-    text-indent: 0;    
+    text-indent: 0;
 }
 
 .blockquote > p > code {
@@ -328,7 +328,7 @@ div.chapter, div.footnotes {
 
 /* keep this body statement last */
 html body {
-  font-family: Literata, Georgia, Bookerly, Caecilia, Palatino, serif;
+  font-family: Literata, Bookerly, Georgia, Caecilia, Palatino, serif;
   font-size: medium;
   max-width: 36em;
   /* margin: 0 0.5em 0 0.5em; */

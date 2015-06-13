@@ -46,7 +46,7 @@ Los registros que devuelven el último valor escrito se denominan _registros at�
 
 [[RMW]]
 === Primitivas de hardware y registros _Read-Modify-Write_
-Como observamos en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos concurrentes. Además, como las esperas activas recorren muchos registros se introduce presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de procesos son ineficientes e inseguras.
+Como observamos en el algoritmo de la panadería, el número de registros necesarios crece linealmente con el número de procesos concurrentes. Además, como las esperas activas recorren muchos registros introducen presión sobre zonas extensas de la caché. También obliga a la especificación manual y explícita de barreras de memoria para asegurar la consistencia secuencial. Las soluciones por software al problema de sincronización de procesos son ineficientes e inseguras.
 
 Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema operativo de tener varios procesos activos en memoria e intercalar su ejecución.] se diseñaron instrucciones atómicas que permitieron implementar algoritmos más seguros y eficientes. Estas primitivas pueden ser expresadas como abstracciones, denominadas genéricamente _registros Read-Modify-Write_ o _RMW_. Los registros _RMW_ pueden implementarse como construcciones de lenguajes o instrucciones de procesador, sus propiedades son similares.
 
@@ -54,7 +54,7 @@ Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema ope
 [NOTE]
 .Registros RMW no triviales
 ====
-Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91,  Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
+Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91, Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
 
 _CAS_ es la más potente de la lista. <<Herlihy91, Herlihy>> demostró que pertenece a la clase de _consenso N_ (o _infinito_). En palabras del autor (<<Herlihy12>>):
 
@@ -109,7 +109,7 @@ def unlock():
     mutex = 0
 ----
 
-El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre, no se trata la instrucción _swap_ sino un equivalente de _get&set_.
+El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre no se trata de la instrucción _swap_, sino un equivalente de _get&set_.
 
 ==== _Get&Add_
 
@@ -201,11 +201,11 @@ Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<g
 [[em_cas]]
 ==== _Compare&Swap_
 
-Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XAfootnote:[Inventada por Charlie Salisbury, se dice que se llamó inicialmente CAS por sus iniciales y posteriormente se buscó _compare and swap_.] para solucionar las limitaciones de _test&set_ en operaciones complejas como actualización de colas (<<Gifford>>). Actualmente _CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
+Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XAfootnote:[Inventada por Charlie Salisbury, se dice que se llamó inicialmente CAS por sus iniciales y posteriormente se cambió a _compare and swap_.] para solucionar las limitaciones de _test&set_ en operaciones complejas como actualización de colas (<<Gifford>>). Actualmente _CAS_ está disponible en la mayoría de arquitecturas CISC, incluida Intel/AMD. Provee el mayor _nivel de consenso_. La instrucción requiere tres operandos:
 
 Registro (_register_):: La dirección de memoria cuyo valor se comparará y a la que se asignará un nuevo valor, si corresponde.
 
-Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _nuevo valor_ (se copia en el sentido inverso).
+Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _nuevo valor_ (se copia en sentido inverso).
 
 Nuevo valor (_desired_):: El valor que se asignará al registro si su valor era igual al esperado.
 
@@ -239,7 +239,7 @@ def unlock():
     mutex = 0
 ----
 
-La instrucción +CompareAndSwapInt32+ <<gocounter_compare_and_swap_go, en Go>> es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia sino por valor:
+La instrucción +CompareAndSwapInt32+ <<gocounter_compare_and_swap_go, en Go>> es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia, sino por valor:
 
 [source,go]
 ----
@@ -253,7 +253,7 @@ func lock() {
 _CAS_ tiene un defecto conocido y estudiado, el _problema ABA_. Aunque no se presenta en algoritmos sencillos como el de exclusión mutua, solo en casos de intercalados más complejos. Por ejemplo, dos procesos _P_ y _Q_ que modifican un registro con _CAS_:
 
 - El proceso _P_ lee el valor _A_ y se interrumpe.
-- _Q_ modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que  _P_ vuelva a ejecutarse (de allí el nombre _ABA_).
+- _Q_ modifica el registro con el valor _B_ y vuelve a poner el mismo valor _A_ antes que _P_ vuelva a ejecutarse (de allí el nombre _ABA_).
 - _P_ ejecutará la instrucción _CAS_ sin haber detectado el cambio.
 
 Si _A_ y _B_ son valores simples no hay conflictos. Pero si son punteros a estructuras más complejas, como nodos de una pila, un campo de esas estructuras pudo haber cambiado y provocar errores.
@@ -269,12 +269,12 @@ Veremos un caso práctico de implementación de _pilas concurrentes sin exclusi�
 ====
 Una estructura de datos compartida es _sin exclusión mutua_ (o _lock-free_) si sus operaciones no requieren exclusión mutua.
 
-Existe interés académico por este tipo de estructuras porque permiten paralelizar más eficientemente las operaciones a estructuras esenciales: _hashes_, colas, árboles balanceados, etc. No son problemas sencillos debido a las limitaciones de las primitivas de hardware para manipular registros de tamaño superior a una palabra, lo que obliga a diseñar algoritmos complejos para componer operaciones atómicas. Por ejemplo, todavía se estudia la solución eficiente a una cola _lock-free_ que permita agregar o quitar elementos por ambos extremos.
+Existe interés académico por estos mecanismos porque permiten paralelizar las operaciones sobre estructuras esenciales: _hashes_, colas, árboles balanceados, etc. No son problemas sencillos debido a las limitaciones de las primitivas de hardware para manipular registros de tamaño superior a una palabra, lo que obliga a diseñar algoritmos complejos para componer operaciones atómicas. Por ejemplo, todavía se estudia la solución eficiente a una cola _lock-free_ que permita agregar o quitar elementos por ambos extremos.
 
 A continuación implementamos una pila sin exclusión mutua, en el capítulo siguiente veremos colas sin exclusión mutua necesarias para los algoritmos de _spinlocks_ <<mcs_queue, _MCS_>> y <<clh_queue, _CLH_>>.
 ====
 
-La pila es una lista encadenada de nodos del tipo +node+ y tiene dos operaciones: _pop_ y _push_. La estructura +node+ contiene un puntero al siguiente elemento (+next+) y una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+ pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o _payload_, su estructura interna nos es irrelevante):
+La pila es una lista encadenada de nodos del tipo +node+ y tiene dos operaciones: _pop_ y _push_. La estructura +node+ contiene un puntero al siguiente elemento (+next+) y una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+, pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o _payload_, su estructura interna nos es irrelevante):
 
 [[struct_node]]
 [source, c]
@@ -447,7 +447,7 @@ struct node_head free_nodes;
 ----
 <1> El puntero al nodo que contiene los datos.
 <2> Será usada como etiqueta, un contador que se incrementará en cada _transacción_. Es un entero del mismo tamaño que los punteros (32 o 64 bits según la arquitectura).
-<3> Los punteros a las pilas no serán un simple puntero sino la estructura con el puntero y la etiqueta.
+<3> Los punteros a las pilas no serán un simple puntero, sino la estructura con el puntero y la etiqueta.
 
 Del <<stack_cas_tagged_c, código completo en C>> analicemos en detalle el funcionamiento de +push+:
 
@@ -472,7 +472,7 @@ void push(node_head *head, node *e) {
 [[llsc]]
 ==== Load-Link/Store-Conditional (_LL/SC_)
 
-_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_, que es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplo en algunas de esas arquitecturas –por ejemplo, en Raspberry Pi–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
+_CAS_ es la más potente de las operaciones atómicas anteriores, permite el consenso con infinitos procesos (_consenso de clase N_). Los fabricantes de arquitecturas RISCfootnote:[PowerPC, Alpha, MIPS y ARM.] diseñaron una técnica diferente para implementar registros _RMW_ que es tan potente que puede emular a cualquiera de las anteriores: las instrucciones _LL/SC_. De hecho, al compilar los programas de ejemplo en algunas de esas arquitecturas –por ejemplo, en Raspberry Pi–, el compilador reemplaza los macros por una serie de instrucciones con _LL/SC_.
 
 El diseño de _LL/SC_ se basa en dos operacionesfootnote:[+lwarx+/+stwc+ en PowerPC, +ll+/+sc+ en MIPS, +ldrex+/+strex+ en ARM.] que trabajan en cooperación con el sistema de coherencia de caché. Una es similar a la tradicional cargar (_load_) una dirección de memoria; la otra a la de almacenar (_store_) en una posición de memoria. La diferencia es que ambas están _enlazadas_, la ejecución de la segunda (_SC_) es condicional: almacena el valor solo si la dirección de memoria no fue modificada desde la ejecución de la primera (_LL_).
 
@@ -554,7 +554,7 @@ En una arquitectura con _LL/SC_ hay que implementar el algoritmo directamente co
 
 [[llsc_code]]
 ===== _LL/SC_ en ensamblador nativo
-Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que tenía el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
+Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que sufría el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
 
 1. El <<stack_llsc_freelist_c, módulo en C>> es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+.
 
@@ -608,7 +608,7 @@ En este capítulo hemos visto las instrucciones por hardware esenciales para con
 
 No hay instrucciones de hardware unificadas para todas las arquitecturas, ni tampoco una estandarización a nivel de lenguajes de programación. Esa es la razón por la que los compiladores implementan sus propios _macros atómicos_ que traducen o emulan los registros _RMW_ representados por el macro.
 
-Simular las instrucciones_LL/SC_ con _CAS_ o _TAS_ es más complicado –si no imposible– por lo que GCC no incluye macros para emularlas. Tuvimos que recurrir a ensamblador para poder usarlas en procesadores ARM.
+Simular las instrucciones _LL/SC_ con _CAS_ o _TAS_ es más complicado –si no imposible– por lo que GCC no incluye macros para emularlas. Tuvimos que recurrir a ensamblador para poder usarlas en procesadores ARM.
 
 Los _spinlocks_ basados en instrucciones por hardware son fundamentales, se requieren algoritmos más eficientes y construcciones más sofisticadas, como lectores-escritores. Son los temas del siguiente capítulo.
 
@@ -617,7 +617,7 @@ Los _spinlocks_ basados en instrucciones por hardware son fundamentales, se requ
 ====
 En todos los ejemplos de exclusión mutua la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una operación aritmética tan simple también sufre los problemas de concurrencia. No obstante, espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para incrementar una variable compartida. Se puede hacer de forma directa y óptima con _get&add_ o _add&get_.
 
-Por ejemplo en  C:
+Por ejemplo en C:
 
 [source, c]
 ----

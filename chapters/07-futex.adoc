@@ -123,9 +123,9 @@ real    0m27.587s
 user    0m3.678s
 sys     0m31.147s <1>
 ----
-<1> Nótese la cantidad de CPU que se consumió en modo sistema, esto está provocado por el bloqueo y desbloqueo de procesos.
+<1> Nótese la cantidad de CPU que se consumió en modo sistema, está provocado por el bloqueo y desbloqueo de procesos.
 
-Cuando el +valor+ del semáforo se hace negativo (la situación habitual para un _mutex_ de alta competencia), todos los procesos pasan obligatoriamente por la cola de bloqueados, provocando cambios de contexto innecesarios. No es sencillo mejorarlo sin un algoritmo bastante más complejo, por dos razones:
+Cuando el +valor+ del semáforo se hace negativo (la situación habitual para un _mutex_ de alta competencia), todos los procesos pasan obligatoriamente por la cola de bloqueados provocando cambios de contexto innecesarios. No es sencillo mejorarlo sin un algoritmo bastante más complejo, por dos razones:
 
 - La intercalación de instrucciones dentro de las funciones +wait+ y +signal+.
 

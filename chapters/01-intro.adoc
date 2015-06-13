@@ -45,7 +45,7 @@ Los procesos pasan a bloqueados porque solicitaron una operación al núcleo (v�
 === _Scheduler_
 La transición de _listos_ a _ejecución_ la decide el módulo _scheduler_, o _planificador a corto plazo_, del núcleo. Se ejecuta cada vez que un proceso se bloquea, cuando se produjo algún evento (habitualmente interrupciones de hardware generadas por dispositivos), o un proceso pasó de bloqueado a listo. Para evitar que un proceso pueda retener el procesador indefinidamente se usa un reloj que genera interrupciones periódicamente.
 
-Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción y ejecuta al _scheduler_, este  decide qué proceso se ejecutará a continuación. Así pues, el núcleo es capaz de quitar de ejecución a los procesos aunque no hagan llamadas de sistema, se dice que el planificador es _apropiativo_ (_preemptive_).
+Cada pocos milisegundosfootnote:[Varía entre 100 a 1000 veces por segundo, en Linux por defecto es 250 Hz.] el reloj genera una interrupción y ejecuta al _scheduler_, este decide qué proceso se ejecutará a continuación. Así pues, el núcleo es capaz de quitar de ejecución a los procesos aunque no hagan llamadas de sistema, se dice que el planificador es _apropiativo_ (_preemptive_).
 
 El _scheduler_ debe tomar decisiones muy frecuentemente, entre unos pocos cientos a decenas de miles de veces por segundo. Para que la decisión sea muy rápida y eficiente se usan sofisticados algoritmos de colas para que la selección sea de baja complejidad computacional, se busca obtener _O(1)_ (i.e. seleccionar el primer elemento de la cola).
 

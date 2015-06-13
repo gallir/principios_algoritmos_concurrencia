@@ -92,7 +92,7 @@ Este tipo de mecanismo se denomina _tipo_ u _objetos protegidos_. En ADAfootnote
 [source, ada]
 ----
 protected body Protected_Buffer_Type is
-    entry Insert (An_Item : in  Item)
+    entry Insert (An_Item : in Item)
        when Empty is        <1>
     begin
     ...
@@ -365,7 +365,7 @@ def barrier(n):
 ----
 <1> +with mutex+ asegura exclusión mutua de todo el bloque, en este caso es la función completa.
 
-La función _broadcast_ simplifica el algoritmo, sin ella habría que hacer tantos _signals_ como procesos bloqueados. A diferencia de la barrera <<alg_barriers, con semáforos>>, en este caso no es un problema, solo hay que agregar un bucle. El _mutex_ de la función impide que  procesos desbloqueados se adelanten y ejecuten el +wait+ cuando todavía no se acabó de despertar a los procesos anteriores. Es una ventaja de usar el _patrón_ de monitores.
+La función _broadcast_ simplifica el algoritmo, sin ella habría que hacer tantos _signals_ como procesos bloqueados. A diferencia de la barrera <<alg_barriers, con semáforos>>, en este caso no es un problema, solo hay que agregar un bucle. El _mutex_ de la función impide que procesos desbloqueados se adelanten y ejecuten el +wait+ cuando todavía no se acabó de despertar a los procesos anteriores. Es una ventaja de usar el _patrón_ de monitores.
 
 ==== Productores-consumidores
 
@@ -422,7 +422,7 @@ synchronized void append(Integer data) {
 }
 ----
 
-Al no poder disponer de variables independientes los productores y consumidores comparten la misma cola, por lo que no se puede discriminar a qué procesos hay que desbloquear. Ambos  llaman a +notifyAll+ para que todos –productores y consumidores– verifiquen si pueden continuar. Como la verificación se hace dento de un +while+ el algoritmo también es correcto, pero potencialmente más ineficientefootnote:[Lo comprobaremos un poco más adelante.]: cuando un productor o consumidor ejecuta +notifyAll+ se despiertan todos los productores y consumidores bloqueados, aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
+Al no poder disponer de variables independientes los productores y consumidores comparten la misma cola, por lo que no se puede discriminar a qué procesos hay que desbloquear. Ambos llaman a +notifyAll+ para que todos –productores y consumidores– verifiquen si pueden continuar. Como la verificación se hace dento de un +while+ el algoritmo también es correcto, pero potencialmente más ineficientefootnote:[Lo comprobaremos un poco más adelante.]: cuando un productor o consumidor ejecuta +notifyAll+ se despiertan todos los productores y consumidores bloqueados, aunque solo uno de ellos podrá salir del bucle y añadir o quitar un elemento.
 
 
 ==== Lectores-escritores
@@ -633,7 +633,7 @@ def release():
 [[monitor_times]]
 === Eficiencia de Monitores
 
-Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–. Esta  característica dificulta implementaciones eficientes para multiprocesamiento. No hay muchos lenguajes modernos con los que comparar las diferencias entre semáforos y monitores nativos, pero al menos podemos intentarlo con Java. Es uno de los lenguajes más usados, es eficiente gestionando hilos y su modelo de memoria está bien definido.
+Los monitores aseguran la ejecución atómica de sus procedimientos –los _serializan_–. Esta característica dificulta implementaciones eficientes para multiprocesamiento. No hay muchos lenguajes modernos con los que comparar las diferencias entre semáforos y monitores nativos, pero al menos podemos intentarlo con Java. Es uno de los lenguajes más usados, es eficiente gestionando hilos y su modelo de memoria está bien definido.
 
 
 [[monitor_times_em]]
@@ -710,7 +710,7 @@ El gráfico siguiente muestra los tiempos de CPU y real de ambas versiones, solo
 [caption=""]
 image::philosophers_monitor.png[align="center"]
 
-La diferencia es mínima, despreciable, a favor de la implementación con variables de condición. Parece lógico que es así porque son solo cinco procesos. Para comprobarlo hice pruebas con 5, 10, 20,  50 y 100 hilos (o filósofos). Sus tiempos son los siguientes:
+La diferencia es mínima, despreciable, a favor de la implementación con variables de condición. Parece lógico que es así porque son solo cinco procesos. Para comprobarlo hice pruebas con 5, 10, 20, 50 y 100 hilos (o filósofos). Sus tiempos son los siguientes:
 
 [[monitor_philosophers_100]]
 .Tiempos de CPU de 5 a 100 filósofos

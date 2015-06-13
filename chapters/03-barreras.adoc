@@ -24,7 +24,7 @@ sys     0m0.000s
 
 Además del incremento notable de tiempo de CPU –casi 70 veces más–, el resultado sigue siendo erróneo. No se cumple la exclusión mutua, se _pierden_ operaciones, como si no hubiese control de acceso.
 
-Los procesadores modernos no garantizan por defecto que los procesos ejecuten las instrucciones en el mismo orden que aparecen en el programa. Es decir, no aseguran  _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
+Los procesadores modernos no garantizan por defecto que los procesos ejecuten las instrucciones en el mismo orden que aparecen en el programa. Es decir, no aseguran _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
 
 Las tres razones que pueden provocar violaciones a la consistencia secuencial son:
 
@@ -44,13 +44,13 @@ El código del algoritmo de Peterson fue compilado sin optimizaciones, aún con 
 
 Los accesos a memoria RAM pueden tomar cientos de ciclos de procesador. Para reducir estas diferencias de velocidad los procesadores usan una jerarquía de hasta tres niveles de memoria caché: _L1_, _L2_ y _L3_. El nivel L1 suele estar integrado en el chip de la CPU, L2 tiene mayor capacidad y menor velocidad de acceso. En los procesadores más modernos L1 y L2 están integrados en cada núcleo y L3 es compartido por los núcleos en un mismo chip.
 
-Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas puede almacenar temporalmente de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente, los siguientes accesos se hacen directamente a la caché sin necesidad de acceder a la RAM. Las líneas de caché modificadas  se _marcan_ como tal para luego ser volcadas a la memoria RAM si el sistema es _write-back_ (si la copia a memoria se hace inmediatamente y antes de dar por finalizada la instrucción se denomina _write-through_).
+Cada caché almacena un bloque o _línea_ de la memoria RAM, cada una de ellas puede almacenar temporalmente de 64 a 256 bytes consecutivos. Cuando el procesador accede a una posición de memoria copia toda la línea correspondiente, los siguientes accesos se hacen directamente a la caché sin necesidad de acceder a la RAM. Las líneas de caché modificadas se _marcan_ como tal para luego ser volcadas a la memoria RAM si el sistema es _write-back_ (si la copia a memoria se hace inmediatamente y antes de dar por finalizada la instrucción se denomina _write-through_).
 
 
 [NOTE]
 .Asociación de caché
 ====
-Se  usan varios mecanismos de _asociación_ para traducir de una dirección de memoria física a la línea correspondiente de la caché.
+Se usan varios mecanismos de _asociación_ para traducir de una dirección de memoria física a la línea correspondiente de la caché.
 
 En _direct mapping_ la asociación entre segmentos de direcciones de memoria y sus líneas correspondientes están predeterminadas.
 
@@ -70,7 +70,7 @@ En arquitecturas _SMP_ los procesadores están conectados por una compleja red d
 .Arquitectura QuickPath de Intelfootnote:[Imagen de _An Introduction to the Intel QuickPath Interconnect, January 2009_ http://www.intel.es/content/dam/doc/white-paper/quick-path-interconnect-introduction-paper.pdf]
 image::intel-quickpath.png[align="center"]
 
-Para mantener la consistencia entre las diferentes copias de caché se usa el algoritmo _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_, <<Papamarcos>>) y derivados como  _MESIF_ de Intel (_F_ por _forward_).
+Para mantener la consistencia entre las diferentes copias de caché se usa el algoritmo _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_, <<Papamarcos>>) y derivados como _MESIF_ de Intel (_F_ por _forward_).
 
 [[mesi_protocol]]
 [NOTE]
@@ -209,7 +209,7 @@ Esto forzará a que ambas asignaciones y lecturas de +x+ e +y+ se ejecuten antes
     BARRIER()
     c = a * 2
 
-Debemos hacer lo mismo para que el algoritmo de Peterson funcione correctamente, hay que  insertar una barrera entre la asignación de +states+ y +turn+ y el +while+ que verifica el turno y estado del otro proceso:
+Debemos hacer lo mismo para que el algoritmo de Peterson funcione correctamente, hay que insertar una barrera entre la asignación de +states+ y +turn+ y el +while+ que verifica el turno y estado del otro proceso:
 
 [source,python]
 ----
@@ -278,6 +278,6 @@ En el algoritmo de Peterson la solución con barreras es sencilla, pero las solu
 
 En este capítulo hemos visto los problemas ocasionados por la ejecución fuera de orden de los procesadores modernos. Las barreras tienen un coste elevado –varios cientos de ciclos de CPU– que se suma a la presión introducida al sistema de caché. Desde el punto de vista del programador, la mayor dificultad es saber exactamente dónde hay que insertar el mínimo número de barreras.
 
-La programación con barreras explícitas no es práctica, ya que tiende a producir errores. Hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos  consideran que es un error permitir la ejecución fuera de orden, pero es el precio a pagar por procesadores más rápidos.
+La programación con barreras explícitas no es práctica ya que tiende a producir errores. Hay que probarlas en diferentes arquitecturas y requieren de mucha experiencia. Los académicos consideran que es un error permitir la ejecución fuera de orden, pero es el precio a pagar por procesadores más rápidos.
 
 En cualquier caso, no tiene sentido programar mecanismos de sincronización como los vistos sin ayuda de primitivas de hardware que faciliten la programación. Las analizamos en el siguiente capítulo. No solo sirven para solucionar la exclusión mutua, sino también otros problemas de sincronización y consenso.

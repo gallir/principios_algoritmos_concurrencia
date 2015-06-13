@@ -45,7 +45,7 @@ Exclusión mutua:: Se debe asegurar que solo uno de los procesos ejecuta instruc
 
 Progreso o _libre de interbloqueos_ (_deadlock free_ o _lock-free_):: Si varios procesos desean entrar a la sección crítica al menos _uno de ellos_ debe poder hacerlo.
 
-Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Cualquier proceso debe poder entrar a la sección crítica en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan  algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñadas para asegurar _equidad_>>.
+Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Cualquier proceso debe poder entrar a la sección crítica en un tiempo finito. Esta condición es deseable pero no siempre se puede asegurar, sobre todo cuando se implementan algoritmos con soporte de instrucciones de hardware que no están <<fairness, diseñadas para asegurar _equidad_>>.
 ====
 
 Además de los tres requisitos fundamentales anteriores, en el artículo original (<<Dijkstra65>>) Dijkstra propuso cuatro que deben cumplir los algoritmos de sección crítica:
@@ -448,7 +448,7 @@ critical_section()
 
 number[i] = 0
 ----
-<1> La nueva condiciónfootnote:[Esta condición se suele representar con la notación +(j, number[j\]) &#8810; (i, number[i\])+ o más brevemente +number[j\] &#8810; number[i\]+.], si ambos números son iguales y el _ID_  del otro (_j_) es menor que _i_ entonces también deberá esperar.
+<1> La nueva condiciónfootnote:[Esta condición se suele representar con la notación +(j, number[j\]) &#8810; (i, number[i\])+ o más brevemente +number[j\] &#8810; number[i\]+.], si ambos números son iguales y el _ID_ del otro (_j_) es menor que _i_ entonces también deberá esperar.
 
 El algoritmo todavía no es correcto, no asegura exclusión mutua.
 
@@ -513,7 +513,7 @@ Separador para que no lo incluya en la lista anterior :-O
 Exclusión mutua::
 Para que dos procesos estén en la sección crítica ambos deberían tener el mismo número. Pero el uso del identificador único y con relación de precedencia asegura que en estos casos siempre habrá uno de ellos que será el _menor_, será el único que saldrá del último bucle.
 +
-Para que un segundo proceso (_P2_) entre a la sección crítica si _P1_ ya está en ella  debe cumplirse que el número de _P2_ es menor que el de _P1_. No puede ocurrir:
+Para que un segundo proceso (_P2_) entre a la sección crítica si _P1_ ya está en ella debe cumplirse que el número de _P2_ es menor que el de _P1_. No puede ocurrir:
 
 1. Si _P1_ salió del bucle sobre +choosing+ es porque _P2_ ya salió de la selección, por tanto su número será comparado en el siguiente bucle de comparación de números y habrá entrado _P2_ antes que _P1_.
 

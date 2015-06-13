@@ -17,11 +17,11 @@ Las transacciones están íntimamente relacionadas con las secciones críticas. 
 
 - Los interbloqueos son difíciles de evitar si se manipulan muchos objetos. Aunque hay técnicas y reglas conocidas (<<deadlocks>>), con el incremento del número y tamaño de los programas concurrentes el modelo ya no es sustentable (<<Herlihy12>>).
 
-- Los basados en primitivas atómicas no son _componibles_. Los  algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas. En <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, pero no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como exclusión mutua adicional, pero crean otro cuello de botella.
+- Los basados en primitivas atómicas no son _componibles_. Los algoritmos de _spinlocks_ son complejos por la dificultad de componer llamadas a múltiples objetos en unidades atómicas. En <<free_lock_stack>> vimos como implementar una pila sin exclusión mutua, pero no se puede eliminar el elemento de una e insertarla en otra atómicamente. Se pueden agregar mecanismos _ad hoc_, como exclusión mutua adicional, pero crean otro cuello de botella.
 
 - Son difíciles de gestionar de manera efectiva, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras sofisticadas (como _hashing_ o árboles balanceados) porque reducir la granularidad de las secciones críticas es una tarea compleja, tediosa, propensa a errores y difícil de validar. Lo que desea el programador es indicar la sección crítica general y que el sistema se encargue de controlar la granularidad.
 
-Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria de que las herramientas actuales  tienen demasiadas limitaciones para cubrir las necesidades que se avecinan.
+Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria de que las herramientas actuales tienen demasiadas limitaciones para cubrir las necesidades que se avecinan.
 
 === Veinte años de historia
 
@@ -151,7 +151,7 @@ Los sistemas de memoria transaccional deben gestionar las escrituras tentativas 
 
 Actualización directa (o _eager version management_):: Se modifica directamente en la dirección de memoria original y se mantiene un _undo-log_ para restaurar los valores si la transacción es abortada. Este modelo requiere control de concurrencia pesimista.
 
-Actualización retrasada (_lazy version management_ o _deferred update_):: Las actualizaciones se hacen al momento del _commit_. Las transacciones mantienen un _redo-log_  privado. El _redo-log_ puede ubicarse una copia en memoria, _buffers_ de escritura, líneas de caché de acceso exclusivo, o en registros adicionales (_renamed registers_).
+Actualización retrasada (_lazy version management_ o _deferred update_):: Las actualizaciones se hacen al momento del _commit_. Las transacciones mantienen un _redo-log_ privado. El _redo-log_ puede ubicarse una copia en memoria, _buffers_ de escritura, líneas de caché de acceso exclusivo, o en registros adicionales (_renamed registers_).
 
 ==== Control de concurrencia
 
@@ -167,9 +167,9 @@ Los tres eventos pueden ocurrir en diferentes momentos pero siempre en el mismo 
 
 - El _control de concurrencia pesimista_ detecta el conflicto en cuanto se produce, por lo tanto los tres eventos se producen simultáneamente. Al inicio de cada transacción el proceso se _apropia_ de los datos, como en una sección crítica, y los demás no pueden acceder a ellos.
 
-- Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y por lo tanto pueden avanzar hasta que el conflicto es detectado. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
+- Con el _control optimista_ los eventos de detección y resolución pueden ocurrir más tarde. Este tipo de control permite que varias transacciones accedan simultáneamente a los mismos datos y avancen aún con conflictos. Esto permite mayor libertad para la resolución, se puede abortar o retrasar a las transacciones conflictivas.
 
-El control optimista es el más usado porque permite mayores niveles de concurrencia. Pero si la tasa de conflictos es elevada produce ejecuciones inútiles, en estos casos es mejor usar control pesimista.
+El control optimista permite mayores niveles de concurrencia, pero si la tasa de conflictos es elevada produce ejecuciones inútiles. En estos casos es mejor usar control pesimista.
 
 El control optimista debe considerar otras cuestiones:
 
@@ -204,7 +204,7 @@ Los componentes fundamentales de las librerías _STM_ son:
 
 - Conjuntos de registros leídos (_read-set_) y escritos (_write-set_). Mantienen las direcciones que fueron leídas y escritas, normalmente acompañadas de un número de versión (que puede ser local o global).
 
-- Estructuras comunes. Son los datos necesarios para detectar conflictos entre diferentes transacciones y hacer operaciones atómicas con sus estructuras de datos. Por ejemplo,  array de _spinlocks_ para secciones críticas internas, número de versión global, árbol de dependencias globales, etc.
+- Estructuras comunes. Son los datos necesarios para detectar conflictos entre diferentes transacciones y hacer operaciones atómicas con sus estructuras de datos. Por ejemplo, array de _spinlocks_ para secciones críticas internas, número de versión global, árbol de dependencias globales, etc.
 
 
 ==== Llamadas explícitas
@@ -234,7 +234,7 @@ for (i=0; i < max; i++) {
 
 ==== Instrumentación del compilador
 
-No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción; y de no acceder directamente a las variables compartidas sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
+No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción; y de no acceder directamente a las variables compartidas, sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
 
 Es mucho más conveniente una construcción sintáctica que delimite claramente qué instrucciones son las que están en una transacción y que sea el compilador el responsable de detectar qué accesos necesitan ser controlados. Para ello se definen los _bloques atómicos_, como el siguiente ejemplo (<<tm_mutex_gcc_c, código completo>>):
 
@@ -279,7 +279,7 @@ Sistemas implícitos:: Solo requieren que se indiquen los límites de la transac
 
 ==== Intel TSX, IBM PowerPC y S390
 
-En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_ y comenzó a  comercializarla desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /proc/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con _HTM_ se comercializan desde 2014.
+En 2012 Intel anunció que su arquitectura Haswell incluiría _HTM_ y comenzó a comercializarla desde 2013 en los procesadores Xeon e i7footnote:[Podéis verificar si tiene soporte con `cat /proc/cpuinfo`, en la línea de +flags+ debería aparecer +hle+ y/o +rtm+.]. BlueGene Q/Sequoia de IBM usa _HTM_ desde 2011, los procesadores de S390 System z desde 2013 y POWER8 con _HTM_ se comercializan desde 2014.
 
 Los sistemas _HTM_ de las tres arquitecturas son similares (_RTM_ en Intel), implementan transacciones implícitas y ofrecen instrucciones casi idénticas:
 
@@ -324,7 +324,7 @@ _TSX_ es el nombre de las extensiones _HTM_ de Intel para su arquitectura Haswel
 
 _TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> para detectar conflictos. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64) con 32 KB en total, pero es compartida en los núcleos con _hyperthreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
 
-Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y es marcada como _exclusiva_ (ahora está en el _read-set_). Si la variable se modifica se marca su línea de caché como _modificada_ (ahora está en el _write-set_). Si se llega al final de la transacción sin conflictos se ponen los bits _T_ en cero por lo que  todas la líneas modificadas son visibles a los demás procesadores.
+Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y es marcada como _exclusiva_ (ahora está en el _read-set_). Si la variable se modifica se marca su línea de caché como _modificada_ (ahora está en el _write-set_). Si se llega al final de la transacción sin conflictos se ponen los bits _T_ en cero por lo que todas las líneas modificadas son visibles a los demás procesadores.
 
 Si _CPU0_ está en una transacción y desde _CPU1_ se intenta acceder a la misma dirección que una variable de la transacción, el protocolo MESI notificará a la _CPU0_ inmediatamente. Si esa línea de caché está marcada como _modificada_ se aborta la transacción: invalida las líneas involucradas y pone sus bit _T_ en 0. _CPU1_ leerá el valor sin modificar en la memoria RAM. Lo mismo ocurre si _CPU1_ intenta escribir en una dirección que está en el _read-set_ de _CPU0_ (es decir, con _T_ en uno pero sin estar marcada como _modificada_).
 

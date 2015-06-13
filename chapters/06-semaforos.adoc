@@ -186,7 +186,7 @@ Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de s
 
 === Sincronización de orden de ejecución
 
-La sección crítica es una abstracción conveniente y sencilla para resolver la competencia  de recursos, otro problema común es la coordinación del orden de ejecución de operaciones (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota como _P~i~ < Q~j~_. Para que se cumpla esta condición, antes de _Q~j~_ hay que asegurar:
+La sección crítica es una abstracción conveniente y sencilla para resolver la competencia de recursos, otro problema común es la coordinación del orden de ejecución de operaciones (<<Ben-Ari>>). Supongamos dos procesos _P_ y _Q_, la instrucción _Q~j~_ debe ejecutarse solo después de la instrucción _P~i~_, se denota como _P~i~ < Q~j~_. Para que se cumpla esta condición, antes de _Q~j~_ hay que asegurar:
 
 - Que continua la ejecución si _P~i~_ ya se ejecutó.
 - Que se bloquea a _Q_ si _P~i~_ todavía no se ejecutó, y se desbloquea una vez que se haya ejecutado.
@@ -297,7 +297,7 @@ Consumidores:: Recibe y consume los elementos transmitidos desde los productores
 
 Hay dos tipos de productores-consumidores:
 
-Síncronos:: Cuando se produce un elemento, este debe ser consumido para que el  productor pueda continuar su ejecución.
+Síncronos:: Cuando se produce un elemento, este debe ser consumido para que el productor pueda continuar su ejecución.
 
 Asíncronos:: El canal de comunicación tiene capacidad de almacenamiento, un _buffer_, por lo que no es necesario que los productores esperen a que cada elemento sea consumido. Los productores agregan los elementos a una cola y los consumidores obtienen el primer elemento de esta.
 
@@ -323,7 +323,7 @@ while True:
 ===== _Buffer_ infinito
 Aunque no existen las memorias infinitas, ni se puede confiar en que las velocidades relativas de los productores evitarán que el _buffer_ supere un tamaño razonable, es un primer paso para la implementación del algoritmo más general.
 
-Como el _buffer_ no está limitado, el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: un +mutex+ para asegurar exclusión mutua al insertar o quitar elementos y otro de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
+Como el _buffer_ no está limitado el algoritmo no debe comprobar que haya espacio suficiente. Solo debe bloquear a los consumidores si el buffer está vacío, y desbloquearlos cuando hay elementos disponibles. Además del _buffer_ compartido se requieren dos semáforos: un +mutex+ para asegurar exclusión mutua al insertar o quitar elementos y otro de sincronización (+notEmpty+) para bloquear a los consumidores si el _buffer_ está vacío.
 
 [source, python]
 ----
@@ -494,7 +494,7 @@ def reader_unlock():
 <1> Si es el último lector, libera +writer+, podrán entrar escritores.
 
 ===== Espera limitada
-El algoritmo anterior da prioridad a los lectores y no asegura espera limitada a los escritores. Cuando entra un lector, los escritores tendrán que esperar hasta que salga el último, pero los lectores podrán seguir entrando sin dejar paso al escritor. Es decir, se pueden generar esperas infinitas. Para evitarlas hay que asegurar que los lectores esperan si un escritor desea entrar.
+El algoritmo anterior da prioridad a los lectores y no asegura espera limitada a los escritores. Cuando entra un lector los escritores tendrán que esperar hasta que salga el último, pero los lectores podrán seguir entrando sin dejar paso al escritor. Es decir, se pueden generar esperas infinitas. Para evitarlas hay que asegurar que los lectores esperan si un escritor desea entrar.
 
 Se usa un semáforo adicional, +entry+, que bloquea a los nuevos lectores cuando el primer escritor hace un _wait_. El siguiente es el algoritmo equitativo, la función +reader_unlock+ es la misma, cambian las otras tres (<<rw_lock_fair_py, código fuente completo>>):
 
@@ -610,7 +610,7 @@ def release(i):
 
 ----
 
-Antes de comer, cada filósofo hace +wait+ sobre los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado, quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona –no hacen falta cinco– una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno tomará su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
+Antes de comer cada filósofo hace +wait+ sobre los dos tenedores que le corresponden, primero al de la izquierda y luego al de la derecha. Si alguno de ellos está ya tomado, quedará bloqueado hasta que el filósofo que lo tiene lo libere y ejecute el +signal+ correspondiente. Sin embargo, tiene un problema importantefootnote:[Lo podéis probar físicamente con la ayuda de otra persona –no hacen falta cinco– una mesa y tenedores.]: si todos intentan comer _simultáneamente_ cada uno tomará su tenedor de la izquierda, cuando lo intenten con el de la derecha quedarán bloqueados porque ya habrá sido tomado por su vecino.
 
 Una secuencia de instrucciones que lleva a este estado podría ser la siguiente: cada filósofo toma el tenedor de su izquierda, la ejecución se intercala o se ejecuta en paralelo (recordad que el problema es equivalente):
 
@@ -724,7 +724,7 @@ Se usa el array +status+ para indicar el estado de cada filósofo: pensando (+TH
     Semaphore mutex = 1
 ----
 
-La función +pick+ asigna +HUNGRY+ al estado del filósofo y llama a la función +canEat+, que verifica si ninguno de los vecinos está comiendo. Si no es así, señaliza en su semáforo +sync+ correspondiente, por lo que no se bloqueará en el +acquire+ sobre +sync[i]+ (en la última línea de +pick+). Pero si alguno de los vecinos está comiendo, no se hará el +release+ y el filósofo se bloqueará.
+La función +pick+ asigna +HUNGRY+ al estado del filósofo y llama a la función +canEat+, que verifica si ninguno de los vecinos está comiendo. Si no es así, señaliza en su semáforo +sync+ correspondiente, por lo que no se bloqueará en el +acquire+ sobre +sync[i]+ (en la última línea de +pick+). Pero si alguno de los vecinos está comiendo no se hará el +release+ y el filósofo se bloqueará.
 
 [source, python]
 ----
@@ -790,7 +790,7 @@ El sistema operativo era un Unix de tiempo real desarrollado por Wind River, VxW
 - _ASI/MET_: Esta era la tarea de menor prioridad, junto con otras tareas científicas (generación y compresión de imágenes, etc.). A diferencia de las otras, ASI/MET toma datos del 1553 a través de un mecanismo de comunicación entre procesos usando el _pipe_ estándar de Unix.
 
 
-Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_. El problema era siempre el mismo: _bc_dist_ no completaba su ejecución en el tiempo previsto. Después de 18 horas de simulaciones descubrieron la causa: por la cantidad inesperada de datos que se recogía, el sistema estaba más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a un _mutex_ dentro de las funciones del +pipe+, pero no alcanzaba a salir porque el núcleo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_, de mayor prioridad, también hacía un _wait_ al mismo _mutex_ pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
+Una vez detectados los reinicios se analizaron los datos de debug generados y enviados por _bc_sched_. El problema era siempre el mismo: _bc_dist_ no completaba su ejecución en el tiempo previsto. Después de 18 horas de simulaciones descubrieron la causa: por la cantidad inesperada de datos que se recogía el sistema estaba más cargado que el _mejor caso_ probado por la NASA. La tarea de baja prioridad _ASI/NET_ accedía a una sección crítica con un _wait_ a un _mutex_ dentro de las funciones del +pipe+, pero no alcanzaba a salir porque el núcleo asignaba el procesador a las tareas de prioridad intermedia. La tarea _bc_dist_, de mayor prioridad, también hacía un _wait_ al mismo _mutex_ pero permanecía bloqueada porque _ASI/NET_ no salía de su sección crítica.
 
 Así, _bc_dist_ llegaba al final de su período sin acabar, el problema era la _inversión de prioridades_.
 ====
@@ -833,7 +833,7 @@ Después de estudiar y hacer simulaciones en la Tierra para asegurarse de que lo
 
 === Recapitulación
 
-Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua, a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, saber cómo se construyen esas soluciones permite diseñar soluciones correctas y eficientes para muchos problemas de programación concurrente.
+Los abstracción de semáforos fue el primer mecanismo formal y útil de sincronización de procesos sin esperas activas. Sigue siendo fundamental y el pilar sobre el que se construyen otros mecanismos. Hemos visto desde su uso trivial para exclusión mutua a algoritmos de sincronización más complejos: barreras, productor-consumidor y lectores-escritores. Estos cuatro modelos a su vez son esenciales para la programación concurrente. Su aprendizaje no solo aporta el conocimiento necesario para reconocer los problemas de concurrencia y las herramientas más adecuadas, saber cómo se construyen esas soluciones permite diseñar soluciones correctas y eficientes para muchos problemas de programación concurrente.
 
 Al haber sido el primer –y más usado– método de sincronización, también sirvió para estudiar los desafíos de la concurrencia, el problema de los filósofos es un clásico. Fue útil para estudiar las diferentes formas de solucionar la sincronización entre procesos y para reconocer las reglas básicas para eludir los interbloqueos.
 
