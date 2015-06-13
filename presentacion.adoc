@@ -6,12 +6,12 @@ Para cada tema se explican el origen, conceptos y algoritmos fundamentales. Siem
 
 El libro está diseñado y formateado para ser leído con comodidad en lectores de libros electrónicos.
 
-El código fuente está disponible en https://github.com/gallir/concurrencia_source_samples.
+El código fuente de los programas está disponible en Github: https://goo.gl/p0Z0KZ
 
 
 
 
-Ricardo Galli es Ingeniero y Doctor en informática. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame.
+Ricardo Galli Granada es Ingeniero en Informática y Doctor en Ciencias de la Computación. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame. 
 
 //////
 

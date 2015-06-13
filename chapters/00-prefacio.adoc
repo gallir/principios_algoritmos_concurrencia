@@ -29,7 +29,7 @@ No se trata de aprender de memoria unos algoritmos, ni de saber exactamente cóm
 
 Mi sensación es que no había un libro pensado para el programador que no tuvo la suerte de una formación universitaria; que quiere actualizarse; o que sencillamente se olvidó de lo que estudió en esa oscura asignatura años atrás y hoy tiene las ganas o la necesidad de recordarlo.
 
-Ante esta situación, y dado que el tiempo para escribir un libro es finito, estuve obligado filtrar y seleccionar lo fundamental, separar los principios de lo que son derivaciones o metaconstrucciones sobre esos pilares básicos. Hice el esfuerzo, no sé si están todos los que son pero sí sé que los que están son fundamentales.
+Ante esta situación, y dado que el tiempo para escribir un libro es finito, estuve obligado a filtrar y seleccionar lo fundamental, separar los principios de lo que son derivaciones o metaconstrucciones sobre esos pilares básicos. Hice el esfuerzo, no sé si están todos los que son pero sí sé que los que están son fundamentales.
 
 === Escribir un _ebook_ técnico legible
 Este libro tiene muchos algoritmos y programas completos, mis experiencias con libros electrónicos de este tipo no son las mejores (estoy siendo comedido). La mayoría incluyen ejemplos de programas –con tratamientos de excepciones incluidas– cuyas líneas no alcanzan a mostrarse completas en la pequeña pantalla del lector. Me duele la cabeza de solo recordarlos, exigen un gran esfuerzo para descifrar la parte importante de los algoritmos.
@@ -51,7 +51,7 @@ La lectura puede dar la sensación de agobio por la rapidez con que se avanza, a
 Para facilitar la búsqueda da los que quieren profundizar fui cuidadoso con la bibliografía. Aunque intenté que las referencias fuesen siempre a los artículos científicos originales también me tomé el trabajo de buscarlos y añadir enlaces accesibles.
 
 ==== Conocimientos previos requeridos
-No se requieren ni se suponen conocimientos de concurrencia. Solo conocimientos de programación, estructuras de datos básicas (pilas, colas, listas), fundamentos muy básicos de programación orientadas a objetos y comprender lo que es un puntero o referencia a memoria.
+No se requieren ni se suponen conocimientos de concurrencia. Solo de programación, estructuras de datos básicas (pilas, colas, listas), fundamentos muy básicos de programación orientadas a objetos y comprender lo que es un puntero o referencia a memoria.
 
 El texto comienza desde los conceptos más básicos y avanza gradual e incrementalmente. No hay conceptos importantes que no se expliquen al menos brevemente. Quizás encuentres algunos que no conoces; si no los expliqué es porque son muy fáciles de encontrar.
 
