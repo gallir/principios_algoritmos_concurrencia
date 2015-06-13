@@ -6,10 +6,8 @@ image::jrmora/11-fin.jpg[align="center"]
 Nos cuesta reconocer que ignoramos más de lo que conocemos. También nuestra historia y las personas que la hicieron posible.
 
 
-=== Cincuenta años de historias de personas
-
 1963::
-El matemático holandés Theodorus Jozef Dekker inventa un algoritmo de exlusión mutua para dos procesos.
+El matemático holandés Theodorus Jozef Dekker inventa un algoritmo de exclusión mutua para dos procesos.
 
 1965::
 Edsger W. Dijkstra propone una solución y formalismos para algoritmos de exclusión mutua (<<Dijkstra65>>), inventa el problema de los filósofos cenando, define el modelo de productor-consumidor, trabaja con la idea de semáforos (<<Dijkstra35>>, <<Lamport15>>).
@@ -65,7 +63,7 @@ Travis Craig (<<Craig>>) y Anders Landin y Eric Hagersten (<<CLH>>) inventan de 
 +
 Maurice Herlihy y Eliot Moss proponen soluciones de hardware para memoria transaccional (_HTM_) (<<Herlihy93>>).
 +
-Janice Stone _et al_ proponen primitivas de hardware atómicas conocidas como _Oklahoma Update_ (<<Stone>>).
+Janice Stone, Harold Stone, Phil Heidelberger y John Turekproponen proponen primitivas de hardware atómicas conocidas como _Oklahoma Update_ (<<Stone>>).
 
 
 1995::
@@ -75,7 +73,7 @@ Sun publica el lenguaje Java –implementa monitores- diseñado por James Goslin
 
 
 2001::
-Ravi Rajwar y James R. Goodman publican el algoritno _Speculative Lock Elision_ que luego se usará en Intel _HLE_ (<<Rajwar>>).
+Ravi Rajwar y James R. Goodman publican el algoritmo _Speculative Lock Elision_ que luego se usará en Intel _HLE_ (<<Rajwar>>).
 
 2002::
 Hubertus Franke, Rusty Russell y Matthew Kirkwood diseñan _FUTEX_ para Linux (<<Franke>>).
@@ -84,7 +82,7 @@ Hubertus Franke, Rusty Russell y Matthew Kirkwood diseñan _FUTEX_ para Linux (<
 Nir Shavit, Dave Dice y Ori Shalev presentan el algoritmo _TL2_ (<<Dice>>).
 
 2007::
-Sun Microsystem presenta el procesador UltraSPARC Rock con soporte _HTM_ (<<Chaudhry>>).
+Sun Microsystems presenta el procesador UltraSPARC Rock con soporte _HTM_ (<<Chaudhry>>).
 
 2010::
 Google publica el lenguaje Go diseñado por Robert Griesemer, Rob Pike y Ken Thompson.
@@ -111,12 +109,12 @@ A Ricardo Alberich y Jairo Rocha del _Departament de Matemàtiques i Informàtic
 
 A Bernat Cabezas y APSL –empresa a la que me incorporaré en setiembre– por dejarme usar sus servidores con procesadores Intel Haswell para las pruebas de memoria transaccional.
 
-A Marc Pàmpols que me dio acceso remoto a una Raspberry Pi 2 mientras esperaba la mía.
+A Marc Pàmpols que me dio acceso remoto a una Raspberry Pi 2 mientras esperaba que llegue la mía.
 
 A Sergio L. Pascual que me ayudó con las pruebas y a simplificar el código ensamblador para procesadores ARM.
 
 A Antonio Pérez, Carles Mateu, Carlos Guadall, David Asorey, David Pinilla, Gerard Ribugent, Javier García, Daniel Matilla, Juan Sosa, _Tzarak_ y _Aragon de Mordor_ por hacer pruebas y mediciones en sus servidores.
 
-A mi familia, que tuvo que aguantar un zombi en casa durante siete meses.
+A mi familia, que tuvo que soportar a un zombi en casa durante siete meses.
 
 Al lector.
