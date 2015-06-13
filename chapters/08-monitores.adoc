@@ -58,19 +58,19 @@ Java agrega automáticamente las operaciones _lock_ y _unlock_ sobre el _mutex_ 
         }
 ----
 
-En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. La especificación +synchronized+ especifica que el hilo debe obtener el _lock_ para ejecutar el método. Las llamadas a otros métodos retienen el _lock_ hasta que se haya salido del método _synchronized_.
+En este caso el _mutex_ está asociado a la propia instancia, el objeto +this+. El prefijo +synchronized+ especifica que el hilo debe obtener el _lock_ para ejecutar el método. Las llamadas a otros métodos retienen el acceso exclusivo hasta que se haya salido del método _synchronized_.
 
 [NOTE]
 ====
 Una clase cuyos métodos públicos están todos declarados como _synchronized_ se denomina _monitor Java_. Aunque es solo una convención, no hay obligación sintáctica de hacerlo así.
 ====
 
-Un error habitual de programadores no experimentados es confundir el _mutex_ de cada instancia como si fuese un _mutex_ global que resguarda a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Cada instancia ejecuta sus métodos independientemente de las demás. Esto significa, por ejemplo, que no hay exclusión mutua si varias instancias modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
+Un error habitual de programadores no experimentados es suponer que el _mutex_ de cada instancia es un _mutex_ global que resguarda a los métodos sincronizados de todas las instancias de una clase. Un método de instancia +synchronized+ solo asegura la exclusión mutua de ese método sobre la misma instancia. Cada instancia ejecuta sus métodos independientemente de las demás. Esto significa, por ejemplo, que no hay exclusión mutua si varias instancias modifican concurrentemente una variable estática desde un método de instancia +synchronized+. Para estos casos hay que definir explícitamente un objeto estático compartido por las diferentes instancias, o hacerlo desde un método de clase +synchronized+.
 
 
 === Variables de condición
 
-La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, para ello se añadieron dos operaciones: _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta a todos los hilos en la cola). Estas permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo, para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio.
+La exclusión mutua entre procedimientos no es suficiente para la sincronización general entre procesos, por ello se añadieron dos operaciones: _wait_ y _signal_ (opcionalmente _broadcast_, similar a _wait_ pero despierta a todos los hilos en la cola). Estas permiten bloquear y desbloquear procesos cuando se cumple alguna condición. Por ejemplo, para bloquear a los productores si el _buffer_ está lleno y desbloquearlos cuando hay nuevamente espacio.
 
 Las operaciones _wait_ y _signal_ se implementan de distintas formas:
 
@@ -280,7 +280,7 @@ En la llamada a +cond_wait+, además de la variable de condición, se envía com
 
 - El _mutex_ es liberado cuando el proceso se bloquea en una variable de condición, así puede entrar otro proceso.
 
-- El _mutex_ vuelve a adquirirse en cuanto el proceso es despertado por un _signal_ y así asegura la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya hecho el _unlock_ al final de su función.
+- El _mutex_ vuelve a adquirirse en cuanto el proceso es despertado por un _signal_ y así asegura la exclusión mutua en el monitor. El proceso despertado no podrá continuar hasta que el que señalizó haya ejecutado el _unlock_ al final de su función.
 +
 El proceso que se despierta en la variable de condición compite en la entrada con los demás procesos en la cola de _mutex_. Así pues, las prioridades de monitores con POSIX Threads son idénticas a las de Java: _E = W < S_.
 
