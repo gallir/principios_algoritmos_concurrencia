@@ -2,7 +2,7 @@
 == 2. Exclusión mutua
 image::jrmora/02-algoritmos.jpg[align="center"]
 
-La exclusión mutua (o _sección crítica_) es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
+La exclusión mutua –o _sección crítica_– es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
 
 Un problema de exclusión mutua muy genérico y _naïve_ que ilustra el problema: si varios procesos en un ordenadorfootnote:[Si la impresora admite trabajos desde diferentes ordenadores el problema se convierte en _distribuido_, el interés de este libro es estudiar las soluciones de _memoria compartida_.] envían diferentes trabajos de impresión se debe asegurar que las páginas no se intercalen. Es decir, se debe asegurar la exclusión mutua en el acceso a la impresora.
 

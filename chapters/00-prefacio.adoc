@@ -55,7 +55,7 @@ No se requieren ni se suponen conocimientos de concurrencia. Solo conocimientos 
 
 El texto comienza desde los conceptos más básicos y avanza gradual e incrementalmente. No hay conceptos importantes que no se expliquen al menos brevemente. Quizás encuentres algunos que no conoces; si no los expliqué es porque son muy fáciles de encontrar.
 
-Los programas están desarrollados y probados en GNU/Linux. Para ejecutarlos y probarlos se necesita acceso a un ordenador con este sistema. No hace falta ser un experto pero sí tener un mínimo de experiencia con comandos básicos de consola.
+Los programas están desarrollados y probados en GNU/Linux. Para ejecutarlos se necesita acceso a un ordenador con este sistema. No hace falta ser un experto pero sí tener un mínimo de experiencia con comandos básicos de consola.
 
 
 ==== Los programas

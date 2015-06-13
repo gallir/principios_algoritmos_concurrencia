@@ -132,7 +132,7 @@ Durante décadas los problemas de concurrencia estuvieron reservados a los desar
 [IMPORTANT]
 .Concurrencia y paralelismo
 ====
-El paralelismo es una forma de ejecutar programas concurrentes. Programación concurrente es una forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
+El paralelismo es una forma de ejecutar programas concurrentes. La programación concurrente es una forma de estructurar los programas, no el número de procesadores que se usa para su ejecución.
 
 Los problemas de procesos concurrentes no son exclusividad del procesamiento paralelo, también ocurren con un único procesador.
 
