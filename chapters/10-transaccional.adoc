@@ -13,7 +13,7 @@ Las transacciones están íntimamente relacionadas con las secciones críticas. 
 
 - Para evitar los cuellos de botella generados por las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atómicas del procesador (fundamentalmente _CAS_). Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se debe trabajar con objetos de mayor tamaño.
 
-- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso en la sección crítica es interrumpido. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no pueden entrar a la sección crítica; y el efecto convoy, cuando los procesos en espera se acumulan. Aún después de que el proceso interrumpido haya liberado la sección crítica toma un tiempo vaciar la cola de procesos en espera.
+- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso en la sección crítica es interrumpido. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no pueden entrar a la sección crítica; el efecto convoy cuando los procesos en espera se acumulan, aún después de que el proceso interrumpido haya liberado la sección crítica toma un tiempo vaciar la cola de procesos en espera.
 
 - Los interbloqueos son difíciles de evitar si se manipulan muchos objetos. Aunque hay técnicas y reglas conocidas (<<deadlocks>>), con el incremento del número y tamaño de los programas concurrentes el modelo ya no es sustentable (<<Herlihy12>>).
 
