@@ -3,17 +3,17 @@
 
 image::jrmora/10-transaccional.jpg[align="center"]
 
-Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. Sus objetivos son simplificar la programación y aumentar el paralelismo de los programas concurrentes. Para acceder a registros compartidos se usa el mismo concepto de _transacción_ conocida desde hace tiempo en las bases de datos ACID. Desde el punto de vista del programador las transacciones se ejecutan secuencialmente y aisladas unas de otras, las complejidades del control de concurrencia son invisibles.
+Como la exclusión mutua, la memoria transaccional es un mecanismo de control de concurrencia. Sus objetivos son simplificar la programación y aumentar el paralelismo de los programas concurrentes. Para acceder a registros compartidos se usa el mismo concepto de _transacción_ conocida desde hace tiempo en las bases de datos ACID. Desde el punto de vista del programador, las transacciones se ejecutan secuencialmente y aisladas unas de otras y las complejidades del control de concurrencia son invisibles.
 
 Las transacciones están íntimamente relacionadas con las secciones críticas. En capítulos anteriores estudiamos dos tipos de mecanismos para resolverlas: los _spinlocks_ con espera activa y las soluciones bloqueantes con semáforos y monitores. Pero estas soluciones tienen limitaciones importantes.
 
 === Limitaciones de la sección crítica
 
-- La exclusión mutua reduce la capacidad de paralelismo. Las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce al capacidad de ejecutar hilos en otros procesadores.
+- La exclusión mutua reduce la capacidad de paralelismo. Las secciones críticas deben ser ejecutadas secuencialmente por lo que se reduce la capacidad de ejecutar hilos en otros procesadores.
 
 - Para evitar los cuellos de botella generados por las secciones críticas se implementan _estructuras concurrentes_ (_lock-free structures_) con instrucciones atómicas del procesador (fundamentalmente _CAS_). Pero estas primitivas solo trabajan con una palabra por lo que requieren algoritmos más complejos cuando se debe trabajar con objetos de mayor tamaño.
 
-- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso en la sección crítica es interrumpido. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no puedan entrar a la sección crítica; el efecto convoy cuando los procesos en espera se acumulan, aún después de que el proceso interrumpido haya liberado la sección crítica toma un tiempo vaciar la cola de procesos en espera.
+- Los _spinlocks_ para exclusión mutua producen inversión de prioridades y _efecto convoy_ cuando un proceso en la sección crítica es interrumpido. La inversión de prioridades ocurre cuando otros procesos de mayor prioridad no pueden entrar a la sección crítica; y el efecto convoy, cuando los procesos en espera se acumulan. Aún después de que el proceso interrumpido haya liberado la sección crítica toma un tiempo vaciar la cola de procesos en espera.
 
 - Los interbloqueos son difíciles de evitar si se manipulan muchos objetos. Aunque hay técnicas y reglas conocidas (<<deadlocks>>), con el incremento del número y tamaño de los programas concurrentes el modelo ya no es sustentable (<<Herlihy12>>).
 
@@ -21,18 +21,18 @@ Las transacciones están íntimamente relacionadas con las secciones críticas. 
 
 - Son difíciles de gestionar de manera efectiva, especialmente para la gestión de estructuras complejas o de grandes sistemas. Si se desea más eficiencia y paralelismo hay que trabajar con granularidades pequeñas. Se usan _mutex_ o _spinlocks_ globales para gestionar estructuras sofisticadas (como _hashing_ o árboles balanceados) porque reducir la granularidad de las secciones críticas es una tarea compleja, tediosa, propensa a errores y difícil de validar. Lo que desea el programador es indicar la sección crítica general y que el sistema se encargue de controlar la granularidad.
 
-Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria de que las herramientas actuales tienen demasiadas limitaciones para cubrir las necesidades que se avecinan.
+Todo parece indicar que en el futuro se incrementará el número de núcleos y procesadores y por consiguiente se producirá un crecimiento del número y tamaño de programas concurrentes. Hay un consenso académico y en la industria en que las herramientas actuales tienen demasiadas limitaciones para cubrir las necesidades que se avecinan.
 
 === Veinte años de historia
 
-Aunque todavía están en su infancia, durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales. La primera propuesta de usar transacciones en programas concurrentes fue de David Lomet en 1977 (<<Lomet>>) pero no detalló ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
+Durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales, aunque todavía están en su infancia. La primera propuesta de usar transacciones en programas concurrentes fue de David Lomet en 1977 (<<Lomet>>) pero no detalló ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
 
 En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones de soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridades, el _efecto convoy_ y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multipalabra_ conocidas como _Oklahoma Update_. El diseño propuesto está basado en la misma idea de LL/SC (<<llsc>>) pero permite reservar más de una palabra.
 
-En 1995 Nir Shavit y Dan Touitou (<<Shavit>>) demostraron por primera vez el uso práctico de memoria transaccional por software (_STM_). En 2006 Nir Shavit, Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas TinySMT (<<Felber>>). TinySTM es una de las librerías _STM_ más populares y eficientesfootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.]. El desarrollo de nuevos algoritmos y las optimizaciones de los compiladores hacen que tenga sentido usar memoria transaccional aún sin soporte de hardware.
+En 1995, Nir Shavit y Dan Touitou (<<Shavit>>) demostraron por primera vez el uso práctico de memoria transaccional por software (_STM_). En 2006 Nir Shavit, Dave Dice y Ori Shalev presentaron el algoritmo _Transaction Locking 2_ (_TL2_, <<Dice>>). TL2 sirvió de base para varias librerías de memoria transaccional, entre ellas TinySMT (<<Felber>>). TinySTM es una de las librerías _STM_ más populares y eficientesfootnote:[Uno de sus autores, Torvald Riegel, es también responsable de las librerías _libitm_ que usa GCC.]. El desarrollo de nuevos algoritmos y las optimizaciones de los compiladores hacen que tenga sentido usar memoria transaccional aún sin soporte de hardware.
 
 
-En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware (_HTM_). En 2007 Sun presentó el procesador UltraSPARC Rock con soporte _HTM_, cancelado en 2009 (<<Chaudhry>>). Los procesadores del supercomputador BlueGene Sequoia incluyeron soporte _HTM_ en 2011. Entre 2012 y 2013 Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con _HTM_.
+En los últimos años se ha producido un avance notable en sistemas de memoria transaccional por hardware (_HTM_). En 2007 Sun presentó el procesador UltraSPARC Rock con soporte _HTM_, cancelado en 2009 (<<Chaudhry>>). Los procesadores del supercomputador BlueGene Sequoia incluyeron soporte _HTM_ en 2011. Entre 2012 y 2013, Intel (Haswell) e IBM (con PowerPC y S390) presentaron sus procesadores con _HTM_.
 
 
 Además de los desarrollos en _STM_ y _HTM_ se hicieron esfuerzos importantes para la estandarización y soporte genérico de memoria transaccional. Hay un borrador para estandarizar las construcciones de _bloques atómicos_ en C y C++ (<<Tabatabai>>). El compilador GCC incluye soporte para _STM_ desde la versión 4.7 y soporte de hardware para procesadores Intel, PowerPC y S390 de la versión 4.8 (<<TransactionGCC>>). Los _mutex_ de las librerías POSIX Threads usan el soporte de hardware desde la versión Glibc 2.18 (2013, <<Kleen>>). El mismo año se empezó a desarrollar soporte para _HTM_ en el núcleo Linux.
@@ -41,13 +41,13 @@ Además de los desarrollos en _STM_ y _HTM_ se hicieron esfuerzos importantes pa
 [NOTE]
 .Transacciones de bases de datos
 ====
-Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, que especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
+Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años. Ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, que especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
 
-Las operaciones dentro de transacciones se ejecutan concurrentemente y en paralelo pero las interacciones están limitadas de forma que los resultados no varían si se ejecutan una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
+Las operaciones dentro de transacciones se ejecutan concurrentemente y en paralelo, pero las interacciones están limitadas de forma que los resultados no varían si se ejecutan una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
 
 Las bases de datos tienen las propiedades ACID, por _atomicidad_, _consistencia_, _aislamiento_ (_isolation_) y _durabilidad_:
 
-- _Atomicidad_ significa las operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no se dejan rastros de los cambios que se hicieron _tentativamente_. Cuando una transacción acaba correctamente se hace el _commit_ haciendo visible los cambios, caso contrario la transacción de _aborta_.
+- _Atomicidad_ significa que las operaciones de una transacción se completan todas o ninguna. Si se _rechaza_ una ejecución no se dejan rastros de los cambios que se hicieron _tentativamente_. Cuando una transacción acaba correctamente se hace el _commit_ haciendo visible los cambios, caso contrario la transacción de _aborta_.
 
 - _Consistencia_ significa que los datos pasan de un estado consistente a otro. Se respetan los invariantes, por ejemplo: el resultado de una transferencia bancaria que generó un ingreso en una cuenta también incluye la extracción desde otra.
 
@@ -58,7 +58,7 @@ Las bases de datos tienen las propiedades ACID, por _atomicidad_, _consistencia_
 
 
 === Transacciones
-Como en bases de datos ACID, una transacción es una serie de instrucciones de acceso a memoria ejecutadas por un único proceso. Las transacciones concurrentes deben ser _secuenciables_, desde el punto de vista del programador parecen ejecutarse secuencialmente. El resultado de la ejecución de dos transacciones concurrentes es equivalente a una ejecución secuencial.
+Como en bases de datos ACID, una transacción es una serie de instrucciones de acceso a memoria ejecutadas por un único proceso. Las transacciones concurrentes deben ser _secuenciables_: desde el punto de vista del programador parecen ejecutarse secuencialmente. El resultado de la ejecución de dos transacciones concurrentes es equivalente a una ejecución secuencial.
 
 Mientras los _mutex_ y _spinlocks_ son pesimistas, las transacciones son optimistas y pueden ser ejecutadas especulativamente en paralelo. Las transacciones hacen cambios _tentativos_ a objetos, si acaban sin conflictos se hace el _commit_ que hace visible los cambios a los demás procesos.
 
@@ -234,7 +234,7 @@ for (i=0; i < max; i++) {
 
 ==== Instrumentación del compilador
 
-No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción; y de no acceder directamente a las variables compartidas, sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
+No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción y de no acceder directamente a las variables compartidas, sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
 
 Es mucho más conveniente una construcción sintáctica que delimite claramente qué instrucciones son las que están en una transacción y que sea el compilador el responsable de detectar qué accesos necesitan ser controlados. Para ello se definen los _bloques atómicos_, como el siguiente ejemplo (<<tm_mutex_gcc_c, código completo>>):
 
@@ -540,7 +540,7 @@ Las dos últimas barras de la derecha son los tiempos de _HLE_ (<<tm_rw_hle_c, c
 
 En este caso –y en este modelo de procesador– _HLE_ tiene dos problemas:
 
-- Las lecturas de +counter+ generan más transacciones fallidas. Aproximadamente el 50 % de las transacciones se abortan, con _RTM_ no llegan al 0.03 %. Si se elimina la lectura de +counter+ el número de fallos se reduce a aproximadamente 33 %, una tasa todavía elevada.
+- Las lecturas de +counter+ generan más transacciones fallidas. Aproximadamente el 50 % de las transacciones se abortan, con _RTM_ no llegan al 0,03 %. Si se elimina la lectura de +counter+ el número de fallos se reduce a aproximadamente 33 %, una tasa todavía elevada.
 
 - Se produce el efecto convoy, al tener un porcentaje elevado de fallos hace que las demás transacciones también fallen porque se modifica el valor de +mutex+.
 
@@ -565,11 +565,11 @@ Todos los métodos de memoria transaccional se comportan peor que el _spinlock_ 
 
 === Recapitulación
 
-Hay un consenso de que las herramientas y mecanismos tradicionales no sirven para un previsible futuro de expansión de las arquitecturas multiprocesadores y programación concurrente y paralela. Por ello el área de investigación en memoria transaccional está muy activa.
+Hay consenso en que las herramientas y mecanismos tradicionales no sirven para un previsible futuro de expansión de las arquitecturas multiprocesadores y programación concurrente y paralela. Por ello el área de investigación en memoria transaccional está muy activa.
 
 El problema es cómo compatibilizar las nuevas aplicaciones con código existente, las transacciones deben coexistir con código no transaccional durante muchos años. Los diseñadores de lenguajes deben implementar nuevas construcciones sintácticas y definir con precisión su semántica (como el tratamiento de excepciones y señales).
 
-Uno de los objetivos es mejorar el rendimiento de las aplicaciones por lo que la eficiencia juega un papel importante. Los sistemas _STM_ no pueden alcanzar la eficiencia que se puede alcanzar por hardware pero es más maleable y permite experimentar con algoritmos más complejos.
+Uno de los objetivos es mejorar el rendimiento de las aplicaciones, por lo que la eficiencia juega un papel importante. Los sistemas _STM_ no pueden alcanzar la eficiencia que se puede alcanzar por hardware pero son más maleables y permiten experimentar con algoritmos más complejos.
 
 Por otro lado los fabricantes de procesadores tienen limitaciones en cuanto a los algoritmos que pueden implementar, estos además deben ser validados y probados extensivamente antes de lanzar la producción masiva: no se puede cambiar la arquitectura y crear dependencias y problemas de compatibilidad en el futuro. Esto hace que cuando los procesadores salen al mercado ya son casi obsoletos.
 
