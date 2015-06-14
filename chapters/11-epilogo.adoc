@@ -15,7 +15,7 @@ Edsger W. Dijkstra propone una solución y formalismos para algoritmos de exclus
 1973::
 Charles Antony Richard Hoare, más conocido como _Tony_, formaliza el concepto de monitores (<<Hoare1>>).
 +
- IBM implementa la instrucción _compare&swap_ de Charlie Salisbury en su arquitectura 370/XA.
+IBM implementa la instrucción _compare&swap_ de Charlie Salisbury en su arquitectura 370/XA.
 
 1974::
 Leslie Lamport publica el algoritmo de la panadería (<<Lamport>>).
