@@ -25,7 +25,7 @@ Todo parece indicar que en el futuro se incrementará el número de núcleos y p
 
 === Veinte años de historia
 
-Durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales, aunque todavía están en su infancia. La primera propuesta de usar transacciones en programas concurrentes fue de David Lomet en 1977 (<<Lomet>>) pero no detalló ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
+Aunque todavía están en su infancia, durante los últimos años se produjo un aumento notable de publicaciones científicas y desarrollos de sistemas de memorias transaccionales. La primera propuesta de usar transacciones en programas concurrentes fue de David Lomet en 1977 (<<Lomet>>) pero no detalló ninguna solución práctica competitiva con los mecanismos de sincronización explícitos (<<Harris>>). La idea cayó en el olvido durante quince años.
 
 En 1993 Maurice Herlihy y Eliot Moss (<<Herlihy93>>) propusieron soluciones de soporte de hardware de transacciones para superar las limitaciones de los _spinlocks_, principalmente la inversión de prioridades, el _efecto convoy_ y los interbloqueos. El mismo año Janice Stone _et al_ (<<Stone>>) propusieron primitivas de hardware atómicas _multipalabra_ conocidas como _Oklahoma Update_. El diseño propuesto está basado en la misma idea de LL/SC (<<llsc>>) pero permite reservar más de una palabra.
 
