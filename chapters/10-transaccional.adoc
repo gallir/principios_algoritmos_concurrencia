@@ -41,7 +41,7 @@ Además de los desarrollos en _STM_ y _HTM_ se hicieron esfuerzos importantes pa
 [NOTE]
 .Transacciones de bases de datos
 ====
-Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años. Ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, que especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
+Las bases de datos son capaces de trabajar concurrentemente y en paralelo desde hace años, ejecutan varias consultas simultáneamente siempre que es posible. Obtienen esta eficiencia con un modelo que evita que el programador deba preocuparse de la concurrencia. El corazón del sistema es la transacción, que especifica una semántica de secuencia de operaciones –una composición– como si fuese el único proceso accediendo a la base de datos.
 
 Las operaciones dentro de transacciones se ejecutan concurrentemente y en paralelo, pero las interacciones están limitadas de forma que los resultados no varían si se ejecutan una después de otra. Esta propiedad del modelo se llama _secuencialidad_ (_serializability_) y facilita el trabajo al programador habituado a la programación secuencial.
 
