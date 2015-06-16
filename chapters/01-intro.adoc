@@ -75,7 +75,7 @@ Es el procedimiento de almacenar el estado del proceso en ejecución y restaurar
 
 Los cambios de contexto producen costes colaterales, como el aumento inicial de la tasa de _fallos_ de caché y _TLB_ porque el nuevo proceso accede a direcciones diferentes. El coste es todavía algo superior si el proceso se ejecutó previamente en una CPU diferente, también se debe considerar esta _afinidad de procesador_.
 
-El _scheduler_ está diseñado y en constante evolución para tomar en cuenta estos requisitos contradictorios. La contrapartida es que la ejecución de los procesos se hace cada vez más impredecible. Por la complejidad de las interacciones y eventos es imposible predecir o repetir una secuencia de ejecución particular. Por eso se dice que los _schedulers_ se sistemas modernos son _no deterministas_.
+El _scheduler_ está diseñado y en constante evolución para tomar en cuenta estos requisitos contradictorios. La contrapartida es que la ejecución de los procesos se hace cada vez más impredecible. Por la complejidad de las interacciones y eventos es imposible predecir o repetir una secuencia de ejecución particular. Por eso se dice que los _schedulers_ de sistemas modernos son _no deterministas_.
 
 === Hilos
 
