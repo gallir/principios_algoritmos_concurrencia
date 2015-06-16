@@ -1,4 +1,4 @@
-Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación y estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
+Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos de programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación y estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
 
 Algunos de los temas son los que se suelen estudiar en asignaturas universitarias de programación concurrente: el problema de exclusión mutua y sincronización con semáforos, monitores y canales. También se tratan temas más avanzados: instrucciones de hardware, optimizaciones de spinlocks, la interfaz FUTEX del núcleo Linux y memoria transaccional.
 
@@ -11,7 +11,7 @@ El código fuente de los programas está disponible en Github: https://goo.gl/p0
 
 
 
-Ricardo Galli Granada es Ingeniero en Informática y Doctor en Ciencias de la Computación. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame. 
+Ricardo Galli Granada es Ingeniero en Informática y Doctor en Ciencias de la Computación. Enseñó Sistemas Operativos y Programación Concurrente en la Universitat de les Illes Balears desde 1993 a setiembre de 2015. Socio-fundador y programador del popular agregador social Menéame.
 
 //////
 

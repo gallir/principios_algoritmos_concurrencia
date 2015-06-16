@@ -150,7 +150,7 @@ while turn != 0:
 
 critical_section()
 
-turno = 1
+turn = 1
 ----
 
 [NOTE]

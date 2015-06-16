@@ -5,14 +5,14 @@
 :copyrights: Attribution-NonCommercial-NoDerivatives 4.0 International CC BY-NC-ND 4.0
 :lang: es
 :docinfo:
-:revnumber: 1.0.2
+:revnumber: 1.0.3
 :keywords: concurrencia, algoritmos, spinlocks, semáforos, monitores, canales
 :toc:
 :toclevels: 2
 :numbered!:
 :imagesdir: images
 :caption!:
-:front-cover-image: image:cover.jpg[Concurrencia Cover,1400,2240]
+:front-cover-image: image:cover.jpg[Concurrencia Cover,1600,2560]
 :hide-uri-scheme:
 //:icons:
 //:source-highlighter: source-highlight
