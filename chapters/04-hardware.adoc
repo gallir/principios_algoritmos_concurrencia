@@ -205,7 +205,7 @@ Esta instrucción se introdujo en 1973 para la arquitectura IBM 370/XAfootnote:[
 
 Registro (_register_):: La dirección de memoria cuyo valor se comparará y a la que se asignará un nuevo valor, si corresponde.
 
-Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _nuevo valor_ (se copia en sentido inverso).
+Valor esperado (_expected_):: Si el valor del registro es igual al esperado entonces se le asignará el nuevo valor. El macro de GCC incluye una operación adicional, si falla la comparación copia el valor del registro a la posición de memoria del _valor esperado_.
 
 Nuevo valor (_desired_):: El valor que se asignará al registro si su valor era igual al esperado.
 
@@ -219,7 +219,7 @@ def CAS(register, expected, desired):
         register = desired
         return True
     else:
-        desired = register
+        expected = register
         return False
 ----
 
