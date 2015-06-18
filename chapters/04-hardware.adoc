@@ -71,7 +71,7 @@ Hay varios tipos de instrucciones que implementan registros _RMW_, las disponibl
 ////
 - _get&set_: Asigna un nuevo valor al registro y retorna el anterior (o la equivalente pero con orden invertido _set&get_).
 
-- _get&add_: Incrementa el valor del registro en el valor indicado y retorna el valor anterior (o su equivalente _add&set_)footnote:[Algunos macros también ofrecen _get&sub_ o _sub&set_, idénticas a sumar un valor negativo.].
+- _get&add_: Incrementa el valor del registro en el valor indicado y retorna el valor anterior (o su equivalente _add&set_)footnote:[Algunos macros también ofrecen _get_and_sub_ o _sub_and_set_, idénticas a sumar un valor negativo.].
 
 - _test&set_: Verifica el valor del registro, si es cero asigna el nuevo valor (habitualmente 1, por ejemplo en IBM 360 el registro es binario o booleano, solo admite 0 y 1).
 
@@ -133,7 +133,7 @@ def unlock():
 ----
 
 [[get_and_add_ticket]]
-El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get&add_ sino _add&get_, devuelve el valor después de sumar, pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
+El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get_and_add_ sino _add_and_get_, devuelve el valor después de sumar. Pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
 
 A diferencia de la implementación con _get&set_, esta asegura espera limitada: el número que selecciona cada proceso es único y crecientefootnote:[Aunque hay que tener en cuenta que el valor de +number+ llegará a su máximo y rotará.]. Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>. Son muy usados en el núcleo de Linux, aseguran espera limitada y equidad (_fairness_): los procesos entran a la sección crítica en orden FIFO.
 
@@ -141,7 +141,7 @@ A diferencia de la implementación con _get&set_, esta asegura espera limitada: 
 ==== _Test&Set_
 La instrucción _test&set_ (_TAS_) fue la más usada hasta la década de 1970, cuando empezó a ser reemplazada por operaciones que permiten niveles de consenso más elevados. La implementación en hardware usa una variable entera binaria (o booleana) que puede tomar valores 0 y 1.
 
-La instrucción solo tiene un operando. Si su valor es 0 le asigna 1 y retorna 1 (o _true_), caso contrario retorna 0 (o _false_).
+La instrucción solo tiene un operando. Si su valor es 0 le asigna 1 y retorna 0, caso contrario retorna 1 (es decir, retorna el valor anterior del registro).
 
 [source,python]
 ----
@@ -160,7 +160,7 @@ La implementación de exclusión mutua con _TAS_:
         mutex = 0
 
 def lock():
-    while TAS(mutex) == 0:
+    while TAS(mutex) == 1:
         pass
 
 def unlock():
