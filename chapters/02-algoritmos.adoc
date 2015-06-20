@@ -466,13 +466,13 @@ La condición +number[0] > 0+ será falsa y _P1_ entrará a la sección crítica
 +[1, 1, 0, ..., 0]+
 --
 
-Cuando verifique el número de _P1_ ambos tendrán el mismo (0), pero la siguiente condición
+Cuando verifique el número de _P1_ ambos tendrán el mismo (1), pero la siguiente condición
 
-    number[1] == number[0] and 0 < 1
+    number[1] == number[0] and 1 < 0
 
 es falsa (el _ID_ de _P0_ es menor que el de _P1_), _P0_ también entrará a la sección crítica.
 
-Para evitarlo hay que impedir que un proceso no avance si el proceso contra el que está por comparar su número todavía lo está seleccionando. Para ello se usa otro array, +choosing+, que indicará si el proceso está en medio de la selección.
+Para evitarlo hay que impedir que un proceso avance si el proceso contra el que está por comparar su número todavía lo está seleccionando. Para ello se usa otro array, +choosing+, que indicará si el proceso está en medio de la selección.
 
 [source,python]
 ----
