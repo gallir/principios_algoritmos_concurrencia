@@ -90,7 +90,7 @@ include::../code/semaphores/producer-consumer-infinite.py[]
 https://github.com/gallir/concurrencia_source_samples/blob/master/semaphores/producer-consumer.py[producer-consumer.py]
 [source,python]
 ----
-include::../code/semaphores/producer-consumer-infinite.py[]
+include::../code/semaphores/producer-consumer.py[]
 ----
 
 === Lectores-escritores
