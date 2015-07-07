@@ -120,7 +120,7 @@ Un último apunte. Estructuré los capítulos de la forma en que me pareció má
 De todas formas, aprender requiere esfuerzo personal e intelectual proporcional a la complejidad de lo estudiado. Si requiere poco esfuerzo no es conocimiento, es entretenimiento. O charlatanería.
 
 === Fe de erratas
-Este libro está autoeditado y no fue revisado por editores ni correctores profesionales. Aunque revisé meticulosamente varias veces cada capítulo, publiqué los manuscritos https://gallir.wordpress.com/principios-de-concurrencia/[en mi blog] y antes de publicarse pasó por la revisión de varias personas, seguro que tiene errores. Pido disculpas por adelantado y me comprometo a actualizarlo con las correcciones en todas las plataformas en las que lo haya publicado.
+Este libro está autoeditado y no fue revisado por editores ni correctores profesionales. Aunque revisé meticulosamente varias veces cada capítulo, publiqué los manuscritos https://gallir.wordpress.com/principios-de-concurrencia/[en mi blog] y pasó por la revisión de varias personas, seguro que tiene errores. Pido disculpas por adelantado y me comprometo a listarlas en https://gallir.wordpress.com/2015/06/21/principios-y-algoritmos-de-concurrencia-fe-de-erratas/[la página de fe de erratas] y actualizar el libro en todas las plataformas en las que lo haya publicado.
 
 Si tenéis consultas o encontráis errores, mi apodo es _gallir_ en casi todas las redes sociales.
 
