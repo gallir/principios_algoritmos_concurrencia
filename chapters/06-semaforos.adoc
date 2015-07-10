@@ -719,7 +719,7 @@ Se usa el array +status+ para indicar el estado de cada filósofo: pensando (+TH
 
 [source, python]
 ----
-    Semaphore status[5] = [THINKING,... ,THINKING]
+    status[5] = [THINKING,... ,THINKING]
     Semaphore sync[5] = [0, 0, 0, 0, 0]
     Semaphore mutex = 1
 ----
