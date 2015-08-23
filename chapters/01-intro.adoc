@@ -1,5 +1,5 @@
 [[processes_concurrency]]
-== 1. Procesos y concurrencia
+== Procesos y concurrencia
 image::jrmora/01-intro.jpg[align="center"]
 
 
@@ -185,7 +185,7 @@ o:
 +q~0~, q~1~, q~2~, p~0~, p~1~, p~2~+
 --
 
-Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ y p~2~ después de p~1~, formalmente: +p~0~ => p~1~ => p~2~+ (lo mismo para las instrucciones de +q+). La siguiente secuencia de ejecución respeta las relaciones secuenciales anteriores, por lo que también es correcta y secuencialmente consistente si se analiza cada programa por separado:
+Para respetar la consistencia secuencial p~1~ se debe ejecutar después de p~0~ y p~2~ después de p~1~, formalmente: +p~0~ -> p~1~ -> p~2~+ (lo mismo para las instrucciones de +q+). La siguiente secuencia de ejecución respeta las relaciones secuenciales anteriores, por lo que también es correcta y secuencialmente consistente si se analiza cada programa por separado:
 
 [quote]
 --

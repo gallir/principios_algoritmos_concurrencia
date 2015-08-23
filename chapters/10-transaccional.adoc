@@ -1,5 +1,5 @@
 [[tm]]
-== 10. Memoria transaccional
+== Memoria transaccional
 
 image::jrmora/10-transaccional.jpg[align="center"]
 

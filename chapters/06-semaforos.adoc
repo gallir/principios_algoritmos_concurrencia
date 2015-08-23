@@ -1,5 +1,5 @@
 [[semaphores]]
-== 6. Semáforos
+== Semáforos
 
 image::jrmora/06-semaforos.jpg[align="center"]
 

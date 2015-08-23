@@ -1,5 +1,5 @@
 [[monitors]]
-== 8. Monitores
+== Monitores
 image::jrmora/08-monitores.jpg[align="center"]
 
 Los semáforos se inventaron para resolver problemas de sincronización sin espera activa. Sin embargo, son primitivas de _bajo nivel_, no están estructuradas. Son propensas a provocar errores de programación y la responsabilidad recae completamente en los programadores. La omisión accidental de un _signal_ o un _unlock_ provoca fallos críticos.

@@ -1,5 +1,5 @@
 [[hardware]]
-== 4. Soluciones por hardware
+== Soluciones por hardware
 
 image::jrmora/04-hardware.jpg[align="center"]
 
@@ -326,21 +326,21 @@ Supongamos una pila con tres nodos que comienzan en las direcciones 10, 20 y 30:
 
 [quote]
 --
-+head => [10] => [20] => [30]+
++head -> [10] -> [20] -> [30]+
 --
 
 El proceso _P_ acaba de ejecutar +orig = *head+ dentro de _pop_ y es interrumpido, su variable +orig+ quedó apuntando a la dirección 10. Otros procesos eliminan dos elementos de la pila:
 
 [quote]
 --
-+head => [30]+
++head -> [30]+
 --
 
 Ahora _Q_ inserta un nuevo nodo con una dirección de memoria usada previamente, la 10:
 
 [quote]
 --
-+head => [10] => [30]+
++head -> [10] -> [30]+
 --
 
 
@@ -348,7 +348,7 @@ Cuando _P_ continúe su ejecución _CAS_ hará el cambio, la dirección de +head
 
 [quote]
 --
-+head => ¿20?    [30]+
++head -> ¿20?    [30]+
 --
 
 ====== ABA con malloc

@@ -1,5 +1,5 @@
 [[spinlocks]]
-== 5. _Spinlocks_ avanzados
+== _Spinlocks_ avanzados
 image::jrmora/05-spinlocks.jpg[align="center"]
 
 Las soluciones de exclusión mutua anteriores tienen en común una espera activa que continuamente verifica el estado de un registro. Este tipo de algoritmos se denominan _spinlocks_; el de Dekker, Peterson, la panadería o cualquiera de las soluciones de exclusión mutua del capítulo anterior son también _spinlocks_.
@@ -168,7 +168,7 @@ Algunos aspectos que vale la pena destacar:
 
 - El buen comportamiento y uniformidad de ARM para todas las instrucciones, sobre todo porque se emulan con el _LL/SC_. En ambas versiones del procesador, ARMv6 y ARMv7 (de Raspberry Pi 1 y 2 respectivamente), _CAS_ es la más eficiente.
 
-- En las plataformas con varios procesadores +sched_yield+ y +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores. La mejora no se debe solo a la reducción de uso de la CPU; también por las reducción de llamadas a instrucciones de sincronización y a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como +for (i = 0; i < limit; i++);+ y verás que se produce también una reducción importante.]. La reducción de la presión al sistema de caché fue el objetivo del estudio de los _spinlocks escalables_ que vemos más adelante.
+- En las plataformas con varios procesadores +sched_yield+ y +backoff+ producen reducciones de tiempos importantes, incluso cuando el número de procesos concurrentes (cuatro) es igual al número de procesadores. La mejora no se debe solo a la reducción de uso de la CPU; también por las reducción de llamadas a instrucciones de sincronización y a la menor presión sobre el sistema de coherencia de cachéfootnote:[Puedes hacer la prueba, en la versión de _backoff_ reemplaza el +clock_nanosleep+ por un bucle como `for (i = 0; i < limit; i++);` y verás que se produce también una reducción importante.]. La reducción de la presión al sistema de caché fue el objetivo del estudio de los _spinlocks escalables_ que vemos más adelante.
 
 ===== Tiempos de CPU vs tiempos de reloj
 

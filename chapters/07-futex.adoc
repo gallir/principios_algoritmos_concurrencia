@@ -1,5 +1,5 @@
 [[futex]]
-== 7. FUTEX
+== FUTEX
 
 image::jrmora/07-futex.jpg[align="center"]
 

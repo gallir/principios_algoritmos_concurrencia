@@ -2,7 +2,22 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- theme -->
+  <xsl:param name="text.color">#000000</xsl:param>
+  <xsl:param name="link.color">#080808</xsl:param>
+  <xsl:param name="border.color">#DDDDDD</xsl:param>
+  <xsl:param name="header.font-weight">normal</xsl:param>
+  <xsl:param name="title.color">#080808</xsl:param>
+  <xsl:param name="chapter.title.color" select="$title.color"/>
+  <xsl:param name="section.title.color" select="$title.color"/>
+  <xsl:param name="caption.color">#0c0c0c</xsl:param>
+  <xsl:param name="code.color" select="$text.color"/>
+  <xsl:param name="code.font-weight">normal</xsl:param>
+  <xsl:param name="code.background-color">transparent</xsl:param>
+
+
   <!-- Asciidoctor theme -->
+  <!--
   <xsl:param name="text.color">#222222</xsl:param>
   <xsl:param name="link.color">#005498</xsl:param>
   <xsl:param name="border.color">#DDDDDD</xsl:param>
@@ -14,6 +29,7 @@
   <xsl:param name="code.color" select="$text.color"/>
   <xsl:param name="code.font-weight">normal</xsl:param>
   <xsl:param name="code.background-color">#EEEEEE</xsl:param>
+  -->
 
   <!-- Foundation theme -->
   <!--
@@ -93,17 +109,17 @@
   </xsl:param>
   <xsl:param name="section.label.includes.component.label" select="1"/>
 
-  <xsl:param name="suppress.navigation">0</xsl:param>
+  <xsl:param name="suppress.navigation">1</xsl:param>
   <xsl:param name="navig.graphics.extension">.png</xsl:param>
   <xsl:param name="navig.graphics">0</xsl:param>
   <xsl:param name="navig.graphics.path">images/icons/</xsl:param>
   <xsl:param name="navig.showtitles">0</xsl:param>
 
-  <xsl:param name="shade.verbatim">0</xsl:param>
+  <xsl:param name="shade.verbatim">1</xsl:param>
 
   <xsl:attribute-set name="shade.verbatim.style">
     <xsl:attribute name="border">0</xsl:attribute>
-    <xsl:attribute name="background-color">#E0E0E0</xsl:attribute>
+    <xsl:attribute name="background-color">#F0F0F0</xsl:attribute>
   </xsl:attribute-set>
 
   <!--

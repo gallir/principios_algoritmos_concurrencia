@@ -1,5 +1,5 @@
 [[mutual_exclusion]]
-== 2. Exclusión mutua
+== Exclusión mutua
 image::jrmora/02-algoritmos.jpg[align="center"]
 
 La exclusión mutua –o _sección crítica_– es un problema básico y fundamental de sincronización entre procesosfootnote:[O hilos (_threads_), a menos que especifique lo contrario uso el término indistintamente.] con _memoria compartida_; se trata de asegurar el acceso ordenado a recursos compartidos para impedir errores e inconsistencias.
@@ -448,7 +448,7 @@ critical_section()
 
 number[i] = 0
 ----
-<1> La nueva condiciónfootnote:[Esta condición se suele representar con la notación +(j, number[j\]) &#8810; (i, number[i\])+ o más brevemente +number[j\] &#8810; number[i\]+.], si ambos números son iguales y el _ID_ del otro (_j_) es menor que _i_ entonces también deberá esperar.
+<1> La nueva condiciónfootnote:[Esta condición se suele representar con la notación +(j, number[j\]) << (i, number[i\])+ o más brevemente +number[j\] << number[i\]+.], si ambos números son iguales y el _ID_ del otro (_j_) es menor que _i_ entonces también deberá esperar.
 
 El algoritmo todavía no es correcto, no asegura exclusión mutua.
 

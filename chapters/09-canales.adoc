@@ -1,5 +1,5 @@
 [[channels]]
-== 9. Canales
+== Canales
 image::jrmora/09-canales.jpg[align="center"]
 
 Las construcciones de programación concurrente anteriores –algoritmos, _spinlocks_, semáforos y monitores– solo funcionan en sistemas de memoria compartida. Los canales no tienen esta restricción. Además de su capacidad de sincronización equivalente sirven para comunicación por intercambio de _mensajes_. Estos se transfieren con las operaciones atómicas _send_ y _receive_ entre procesos remitentes (_sources_) y receptores (_receivers_). Según el comportamiento de las dos operaciones se distinguen dos tipos de comunicación:
@@ -846,17 +846,17 @@ Cuando un proceso solicita el testigo envía un mensaje a su padre e inmediatame
 Supongamos que _A_ solicita el testigo y que lo tiene _D_. La situación inicial es:
 
 [quote]
-+_A_ => _B_ => _C_ => *_D_* <= _E_+
++_A_ -> _B_ -> _C_ -> *_D_* <- _E_+
 
 Cuando _B_ recibe el mensaje desde _A_ lo reenvía a _C_ y cambia su padre a _A_:
 
 [quote]
-+_A_ <= _B_   _C_ => *_D_* <= _E_+
++_A_ <- _B_   _C_ -> *_D_* <- _E_+
 
 El mensaje es así copiado hasta que llega a la raíz del árbol actual ligado al poseedor del testigo (_D_). Las conexiones en ese momento serán las siguientes (hay dos árboles, la raíz de uno es el poseedor el testigo, el otro es el siguiente):
 
 [quote]
-+_A_ <= _B_ <= _C_   *_D_* <= _E_+
++_A_ <- _B_ <- _C_   *_D_* <- _E_+
 
 
 El proceso _D_ puede estar en dos estados:
@@ -868,7 +868,7 @@ El proceso _D_ puede estar en dos estados:
 En cualquier de los dos casos, el árbol se habrá unificado.
 
 [quote]
-+*_A_* <= _B_ <= _C_ <= _D_ <= _E_+
++*_A_* <- _B_ <- _C_ <- _D_ <- _E_+
 
 El algoritmo de Neilsen-Mizuno es muy abstracto y difícil de entenderlo inicialmente, pero su programación es muy sencilla y, como veremos más adelante, también muy eficiente: compite en eficiencia con los algoritmos de memoria compartida.
 
