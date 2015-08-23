@@ -57,24 +57,3 @@ include::chapters/10-transaccional.adoc[]
 include::chapters/11-epilogo.adoc[]
 
 include::chapters/a01-bibliografia.adoc[]
-
-include::chapters/a02-code-intro.adoc[]
-
-include::chapters/a03-code-hardware.adoc[]
-
-include::chapters/a04-code-spinlocks.adoc[]
-
-include::chapters/a05-code-semaphores.adoc[]
-
-include::chapters/a06-code-futex.adoc[]
-
-include::chapters/a07-code-monitors.adoc[]
-
-include::chapters/a08-code-channels.adoc[]
-
-include::chapters/a09-code-transaccional.adoc[]
-
-[NOTE]
-====
-Disculpas si has llegado hasta aquí saltando el código fuente pantalla por pantalla, pero tenía que hacerlo. Era la única forma de no obligar al lector a estar conectado a internet para leer los programas completos.
-====

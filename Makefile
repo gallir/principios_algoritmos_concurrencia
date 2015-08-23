@@ -7,26 +7,25 @@ CSS=epub.css
 RESOURCES=--resource styles/docbook-xsl.css 
 A2XOPTIONS=-v $(RESOURCES) --conf-file=resources/a2x.conf --stylesheet=styles/$(CSS)  --attribute tabsize=4  
 
+all: xml pdf ps
 
 html: $(OUTDIR)/$(BASE).html 
 
-epub: $(OUTDIR)/$(BASE).epub
+xml: $(OUTDIR)/$(BASE).xml
 
-redo: clean epub
+pdf: $(OUTDIR)/$(BASE).pdf
 
-all: clean epub mobi
+ps: $(OUTDIR)/$(BASE).ps
 
-mobi: $(OUTDIR)/$(BASE).mobi
+$(OUTDIR)/$(BASE).xml: $(SOURCES)
+	asciidoctor -D $(OUTDIR) -b docbook -d book -a data-uri! $(MAIN)
 
-validate: 
-	asciidoctor-epub3 -D $(OUTDIR) -a ebook-validate $(MAIN)
-
-$(OUTDIR)/$(BASE).mobi: $(SOURCES) $(OUTDIR)/$(BASE).epub styles/$(CSS)
-	-kindlegen $(OUTDIR)/$(BASE).epub
-
-$(OUTDIR)/$(BASE).epub: $(SOURCES)  styles/$(CSS)
-	scripts/a2x -f epub $(A2XOPTIONS) -D $(OUTDIR) $(MAIN)
-
+$(OUTDIR)/$(BASE).ps: $(OUTDIR)/$(BASE).xml
+	~/git/asciidoctor-fopub/fopub -f ps -t docbook-xsl/ $(OUTDIR)/$(BASE).xml
+	
+$(OUTDIR)/$(BASE).pdf: $(OUTDIR)/$(BASE).xml
+	~/git/asciidoctor-fopub/fopub -t docbook-xsl/ $(OUTDIR)/$(BASE).xml
+	
 $(OUTDIR)/$(BASE).html: $(SOURCES)  styles/$(CSS)
 	#asciidoctor $(MAIN) --attribute tabsize=4 -o $@
 	## Call original a2x to avoid icons
