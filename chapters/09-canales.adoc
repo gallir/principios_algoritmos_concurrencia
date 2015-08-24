@@ -595,7 +595,7 @@ La arquitectura de _Transputer_ consistía en un conjunto de procesadores con in
 
 
 [[BOO42]]
-.Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
+.Placa con Transputer con matriz de 6x7 procesadoresfootnote:[De la página de David May, uno de los arquitectos de Transputer, https://www.cs.bris.ac.uk/~dave/transputer.html]
 image::B0042.jpg[width="300", align="center"]
 
 Inicialmente solo se podía programar en occam pero luego se adaptaron librerías para lenguajes como Pascal, C y Fortran. También se desarrollaron y portaron varios sistemas operativos como _Minix_, _Paros_ y _Trollius_. Aunque inicialmente tuvo éxito en el ambiente académico (ofrecía buena potencia de cálculo, sobre todo de matrices) y se usó en sistemas satelitales, posteriormente desapareció, posiblemente por la aparición de microprocesadores más potentes y económicos. O, como asegura David May –uno sus fundadores–, por el desconocimiento general de concurrencia de los programadores de la época.
