@@ -3,6 +3,10 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!-- theme -->
+  <!--
+  <xsl:param name="l10n.gentext.default.language">es</xsl:param>
+  <xsl:param name="l10n.gentext.language">es</xsl:param>
+  -->
   <xsl:param name="text.color">#000000</xsl:param>
   <xsl:param name="link.color">#080808</xsl:param>
   <xsl:param name="border.color">#DDDDDD</xsl:param>
@@ -163,7 +167,6 @@
   <xsl:param name="table.frame.border.thickness" select="'2px'"/>
   <!-- disabled due to missing adjustColumnWidths function -->
   <xsl:param name="tablecolumns.extension">0</xsl:param>
-
   <xsl:param name="generate.toc">
     <xsl:choose>
       <xsl:when test="/processing-instruction('asciidoc-toc')">

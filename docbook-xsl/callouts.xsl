@@ -9,10 +9,10 @@
   <xsl:param name="callouts.extension">1</xsl:param>
   <xsl:param name="callout.defaultcolumn">60</xsl:param>
   <xsl:param name="callout.icon.size">7pt</xsl:param>
-  <xsl:param name="callout.graphics">0</xsl:param>
+  <xsl:param name="callout.graphics">1</xsl:param>
   <xsl:param name="callout.graphics.number.limit">10</xsl:param>
   <xsl:param name="callout.graphics.extension">.svg</xsl:param>
-  <xsl:param name="callout.unicode">1</xsl:param>
+  <xsl:param name="callout.unicode">0</xsl:param>
   <!--
   <xsl:param name="callout.graphics.extension">.png</xsl:param>
   -->

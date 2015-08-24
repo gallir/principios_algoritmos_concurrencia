@@ -102,6 +102,7 @@
   -->
 
   <xsl:param name="hyphenate">true</xsl:param>
+   <xsl:param name="ulink.hyphenate.chars">:/@?.#_</xsl:param>
   <xsl:param name="line-height">1.3</xsl:param>
   <!--
   <xsl:param name="alignment">left</xsl:param>
@@ -133,7 +134,7 @@
     <xsl:attribute name="color"><xsl:value-of select="$code.color"/></xsl:attribute>
     <xsl:attribute name="font-weight"><xsl:value-of select="$code.font-weight"/></xsl:attribute>
     <xsl:attribute name="font-size">
-      <xsl:value-of select="$body.font.master * 0.9"/><xsl:text>pt</xsl:text>
+      <xsl:value-of select="$body.font.master * 0.85"/><xsl:text>pt</xsl:text>
     </xsl:attribute>
     <xsl:attribute name="background-color"><xsl:value-of select="$code.background-color"/></xsl:attribute>
     <xsl:attribute name="padding">
@@ -173,7 +174,7 @@
     <!--
     <xsl:attribute name="keep-together.within-column">always</xsl:attribute>
     -->
-    <xsl:attribute name="font-size"><xsl:value-of select="$body.font.master * 0.9"/><xsl:text>pt</xsl:text></xsl:attribute>
+    <xsl:attribute name="font-size"><xsl:value-of select="$body.font.master * 0.85"/><xsl:text>pt</xsl:text></xsl:attribute>
     <xsl:attribute name="text-align">start</xsl:attribute>
     <xsl:attribute name="wrap-option">wrap</xsl:attribute>
     <!--
@@ -253,10 +254,10 @@
   <xsl:param name="page.margin.bottom">10mm</xsl:param> <!-- top margin of page -->
   <xsl:param name="page.margin.inner">20mm</xsl:param> <!-- side margin of page (left, towards binding) -->
   <xsl:param name="page.margin.outer">15mm</xsl:param> <!-- side margin of page (right, away from binding) -->
-  <xsl:param name="body.margin.top">15mm</xsl:param> <!-- top margin of content -->
+  <xsl:param name="body.margin.top">10mm</xsl:param> <!-- top margin of content -->
   <xsl:param name="body.margin.bottom">10mm</xsl:param> <!-- bottom margin of content -->
-  <xsl:param name="body.margin.inner">0</xsl:param> <!-- side margin of content (left, towards binding) -->
-  <xsl:param name="body.margin.outer">0</xsl:param> <!-- side margin of content (right, away from binding) -->
+  <xsl:param name="body.margin.inner">4mm</xsl:param> <!-- side margin of content (left, towards binding) -->
+  <xsl:param name="body.margin.outer">2mm</xsl:param> <!-- side margin of content (right, away from binding) -->
   <xsl:param name="body.start.indent">0</xsl:param> <!-- text indentation -->
   <xsl:param name="body.end.indent">0</xsl:param> <!-- text recess from right -->
   <xsl:param name="region.before.extent">10mm</xsl:param> <!-- height of page header -->
