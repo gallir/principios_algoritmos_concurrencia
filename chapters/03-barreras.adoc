@@ -24,7 +24,7 @@ sys     0m0.000s
 
 Además del incremento notable de tiempo de CPU –casi 70 veces más–, el resultado sigue siendo erróneo. No se cumple la exclusión mutua, se _pierden_ operaciones, como si no hubiese control de acceso.
 
-Los procesadores modernos no garantizan por defecto que los procesos ejecuten las instrucciones en el mismo orden que aparecen en el programa. Es decir, no aseguran _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el <<counter_peterson_c, algoritmo de Peterson>>, funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
+Los procesadores modernos no garantizan por defecto que los procesos ejecuten las instrucciones en el mismo orden que aparecen en el programa. Es decir, no aseguran _consistencia secuencial_ de acceso a memoriafootnote:[Una forma habitual de verificar si una arquitectura asegura dicha consistencia secuencial es ejecutar el algoritmo de Peterson (+intro/peterson.c+), funciona correctamente en la Raspberry Pi con procesador ARM6, por ejemplo.].
 
 Las tres razones que pueden provocar violaciones a la consistencia secuencial son:
 
@@ -100,7 +100,7 @@ También es importante conocerla para comprender el funcionamiento de la _memori
 
 La ejecución de procesos es menos eficiente si estos acceden a las mismas zonas de memoria. Cada modificación de las variables almacenadas en la misma línea –aunque sean direcciones diferentes– obliga al sistema de caché a enviar mensajes de multidifusión para que los demás invaliden sus copias. Esto provoca que por cada acceso a la misma variable se envíen mensajes, y sus respectivas respuestas, para obtener el valor actualizado.
 
-El siguiente programa (<<counter_local_c, código fuente>>) es lógicamente equivalente al contador <<counter_c, original>>, pero la suma la hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
+El siguiente programa (+intro/counter_local.c+) es lógicamente equivalente al contador +counter.c+ original, pero la suma la hace sobre una variable local en cada hilo (i.e. no compartidas) y se incrementa la compartida solo al final del bucle.
 
 [source,c]
 ----
@@ -236,7 +236,7 @@ Debido a la complejidad del diseño y fabricación, los procesadores con ejecuci
 
 Afortunadamente, el problema está relativamentefootnote:[Sigue siendo un problema que no haya macros estándares para todos los compiladores.] solucionado por los _builtin macros_ de los compiladores, como los del compilador GCC (<<Atomics_C11>>). El compilador define macros que se tratan como funciones normales del programa y cuando genera el código inserta las instrucciones específicas de cada arquitectura. GCC tiene varios _macros atómicos_, algunos de ellos los analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence`.footnote:[Este macro es de las versiones más modernas de GCC, en las antiguas versiones era `__sync_synchronize`.]
 
-Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson ya lo sabemos (<<counter_peterson_c, código completo en C>>):
+Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson ya lo sabemos (el código completo en C en +intro/peterson.c+):
 
 [source,c]
 ----
@@ -260,7 +260,7 @@ user    0m1.230s
 sys     0m0.000s
 ----
 
-En el algoritmo de Peterson la solución con barreras es sencilla, pero las soluciones se hacen más complejas y nada intuitivas en algoritmos más sofisticados. Por ejemplo, el algoritmo de la panadería (<<counter_peterson_c, código en C>>) y el rápido de Lamport (<<counter_fast, código en C>>) necesitan tres barreras en sitios diferentes.
+En el algoritmo de Peterson la solución con barreras es sencilla, pero las soluciones se hacen más complejas y nada intuitivas en algoritmos más sofisticados. Por ejemplo, el algoritmo de la panadería (+intro/peterson.c+) y el rápido de Lamport (+intro/fast.c+) necesitan tres barreras en sitios diferentes.
 
 [NOTE]
 .Instrucciones de barreras por arquitectura

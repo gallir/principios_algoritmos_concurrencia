@@ -73,7 +73,7 @@ Para simplificar el pseudocódigo usaremos +futex_wait(futex, value)+ y +futex_w
 
 [[futex_semaphore]]
 === Semáforo simple
-La implementación de semáforos generales con FUTEX es trivial (<<futex_semaphore_c, código en C>>), si se toman algunas precauciones para evitar condiciones de carrera:
+La implementación de semáforos generales con FUTEX es trivial, si se toman algunas precauciones para evitar condiciones de carrera (código completo en +futex/futex_semaphore.c+):
 
 1. Permitimos que el valor del semáforo, +value+, pueda tomar números negativos (si es negativo su valor absoluto indica el número de procesos en la cola).
 
@@ -134,7 +134,7 @@ Cuando el +valor+ del semáforo se hace negativo (la situación habitual para un
 Si se pretende optimizar la exclusión mutua para alta competencia conviene implementar semáforos _mutex_, son considerablemente más eficientesfootnote:[¿Empiezas a entender mejor por qué es más eficiente usar _mutexes_ para exclusión mutua?] que los semáforos generales.
 
 === _Mutex_ simple
-Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas (<<futex_simple_mutex_c, código en C>>). Se usan las operaciones atómicas _swap_  y _get&add_. Las funciones +lock+ y +unlock+ reciben como argumento la dirección de una estructura con dos enteros:
+Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas. Se usan las operaciones atómicas _swap_  y _get&add_. Las funciones +lock+ y +unlock+ reciben como argumento la dirección de una estructura con dos enteros (código completo en el mismo directorio +futex/+, +futex_simple_mutex.c+):
 
 ----
 struct simple_futex {
@@ -191,7 +191,7 @@ No obstante, tiene un problema. Aunque las colas de FUTEX son FIFO, esta impleme
 [[drepper_mutex]]
 === _Mutex_ de Drepper
 
-En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>), Ulrich Drepper propone un algoritmo de _mutex_ diferente (<<mutex_drepper_c, código en C>>). En teoría es eficiente, pero tampoco es equitativo y es bastante más complejo, sobre todo para explicarlo en pocas líneas. En el _mutex simple_ anterior se usaban dos variables (+waiters+ y +locked+), en este se usa un único entero _futex_ que puede tomar tres valores diferentes:
+En su influyente artículo _Futexes Are Tricky_ (<<Drepper>>), Ulrich Drepper propone un algoritmo de _mutex_ diferente (código completo en +mutex_drepper.c+). En teoría es eficiente, pero tampoco es equitativo y es bastante más complejo, sobre todo para explicarlo en pocas líneas. En el _mutex simple_ anterior se usaban dos variables (+waiters+ y +locked+), en este se usa un único entero _futex_ que puede tomar tres valores diferentes:
 
 
 - 0: libre
@@ -251,7 +251,7 @@ struct simple_futex {
 
 El campo +turn+ es la variable _futex_, la comparación en +futex_wait+ elimina la condición de carrera si el turno se modifica entre la comparación y la llamada de sistema. Si el proceso es interrumpido y otro proceso entra a la sección crítica, +turn+ será diferente y no será bloqueado, volverá al inicio del +while+.
 
-El algoritmo es el siguiente (<<futex_fair_mutex_c, código en C>>):
+El algoritmo es el siguiente (código completo en +futex_fair_mutex.c+):
 
 [source, python]
 ----
@@ -300,7 +300,7 @@ def MASK(number):
     return 1 << (number % 32)
 ----
 
-El pseudocódigo es el siguiente (<<futex_fair_mutex_bitset_c, código completo>>):
+El pseudocódigo es el siguiente (código completo en +futex_fair_mutex_bitset.c+):
 
 [source, python]
 ----
@@ -351,7 +351,7 @@ Si es imprescindible un _mutex_ equitativo se puede intentar con otra técnica: 
 
 Parece contraintuitiva, pero es posible optimizar considerablemente el _mutex_ equitativo recurriendo a esperas activas limitadas. Si hay alta competencia y las secciones críticas son breves, conviene hacer una espera activa breve –en la entrada y la salida– para dar oportunidad a que el siguiente proceso obtenga el _lock_ sin necesidad de pasar por la cola de bloqueados.
 
-Se hace la espera activa en _lock_ antes de llamar a +futex_wait+, y en _unlock_ antes de +futex_wake+ (<<futex_fair_mutex_spin_c, código fuente>>). El número de iteraciones de la espera activa debe estar limitada –a cien en el ejemplo– para no convertir al algoritmo en un _spinlock_ que consuma mucha CPU.
+Se hace la espera activa en _lock_ antes de llamar a +futex_wait+, y en _unlock_ antes de +futex_wake+. El número de iteraciones de la espera activa debe estar limitada –a cien en el ejemplo– para no convertir al algoritmo en un _spinlock_ que consuma mucha CPU (código completo en +futex_fair_mutex_spin.c+).
 
 [source, python]
 ----
@@ -427,7 +427,7 @@ Los campos +processes+ y +to_arrive+ deben inicializarse con el número de proce
         wait(barrier)
 ----
 
-El algoritmo, aunque más extenso que los habituales, es sencillo (<<futex_barrier_c, código completo en C>>):
+El algoritmo, aunque más extenso que los habituales, es sencillo (código completo en +futex_barrier.c+):
 
 [source, python]
 ----

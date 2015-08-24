@@ -39,7 +39,9 @@ Al momento de escribir estas líneas no sé si habrá una versión impresa del l
 
 Por esa claridad y expresividad muchos ejemplos están escritos en Python. Los programas completos están en cinco lenguajes diferentes (C, Python, Java, Go y ensamblador de ARM). Usé siempre el que me pareció más apropiado para demostrar lo que estaba explicando. En algunos casos traduje el código a Python para explicarlo en el texto, en otros casos usé el lenguaje original pero quitando lo accesorio (como largas listas de argumentos, tratamiento de excepciones y nombres extensos).
 
+////
 De todas formas, me parece importante poder analizar el código completo. Dado que un _ebook_ no tiene las restricciones de un libro físico, todos los programas están disponibles directamente desde el lector. El listado completo de todos los programas <<source_code, está en los apéndices>> al final del libro (aproximadamente el 30 % del total de contenido del libro) y cada uno de ellos está enlazado desde el texto donde se discute el código simplificado. Ya en el apéndice, justo antes del código, está el enlace al original en https://github.com/gallir/concurrencia_source_samples[Github].
+////
 
 Creo que en este aspecto cumplí los objetivos. Los algoritmos en el texto son legibles –aún en pantallas de teléfonos–, muestran la parte que interesa y no necesitan tres pantallas para leerse. Pero con un clic se puede ver el programa completo sin salir del libro y con otro clic se puede acceder al repositorio para bajarlo a un ordenador.
 
@@ -68,7 +70,7 @@ La regla para usar uno u otro lenguaje de programación fue elegir el más apto 
 
 Hay bastantes ejemplos en C. Lo usé cuando no había opción de hacerlo en otro lenguaje o porque era el más adecuado para ese caso. Mi opinión es que los programadores deben saber C, su gramática es muy sencilla y a la vez está muy próximo a la arquitectura. Pero si no lo sabes no te preocupes, aprenderás un poco sin mucho esfuerzo. Los programas son breves, se usan siempre las mismas funciones y están explicados –a veces línea a línea–.
 
-Usé ensamblador en un <<stack_llsc_freelist_s, único caso>>, no había otra opción para demostrar el funcionamiento de las instrucciones de sincronización _LL/SC_. Afortunadamente los procesadores ARM de ambos modelos de Raspberry Pi (ARMv6 y ARMv7) soportan esas instrucciones, no hace falta hardware especial o caro.
+Usé ensamblador en un único caso, no había otra opción para demostrar el funcionamiento de las instrucciones de sincronización _LL/SC_ (<<llsc>>). Afortunadamente los procesadores ARM de ambos modelos de Raspberry Pi (ARMv6 y ARMv7) soportan esas instrucciones, no hace falta hardware especial o caro.
 
 En algunos algoritmos hay ejemplos en varios lenguajes diferentes, me pareció oportuno mostrar cómo se hacen en cada uno de ellos, o cómo se pueden construir mecanismos similares (notablemente simular monitores en C y Python). Para los que conozcan un lenguaje mejor que otro puede ser clarificador.
 

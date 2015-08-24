@@ -78,7 +78,7 @@ def lock():
 
 Las mejoras dependen de la instrucción atómica y las características del sistema de coherencia de caché. En los <<execution_times, tiempos de ejecución>> se observa que la mejora es notable (algo menor en el procesador ARM), tanto en tiempos de CPU como en tiempos de retornofootnote:[Se denomina tiempo de retorno al tiempo total que tarda un proceso desde que se creó hasta que acabó. El tiempo de respuesta es el tiempo que transcurre desde que ocurrió un evento que debe ser tratado por el proceso hasta que este empezó a ejecutarse.].
 
-Código fuente para <<test_test_and_set_c, _TAS_>>, <<test_swap_c, _swap_>> y <<test_compare_and_swap_c, _CAS_>>.
+Los programas en C para _TAS_, _swap_ y _CAS_ están el directorio +spinlocks/+: +test_test_and_set_c+, +test_swap.c+ y +test_compare_and_swap.c+ respectivamente.
 
 ==== Ceder el procesador
 
@@ -95,7 +95,7 @@ def lock():
         sched_yield()
 ----
 
-Como puede observarse en <<execution_times, los gráficos>>, la cesión del procesador produce reducciones importantes de tiempos en todas las arquitecturas (código fuente para <<test_and_set_yield_c, _TAS_>>, <<swap_yield_c, _swap_>> y <<compare_and_swap_yield_c, _CAS_>>).
+Como puede observarse en <<execution_times, los gráficos>>, la cesión del procesador produce reducciones importantes de tiempos en todas las arquitecturas (los programas completos para _TAS_, _swap_ y _CAS_ son +test_and_set_yield.c+, +swap_yield.c+ y +compare_and_swap_yield.c+ respectivamente).
 
 [[exponential_backoff]]
 ==== Espera exponencial
@@ -146,7 +146,7 @@ El problema con el _backoff_ es la elección de la unidad de tiempo y el límite
 
 Sin embargo, la mejora del _backoff_ es general para todos los procesadores probados, tanto en tiempos de CPU como de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] (en los procesadores Intel la diferencia es importante, en ARM es mínima).
 
-Código fuente para <<test_and_set_backoff_c, _TAS_>>, <<swap_backoff_c, _swap_>> y <<compare_and_swap_backoff_c, _CAS_>>.
+El código fuente completo en +test_and_set_backoff.c, +swap_backoff.c+ y +compare_and_swap_backoff.c+.
 
 [[execution_times]]
 ==== Tiempos de ejecución
@@ -216,7 +216,7 @@ Las condiciones que deben cumplir son:
 
 Así como la exclusión mutua tiene un protocolo de entrada (_lock_) y otro de salida (_unlock_), los de lectores-escritores necesitan distinguir entre ellos con protocolos diferenciados: _reader_lock_, _writer_lock_, _reader_unlock_ y _writer_unlock_.
 
-El siguiente algoritmo es relativamente simple (<<rw_lock_c, código en C>>), está implementado con las instrucciones _CAS_ y _get&add_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores, pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica. Los bits restantes se usan para contar el número de lectores, para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Es un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencias favorables.].
+El siguiente algoritmo es relativamente simple (+rw_lock.c+), está implementado con las instrucciones _CAS_ y _get&add_. Se usa una variable global entera _mutex_ como en los algoritmos anteriores, pero el bit más significativo se reserva para indicar si un escritor está en la sección crítica. Los bits restantes se usan para contar el número de lectores, para un entero de 32 bits se permiten hasta 2^31^ lectoresfootnote:[Es un número muy elevado y puede reducirse a enteros más pequeños pero en las mediciones de tiempo no encontré diferencias favorables.].
 
 Los lectores primero esperan a que no haya ningún escritor, luego incrementan el número de lectores e intentan hacer el _CAS_. Si fue posible entran a la sección crítica, caso contrario vuelven a intentar desde el inicio del bucle.
 
@@ -295,7 +295,7 @@ Una solución sencilla la hemos descubierto al introducir la instrucción <<get_
 
 Se usan dos variables: la secuencia creciente de números y el turno. Un proceso obtiene su número y luego espera por su turno. Cuando sale de la sección crítica incrementa el turno para que entre el siguiente proceso.
 
-El <<ticket_lock_c, código en C>> de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits: 16 bits para +turn+ y +number+ respectivamente. Con ejecuciones extensas número y turno llegarán hasta 2^16^ y rotarán.
+El código en C (+ticket_lock.c+) de este algoritmo es idéntico al anterior de _get&add_, para hacerlo más eficiente se unificaron ambas variables en una única estructura de 32 bits: 16 bits para +turn+ y +number+ respectivamente. Con ejecuciones extensas número y turno llegarán hasta 2^16^ y rotarán.
 
 [source, c]
 ----
@@ -311,7 +311,7 @@ Con la base el algoritmo _ticket-lock_ se puede implementar un algoritmo de lect
 
 image::ticket_rw.png[align="center"]
 
-<<ticket_rw_lock_c, En C>> se define de la siguiente forma:
+En C (+ticket_rw_lock.c+) se define de la siguiente forma:
 
 [source, c]
 ----
@@ -413,7 +413,7 @@ int tail;
     flag[0] = 1;
 ----
 
-Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo simplificado (<<array_lock_c, código completo en C>>) es el siguiente:
+Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo simplificado es el siguiente (código completo +array_lock.c+):
 
 
 [source, python]
@@ -464,7 +464,7 @@ image::mcs.png[align="center"]
 
 En la figura anterior se representa al hilo _Thread 0_ que ya salió de su sección crítica; _Thread 1_ está en ella; el siguiente en la cola es _Thread 2_; el último es _Thread 3_. Cada uno de los procesos en espera activa verifica el campo +locked+ de su nodo local. La variable +tail+ apunta al último proceso en la cola, si no hay ningún proceso será +NULL+.
 
-El siguiente es el <<mcs_spinlock_c, código en C>> simplificado del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
+El siguiente es el código en C (+mcs_spinlock.c+) simplificado del algoritmofootnote:[Dada la importancia de manipular punteros en este algoritmo y el siguiente consideré más apropiado mostrar en _pseudocódigo C_.]:
 
 [NOTE]
 ====
@@ -564,7 +564,7 @@ struct clh_node *tail = &lock_node; <2>
 <1> El nodo _sin propietario_.
 <2> +tail+ apunta inicialmente a ese nodo.
 
-La versión simplificada del <<clh_spinlock_c, algoritmo en C>> es la siguiente:
+La versión simplificada del algoritmo en C (+clh_spinlock.c+) es la siguiente:
 
 
 

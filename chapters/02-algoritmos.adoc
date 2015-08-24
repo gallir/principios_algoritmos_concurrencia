@@ -503,7 +503,7 @@ number[i] = 0
 
 [NOTE]
 ====
-Se puede consultar y probar el <<counter_bakery, código en C>> de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio del <<barriers, siguiente capítulo>>.
+Se puede consultar y probar el código en C (+intro/bakery.c+) de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio en <<barriers>>.
 ====
 
 ////
@@ -537,7 +537,7 @@ El algoritmo de la panadería es la solución correcta y cumple con todos los re
 
 En 1987 Leslie Lamport (<<Lamport3>>) desarrolló un algoritmo que requiere menos espacio y es más rápido cuando no hay competencia. Usa un array booleano de tamaño _n_ y dos variables (+x+ e +y+). Si no hay competencia se puede entrar a la sección crítica sin recorrer el array, ejecutando solo siete instrucciones (cinco en la entrada y dos en la salida).
 
-El <<counter_fast, algoritmo completo y correcto en C>>, con sus respectivas barreras de memoria. No lo analizaremos en detalle, sin embargo, cabe mencionar sus problemas:
+El algoritmo completo y correcto en C está en +intro/fast.c+, con sus respectivas barreras de memoria. No lo analizaremos en detalle, sin embargo, cabe mencionar sus problemas:
 
 1. No asegura espera limitada.
 2. Si hay competencia entre dos procesos debe recorrer el array completo.

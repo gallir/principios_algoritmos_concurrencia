@@ -85,7 +85,7 @@ Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar 
 
 === Exclusión mutua con registros _Read-Modify-Write_
 
-Estudiaremos los algoritmos de exclusión mutua para _N_ procesos con instrucciones de hardware. La mayoría de los <<code_hardware, ejemplos>> están en lenguaje C, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
+Estudiaremos los algoritmos de exclusión mutua para _N_ procesos con instrucciones de hardware. La mayoría de los ejemplos están en lenguaje C en el directorio +hardware+, para evitar programar en ensamblador usé los macros atómicos de GCC (<<Atomics_C11>>). Cuando es posible, también están en Go con las primitivas atómicas del módulo +sync+.
 
 Las instrucciones _LL/SC_ solo pueden ser programadas en ensamblador de algunas arquitecturas. Sus ejemplos están en ese lenguaje, solo funcionan en arquitecturas ARM (incluidas las Raspberry Pi).
 
@@ -109,7 +109,7 @@ def unlock():
     mutex = 0
 ----
 
-El <<getAndSet, código en C>> está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre no se trata de la instrucción _swap_, sino un equivalente de _get&set_.
+El código en C (+counter_get_and_set.c+) está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre no se trata de la instrucción _swap_, sino un equivalente de _get&set_.
 
 ==== _Get&Add_
 
@@ -133,7 +133,7 @@ def unlock():
 ----
 
 [[get_and_add_ticket]]
-El <<getAndAdd, código en C>> está implementado con el macro `fetch_add` y <<gocounter_get_and_add_go, en Go>> con +atomic.AddUint32+.footnote:[Estrictamente no es _get_and_add_ sino _add_and_get_, devuelve el valor después de sumar. Pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
+El código en C (+counter_get_and_add.c+) está implementado con el macro `fetch_add` y en Go (+gocounter_get_and_add.go+) con +atomic.AddUint32+.footnote:[Estrictamente no es _get_and_add_ sino _add_and_get_, devuelve el valor después de sumar. Pero son equivalentes, solo hay que cambiar la inicialización de la variable +turn+.]
 
 A diferencia de la implementación con _get&set_, esta asegura espera limitada: el número que selecciona cada proceso es único y crecientefootnote:[Aunque hay que tener en cuenta que el valor de +number+ llegará a su máximo y rotará.]. Los _spinlocks_ de este tipo son conocidos como <<ticket_lock, _ticket locks_>>. Son muy usados en el núcleo de Linux, aseguran espera limitada y equidad (_fairness_): los procesos entran a la sección crítica en orden FIFO.
 
@@ -167,7 +167,7 @@ def unlock():
     mutex = 0
 ----
 
-<<testAndSet, El código en C>> está implementado con el macro +test_and_set+.
+El código en C (+counter_test_and_set.c+) está implementado con el macro +test_and_set+.
 
 
 ==== _Swap_
@@ -196,7 +196,7 @@ def unlock():
     mutex = 0
 ----
 
-Para la <<counter_swap_c, implementación en C>> se usa el macro `exchange`. <<gocounter_swap_go, En Go>> se pueden usar las funciones atómicas del paquete +sync/atomic+, por ejemplo con +SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
+Para la implementación en C (+counter_swap.c+) se usa el macro `exchange`.En Go (+gocounter_swap.go+) se pueden usar las funciones atómicas del paquete +sync/atomic+, por ejemplo con +SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
 
 [[em_cas]]
 ==== _Compare&Swap_
@@ -224,7 +224,7 @@ def CAS(register, expected, desired):
 ----
 
 
-La implementación de exclusión mutua <<counter_compare_and_swap_c, en C>> es también sencilla, en el ejemplo se usa una variable local porque el macro de GCC requiere un puntero para el valor esperado. Si +mutex+ vale cero –no hay procesos en la sección crítica–, se le asigna uno y puede continuar. En caso de fallo –+mutex+ valía uno–, volverá a intentarlo en un bucle:
+La implementación de exclusión mutua en C (+counter_compare_and_swap.c+) es también sencilla, en el ejemplo se usa una variable local porque el macro de GCC requiere un puntero para el valor esperado. Si +mutex+ vale cero –no hay procesos en la sección crítica–, se le asigna uno y puede continuar. En caso de fallo –+mutex+ valía uno–, volverá a intentarlo en un bucle:
 
 [source,python]
 ----
@@ -239,7 +239,7 @@ def unlock():
     mutex = 0
 ----
 
-La instrucción +CompareAndSwapInt32+ <<gocounter_compare_and_swap_go, en Go>> es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia, sino por valor:
+La instrucción +CompareAndSwapInt32+ en Go (+gocounter_compare_and_swap.go+) es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia, sino por valor:
 
 [source,go]
 ----
@@ -352,7 +352,7 @@ Cuando _P_ continúe su ejecución _CAS_ hará el cambio, la dirección de +head
 --
 
 ====== ABA con malloc
-El _reciclado_ de direcciones es habitual si se usa +malloc+ y +free+ al insertar y eliminar nodosfootnote:[Las implementaciones de +malloc+ suelen volver a usar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]Podemos comprobarlo, el siguiente <<stack_cas_malloc_c, programa en C>> usa estas funciones en cuatro hilos diferentes. Cada uno de ellos ejecuta repetidamente el siguiente código:
+El _reciclado_ de direcciones es habitual si se usa +malloc+ y +free+ al insertar y eliminar nodosfootnote:[Las implementaciones de +malloc+ suelen volver a usar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]Podemos comprobarlo, el programa en C +stack_cas_malloc.c+ usa estas funciones en cuatro hilos diferentes. Cada uno de ellos ejecuta repetidamente el siguiente código:
 
 [source, c]
 ----
@@ -388,7 +388,7 @@ Algunas implementaciones de +malloc+ no retornan las direcciones usadas reciente
 
 [[cas_double_stack]] No se libera la memoria de los nodos con +free+, sino que se insertan en una segunda pila de _caché_ de libres, +free_nodes+. En lugar de solicitar memoria cada vez, se reciclan los nodos de la pila de libres.
 
-<<stack_cas_freelist_c, El programa>> ejecutará repetidamente el siguiente código:
+El programa (+stack_cas_freelist.c+) ejecuta repetidamente el siguiente código:
 
 
 [source, c]
@@ -449,7 +449,7 @@ struct node_head free_nodes;
 <2> Será usada como etiqueta, un contador que se incrementará en cada _transacción_. Es un entero del mismo tamaño que los punteros (32 o 64 bits según la arquitectura).
 <3> Los punteros a las pilas no serán un simple puntero, sino la estructura con el puntero y la etiqueta.
 
-Del <<stack_cas_tagged_c, código completo en C>> analicemos en detalle el funcionamiento de +push+:
+Del código completo en C (+stack_cas_tagged.c+) analicemos en detalle el funcionamiento de +push+:
 
 [source, c]
 ----
@@ -556,9 +556,9 @@ En una arquitectura con _LL/SC_ hay que implementar el algoritmo directamente co
 ===== _LL/SC_ en ensamblador nativo
 Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que sufría el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
 
-1. El <<stack_llsc_freelist_c, módulo en C>> es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+.
+1. El módulo en C (+stack_llsc_freelist.c+) es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+.
 
-2. Las funciones +pop+ y +push+ están implementadas <<stack_llsc_freelist_s, en ensamblador>> de ARM.
+2. Las funciones +pop+ y +push+ están implementadas en ensamblador de ARM (+stack_llsc_freelist.s+).
 
 El código en ensamblador es sencillo y breve, solo 32 líneas en total, pero analicemos en detalle la función +pop+:
 

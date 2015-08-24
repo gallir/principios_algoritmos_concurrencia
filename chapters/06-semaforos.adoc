@@ -83,7 +83,7 @@ s.signal()
 
 Cuando el primer proceso entre a la sección crítica decrementará su valor y continuará. Si otro proceso desea entrar, el valor de +value+ será cero, por lo que se bloqueará hasta que el primero ejecute el +signal+.
 
-Los programas de ejemplo incluyen la solución del contador en <<sem_counter_c, C con semáforos POSIX>>, <<sem_counter_py, Python>> y <<sem_counter_java, Java>> usando semáforos.
+Los programas de ejemplo (en el directorio +semaphores/+) incluyen las soluciónes al contador con semáforos C (+sem_counter.c+), Python (+sem_counter.py+) y Java (+sem_counter.java+).
 
 ==== Sincronización genérica
 El valor del semáforo puede interpretarse como un indicador del _número de recursos_ disponibles –también denominado _permisos_ (_permits_)–, indica el número de llamadas que se pueden hacer a _wait_ sin provocar el bloqueo del proceso. En exclusión mutua interesa que solo haya un proceso en la sección crítica, así pues, el valor inicial debe ser 1.
@@ -149,11 +149,11 @@ mutex.unlock()
 [NOTE]
 ._Mutex_ de POSIX Threads
 ====
-En C se pueden usar los _mutex_ de las librerías POSIX Threads. Las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (<<sem_mutex_c, programa en C>>), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (<<go_mutex_go, código fuente>>).
+En C se pueden usar los _mutex_ de las librerías POSIX Threads. Las primitivas son +pthread_mutex_lock+ y +pthread_mutex_unlock+ (+sem_mutex.c+), no son reentrantes. Go lo ofrece en +Mutex+ y +Locker+ del paquete +sync+ (código de ejemplo en +go_mutex.go+).
 
-En <<sem_lock_java, Java se puede usar>> la clase +ReentrantLock+ de +java.util.concurrent.locks+.
+En Java se puede usar la clase +ReentrantLock+ de +java.util.concurrent.locks+ (programa de ejemplo +sem_lock.java+).
 
-Python tiene clases similares, +threading.Lock+ y +threading.RLock+.footnote:[También incluye primitivas similares en el nuevo paquete +asyncio+. La clase +threading.Lock+, al contrario que +threading.RLock+, no tiene control de propiedad, cualquier hilo puede hacer el +release+.] Además de las llamadas tradicionales a <<sem_lock_py, +acquire+ y +release+>> se puede usar <<sem_lock_with_py, con la cláusula +with+>>:
+Python tiene clases similares, +threading.Lock+ y +threading.RLock+.footnote:[También incluye primitivas similares en el nuevo paquete +asyncio+. La clase +threading.Lock+, al contrario que +threading.RLock+, no tiene control de propiedad, cualquier hilo puede hacer el +release+.] Además de las llamadas tradicionales a +acquire+ y +release+ (+sem_lock.py+) se puede usar con la cláusula +with+ (código fuente completo en +sem_lock_with.py+):
 
 ----
 for i in range(MAX_COUNT/THREADS):
@@ -177,11 +177,11 @@ Los semáforos se obtienen con la función +semget+, que retorna un descriptor d
 - La primitiva adicional esperar por cero o _wait_for_0_. Como se intuye por su nombre, bloquea a los procesos si el valor del semáforo es diferente a cero, los desbloquea cuando se hace cero.
 - Deshacer la última operación, +SEM_UNDO+, si el proceso acaba. Es útil como medida de protección: si un proceso está en la sección crítica y acaba por error, el sistema revierte la última operación.
 
-Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamos en el <<sem_counter_c, primer ejemplo de semáforos en C>>. Es el estándar actual y más usado. Aunque carece de la flexibilidad y operaciones adicionales de los System V, tiene una interfaz más sencilla y más eficiente.
+Semáforos POSIX:: Están implementados en Linux desde la versión 2.6, lo usamos en el primer ejemplo de semáforos en C (+sem_counter.c+). Es el estándar actual y más usado. Aunque carece de la flexibilidad y operaciones adicionales de los System V, tiene una interfaz más sencilla y más eficiente.
 +
 Se pueden crear de dos tipos, _sin nombre_ (_unnamed_) y _con nombre_ (_named_). El primero es más simple de usar cuando los procesos comparten la memoria, solo hay que declarar una variable del tipo +sem_t+ y luego inicializar el valor del semáforo con +sem_init+. Cuando se necesitan para procesos que no comparten memoria, se pueden crear y/o abrir con la función +sem_open+ usando un nombre similar a ficheros.
 
-Mutex de POSIX Threads:: Las usamos en el <<sem_mutex_c, ejemplo anterior>> de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización, entre ellos _mutex_ y variables de condición (las usamos en el capítulo <<monitors>>).
+Mutex de POSIX Threads:: Las usamos en el ejemplo anterior (+sem_mutex.c+) de semáforos _mutex_. No hay que confundirlos con los semáforos POSIX, en este caso se trata de las librerías POSIX para la implementación de hilos que incluyen mecanismos básicos de sincronización, entre ellos _mutex_ y variables de condición (las usamos en <<monitors>>).
 ====
 
 === Sincronización de orden de ejecución
@@ -248,7 +248,7 @@ Después de +do_phase+ cada proceso esperará a que los demás hayan llegado al 
 
 Estas barreras no pueden implementarse igual que las binarias. Los semáforos son recursos _costosos_, requieren colas y tiempos relativamente elevados para la inicialización. No tiene sentido tener un array de _N_ semáforos y hacer _N_ operaciones de _wait_ y _signal_. Hay que solucionarlo con un número limitado de semáforos, y que no requiera que el número de operaciones de cada proceso sea proporcional al número de procesos concurrentes.
 
-El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&add_ o similares como _add&get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se dispone de este tipo de operaciones atómicas, hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (<<barrier_py, código en Python>> y <<barrier_java, en Java>>):
+El siguiente algoritmo de _barreras cíclicas_ usa dos semáforos binarios, +arrivals+ y +departures+, y una variable +counter+ incrementada atómicamentefootnote:[Por ejemplo con la ya conocida _get&add_ o similares como _add&get_. En vez de operaciones atómicas puede usarse un semáforo contador si es posible consultar su valor, en este caso se reemplaza el incremento por _signal_ y el decremento por _wait_.]. Si no se dispone de este tipo de operaciones atómicas, hay que usar un _mutex_ adicional para asegurar exclusión mutua en las modificaciones a +counter+ (código Python: +barrier.py+; en Java: +barrier.java+):
 
 [[alg_barriers]]
 [source, python]
@@ -365,7 +365,7 @@ while True:
 <1> Se bloquea si el _buffer_ está vacío, si no es así decrementa y obtiene el siguiente elemento. El valor del semáforo contador +notEmtpy+ siempre se corresponde con el número de elementos disponibles en el _buffer_.
 <2> Obtiene el siguiente elemento de la cola.
 
-En el <<producer_consumer_infinite_py, código en Python>> se puede consultar la implementación completa. Hay dos clases –+Producer+ y +Consumer+– que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+). Los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
+En +producer_consumer_infinite.py+ se puede consultar la implementación completa. Hay dos clases –+Producer+ y +Consumer+– que implementan el algoritmo de productores y consumidores respectivamente. Se crean dos hilos productores (variable +PRODUCERS+) y dos consumidores (+CONSUMERS+). Los productores producen 1 000 elementos (+TO_PRODUCE+) cada uno y acaban. Para el _buffer_ se usa una lista nativa de Python, se agregan elementos con +append+ y se obtiene el primer elemento con +pop(0)+.
 
 
 ===== _Buffer_ finito
@@ -379,7 +379,7 @@ El algoritmo anterior puede ser extendido para que funcione con un tamaño de _b
     Semaphore notFull = BUFFER_SIZE
 ----
 
-Los siguientes son los algoritmos para cada proceso, solo se requiere una línea adicional en cada uno (el <<producer_consumer_py, código en Python>>):
+Los siguientes son los algoritmos para cada proceso, solo se requiere una línea adicional en cada uno (código completo en +producer_consumer.py+):
 
 .Productor
 [source, python]
@@ -442,7 +442,7 @@ En <<readers_writers>> del capítulo <<spinlocks>> vimos cómo resolver un probl
 - Solo puede haber un escritor en la sección crítica.
 
 ===== La solución clásica
-El algoritmo _clásico_ de lectores-escritores se puede implementar con semáforos binarios o _mutex_, siempre que permitan que un proceso que no hizo el _wait_ pueda hacer un _signal_. En el <<rw_lock_py, ejemplo en Python>> se usa la clase +threading.Lock+, permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
+El algoritmo _clásico_ de lectores-escritores se puede implementar con semáforos binarios o _mutex_, siempre que permitan que un proceso que no hizo el _wait_ pueda hacer un _signal_. En el ejemplo en Python (+rw_lock.py+) se usa la clase +threading.Lock+, permite que cualquier hilo llame a +release+ aunque no haya ejecutado el +acquire+.
 
 [source, python]
 ----
@@ -496,7 +496,7 @@ def reader_unlock():
 ===== Espera limitada
 El algoritmo anterior da prioridad a los lectores y no asegura espera limitada a los escritores. Cuando entra un lector los escritores tendrán que esperar hasta que salga el último, pero los lectores podrán seguir entrando sin dejar paso al escritor. Es decir, se pueden generar esperas infinitas. Para evitarlas hay que asegurar que los lectores esperan si un escritor desea entrar.
 
-Se usa un semáforo adicional, +entry+, que bloquea a los nuevos lectores cuando el primer escritor hace un _wait_. El siguiente es el algoritmo equitativo, la función +reader_unlock+ es la misma, cambian las otras tres (<<rw_lock_fair_py, código fuente completo>>):
+Se usa un semáforo adicional, +entry+, que bloquea a los nuevos lectores cuando el primer escritor hace un _wait_. El siguiente es el algoritmo equitativo, la función +reader_unlock+ es la misma, cambian las otras tres (código fuente completo en +rw_lock_fair.py+):
 
 [source, python]
 ----
@@ -511,9 +511,7 @@ def reader_lock():
         writer.wait()
     mx.signal()
     entry.signal()
-
 ...
-
 def writer_lock():
     entry.wait()
     writer.wait()
@@ -523,7 +521,7 @@ def writer_unlock():
     entry.signal()
 ----
 
-La mayor ineficiencia de este algoritmo está en la entrada de lectores, se hacen dos _wait_ sobre dos semáforos, +entry+ y +mx+. En 2013, Vlad Popov y Oleg Mazonka propusieron un algoritmo más eficiente (<<Popov>>), los lectores solo hacen _wait_ sobre un semáforo (el <<rw_lock_fair_faster_py, código completo en Python>>).
+La mayor ineficiencia de este algoritmo está en la entrada de lectores, se hacen dos _wait_ sobre dos semáforos, +entry+ y +mx+. En 2013, Vlad Popov y Oleg Mazonka propusieron un algoritmo más eficiente (<<Popov>>), los lectores solo hacen _wait_ sobre un semáforo (código completo Python en +rw_lock_fair_faster.py+).
 
 [NOTE]
 ====
@@ -674,7 +672,7 @@ Para prevenir interbloqueos es suficiente que el algoritmo evite que se presente
 
 4. La condición de espera circular es la más sencilla de evitar que se produzca, basta forzar a que todos los procesos soliciten los recursos en el mismo orden, ascendente o descendente.
 
-El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario de los demás, que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los toma en orden descendente: primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden se puede cambiar la función +pick+, de forma que el primer +wait+ se haga siempre sobre el tenedor con el índice menor (<<philosophers_1_py, código en Python>>):
+El _culpable_ de que no se soliciten los tenedores en el mismo orden es el filósofo con el último índice. Al contrario de los demás, que solicitan los tenedores en orden ascendente, el _filósofo~4~_ los toma en orden descendente: primero el _tenedor~4~_ y luego el _tenedor~0~_. Para forzar el mismo orden se puede cambiar la función +pick+, de forma que el primer +wait+ se haga siempre sobre el tenedor con el índice menor (código completo en +philosophers_1.py+):
 
 [source, python]
 ----
@@ -763,7 +761,7 @@ def release(i):
 
 Hay que tener en cuenta que las llamadas a +canEat+ se hacen siempre desde dentro de la sección crítica del semáforo +mutex+, es decir, no se producen condiciones de carrera ni conflictos en las verificaciones y cambios de estado del array +status+.
 
-Este algoritmo es óptimo (<<philosophers_2_py, código fuente completo>>), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. No hay retención y espera, los filósofos que no pueden comer no retienen ningún tenedor. Sin retención y espera tampoco se puede producir espera circular.
+Este algoritmo es óptimo (código fuente completo en +philosophers_2.py+), asegura que si hay tenedores para que coman dos filósofos estos podrán hacerlo sin demora. No hay retención y espera, los filósofos que no pueden comer no retienen ningún tenedor. Sin retención y espera tampoco se puede producir espera circular.
 
 Dado que no se cumplen dos de las condiciones necesarias, no pueden producirse _interbloqueos_. Cumple con todas los requisitos que <<philosophers_requisites, impusimos al principio>>.
 
