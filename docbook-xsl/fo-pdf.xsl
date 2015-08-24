@@ -101,7 +101,7 @@
     Text properties
   -->
 
-  <xsl:param name="hyphenate">false</xsl:param>
+  <xsl:param name="hyphenate">true</xsl:param>
   <xsl:param name="line-height">1.3</xsl:param>
   <!--
   <xsl:param name="alignment">left</xsl:param>
@@ -156,9 +156,9 @@
     <xsl:attribute name="space-before.minimum">0</xsl:attribute>
     <xsl:attribute name="space-before.optimum">.2em</xsl:attribute>
     <xsl:attribute name="space-before.maximum">.4em</xsl:attribute>
-    <xsl:attribute name="space-after.minimum">.4em</xsl:attribute>
-    <xsl:attribute name="space-after.optimum">0.6em</xsl:attribute>
-    <xsl:attribute name="space-after.maximum">0.8em</xsl:attribute>
+    <xsl:attribute name="space-after.minimum">.6em</xsl:attribute>
+    <xsl:attribute name="space-after.optimum">0.8em</xsl:attribute>
+    <xsl:attribute name="space-after.maximum">1em</xsl:attribute>
     <xsl:attribute name="hyphenate">false</xsl:attribute>
     <xsl:attribute name="wrap-option">wrap</xsl:attribute>
     <xsl:attribute name="white-space-collapse">false</xsl:attribute>
@@ -250,7 +250,7 @@
   <xsl:param name="footers.on.blank.pages">0</xsl:param>
   <xsl:param name="page.margin.top">10mm</xsl:param> <!-- top margin of page -->
   <xsl:param name="page.margin.bottom">10mm</xsl:param> <!-- top margin of page -->
-  <xsl:param name="page.margin.inner">25mm</xsl:param> <!-- side margin of page (left, towards binding) -->
+  <xsl:param name="page.margin.inner">20mm</xsl:param> <!-- side margin of page (left, towards binding) -->
   <xsl:param name="page.margin.outer">15mm</xsl:param> <!-- side margin of page (right, away from binding) -->
   <xsl:param name="body.margin.top">15mm</xsl:param> <!-- top margin of content -->
   <xsl:param name="body.margin.bottom">15mm</xsl:param> <!-- bottom margin of content -->
@@ -344,7 +344,7 @@
 
   <xsl:attribute-set name="admonition.properties">
     <xsl:attribute name="color">#0c0c0c</xsl:attribute>
-    <xsl:attribute name="padding-left">12pt</xsl:attribute>
+    <xsl:attribute name="padding-left">6pt</xsl:attribute>
     <xsl:attribute name="border-left-width">.75pt</xsl:attribute>
     <xsl:attribute name="border-left-style">solid</xsl:attribute>
     <xsl:attribute name="border-left-color"><xsl:value-of select="$border.color"/></xsl:attribute>
@@ -352,10 +352,11 @@
   </xsl:attribute-set>
 
   <xsl:attribute-set name="graphical.admonition.properties">
-    <xsl:attribute name="margin-left">6pt</xsl:attribute>
-    <xsl:attribute name="margin-right">6pt</xsl:attribute>
+    <xsl:attribute name="margin-left">0pt</xsl:attribute>
+    <xsl:attribute name="margin-right">0pt</xsl:attribute>
   </xsl:attribute-set>
 
+  <!--
   <xsl:attribute-set name="example.properties" use-attribute-sets="formal.object.properties">
     <xsl:attribute name="border-width">1pt</xsl:attribute>
     <xsl:attribute name="border-style">solid</xsl:attribute>
@@ -390,6 +391,7 @@
       <xsl:value-of select="$body.font.master"/><xsl:text>pt</xsl:text>
     </xsl:attribute>
   </xsl:attribute-set>
+  -->
 
   <!--
     Tables

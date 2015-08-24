@@ -2,6 +2,10 @@ BASE=concurrencia
 OUTDIR=output
 SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
+
+current_dir = $(shell pwd)
+export FOP_HYPHENATION_PATH=$(current_dir)/resources
+
 CSS=epub.css
 
 RESOURCES=--resource styles/docbook-xsl.css
@@ -36,4 +40,8 @@ $(OUTDIR)/$(BASE).html: $(SOURCES)  styles/$(CSS)
 clean:
 	-rm -rf output/*
 
+test:
+	@echo FOP_HYPHENATION_PATH is $$FOP_HYPHENATION_PATH
+
 print-%  : ; @echo $* = $($*)
+

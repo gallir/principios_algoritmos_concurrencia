@@ -1,4 +1,5 @@
 [preface]
+:numbered!:
 == Manifiesto
 
 image::jrmora/00-prefacio.jpg[align="center"]
@@ -129,3 +130,23 @@ Si tenéis consultas o encontráis errores, mi apodo es _gallir_ en casi todas l
 Creo que el conocimiento debe estar accesible a todos y que es un honor tener lectores interesados en tu obra, independientemente de cómo la obtuvieron. Por eso este libro se distribuye sin DRM y tiene una licencia Creative Commons que te autoriza a dar copias a novios, amigos, compañeros y cuñados. Las únicas condiciones son que no lo hagas con fines comerciales y no plagies ni modifiques el contenido.
 
 Aunque puedes copiarlo gratuitamente, este libro me costó mucho esfuerzo, tiempo y algo de dinero. No sé por qué, pero se me ocurrió ahora mismo que debo recordarte que se vende a un precio ridículamente bajo y si lo compras _online_ te resultará más cómodo que copiar ficheros desde el ordenador al lector o _tablet_.
+
+=== Agradecimientos
+
+A Juan Sosa, Marilín Gonzalo y Virginia Ramirez por sus buenas sugerencias y correcciones.
+
+A Ricardo Alberich y Jairo Rocha del _Departament de Matemàtiques i Informàtica_ de la _Universitat de les Illes Balears_ por darme acceso al servidor de cálculo de su grupo de investigación.
+
+A Bernat Cabezas y APSL –empresa a la que me incorporaré en setiembre– por dejarme usar sus servidores con procesadores Intel Haswell para las pruebas de memoria transaccional.
+
+A Marc Pàmpols que me dio acceso remoto a una Raspberry Pi 2 mientras esperaba que llegue la mía.
+
+A Sergio L. Pascual que me ayudó con las pruebas y a simplificar el código ensamblador para procesadores ARM.
+
+A Antonio Pérez, Carles Mateu, Carlos Guadall, David Asorey, David Pinilla, Gerard Ribugent, Javier García, Daniel Matilla, Juan Sosa, _Tzarak_ y _Aragon de Mordor_ por hacer pruebas y mediciones en sus servidores.
+
+A la gente de CreateSpace que me animó a adaptar el libro para esta versión impresa.
+
+A mi familia, que tuvo que soportar a un zombi en casa durante siete meses.
+
+Al lector.

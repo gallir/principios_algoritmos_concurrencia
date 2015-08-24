@@ -9,6 +9,7 @@
 :keywords: concurrencia, algoritmos, spinlocks, semáforos, monitores, canales
 :toc:
 :toclevels: 2
+:sectnums:
 //:numbered!:
 :imagesdir: images
 :caption!:
@@ -29,7 +30,6 @@ Principios y algoritmos de concurrencia
 ////
 
 include::chapters/00-colophon.adoc[]
-
 
 include::chapters/00-prefacio.adoc[]
 

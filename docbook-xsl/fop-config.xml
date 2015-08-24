@@ -2,10 +2,16 @@
 <fop version="1.0">
   <strict-configuration>true</strict-configuration>
   <renderers>
+    <renderer-resolution>300</renderer-resolution>
     <renderer mime="application/pdf">
       <fonts>
         <auto-detect />
       </fonts>
     </renderer>
   </renderers>
+  <target-resolution>300</target-resolution>
+  <!--
+  <hyphenation-base>/home/gallir/git/Concurrencia/resources/</hyphenation-base>
+  <hyphenation-pattern lang="es">es</hyphenation-pattern>
+  -->
 </fop>
