@@ -6,14 +6,18 @@
   <xsl:param name="text.color">#000000</xsl:param>
   <xsl:param name="link.color">#080808</xsl:param>
   <xsl:param name="border.color">#DDDDDD</xsl:param>
-  <xsl:param name="header.font-weight">normal</xsl:param>
+  <xsl:param name="header.font-weight">bold</xsl:param>
+  <xsl:param name="header.font-family"><xsl:call-template name="pickfont-sans"/></xsl:param>
   <xsl:param name="title.color">#080808</xsl:param>
   <xsl:param name="chapter.title.color" select="$title.color"/>
   <xsl:param name="section.title.color" select="$title.color"/>
-  <xsl:param name="caption.color">#0c0c0c</xsl:param>
+  <xsl:param name="caption.color">#0f0f0f</xsl:param>
   <xsl:param name="code.color" select="$text.color"/>
   <xsl:param name="code.font-weight">normal</xsl:param>
   <xsl:param name="code.background-color">transparent</xsl:param>
+  <xsl:param name="footer.rule" select="0" ></xsl:param>
+  <xsl:param name="header.rule" select="0" ></xsl:param>
+  <xsl:param name="preface.autolabel" select="0"></xsl:param>
 
 
   <!-- Asciidoctor theme -->
@@ -139,7 +143,7 @@
     <xsl:text>margin-left: 0; margin-right: 10%;</xsl:text>
   </xsl:param>
   -->
-  <xsl:param name="admon.textlabel">0</xsl:param>
+  <xsl:param name="admon.textlabel">1</xsl:param>
 
   <xsl:param name="chunk.first.sections" select="0"/>
   <xsl:param name="chunk.quietly" select="0"/>
