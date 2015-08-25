@@ -27,4 +27,14 @@
     <xsl:text>images/icons/callouts/</xsl:text>
   </xsl:param>
 
+
+<xsl:attribute-set name="calloutlist.properties">
+  <xsl:attribute name="space-before.optimum">0</xsl:attribute>
+  <xsl:attribute name="space-before.minimum">0</xsl:attribute>
+  <xsl:attribute name="space-before.maximum">0</xsl:attribute>
+  <xsl:attribute name="space-after.optimum">1.1em</xsl:attribute>
+  <xsl:attribute name="space-after.minimum">0.9em</xsl:attribute>
+  <xsl:attribute name="space-after.maximum">1.3em</xsl:attribute>
+</xsl:attribute-set>
+
 </xsl:stylesheet>

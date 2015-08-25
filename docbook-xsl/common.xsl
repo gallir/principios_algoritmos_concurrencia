@@ -19,7 +19,7 @@
   <xsl:param name="code.color" select="$text.color"/>
   <xsl:param name="code.font-weight">normal</xsl:param>
   <xsl:param name="code.background-color">transparent</xsl:param>
-  <xsl:param name="footer.rule" select="1" ></xsl:param>
+  <xsl:param name="footer.rule" select="0" ></xsl:param>
   <xsl:param name="header.rule" select="0" ></xsl:param>
   <xsl:param name="preface.autolabel" select="0"></xsl:param>
 

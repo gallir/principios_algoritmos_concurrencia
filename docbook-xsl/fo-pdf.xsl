@@ -251,12 +251,12 @@
   <xsl:param name="page.height.portrait">9.61in</xsl:param>
   <xsl:param name="headers.on.blank.pages">0</xsl:param>
   <xsl:param name="footers.on.blank.pages">0</xsl:param>
-  <xsl:param name="page.margin.top">20mm</xsl:param> <!-- top margin of page -->
-  <xsl:param name="page.margin.bottom">10mm</xsl:param> <!-- top margin of page -->
-  <xsl:param name="page.margin.inner">20mm</xsl:param> <!-- side margin of page (left, towards binding) -->
+  <xsl:param name="page.margin.top">10mm</xsl:param> <!-- top margin of page -->
+  <xsl:param name="page.margin.bottom">20mm</xsl:param> <!-- top margin of page -->
+  <xsl:param name="page.margin.inner">24mm</xsl:param> <!-- side margin of page (left, towards binding) -->
   <xsl:param name="page.margin.outer">15mm</xsl:param> <!-- side margin of page (right, away from binding) -->
-  <xsl:param name="body.margin.top">0</xsl:param> <!-- top margin of content -->
-  <xsl:param name="body.margin.bottom">12mm</xsl:param> <!-- bottom margin of content -->
+  <xsl:param name="body.margin.top">15mm</xsl:param> <!-- top margin of content -->
+  <xsl:param name="body.margin.bottom">0mm</xsl:param> <!-- bottom margin of content -->
   <xsl:param name="body.margin.inner">0</xsl:param> <!-- side margin of content (left, towards binding) -->
   <xsl:param name="body.margin.outer">0</xsl:param> <!-- side margin of content (right, away from binding) -->
   <xsl:param name="body.start.indent">0</xsl:param> <!-- text indentation -->
@@ -269,7 +269,7 @@
 
 
 
-<xsl:attribute-set name="footer.content.properties">
+<xsl:attribute-set name="header.content.properties">
     <xsl:attribute name="font-family">
         <xsl:value-of select="$title.fontset"/>
     </xsl:attribute>
