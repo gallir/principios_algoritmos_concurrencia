@@ -4,7 +4,7 @@
 === Exclusión mutua
 
 [[monitors_counter_object_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/CounterObject.java[CounterObject.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/CounterObject.java[CounterObject.java]
 [source,java]
 ----
 include::../code/monitors/CounterObject.java[]
@@ -12,14 +12,14 @@ include::../code/monitors/CounterObject.java[]
 
 
 [[monitors_counter_method_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/CounterMethod.java[CounterMethod.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/CounterMethod.java[CounterMethod.java]
 [source,java]
 ----
 include::../code/monitors/CounterMethod.java[]
 ----
 
 [[monitors_semaphore_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/CounterSemaphore.java[CounterSemaphore.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/CounterSemaphore.java[CounterSemaphore.java]
 [source,java]
 ----
 include::../code/monitors/CounterSemaphore.java[]
@@ -28,14 +28,14 @@ include::../code/monitors/CounterSemaphore.java[]
 
 
 [[monitors_mutex_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/CounterMutex.java[CounterMutex.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/CounterMutex.java[CounterMutex.java]
 [source,java]
 ----
 include::../code/monitors/CounterMutex.java[]
 ----
 
 [[monitors_semaphore_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/semaphore.c[semaphore.c]
+https://github.com/gallir/concurrencia/blob/master/monitors/semaphore.c[semaphore.c]
 [source,c]
 ----
 include::../code/monitors/semaphore.c[]
@@ -45,7 +45,7 @@ include::../code/monitors/semaphore.c[]
 
 
 [[monitors_mutex_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/mutex.c[mutex.c]
+https://github.com/gallir/concurrencia/blob/master/monitors/mutex.c[mutex.c]
 [source,c]
 ----
 include::../code/monitors/mutex.c[]
@@ -55,7 +55,7 @@ include::../code/monitors/mutex.c[]
 
 ===Barreras
 [[monitors_barrier_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Barrier.java[Barrier.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/Barrier.java[Barrier.java]
 [source,java]
 ----
 include::../code/monitors/Barrier.java[]
@@ -63,7 +63,7 @@ include::../code/monitors/Barrier.java[]
 
 
 [[monitors_barrier_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/barrier.py[barrier.py]
+https://github.com/gallir/concurrencia/blob/master/monitors/barrier.py[barrier.py]
 [source,python]
 ----
 include::../code/monitors/barrier.py[]
@@ -72,14 +72,14 @@ include::../code/monitors/barrier.py[]
 
 === Productor-consumidor
 [[monitors_producer_consumer_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/producer-consumer.py[producer-consumer.py]
+https://github.com/gallir/concurrencia/blob/master/monitors/producer-consumer.py[producer-consumer.py]
 [source,python]
 ----
 include::../code/monitors/producer-consumer.py[]
 ----
 
 [[monitors_producer_consumer_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/ProducerConsumer.java[ProducerConsumer.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/ProducerConsumer.java[ProducerConsumer.java]
 [source,java]
 ----
 include::../code/monitors/ProducerConsumer.java[]
@@ -88,14 +88,14 @@ include::../code/monitors/ProducerConsumer.java[]
 
 === Lectores-escritores
 [[monitors_rw_lock_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/rw_lock.py[rw_lock.py]
+https://github.com/gallir/concurrencia/blob/master/monitors/rw_lock.py[rw_lock.py]
 [source,python]
 ----
 include::../code/monitors/rw_lock.py[]
 ----
 
 [[monitors_rw_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/ReaderWriter.java[ReaderWriter.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/ReaderWriter.java[ReaderWriter.java]
 [source,java]
 ----
 include::../code/monitors/ReaderWriter.java[]
@@ -103,21 +103,21 @@ include::../code/monitors/ReaderWriter.java[]
 
 === Filósofos
 [[monitors_philosophers_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/Philosopher.java[Philosopher.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/Philosopher.java[Philosopher.java]
 [source,java]
 ----
 include::../code/monitors/Philosopher.java[]
 ----
 
 [[monitors_philosophers2_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/PhilosopherConditions.java[PhilosopherConditions.java]
+https://github.com/gallir/concurrencia/blob/master/monitors/PhilosopherConditions.java[PhilosopherConditions.java]
 [source,java]
 ----
 include::../code/monitors/PhilosopherConditions.java[]
 ----
 
 [[monitors_philosophers_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/monitors/philosophers.py[philosophers.py]
+https://github.com/gallir/concurrencia/blob/master/monitors/philosophers.py[philosophers.py]
 [source,python]
 ----
 include::../code/monitors/philosophers.py[]

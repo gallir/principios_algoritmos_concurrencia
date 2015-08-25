@@ -898,7 +898,7 @@ Como parece más una anomalía ejecuté los mismos programas en una Raspberry Pi
 ====
 En un momento pensé en cambiar el gráfico y poner resultados con otros procesadores, así no necesitaría explicar y matizar con más gráficos. Preferí ser honesto y riguroso: los datos son reales y repetibles. En ninguna de las centenares de pruebas dio un resultado diferente.
 
-El ordenador que generó esos resultados _anómalos_ es un _Thinkpad X1_ con procesador _Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz_, el sistema operativo es Ubuntu 15.04 y la versión 1.3.3 de Go. En Github https://github.com/gallir/concurrencia_source_samples/blob/master/measurements/logs/measures_mutex_go.log[está disponible] el registro de las pruebas usadas para el gráfico. Poco después otra persona obtuvo resultados similares con un i7-4770K y Go 1.4.2 (https://github.com/gallir/concurrencia_source_samples/blob/master/measurements/logs/i7-4770K-go_mutex.png[imagen en Github]).
+El ordenador que generó esos resultados _anómalos_ es un _Thinkpad X1_ con procesador _Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz_, el sistema operativo es Ubuntu 15.04 y la versión 1.3.3 de Go. En Github https://github.com/gallir/concurrencia/blob/master/measurements/logs/measures_mutex_go.log[está disponible] el registro de las pruebas usadas para el gráfico. Poco después otra persona obtuvo resultados similares con un i7-4770K y Go 1.4.2 (https://github.com/gallir/concurrencia/blob/master/measurements/logs/i7-4770K-go_mutex.png[imagen en Github]).
 ====
 
 ////

@@ -6,7 +6,7 @@
 
 ==== _Mutex_ tinySTM
 [[tm_mutex_tinystm_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/mutex_tinystm.c[mutex_tinystm.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/mutex_tinystm.c[mutex_tinystm.c]
 [source,go]
 ----
 include::../code/transactional/mutex_tinystm.c[]
@@ -14,7 +14,7 @@ include::../code/transactional/mutex_tinystm.c[]
 
 ==== _Mutex_ gcc con libitm
 [[tm_mutex_gcc_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/mutex_transaction.c[mutex_transaction.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/mutex_transaction.c[mutex_transaction.c]
 [source,go]
 ----
 include::../code/transactional/mutex_transaction.c[]
@@ -23,7 +23,7 @@ include::../code/transactional/mutex_transaction.c[]
 
 ==== Lectores-escritores con tinySTM
 [[tm_rw_tinystm_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/rw_tinystm.c[rw_tinystm.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/rw_tinystm.c[rw_tinystm.c]
 [source,go]
 ----
 include::../code/transactional/rw_tinystm.c[]
@@ -32,7 +32,7 @@ include::../code/transactional/rw_tinystm.c[]
 
 ==== Lectores-escritores con _transaction_atomic_
 [[tm_rw_transaction_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/rw_transaction.c[rw_transaction.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/rw_transaction.c[rw_transaction.c]
 [source,go]
 ----
 include::../code/transactional/rw_transaction.c[]
@@ -43,7 +43,7 @@ include::../code/transactional/rw_transaction.c[]
 
 ==== _Mutex_ _HLE_
 [[tm_mutex_hle_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_hle.c[mutex_hle.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/intel/mutex_hle.c[mutex_hle.c]
 [source,go]
 ----
 include::../code/transactional/intel/mutex_hle.c[]
@@ -51,7 +51,7 @@ include::../code/transactional/intel/mutex_hle.c[]
 
 ==== _Mutex_ _RTM_
 [[tm_mutex_rtm_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/mutex_rtm.c[mutex_rtm.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/intel/mutex_rtm.c[mutex_rtm.c]
 [source,go]
 ----
 include::../code/transactional/intel/mutex_rtm.c[]
@@ -59,7 +59,7 @@ include::../code/transactional/intel/mutex_rtm.c[]
 
 ==== Lectores-escritores _HLE_
 [[tm_rw_hle_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/rw_hle.c[rw_hle.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/intel/rw_hle.c[rw_hle.c]
 [source,go]
 ----
 include::../code/transactional/intel/rw_hle.c[]
@@ -67,7 +67,7 @@ include::../code/transactional/intel/rw_hle.c[]
 
 ==== Lectores-escritores _RTM_
 [[tm_rw_rtm_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/transactional/intel/rw_rtm.c[rw_rtm.c]
+https://github.com/gallir/concurrencia/blob/master/transactional/intel/rw_rtm.c[rw_rtm.c]
 [source,go]
 ----
 include::../code/transactional/intel/rw_rtm.c[]

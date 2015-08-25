@@ -4,7 +4,7 @@
 
 === Semáforo
 [[futex_semaphore_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/semaphore.c[semaphore.c]
+https://github.com/gallir/concurrencia/blob/master/futex/semaphore.c[semaphore.c]
 [source,c]
 ----
 include::../code/futex/semaphore.c[]
@@ -13,7 +13,7 @@ include::../code/futex/semaphore.c[]
 === Mutexes
 
 [[futex_simple_mutex_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/simple_mutex.c[simple_mutex.c]
+https://github.com/gallir/concurrencia/blob/master/futex/simple_mutex.c[simple_mutex.c]
 [source,c]
 ----
 include::../code/futex/simple_mutex.c[]
@@ -21,7 +21,7 @@ include::../code/futex/simple_mutex.c[]
 
 
 [[mutex_drepper_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/mutex_drepper.c[mutex_drepper.c]
+https://github.com/gallir/concurrencia/blob/master/futex/mutex_drepper.c[mutex_drepper.c]
 [source,c]
 ----
 include::../code/futex/mutex_drepper.c[]
@@ -29,21 +29,21 @@ include::../code/futex/mutex_drepper.c[]
 
 
 [[futex_fair_mutex_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/fair_mutex.c[fair_mutex.c]
+https://github.com/gallir/concurrencia/blob/master/futex/fair_mutex.c[fair_mutex.c]
 [source,c]
 ----
 include::../code/futex/fair_mutex.c[]
 ----
 
 [[futex_fair_mutex_bitset_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/fair_mutex_bitset.c[fair_mutex_bitset.c]
+https://github.com/gallir/concurrencia/blob/master/futex/fair_mutex_bitset.c[fair_mutex_bitset.c]
 [source,c]
 ----
 include::../code/futex/fair_mutex_bitset.c[]
 ----
 
 [[futex_fair_mutex_spin_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/fair_mutex_spin.c[fair_mutex_spin.c]
+https://github.com/gallir/concurrencia/blob/master/futex/fair_mutex_spin.c[fair_mutex_spin.c]
 [source,c]
 ----
 include::../code/futex/fair_mutex_spin.c[]
@@ -51,7 +51,7 @@ include::../code/futex/fair_mutex_spin.c[]
 
 === Barreras
 [[futex_barrier_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/futex/barrier.c[barrier.c]
+https://github.com/gallir/concurrencia/blob/master/futex/barrier.c[barrier.c]
 [source,c]
 ----
 include::../code/futex/barrier.c[]

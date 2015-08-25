@@ -7,28 +7,28 @@
 === Creación de threads
 
 [[threads_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/threads.c[threads.c]
+https://github.com/gallir/concurrencia/blob/master/intro/threads.c[threads.c]
 [source,c]
 ----
 include::../code/intro/threads.c[]
 ----
 
 [[threads_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/threads.py[threads.py]
+https://github.com/gallir/concurrencia/blob/master/intro/threads.py[threads.py]
 [source,python]
 ----
 include::../code/intro/threads.py[]
 ----
 
 [[gothreads_go]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/gothreads.go[gothreads.go]
+https://github.com/gallir/concurrencia/blob/master/intro/gothreads.go[gothreads.go]
 [source,go]
 ----
 include::../code/intro/gothreads.go[]
 ----
 
 [[threads_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/Threads.java[Threads.java]
+https://github.com/gallir/concurrencia/blob/master/intro/Threads.java[Threads.java]
 [source,java]
 ----
 include::../code/intro/Threads.java[]
@@ -40,35 +40,35 @@ include::../code/intro/Threads.java[]
 === Incrementar un contador con dos hilos
 
 [[counter_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter.c[counter.c]
+https://github.com/gallir/concurrencia/blob/master/intro/counter.c[counter.c]
 [source,c]
 ----
 include::../code/intro/counter.c[]
 ----
 
 [[counter_py]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter.py[counter.py]
+https://github.com/gallir/concurrencia/blob/master/intro/counter.py[counter.py]
 [source,python]
 ----
 include::../code/intro/counter.py[]
 ----
 
 [[gocounter_go]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/gocounter.go[gocounter.go]
+https://github.com/gallir/concurrencia/blob/master/intro/gocounter.go[gocounter.go]
 [source,go]
 ----
 include::../code/intro/gocounter.go[]
 ----
 
 [[counter_java]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/Counter.java[Counter.java]
+https://github.com/gallir/concurrencia/blob/master/intro/Counter.java[Counter.java]
 [source,java]
 ----
 include::../code/intro/Counter.java[]
 ----
 
 [[counter_local_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/counter_local.c[counter_local.c]
+https://github.com/gallir/concurrencia/blob/master/intro/counter_local.c[counter_local.c]
 [source,c]
 ----
 include::../code/intro/counter_local.c[]
@@ -79,7 +79,7 @@ include::../code/intro/counter_local.c[]
 === Algoritmo de Peterson con barreras de memoria
 
 [[counter_peterson_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/peterson.c[peterson.c]
+https://github.com/gallir/concurrencia/blob/master/intro/peterson.c[peterson.c]
 [source,c]
 ----
 include::../code/intro/peterson.c[]
@@ -89,7 +89,7 @@ include::../code/intro/peterson.c[]
 === Algoritmo de la panaderia con barreras de memoria
 
 [[counter_bakery_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/bakery.c[bakery.c]
+https://github.com/gallir/concurrencia/blob/master/intro/bakery.c[bakery.c]
 [source,c]
 ----
 include::../code/intro/bakery.c[]
@@ -99,7 +99,7 @@ include::../code/intro/bakery.c[]
 === Algoritmo rápido de Lamport
 
 [[counter_fast_c]]
-https://github.com/gallir/concurrencia_source_samples/blob/master/intro/fast.c[fast.c]
+https://github.com/gallir/concurrencia/blob/master/intro/fast.c[fast.c]
 [source,c]
 ----
 include::../code/intro/fast.c[]
