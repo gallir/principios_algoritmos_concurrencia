@@ -30,7 +30,7 @@ Ningún procedimiento de un monitor se ejecutará si otro se está ejecutando, e
 === Monitores en Java
 La estructura de monitores que encapsula variables y procedimientos es similar al concepto de programación orientada a objetos. Esta es una de las razones por la que Java implementa monitores como construcción sintáctica del lenguaje. Aunque no tiene una construcción específica para definir monitores, cada objeto en Java tiene asociado un _mutex_ implícito.
 
-Dicho _mutex_ se puede usar para forzar la exclusión mutua de un bloque de código indicando que está _synchronized_ con el objeto. Como en el siguiente ejemplo (<<monitors_counter_object_java, código completo>>):
+Dicho _mutex_ se puede usar para forzar la exclusión mutua de un bloque de código indicando que está _synchronized_ con el objeto. Como en el siguiente ejemplo (código completo en +CounterObject.java+ del directorio +monitors/+):
 
 
 [source, java]
@@ -44,7 +44,7 @@ Dicho _mutex_ se puede usar para forzar la exclusión mutua de un bloque de cód
     }
 ----
 
-Java agrega automáticamente las operaciones _lock_ y _unlock_ sobre el _mutex_ del objeto al inicio y salidas del bloque de código. La alternativa equivalente y más simple es declarar +synchronized+ a los métodos que acceden a recursos compartidos, como el siguiente ejemplo (<<monitors_counter_method_java, código completo>>):
+Java agrega automáticamente las operaciones _lock_ y _unlock_ sobre el _mutex_ del objeto al inicio y salidas del bloque de código. La alternativa equivalente y más simple es declarar +synchronized+ a los métodos que acceden a recursos compartidos, como el siguiente ejemplo (código completo en +CounterMethod.java+):
 
 [source, java]
 ----
@@ -210,11 +210,11 @@ class Semaphore {
 }
 ----
 
-<<monitors_semaphore_java, CounterSemaphore.java>> es el código completo de la simulación semáforos. Este ejemplo es similar y equivalente al <<sem_counter_java, código>> con la clase +Semaphore+ de +java.util.concurrent+ que vimos en el capítulo <<semaphores>>.
++CounterSemaphore.java+ es el código completo de la simulación semáforos. Este ejemplo es similar y equivalente al código con la clase +Semaphore+ de +java.util.concurrent+ que vimos en el <<semaphores>>.
 
 ==== Mutex
 
-La implementación de _mutex_ es más sencilla (<<monitors_mutex_java, código completo>>) que la de semáforos, solo hace falta una variable booleana (+lock+):
+La implementación de _mutex_ es más sencilla (código completo en +CounterMutex.java+) que la de semáforos, solo hace falta una variable booleana (+lock+):
 
 [source, java]
 ----
@@ -255,7 +255,7 @@ int value = 1;
 
 Se usa +mutex+ para asegurar la exclusión mutua entre las dos operaciones (+p+ y +v+), la variable de condición +notZero+ para los procesos bloqueados en el _wait_ y +value+ para el valor del semáforo. Salvo las llamadas explícitas a _lock_ y _unlock_ (al inicio y fin de cada función respectivamente), el resto del código es idéntico a la implementación de semáforos con monitores en Java.
 
-El código simplificadofootnote:[Para que no superen los márgenes no incluí el código de inicialización y abrevié las llamadas +pthread_*+.] (<<monitors_semaphore_c, código completo>>):
+El código simplificadofootnote:[Para que no superen los márgenes no incluí el código de inicialización y abrevié las llamadas +pthread_*+.] (código completo en +semaphore.c+):
 
 [source, c]
 ----
@@ -287,7 +287,7 @@ El proceso que se despierta en la variable de condición compite en la entrada c
 [[monitor_mutex_emulation]]
 ==== Mutex con POSIX Threads
 
-La implementación de un semáforo _mutex_ es igual de sencillo que el de Java, el código simplificado (<<monitors_mutex_c, código completo>>):
+La implementación de un semáforo _mutex_ es igual de sencillo que el de Java, el código simplificado (código completo en +mutex.c+):
 
 [source, c]
 ----
@@ -316,7 +316,7 @@ La mala noticia es que con monitores haremos lo mismo, estudiaremos los algoritm
 
 ==== Barreras
 
-El algoritmo de barreras con monitores es significativamente más sencillo con monitores que con semáforos. En Java solo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso en llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (<<monitors_barrier_java, código completo>>):
+El algoritmo de barreras con monitores es significativamente más sencillo con monitores que con semáforos. En Java solo hace falta un contador (+arrived+) inicialmente en cero. Cuando cada proceso ejecuta +barrier+ se incrementa el contador, si todavía no es el último se bloquea con +wait+. Si es el último proceso en llegar pone a cero el contador y despierta a todos los procesos con +notifyAll+ (código completo en +Barrier.java+):
 
 [source, java]
 ----
@@ -349,7 +349,7 @@ allArrived = threading.Condition(mutex)
 arrived = 0
 ----
 
-El código simplificado de la función +barrier+ (<<monitors_barrier_py, código completo>>):
+El código simplificado de la función +barrier+ (código completo en +barrier.py+):
 
 
 [source, python]
@@ -369,7 +369,7 @@ La función _broadcast_ simplifica el algoritmo, sin ella habría que hacer tant
 
 ==== Productores-consumidores
 
-El algoritmo de productores-consumidores con _buffer_ finito se puede implementar con dos variables de condición (<<monitors_producer_consumer_py, código completo en Python>>): una para bloquear los productores cuando el _buffer_ está lleno (+notFull+) y otra para bloquear a los consumidores (+notEmpty+) cuando no hay elementos en el _buffer_.
+El algoritmo de productores-consumidores con _buffer_ finito se puede implementar con dos variables de condición (código Python completo en +producer-consumer.py+): una para bloquear los productores cuando el _buffer_ está lleno (+notFull+) y otra para bloquear a los consumidores (+notEmpty+) cuando no hay elementos en el _buffer_.
 
 La lógica del productor es sencilla. Mientras el _buffer_ está está lleno se bloquea en +notFull+. Después de agregar un elemento se hace un _signal_ a +notEmpty+ para que se despierte un consumidor (si hay alguno esperando).
 
@@ -399,7 +399,7 @@ def take(self):
 
 El algoritmo es correcto porque asegura que el productor no puede avanzar si no hay espacio en el _buffer_, ni los consumidores si el _buffer_ está vacío. Mientras se hace la verificación del estado del _buffer_ ningún otro proceso puede agregar o quitar elementos debido a la exclusión mutua entre métodos del monitor.
 
-En los monitores nativos de Java no se pueden usar diferentes variables de condición, pero el algoritmo es casi idéntico (<<monitors_producer_consumer_java, código completo>>):
+En los monitores nativos de Java no se pueden usar diferentes variables de condición, pero el algoritmo es casi idéntico (código completo en +ProducerConsumer.java+):
 
 
 [source, java]
@@ -427,7 +427,7 @@ Al no poder disponer de variables independientes los productores y consumidores 
 
 ==== Lectores-escritores
 
-Se usan dos variables de condición: +canRead+ para notificar a los lectores y +canWrite+ para los escritores. También una variable entera +readers+ para contar los lectores en la sección crítica y la booleana +writing+ para indicar si hay un escritor (<<monitors_rw_lock_py, código completo>>).
+Se usan dos variables de condición: +canRead+ para notificar a los lectores y +canWrite+ para los escritores. También una variable entera +readers+ para contar los lectores en la sección crítica y la booleana +writing+ para indicar si hay un escritor (código completo en +rw_lock.py+).
 
 Si hay un escritor en la sección crítica los lectores esperarán en la variable +canRead+ hasta que el escritor señalice y comprueben si pueden entrar. Si es el caso, incrementan el número de lectores y señalizan a +canRead+ para que los lectores bloqueados puedan avanzar.
 
@@ -499,7 +499,7 @@ def reader_lock():
 
 
 ===== Lectores-escritores con Java
-En Java no se pueden usar dos variables de condición por lo que hay que recurrir al +notifyAll+ para desbloquear a lectores y escritores (<<monitors_rw_java, código completo>>). Se necesitan dos variables, el contador de lectores (+readers+) y una booleana que indicará si hay un escritor en la sección crítica (+writing+).
+En Java no se pueden usar dos variables de condición por lo que hay que recurrir al +notifyAll+ para desbloquear a lectores y escritores (código completo en +ReaderWriter.java+). Se necesitan dos variables, el contador de lectores (+readers+) y una booleana que indicará si hay un escritor en la sección crítica (+writing+).
 
 Los lectores solo se bloquean si hay un escritor, cuando entran hacen el +notifyAll+ para que puedan entrar otros lectores que bloqueados en +wait+ (también despertará a los escritores, que volverán a bloquearse inmediatamente).
 
@@ -572,7 +572,7 @@ Con la solución con semáforos de los <<dining_philosophers, filósofos cenando
 
 El caso de los filósofos es otro ejemplo notable –como el de barreras– de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica, la excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_ de sincronización) que deben estar fuera de la sección crítica para evitar interbloqueos. Ese problema ya no existe con las variables de condición, el proceso que se bloquea automáticamente _libera_ el monitor.
 
-Puede diseñarse un clase monitor para toda la _mesa_: los filósofos deben llamar a sus métodos para tomar y soltar los tenedores (+pick+ y +release+ respectivamente). El algoritmo simplificado en Java es el siguiente (<<monitors_philosophers_java, código completo>>):
+Puede diseñarse un clase monitor para toda la _mesa_: los filósofos deben llamar a sus métodos para tomar y soltar los tenedores (+pick+ y +release+ respectivamente). El algoritmo simplificado en Java es el siguiente (código completo en +Philosopher.java+):
 
 [source, java]
 ----
@@ -602,7 +602,7 @@ El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, e
 ===== Con variables de condición
 A pesar de su simplicidad se puede observar otra vez la potencial ineficiencia, la _tormenta_ de procesos desbloqueados provocada por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados esperando por tenedores diferentes. Para desbloquear selectivamente se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Se pueden usar las clases de sincronización de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
 
-El siguiente es un algoritmo con diferentes variables de condición (<<monitors_philosophers2_java, código en Java>>, <<monitors_philosophers_py, equivalente en Python>>). El array +forks+ ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo (inicialmente dos). Cuando un filósofo toma los tenedores decrementa los disponibles de sus vecinos y los incrementa cuando los libera.
+El siguiente es un algoritmo con diferentes variables de condición (código en Java +PhilosopherConditions.java+ y el equivalente en Python +philosophers.py+). El array +forks+ ahora se usa para indicar cuántos tenedores están disponibles para cada filósofo (inicialmente dos). Cuando un filósofo toma los tenedores decrementa los disponibles de sus vecinos y los incrementa cuando los libera.
 
 +CanEat+ es un array de variables de condición para bloquear a los filósofos que no tienen los dos tenedores disponibles. Las variables +left+ y +right+ representan a los vecinos de un filósofo. El vecino de la izquierda del _filósofo~0~_ es _filósofo~4~_ y _filósofo~1~_ el de la derechafootnote:[En Python se calcula con +(i - 1) % N+ y +(i + 1) % N+ respectivamente, pero puede dar valores negativos, no hay un estándar sobre el módulo de números negativos. Python devuelve +N - 1+ pero Java -1, la forma de asegurar que funcione en cualquier lenguaje es forzando a que sea positivo con +(i + N - 1) % N+.].
 

@@ -73,7 +73,7 @@ Para simplificar el pseudocódigo usaremos +futex_wait(futex, value)+ y +futex_w
 
 [[futex_semaphore]]
 === Semáforo simple
-La implementación de semáforos generales con FUTEX es trivial, si se toman algunas precauciones para evitar condiciones de carrera (código completo en +futex/futex_semaphore.c+):
+La implementación de semáforos generales con FUTEX es trivial, si se toman algunas precauciones para evitar condiciones de carrera (código completo en +futex/semaphore.c+):
 
 1. Permitimos que el valor del semáforo, +value+, pueda tomar números negativos (si es negativo su valor absoluto indica el número de procesos en la cola).
 
@@ -134,7 +134,7 @@ Cuando el +valor+ del semáforo se hace negativo (la situación habitual para un
 Si se pretende optimizar la exclusión mutua para alta competencia conviene implementar semáforos _mutex_, son considerablemente más eficientesfootnote:[¿Empiezas a entender mejor por qué es más eficiente usar _mutexes_ para exclusión mutua?] que los semáforos generales.
 
 === _Mutex_ simple
-Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas. Se usan las operaciones atómicas _swap_  y _get&add_. Las funciones +lock+ y +unlock+ reciben como argumento la dirección de una estructura con dos enteros (código completo en el mismo directorio +futex/+, +futex_simple_mutex.c+):
+Para el siguiente _mutex_ simplefootnote:[Lo desarrollé para este libro buscando que sea eficiente pero a la vez muy sencillo de explicar, no encontré publicado un algoritmo similar.] se requieren también las dos operaciones básicas. Se usan las operaciones atómicas _swap_  y _get&add_. Las funciones +lock+ y +unlock+ reciben como argumento la dirección de una estructura con dos enteros (código completo en el mismo directorio +futex/+, +simple_mutex.c+):
 
 ----
 struct simple_futex {
@@ -251,7 +251,7 @@ struct simple_futex {
 
 El campo +turn+ es la variable _futex_, la comparación en +futex_wait+ elimina la condición de carrera si el turno se modifica entre la comparación y la llamada de sistema. Si el proceso es interrumpido y otro proceso entra a la sección crítica, +turn+ será diferente y no será bloqueado, volverá al inicio del +while+.
 
-El algoritmo es el siguiente (código completo en +futex_fair_mutex.c+):
+El algoritmo es el siguiente (código completo en +fair_mutex.c+):
 
 [source, python]
 ----
@@ -300,7 +300,7 @@ def MASK(number):
     return 1 << (number % 32)
 ----
 
-El pseudocódigo es el siguiente (código completo en +futex_fair_mutex_bitset.c+):
+El pseudocódigo es el siguiente (código completo en +fair_mutex_bitset.c+):
 
 [source, python]
 ----
@@ -351,7 +351,7 @@ Si es imprescindible un _mutex_ equitativo se puede intentar con otra técnica: 
 
 Parece contraintuitiva, pero es posible optimizar considerablemente el _mutex_ equitativo recurriendo a esperas activas limitadas. Si hay alta competencia y las secciones críticas son breves, conviene hacer una espera activa breve –en la entrada y la salida– para dar oportunidad a que el siguiente proceso obtenga el _lock_ sin necesidad de pasar por la cola de bloqueados.
 
-Se hace la espera activa en _lock_ antes de llamar a +futex_wait+, y en _unlock_ antes de +futex_wake+. El número de iteraciones de la espera activa debe estar limitada –a cien en el ejemplo– para no convertir al algoritmo en un _spinlock_ que consuma mucha CPU (código completo en +futex_fair_mutex_spin.c+).
+Se hace la espera activa en _lock_ antes de llamar a +futex_wait+, y en _unlock_ antes de +futex_wake+. El número de iteraciones de la espera activa debe estar limitada –a cien en el ejemplo– para no convertir al algoritmo en un _spinlock_ que consuma mucha CPU (código completo en +fair_mutex_spin.c+).
 
 [source, python]
 ----
@@ -427,7 +427,7 @@ Los campos +processes+ y +to_arrive+ deben inicializarse con el número de proce
         wait(barrier)
 ----
 
-El algoritmo, aunque más extenso que los habituales, es sencillo (código completo en +futex_barrier.c+):
+El algoritmo, aunque más extenso que los habituales, es sencillo (código completo en +barrier.c+):
 
 [source, python]
 ----

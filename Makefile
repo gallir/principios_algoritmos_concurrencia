@@ -3,8 +3,8 @@ OUTDIR=output
 SOURCES=$(wildcard $(BASE).adoc chapters/*.adoc)
 MAIN=$(BASE).adoc
 
-current_dir = $(shell pwd)
-export FOP_HYPHENATION_PATH=$(current_dir)/resources
+### current_dir = $(shell pwd)
+### export FOP_HYPHENATION_PATH=$(current_dir)/resources
 
 CSS=epub.css
 

@@ -132,7 +132,7 @@ Algunos compiladores ya incluyen construcciones sintácticas de bloques, el comp
 
 ==== Bloques atómicos con GCC
 
-Desde la versión 4.7 GCC (2011) permite especificar bloques atómicos con semántica similar a la del borrador de C/C++ (<<TransactionGCC>>). El siguiente ejemplo es la implementación del contador con memoria transaccional (<<tm_mutex_gcc_c, código completo>>)footnote:[Puede usarse también `__transaction_relaxed`, pero con gcc 4.9 no encontré diferencia en el código ensamblador generado.]:
+Desde la versión 4.7 GCC (2011) permite especificar bloques atómicos con semántica similar a la del borrador de C/C++ (<<TransactionGCC>>). El siguiente ejemplo es la implementación del contador con memoria transaccional (código completo en +mutex_transaction.c+ en el directorio +transactional/+)footnote:[Puede usarse también `__transaction_relaxed`, pero con gcc 4.9 no encontré diferencia en el código ensamblador generado.]:
 
 [source, c]
 ._Mutex_ con GCC
@@ -215,7 +215,7 @@ El procedimiento general es inicializar la librería al principio del programa (
 
 Dentro de las transacciones no se debe acceder directamente a los registros u objetos compartidos, sino que deben usarse las funciones para lectura y escritura. En nuestro caso, se trata de un entero, usamos +stm_load_int+ y +stm_store_int+.
 
-El siguiente es el código resumido para incrementar el contador compartido (<<tm_mutex_tinystm_c, código completo>>):
+El siguiente es el código resumido para incrementar el contador compartido (código completo en +mutex_tinystm.c+):
 
 [source, c]
 ----
@@ -236,7 +236,7 @@ for (i=0; i < max; i++) {
 
 No es práctico programar con funciones explícitas, son propensas a provocar errores de programación. El programador debe preocuparse de insertar las funciones de inicio o fin de transacción y de no acceder directamente a las variables compartidas, sino usar las funciones específicas para leer o almacenar. Cualquier omisión puede provocar fallos graves difíciles de detectar.
 
-Es mucho más conveniente una construcción sintáctica que delimite claramente qué instrucciones son las que están en una transacción y que sea el compilador el responsable de detectar qué accesos necesitan ser controlados. Para ello se definen los _bloques atómicos_, como el siguiente ejemplo (<<tm_mutex_gcc_c, código completo>>):
+Es mucho más conveniente una construcción sintáctica que delimite claramente qué instrucciones son las que están en una transacción y que sea el compilador el responsable de detectar qué accesos necesitan ser controlados. Para ello se definen los _bloques atómicos_, como el siguiente ejemplo (similar a +mutex_transaction.c+):
 
 [source, c]
 ----
@@ -358,7 +358,7 @@ xrelease movl   %eax, mutex(%rip)
 
 Cuando el procesador encuentra la operación +xchgl+ con el prefijo +xacquire+ elidefootnote:[Es la traducción de _elision_, un verbo válido en castellano, se dice así a la supresión de vocales o de palabras completas.] la asignación y ejecuta el resto de las instrucciones como una transacción hasta que encuentra +xrelease+. Si detecta conflicto vuelve a ejecutar desde el +xacquire+ pero esta vez sí ejecuta la instrucción +xchgl+.
 
-GCC permite especificar _spinlocks_ con los prefijos _HLE_ con la opción `__ATOMIC_HLE_ACQUIRE` en sus macros atómicos. El código simplificado para el _lock_ y _unlock_ es el siguiente (<<tm_mutex_hle_c, código completo>>):
+GCC permite especificar _spinlocks_ con los prefijos _HLE_ con la opción `__ATOMIC_HLE_ACQUIRE` en sus macros atómicos. El código simplificado para el _lock_ y _unlock_ es el siguiente (código completo en +mutex_hle.c+ del subdirectorio +transactional/intel/+):
 
 ----
 void lock() {
@@ -431,7 +431,7 @@ La probabilidad de que una transacción falle no es baja, siempre ocurrirá en u
 
 Para evitar este efecto hay que reintentar la transacción un número limitado de veces si es factible que pueda acabar sin conflictos. El procesador indica la razón del fallo, incluso da pistas de si vale la pena reintentar (con el código +_XABORT_RETRY+), se puede usar su valor para decidir reintentar la transacción o tomar el camino alternativo.
 
-El siguiente es el código simplificado de cómo queda la función +rtm_lock+ (<<tm_mutex_rtm_c, código completo>>):
+El siguiente es el código simplificado de cómo queda la función +rtm_lock+ (código completo en +mutex_rtm.c+ también en el subdirectorio +transactional/intel/+):
 
 [source, c]
 ----
@@ -454,7 +454,7 @@ Se reintenta la transacción hasta diez veces si se cumple alguna de las siguien
 - o si el código de error es 0.
 
 
-En el siguiente gráfico se puede observar una comparación de tiempos de CPU y retorno del algoritmo de lectores-escritores con _spinlock_, _RTM_ simple y _RTM_ con reintentos (<<tm_rw_rtm_c, código fuente>>) de la transacción.
+En el siguiente gráfico se puede observar una comparación de tiempos de CPU y retorno del algoritmo de lectores-escritores con _spinlock_, _RTM_ simple y _RTM_ con reintentos de la transacción (código en +rw_rtm.c+ de +transactional/intel/+).
 
 .Lectores-escritores con y sin reintentos de la transacción
 [caption=""]
@@ -532,11 +532,11 @@ image::tm_rw.png[align="center"]
 
 Las dos barras de la izquierda muestran los tiempos del _spinlock_ básicos como referencia para los demás algoritmos.
 
-Las siguientes son los tiempos con transacciones de software de la librería _tinySTM_ (<<tm_rw_tinystm_c, código fuente>>). En ambos procesadores la reducción de tiempo es importante aún con la sobrecarga de llamadas a funciones.
+Las siguientes son los tiempos con transacciones de software de la librería _tinySTM_ (código fuente en +rw_tinystm.c+ del directorio +transactional/+). En ambos procesadores la reducción de tiempo es importante aún con la sobrecarga de llamadas a funciones.
 
-A continuación con el bloque atómico de GCC (<<tm_rw_transaction_c, código fuente>>) que usa _libitm_. En Xeon se usa el soporte de hardware, en i5 es solo por software. _Libitm_ no es tan eficiente como _tinySTM_ pero la reducción de tiempo sigue siendo importante.
+A continuación con el bloque atómico de GCC que usa _libitm_  (código fuente en +rw_transaction.c+). En Xeon se usa el soporte de hardware, en i5 es solo por software. _Libitm_ no es tan eficiente como _tinySTM_ pero la reducción de tiempo sigue siendo importante.
 
-Las dos últimas barras de la derecha son los tiempos de _HLE_ (<<tm_rw_hle_c, código fuente>>) y RTM (<<tm_rw_rtm_c, código fuente>>), solo disponibles en Xeon. _RTM_ dio los mejores tiempos, los de _HLE_ son similares a los del _spinlock_.
+Las dos últimas barras de la derecha son los tiempos de _HLE_ (código fuente en +rw_hle.c+ del subdirectorio +transactional/intel/+) y RTM (+rw_rtm.c+ en el mismo directorio), solo disponibles en Xeon. _RTM_ dio los mejores tiempos, los de _HLE_ son similares a los del _spinlock_.
 
 En este caso –y en este modelo de procesador– _HLE_ tiene dos problemas:
 
