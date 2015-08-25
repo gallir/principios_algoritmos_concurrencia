@@ -19,7 +19,7 @@
   <xsl:param name="code.color" select="$text.color"/>
   <xsl:param name="code.font-weight">normal</xsl:param>
   <xsl:param name="code.background-color">transparent</xsl:param>
-  <xsl:param name="footer.rule" select="0" ></xsl:param>
+  <xsl:param name="footer.rule" select="1" ></xsl:param>
   <xsl:param name="header.rule" select="0" ></xsl:param>
   <xsl:param name="preface.autolabel" select="0"></xsl:param>
 
@@ -73,7 +73,9 @@
   <xsl:template name="root.messages"/>
 
   <!-- Disable watermark image to avoid long timeouts fetching from internet -->
+  <!--
   <xsl:param name="draft.watermark.image"/>
+  -->
 
   <!--
   <xsl:param name="use.extensions">1</xsl:param>
@@ -171,7 +173,8 @@
     <xsl:choose>
       <xsl:when test="/processing-instruction('asciidoc-toc')">
 article toc,title
-book    toc,title,figure,table,example,equation
+book    toc,title
+<!--,figure,table,example,equation-->
       </xsl:when>
       <xsl:otherwise>
 article nop
