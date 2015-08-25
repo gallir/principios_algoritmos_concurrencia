@@ -33,7 +33,7 @@ Enviar el contenido de las variables _x_ e _y_ al proceso _DIV_:
     DIV!(x, y)
 
 
-El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para la empresa británica INMOS, diseñadora de los procesadores _Transputer_. Con el tiempo se desarrolló una rama de lenguajes siguiendo este modelo: _Erlang_ (Armstrong, Virding y Williams, 1986), _Newsqueak_ (Rob Pike, 1988), _Concurrent ML_ (John Reppy, 1993), _Alef_ (Phil Winterbottom, 1995) y _Limbo_ (Dorward, Pike y Winterbottom, 1996). Erlang es el más exitoso de todos ellos, sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensaje. Si no es por una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
+El primer lenguaje que se desarrolló con este modelo fue occam (1983) de David May (con la colaboración de Hoare) para la empresa británica INMOS, diseñadora de los procesadores _Transputer_. Con el tiempo se desarrolló una rama de lenguajes siguiendo este modelo: _Erlang_ (Armstrong, Virding y Williams, 1986), _Newsqueak_ (Rob Pike, 1988), _Concurrent ML_ (John Reppy, 1993), _Alef_ (Phil Winterbottom, 1995) y _Limbo_ (Dorward, Pike y Winterbottom, 1996). Erlang es el más exitoso de todos ellos, sigue siendo muy usado para sistemas concurrentesfootnote:[La mayoría de los lenguajes modernos tienen algún tipo de soporte de canales o sincronización por mensajes. Si no es por una construcción sintáctica del lenguaje lo hacen vía clases o librerías].
 
 [NOTE]
 .Erlang
@@ -913,7 +913,7 @@ El _mutex_ nativo de Go tiene tiempos similares a los de POSIX Threads y Java mi
 
 ==== Barreras
 
-El siguiente gráfico es también similar a la de <<barriers_monitor_java, monitores>>. Esta vez con semáforos y variables de condición de POSIX Threads, monitor de Java y canales en Go.
+El siguiente gráfico es también similar al de <<barriers_monitor_java, monitores>>. Esta vez con semáforos y variables de condición de POSIX Threads, monitor de Java y canales en Go.
 
 .Tiempos de ejecución de barreras, Intel
 [caption=""]

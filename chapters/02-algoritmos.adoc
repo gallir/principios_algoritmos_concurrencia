@@ -230,7 +230,7 @@ Es sencillo demostrar que cumple el primer requisito de exclusión mutua. Si hay
 También cumple el requisito de _no interferencia_ y el de _entrada inmediata_. Si _P1_ está en el resto del código entonces +states[1]+ será falso, por lo que no interfiere con _P0_ y este podrá entrar y salir varias veces sin esperasfootnote:[Lo que implica que tampoco estamos haciendo suposiciones de velocidad relativa entre ellos.].
 
 [[first_deadlock]]
-Pero no cumple el requisito de _progreso_, el algoritmo genera interbloqueofootnote:[En el capítulo <<semaphores>> se trata el problema <<deadlocks, interbloqueos>> con mayor profundidad.] si ocurre la siguiente intercalación de instrucciones:
+Pero no cumple el requisito de _progreso_, el algoritmo genera interbloqueofootnote:[En el capítulo <<semaphores>> se trata el problema de <<deadlocks, interbloqueos>> con mayor profundidad.] si ocurre la siguiente intercalación de instrucciones:
 
 ----
 P0                    P1
