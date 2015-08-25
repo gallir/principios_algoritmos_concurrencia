@@ -14,7 +14,7 @@ La _imagen de memoria_ es la memoria física ocupada por el código y datos del 
 
 Las _tablas de control de procesos_ son estructuras variadas y complejas con información de estado de cada proceso. Por ejemplo, los valores de los registros del procesador cuando el proceso fue interrumpido, tablas de páginas, de entrada-salida, información de propiedad, estadísticas de uso, etc.
 
-[NOTE]
+[TIP]
 .Creación de procesos en Unix
 ====
 La forma estándar de crear procesos en Unix es la llamada de sistema +fork+:
@@ -91,7 +91,7 @@ Desde el punto de vista del _scheduler_ los hilos son idénticos a procesos inde
 
 Además de las ventajas para los programadores, los hilos son más _baratos_ que los procesos. Al no tener que replicar toda la memoria su consumo es menor y, fundamentalmente, los tiempos de creación de nuevos hilos son considerablemente inferiores. Tiene otras ventajas más sutiles, al compartir gran parte de memoria el coste de los cambios de contexto entre hilos es también menor, se invalidan y reemplazan menos entradas de los _TLB_ y líneas de caché.
 
-[NOTE]
+[TIP]
 .POSIX Threads
 ====
 _POSIX Threads_ (o _Pthreads_) es el estándar POSIX para crear y gestionar hilos en entornos Unix. En Linux están implementadas en la librería _Native POSIX Thread Library_ (_NPTL_), ya incluida en _GNU C Library_ (_Glibc_).
@@ -168,7 +168,7 @@ La superposición no complica la resolución de los problemas de sincronización
 ==== Los problemas de la intercalación
 Los programadores estamos acostumbrados al modelo de consistencia secuencial de los lenguajes de programación: las instrucciones se ejecutan en el orden especificado en el programa. Una de las propiedades que distingue a la programación concurrente es que esta consistencia secuencial ya no se cumplefootnote:[Más adelante, en <<barriers>>, veremos que las arquitecturas modernas de hardware tampoco aseguran por defecto la consistencia secuencial.].
 
-[NOTE]
+[IMPORTANT]
 .Consistencia secuencial
 ====
 Un programa está formado por una secuencia de operaciones atómicas ordenadas, por ejemplo +P+ por +p~0~, p~1~, p~2~+ y +Q+ por +q~0~, q~1~, q~2~+. Una ejecución válida de +P+ y +Q+ es:

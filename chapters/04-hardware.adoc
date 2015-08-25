@@ -54,7 +54,7 @@ Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema ope
 [NOTE]
 .Registros RMW no triviales
 ====
-Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91, Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
+Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. Maurice Herlihy (<<Herlihy91>>) demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
 
 _CAS_ es la más potente de la lista. Herlihy (<<Herlihy91>>) demostró que pertenece a la clase de _consenso N_ (o _infinito_). En palabras del autor (<<Herlihy12>>):
 
@@ -80,7 +80,7 @@ Hay varios tipos de instrucciones que implementan registros _RMW_, las disponibl
 - _compare&swap_: Compara el valor del registro con otro, si son iguales asigna uno nuevo y retorna el anterior.
 
 
-Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar la programación y portabilidad los compiladores proveen macros, o _intrinsics_, más abstractos. Estos macros generan la secuencia de instrucciones nativas para cada arquitecturafootnote:[Por ejemplo GCC <<Atomics, tenía los macros>> `__sync_*`, pero en las últimas versiones fueron reemplazados por <<Atomics_C11, nuevos macros>> más cercanos al modelo de memoria de C11 y C++11.] así los desarrolladores no se deben preocupar de programar en ensamblador para cada arquitecturafootnote:[En el núcleo Linux no se usan macros, ya que lo haría dependiente del compilador y tampoco generan el código más eficiente. Se programa en ensamblador _empotrado_ para cada arquitectura.].
+Los fabricantes implementan conjuntos de operaciones diferentes; para facilitar la programación y portabilidad los compiladores proveen macros, o _intrinsics_, más abstractos. Estos macros generan la secuencia de instrucciones nativas para cada arquitecturafootnote:[Por ejemplo GCC tenía los macros `__sync_*` (<<Atomics>>), pero en las últimas versiones fueron reemplazados por nuevos macros más cercanos al modelo de memoria de C11 y C++11 (<<Atomics_C11>>).] así los desarrolladores no se deben preocupar de programar en ensamblador para cada arquitecturafootnote:[En el núcleo Linux no se usan macros, ya que lo haría dependiente del compilador y tampoco generan el código más eficiente. Se programa en ensamblador _empotrado_ para cada arquitectura.].
 
 
 === Exclusión mutua con registros _Read-Modify-Write_
@@ -109,7 +109,7 @@ def unlock():
     mutex = 0
 ----
 
-El código en C (+counter_get_and_set.c+) está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que no se llevan bien con las pantallas pequeñas.] `exchange_n`. A pesar de su nombre no se trata de la instrucción _swap_, sino un equivalente de _get&set_.
+El código en C (+counter_get_and_set.c+ en el subdirectorio +hardware/+) está implementado con el macrofootnote:[De aquí en adelante, cuando se hace referencia a los macros atómicos de GCC se eliminará el prefijo `__atomic_` para evitar palabras tan largas que dificultan la lectura.] `exchange_n`. A pesar de su nombre no se trata de la instrucción _swap_, sino un equivalente de _get&set_.
 
 ==== _Get&Add_
 
@@ -196,7 +196,7 @@ def unlock():
     mutex = 0
 ----
 
-Para la implementación en C (+counter_swap.c+) se usa el macro `exchange`.En Go (+gocounter_swap.go+) se pueden usar las funciones atómicas del paquete +sync/atomic+, por ejemplo con +SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
+Para la implementación en C (código completo en +counter_swap.c+) se usa el macro `exchange`. En Go (código en +gocounter_swap.go+) se pueden usar las funciones atómicas del paquete +sync/atomic+, por ejemplo con +SwapInt32+ footnote:[Esta función no estaba disponible en Go para ARM hasta 2013, asegúrate de tener una versión moderna.].
 
 [[em_cas]]
 ==== _Compare&Swap_
@@ -239,7 +239,7 @@ def unlock():
     mutex = 0
 ----
 
-La instrucción +CompareAndSwapInt32+ en Go (+gocounter_compare_and_swap.go+) es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia, sino por valor:
+La instrucción +CompareAndSwapInt32+ en Go (código completo en +gocounter_compare_and_swap.go+) es algo diferente, los argumentos del _valor esperado_ y el _nuevo_ no se pasan por referencia, sino por valor:
 
 [source,go]
 ----
@@ -264,7 +264,7 @@ Si _A_ y _B_ son valores simples no hay conflictos. Pero si son punteros a estru
 Veremos un caso práctico de implementación de _pilas concurrentes sin exclusión mutua_ (_free-lock stacks_) con _CAS_.
 
 
-[NOTE]
+[IMPORTANT]
 .Estructuras _lock-free_
 ====
 Una estructura de datos compartida es _sin exclusión mutua_ (o _lock-free_) si sus operaciones no requieren exclusión mutua.
@@ -352,7 +352,7 @@ Cuando _P_ continúe su ejecución _CAS_ hará el cambio, la dirección de +head
 --
 
 ====== ABA con malloc
-El _reciclado_ de direcciones es habitual si se usa +malloc+ y +free+ al insertar y eliminar nodosfootnote:[Las implementaciones de +malloc+ suelen volver a usar las direcciones de los elementos que acaban de ser liberados.]. [[stack_cas_malloc]]Podemos comprobarlo, el programa en C +stack_cas_malloc.c+ usa estas funciones en cuatro hilos diferentes. Cada uno de ellos ejecuta repetidamente el siguiente código:
+El _reciclado_ de direcciones es habitual si se usa +malloc+ y +free+ al insertar y eliminar nodosfootnote:[Las implementaciones de +malloc+ suelen volver a usar las direcciones de los elementos que acaban de ser liberados.]. Podemos comprobarlo, el programa en C +stack_cas_malloc.c+ usa estas funciones en cuatro hilos diferentes. Cada uno de ellos ejecuta repetidamente el siguiente código:
 
 [source, c]
 ----
@@ -388,7 +388,7 @@ Algunas implementaciones de +malloc+ no retornan las direcciones usadas reciente
 
 [[cas_double_stack]] No se libera la memoria de los nodos con +free+, sino que se insertan en una segunda pila de _caché_ de libres, +free_nodes+. En lugar de solicitar memoria cada vez, se reciclan los nodos de la pila de libres.
 
-El programa (+stack_cas_freelist.c+) ejecuta repetidamente el siguiente código:
+El programa (código completo en +stack_cas_freelist.c+) ejecuta repetidamente el siguiente código:
 
 
 [source, c]
@@ -556,9 +556,9 @@ En una arquitectura con _LL/SC_ hay que implementar el algoritmo directamente co
 ===== _LL/SC_ en ensamblador nativo
 Veremos la implementación correcta con _LL/SC_ del programa con <<cas_double_stack, dos pilas _concurrentes_>> que sufría el problema ABA. Las operaciones _pop_ y _push_ se implementan esta vez en ensamblador, el código tendrá dos partes:
 
-1. El módulo en C (+stack_llsc_freelist.c+) es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+.
+1. El módulo en C es similar al código de _CAS_ con doble pila, pero sin la implementación de las funciones +pop+ y +push+ (código completo en +stack_llsc_freelist.c+, en el subdirectorio +hardware/arm/+).
 
-2. Las funciones +pop+ y +push+ están implementadas en ensamblador de ARM (+stack_llsc_freelist.s+).
+2. Las funciones +pop+ y +push+ están implementadas en ensamblador de ARM (el programa +stack_llsc_freelist.s+, también en +hardware/arm/+).
 
 El código en ensamblador es sencillo y breve, solo 32 líneas en total, pero analicemos en detalle la función +pop+:
 
@@ -612,8 +612,7 @@ Simular las instrucciones _LL/SC_ con _CAS_ o _TAS_ es más complicado –si no 
 
 Los _spinlocks_ basados en instrucciones por hardware son fundamentales, se requieren algoritmos más eficientes y construcciones más sofisticadas, como lectores-escritores. Son los temas del siguiente capítulo.
 
-[NOTE]
-.Por las dudas
+[IMPORTANT]
 ====
 En todos los ejemplos de exclusión mutua la sección crítica consistía solo en incrementar un contador compartido. Es perfecto para mostrar que una operación aritmética tan simple también sufre los problemas de concurrencia. No obstante, espero que os hayáis dado cuenta que no hace falta recurrir a un _spinlock_ para incrementar una variable compartida. Se puede hacer de forma directa y óptima con _get&add_ o _add&get_.
 

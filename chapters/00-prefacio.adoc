@@ -32,15 +32,20 @@ Mi sensación es que no había un libro pensado para el programador que no tuvo 
 
 Ante esta situación, y dado que el tiempo para escribir un libro es finito, estuve obligado a filtrar y seleccionar lo fundamental, separar los principios de lo que son derivaciones o metaconstrucciones sobre esos pilares básicos. Hice el esfuerzo, no sé si están todos los que son pero sí sé que los que están son fundamentales.
 
-=== Escribir un _ebook_ técnico legible
+=== Del _ebook_ al papel
+
+[quote]
+____
+*Escribir un _ebook_ técnico legible*
 Este libro tiene muchos algoritmos y programas completos, mis experiencias con libros electrónicos de este tipo no son las mejores (estoy siendo comedido). La mayoría incluyen ejemplos de programas –con tratamientos de excepciones incluidas– cuyas líneas no alcanzan a mostrarse completas en la pequeña pantalla del lector. Me duele la cabeza de solo recordarlos, exigen un gran esfuerzo para descifrar la parte importante de los algoritmos.
 
 Al momento de escribir estas líneas no sé si habrá una versión impresa del libro –no contacté con ninguna editorial–, la intención desde el principio fue hacer un _ebook_ que fuese accesible, compacto y con ejemplos razonablemente fáciles de leer. Fui muy cuidadoso y meticuloso en estos aspectos y creo que el resultado es buenofootnote:[Como las notas son algo menos formales he de ser honesto: nunca vi un libro electrónico con tanto código tan legible como este.]. En vez de inventar otro pseudocódigo usé directamente Python: es expresivo, fácil de comprender y los programas además son válidos.
+____
 
 Por esa claridad y expresividad muchos ejemplos están escritos en Python. Los programas completos están en cinco lenguajes diferentes (C, Python, Java, Go y ensamblador de ARM). Usé siempre el que me pareció más apropiado para demostrar lo que estaba explicando. En algunos casos traduje el código a Python para explicarlo en el texto, en otros casos usé el lenguaje original pero quitando lo accesorio (como largas listas de argumentos, tratamiento de excepciones y nombres extensos).
 
 ////
-De todas formas, me parece importante poder analizar el código completo. Dado que un _ebook_ no tiene las restricciones de un libro físico, todos los programas están disponibles directamente desde el lector. El listado completo de todos los programas <<source_code, está en los apéndices>> al final del libro (aproximadamente el 30 % del total de contenido del libro) y cada uno de ellos está enlazado desde el texto donde se discute el código simplificado. Ya en el apéndice, justo antes del código, está el enlace al original en https://github.com/gallir/concurrencia_source_samples[Github].
+De todas formas, me parece importante poder analizar el código completo. Dado que un _ebook_ no tiene las restricciones de un libro físico, todos los programas están disponibles directamente desde el lector. El listado completo de todos los programas <<source_code, está en los apéndices>> al final del libro (aproximadamente el 30 % del total de contenido del libro) y cada uno de ellos está enlazado desde el texto donde se discute el código simplificado. Ya en el apéndice, justo antes del código, está el enlace al original en https://github.com/gallir/concurrencia[Github].
 ////
 
 Creo que en este aspecto cumplí los objetivos. Los algoritmos en el texto son legibles –aún en pantallas de teléfonos–, muestran la parte que interesa y no necesitan tres pantallas para leerse. Pero con un clic se puede ver el programa completo sin salir del libro y con otro clic se puede acceder al repositorio para bajarlo a un ordenador.
@@ -85,7 +90,7 @@ Tampoco es fácil seleccionar una definición en particular. Muchas veces doy va
 
 Los libros no suelen incluir gráficos ni comparaciones de tiempos por una buena razón: la tecnología cambia muy rápidamente y los números aburren. El problema es que se hacen afirmaciones rotundas de eficiencia de estrategias o algoritmos pero sin presentar los datos ni el contexto en que fueron tomadas. Quizás tenían sentido en el momento que se diseñaron esos algoritmos, pero los sistemas _SMP_ han evolucionado y mejorado sustancialmente. Las mejoras notables de hace una década hoy pueden ser inexistentes o residuales.
 
-Hice pruebas y mediciones de todos los ejemplos en diferentes arquitecturas. No fueron mediciones escrupulosas para artículos científicos ni descubrí nada nuevo, no tenía sentido que las incluyera a todas. Pero sí incluí algunos gráficosfootnote:[Los datos _crudos_ https://github.com/gallir/concurrencia_source_samples/tree/master/measurements[están en Github].] en secciones donde la eficiencia era el tema central, o cuando los datos desmentían la intuición o suposiciones populares. Pido disculpas si me excedí, no siempre salí triunfante contra mi obstinación de _cada afirmación debe ir acompañada de los datos que la soportan_.
+Hice pruebas y mediciones de todos los ejemplos en diferentes arquitecturas. No fueron mediciones escrupulosas para artículos científicos ni descubrí nada nuevo, no tenía sentido que las incluyera a todas. Pero sí incluí algunos gráficosfootnote:[Los datos _crudos_ https://github.com/gallir/concurrencia/tree/master/measurements[están en Github].] en secciones donde la eficiencia era el tema central, o cuando los datos desmentían la intuición o suposiciones populares. Pido disculpas si me excedí, no siempre salí triunfante contra mi obstinación de _cada afirmación debe ir acompañada de los datos que la soportan_.
 
 ==== Para docencia
 No fue la intención original pero este libro cubre completamente, y con algo más, los contenidos de concurrencia que se suelen dar en las carreras de informática. Hace unos años estos temas eran una parte de las asignaturas de sistemas operativos. Fue en esta área donde primero aparecieron los problemas de concurrencia, era natural que se explicaran en estas asignaturas.

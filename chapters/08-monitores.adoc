@@ -179,7 +179,7 @@ En el método +wait+ hay que cambiar el +if+ por +while+:
         value = value - 1
 ----
 
-[NOTE]
+[IMPORTANT]
 ====
 La _reanudación inmediata_ simplifica los algoritmos pero también genera retrasos innecesarios en los procesos que señalizan. Cuando no se cuenta con esta propiedad el patrón de programación correcto para verificar la condición es usar +while+ en lugar de +if+.
 ====

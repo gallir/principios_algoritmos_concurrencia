@@ -51,7 +51,9 @@ Espera limitada o _libre de inanición_ (_starvation free_ o _wait-free_):: Cual
 Además de los tres requisitos fundamentales anteriores, en el artículo original (<<Dijkstra65>>) Dijkstra propuso cuatro que deben cumplir los algoritmos de sección crítica:
 
 [[four_requisites]]
+[NOTE]
 .Cuatro requisitos de Dijkstra
+====
 . La solución debe ser _simétrica_: no se permiten soluciones que cambien el comportamiento o la prioridad estática de algún proceso.
 
 . No se deben hacer suposiciones de la _velocidad relativa_ de los procesos, ni se puede suponer que las velocidades sean constantes.
@@ -59,13 +61,13 @@ Además de los tres requisitos fundamentales anteriores, en el artículo origina
 . _Entrada inmediata_ o _no interferencia_: un proceso que se interrumpe en el resto del código no debe interferir ni bloquear a los demás procesos.
 
 . Si varios procesos desean entrar simultáneamente, la decisión en la entrada de la sección crítica debe tomar un número finito de pasos.
-
+====
 
 [[algorithms]]
 === Algoritmos de exclusión mutua
 Empezaremos analizando los problemas de algoritmos simples para dos procesos hasta llegar a la primera solución, el _algoritmo de Dekker_ de 1963footnote:[Theodorus Jozef Dekker es un matemático holandés nacido en 1927, su algoritmo se considera el primero que solucionó problemas de procesos concurrentes.]. Luego veremos una solución equivalente pero más sencilla desarrollada por Peterson (<<Peterson>>) en 1981. Finalmente estudiaremos la solución para _N_ procesos, el _algoritmo de la panadería_ de Leslie Lamport (<<Lamport>>).
 
-[NOTE]
+[WARNING]
 ====
 Estos algoritmos no son prácticos por varios motivos. No solo por la espera activa, también porque no funcionan en los procesadores modernos. Estos reordenan las instrucciones (_out of order execution_) para optimizar la ejecución, por lo tanto no aseguran la _consistencia secuencial_ del programa; obligan a llamar a _barreras de memoria_ (_memory barriers_) explícitas. En capítulos posteriores estudiaremos estos problemas y sus soluciones.
 ====
@@ -124,7 +126,7 @@ while True:
 
 === Solución para dos procesos
 
-Encontraremos los algoritmos de exclusión mutua en varios intentos con complejidad creciente, asegurando además que se cumplan los tres requisitos de exclusión mutua y los cuatro de Dijkstra (<<four_requisites>>). La primera de estas últimas condiciones dice que los algoritmos deben ser simétricos, implican que el código debe ser el mismo para ambos procesos. No haremos programas diferentes para cada proceso, será el mismo para todos.
+Encontraremos los algoritmos de exclusión mutua en varios intentos con complejidad creciente, asegurando además que se cumplan los tres requisitos de exclusión mutua y los cuatro de Dijkstra. La primera de estas últimas condiciones dice que los algoritmos deben ser simétricos, implican que el código debe ser el mismo para ambos procesos. No haremos programas diferentes para cada proceso, será el mismo para todos.
 
 Cada uno de los dos procesos está identificado por 0 y 1. Dado que el código de sincronización es idéntico analizaremos la ejecución de solo uno de ellos, la del proceso 0, o _P0_. Desde la perspectiva de _P0_ el _otro_ proceso es el 1 (o _P1_). Obviamente, el algoritmo de _P1_ será igual al de _P0_ pero con los valores 0 y 1 intercambiados.
 
@@ -153,10 +155,10 @@ critical_section()
 turn = 1
 ----
 
-[NOTE]
+[IMPORTANT]
 .Espera activa
 ====
-Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable, se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU, pero a veces es inevitable cuando no se pueden usar otras primitivas de sincronización. En estos casos se los llama _spinlocks_, el capítulo <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
+Esta espera en el +while+ sin hacer trabajo útil, solo verificando el valor de una variable, se denomina _espera activa_ (_busy waiting_). Es una característica indeseable porque consume CPU, pero a veces es inevitable cuando no se pueden usar otras primitivas de sincronización. En estos casos se los llama _spinlocks_, el <<spinlocks>> describe algoritmos más eficientes con instrucciones por hardware.
 ====
 
 Cuando la variable +turn+ sea 0 _P0_ podrá entrar a su sección crítica. Al salir de ella ejecutará el posprotocolo que consiste solo en dar el turno a _P1_. El problema del algoritmo es obvio, pero por ser la primera vez lo analizaremos en detalle comprobando el cumplimiento de cada requisito.
@@ -369,7 +371,7 @@ states[0] = False
 <1> Cede el turno al otro proceso.
 <2> Espera si el estado del otro es verdadero y es su turno.
 
-Como ya hemos analizado en detalle los algoritmos anteriores, en este nos limitaremos a demostrar que se cumplen los tres criterios fundamentales (<<em_requisites>>):
+Como ya hemos analizado en detalle los algoritmos anteriores, en este nos limitaremos a demostrar que se cumplen los tres criterios fundamentales de _<<em_requisites>>_:
 
 Exclusión mutua::
 Para que haya dos procesos en la sección crítica y por la condición +states[j] and turn == j+ se tiene que cumplir una de las condiciones siguientes:
@@ -501,7 +503,7 @@ number[i] = 0
 <3> Se indica que ya acabó la selección.
 <4> Si el proceso _j_ está seleccionando se le espera porque podría corresponderle el turno.
 
-[NOTE]
+[TIP]
 ====
 Se puede consultar y probar el código en C (+intro/bakery.c+) de este algoritmo. Para que funcione correctamente en las arquitecturas modernas hay que insertar _barreras de memoria_, tema de estudio en <<barriers>>.
 ====

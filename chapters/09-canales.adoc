@@ -284,7 +284,7 @@ Si el _buffer_ del canal está lleno los productores se bloquearán hasta que lo
 
 [[channels_mutex]]
 === Mutex
-La implementación de _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a las usadas por los monitores en la máquina virtual de Java.] también es sencilla (código completo, +mutex.go+). Inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
+La implementación de _mutex_ con mensajesfootnote:[El paquete +sync+ de Go tiene una implementación +Mutex+ que es más eficiente, usa los semáforos implementados a nivel de librería en el +runtime+ (https://golang.org/src/runtime/sema.go), el lenguaje implementa su propio _scheduler_ y usa técnicas de _spin/park_ similares a las usadas por los monitores en la máquina virtual de Java.] también es sencilla (código completo en +mutex.go+). Inicialmente se crea un canal con capacidad 1 y se deposita un mensaje vacío (no hace falta compartir datos) que representa un _permiso_ para entrar a la sección crítica.
 
 [source,go]
 ----
@@ -474,7 +474,7 @@ func fork(i int) {
 }
 ----
 
-[NOTE]
+[TIP]
 ====
 Al tratarse de canales síncronos se puede invertir el orden de envío y recepción de mensajes: para tomar los tenedores los filósofos envían un mensaje y para liberarlos reciben uno. En este caso el proceso +fork+ debe invertir también sus operaciones:
 

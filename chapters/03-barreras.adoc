@@ -7,11 +7,11 @@ image::jrmora/03-barreras.jpg[align="center"]
 Los algoritmos de exclusión mutua anteriores son formalmente correctos, pero no funcionan en la mayoría de procesadores modernosfootnote:[No debería decepcionar, la intención era aprender los fundamentos básicos para entender la evolución y cómo hemos llegado a las construcciones actuales.]. Los fabricantes intentan maximizar la potencia de sus procesadores con todos los medios posibles: desde múltiples niveles de caché; _buffer_ de escrituras; segmentación y cola de instrucciones (_instruction pipeline_); al uso ya extendido de varios núcleosfootnote:[Una de las razones de la popularización de la programación concurrente –también de la confusión entre concurrencia y paralelismo–, desarrollar programas con varios hilos para poder ejecutarlos en paralelo en los diferentes núcleos.]. No es posible la programación concurrente en estos procesadores sin el soporte de instrucciones especiales. Sin ellas no se podría ni asegurar que se cumplan las condiciones de la _máquina universal de Turing_.
 
 
-Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que a los programas del capítulo anterior (<<counter_times>>):
+Para mostrar el problema programé el algoritmo de Peterson y lo ejecuté de la misma forma que a los programas del capítulo anterior (_<<counter_times>>_):
 
-[NOTE]
+[WARNING]
 ====
-En <<hardware>> veremos cómo se puede solucionar más eficientemente con instrucciones de hardware.
+En el <<hardware>> veremos cómo se puede solucionar más eficientemente con instrucciones de hardware.
 ====
 
 ----
@@ -89,7 +89,7 @@ Si debe acceder a datos en una línea etiquetada _invalid_, envía un mensaje de
 
 Los sistemas de caché en sistemas _SMP_ aseguran la consistencia de caché. La inconsistencia de caché no es la responsable del mal funcionamiento del algoritmo de exclusión mutua.
 
-[NOTE]
+[IMPORTANT]
 ====
 Era importante introducir el tema de la coherencia de caché ya que tiene una enorme influencia en el rendimiento de programas concurrentes en sistemas _SMP_.
 
@@ -132,7 +132,7 @@ sys     0m0.000s
 ----
 
 [[false_sharing]]
-[NOTE]
+[TIP]
 ._False sharing_
 ====
 Si se iterará frecuentemente (_spinning_) sobre variables compartidas, es mejor asegurarse de que no comparten la misma línea de caché. Las variables han de ser _distantes_ para evitar el efecto conocido como _false sharing_ que obliga al intercambio de mensajes aunque sean variables diferentes.
@@ -236,7 +236,7 @@ Debido a la complejidad del diseño y fabricación, los procesadores con ejecuci
 
 Afortunadamente, el problema está relativamentefootnote:[Sigue siendo un problema que no haya macros estándares para todos los compiladores.] solucionado por los _builtin macros_ de los compiladores, como los del compilador GCC (<<Atomics_C11>>). El compilador define macros que se tratan como funciones normales del programa y cuando genera el código inserta las instrucciones específicas de cada arquitectura. GCC tiene varios _macros atómicos_, algunos de ellos los analizaremos y usaremos en el siguiente capítulo, por ahora nos interesa el genérico `__atomic_thread_fence`.footnote:[Este macro es de las versiones más modernas de GCC, en las antiguas versiones era `__sync_synchronize`.]
 
-Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson ya lo sabemos (el código completo en C en +intro/peterson.c+):
+Hay que insertar la barrera en el sitio correcto, en el caso del algoritmo de Peterson ya lo sabemos (el código completo en +intro/peterson.c+):
 
 [source,c]
 ----
@@ -262,7 +262,7 @@ sys     0m0.000s
 
 En el algoritmo de Peterson la solución con barreras es sencilla, pero las soluciones se hacen más complejas y nada intuitivas en algoritmos más sofisticados. Por ejemplo, el algoritmo de la panadería (+intro/peterson.c+) y el rápido de Lamport (+intro/fast.c+) necesitan tres barreras en sitios diferentes.
 
-[NOTE]
+[TIP]
 .Instrucciones de barreras por arquitectura
 ====
 - Intel 64 bits: +mfence+

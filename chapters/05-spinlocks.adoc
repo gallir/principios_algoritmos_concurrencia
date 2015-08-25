@@ -39,7 +39,7 @@ La presión sobre la memoria caché:: Estos algoritmos no son _escalables_. En s
 
 Aunque en principio son preferibles los _spinlocks_ escalables, antes veremos técnicas básicas para mejorar el rendimiento de los anteriores. Al final del capítulo estudiaremos los dos algoritmos escalables más importantes: _MCS_ y _CLH_.
 
-[NOTE]
+[IMPORTANT]
 ._Spinlocks_ escalables
 ====
 Se denominan _spinlocks escalables_ aquellos en que los _fallosfootnote:[No implica que haya producido un error en el sistema, sino que el procesador no tiene una copia actualizada en su memoria caché, por lo que se deben producir intercambios de mensajes para actualizarla al último valor.] de memoria caché_ se mantienen constantes, independientemente de las iteraciones necesarias en la entrada a la sección crítica (<<MCS1>>, <<Boyd-Wickizer>>).
@@ -146,7 +146,7 @@ El problema con el _backoff_ es la elección de la unidad de tiempo y el límite
 
 Sin embargo, la mejora del _backoff_ es general para todos los procesadores probados, tanto en tiempos de CPU como de retornofootnote:[Me sorprendió, no esperaba que mejore al _yield_, y menos por el sobrecoste de lo cálculos de _backoff_ más la transición breve por el estado _bloqueado_.] (en los procesadores Intel la diferencia es importante, en ARM es mínima).
 
-El código fuente completo en +test_and_set_backoff.c, +swap_backoff.c+ y +compare_and_swap_backoff.c+.
+Los programas completos están en +test_and_set_backoff.c+, +swap_backoff.c+ y +compare_and_swap_backoff.c+, también en el directorio +spinlocks/+.
 
 [[execution_times]]
 ==== Tiempos de ejecución
@@ -413,7 +413,7 @@ int tail;
     flag[0] = 1;
 ----
 
-Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo simplificado es el siguiente (código completo +array_lock.c+):
+Si hay cuatro hilos máximo la dimensión del array será +4 * 32+ (128 bytes en total). El cálculo de la posición real (+my_index+) requiere de una multiplicación y módulo. El algoritmo simplificado es el siguiente (el código completo en +array_lock.c+):
 
 
 [source, python]
@@ -514,7 +514,7 @@ void unlock(mcs_spinlock *node) {
 <4> Se ejecuta solo si había un proceso esperando, en este caso asigna 0 al campo +locked+ de su nodo para que pueda continuar.
 
 
-[NOTE]
+[IMPORTANT]
 .Barreras de memoria
 ====
 En el código C de algunos de los algoritmos se usa `thread_fence` o `store_n` para introducir barreras de memoria explícitas. La necesidad de barreras no se menciona en la bibliografía o los artículos científicos citados, pero son necesarias por lo explicado en <<barriers>>: aunque el sistema de caché sea coherente aún se pueden producir ejecuciones de instrucciones fuera de orden.
@@ -539,7 +539,7 @@ El algoritmo es breve pero más complejo. Tiene más niveles de indirecciónfoot
 
 - Como _MCS_, la espera activa se hace sobre variables independientes, aunque no necesariamente locales a cada proceso.
 - Solo requiere la instrucción atómica _get&set_.
-- La memoria de los nodos puede ser gestionada independientemente. Los procesos pueden proveer un nodo a una dirección estática, o puede gestionarlo el propio módulo de _spinlocks_. footnote:[Por ejemplo, haciendo +malloc+ en el +lock+ y +free+ del nodo que ya no se usa en el +unlock+.].
+- La memoria de los nodos puede ser gestionada independientemente. Los procesos pueden proveer un nodo a una dirección estática, o puede gestionarlo el propio módulo de _spinlocks_.footnote:[Por ejemplo, haciendo +malloc+ en el +lock+ y +free+ del nodo que ya no se usa en el +unlock+.]
 - Puede ser adaptado a sistemas sin coherencia de caché.
 
 La estructura de cada nodo es similar a _MCS_:
