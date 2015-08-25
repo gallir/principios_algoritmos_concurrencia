@@ -56,7 +56,7 @@ Desde los inicios de la multiprogramaciónfootnote:[La capacidad del sistema ope
 ====
 Los registros _RMW_ que proveen operaciones adicionales a la _función identidad_ (i.e. _get_) se denominan _no triviales_. <<Herlihy91, Maurice Herlihy>> demostró que los registros no triviales tienen un _consenso_ de al menos 2 (o son de _clase 2_). Las instrucciones de sincronización mencionadas (_get&add_, _TAS_, _swap_, _CAS_, etc.) implementan registros _RMW_ no triviales.
 
-_CAS_ es la más potente de la lista. <<Herlihy91, Herlihy>> demostró que pertenece a la clase de _consenso N_ (o _infinito_). En palabras del autor (<<Herlihy12>>):
+_CAS_ es la más potente de la lista. Herlihy (<<Herlihy91>>) demostró que pertenece a la clase de _consenso N_ (o _infinito_). En palabras del autor (<<Herlihy12>>):
 
 [quote, Maurice Herlihy]
 _CAS_ es a la computación asíncrona el equivalente de las máquinas de Turing de la computación secuencial.
@@ -271,7 +271,7 @@ Una estructura de datos compartida es _sin exclusión mutua_ (o _lock-free_) si 
 
 Existe interés académico por estos mecanismos porque permiten paralelizar las operaciones sobre estructuras esenciales: _hashes_, colas, árboles balanceados, etc. No son problemas sencillos debido a las limitaciones de las primitivas de hardware para manipular registros de tamaño superior a una palabra, lo que obliga a diseñar algoritmos complejos para componer operaciones atómicas. Por ejemplo, todavía se estudia la solución eficiente a una cola _lock-free_ que permita agregar o quitar elementos por ambos extremos.
 
-A continuación implementamos una pila sin exclusión mutua, en el capítulo siguiente veremos colas sin exclusión mutua necesarias para los algoritmos de _spinlocks_ <<mcs_queue, _MCS_>> y <<clh_queue, _CLH_>>.
+A continuación implementamos una pila sin exclusión mutua, en el capítulo siguiente veremos colas sin exclusión mutua necesarias para los algoritmos de _spinlocks_ _MCS_ (<<mcs_queue>>) y _CLH_ (<<clh_queue>>).
 ====
 
 La pila es una lista encadenada de nodos del tipo +node+ y tiene dos operaciones: _pop_ y _push_. La estructura +node+ contiene un puntero al siguiente elemento (+next+) y una estructurafootnote:[En el código simplificado no se muestra cada +struct+, en el código se pudo haber usado +typedef+, pero preferí no agregar más _capas_ que las estrictamente necesarias.] que almacena los datos (o _payload_, su estructura interna nos es irrelevante):
@@ -542,7 +542,7 @@ Las instrucciones _LL/SC_ tienen algunos problemas que afectan al _avance_. El r
 
 La recomendación general es que el fragmento de código dentro de una sección exclusiva sea breve y que se minimicen las escrituras a memoria.
 
-La principal ventaja de las instrucciones _LL/SC_ es que no sufren el problema ABA: el primer cambio -de _A_ a _B_- ya invalidará el _store_ condicional posterior. Cuando analizamos el problema ABA vimos cómo se puede reproducir el problema con un <<cas_double_stack, par de colas>> que intercambian sus nodos. El programa usa el macro atómico para _CAS_, cuando se compila para ARM se emula esa operación, también con sus problemas. Así, a pesar de que en ARM se traduce a operaciones _LL/SC_, también provoca los mismos errores:
+La principal ventaja de las instrucciones _LL/SC_ es que no sufren el problema ABA: el primer cambio -de _A_ a _B_- ya invalidará el _store_ condicional posterior. Cuando analizamos el problema ABA vimos cómo se puede reproducir el problema con un par de colas que intercambian sus nodos. El programa usa el macro atómico para _CAS_, cuando se compila para ARM se emula esa operación, también con sus problemas. Así, a pesar de que en ARM se traduce a operaciones _LL/SC_, también provoca los mismos errores:
 
 ----
 *** Error in `./stack_cas_malloc': double free or corruption (fasttop): 0x75300468 ***

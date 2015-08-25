@@ -310,7 +310,7 @@ void unlock() {
 
 === Algoritmos de sincronización
 
-En el capítulo <<semaphores>> vimos algunos algoritmos de sincronización, no se pretende resolver todos los problemas con dichos algoritmos, ni que se deban reprogramar cada vez que se necesitan (la mayoría de ellos ya están disponibles como librerías). Los estudiamos porque son modelos simples de los diferentes tipos de problemas de programación concurrente.
+En el <<semaphores>> vimos algunos algoritmos de sincronización, no se pretende resolver todos los problemas con dichos algoritmos, ni que se deban reprogramar cada vez que se necesitan (la mayoría de ellos ya están disponibles como librerías). Los estudiamos porque son modelos simples de los diferentes tipos de problemas de programación concurrente.
 
 La mala noticia es que con monitores haremos lo mismo, estudiaremos los algoritmos para resolver los mismos problemas. La buena noticia es que los problemas (barreras, productor-consumidor, lectores-escritores, etc.) ya nos son conocidos por lo que no habrá que repetir la presentación de cada uno de ellos. La segunda buena noticia es que los algoritmos con monitores son más sencillos que sus equivalentes con semáforos.
 
@@ -568,7 +568,7 @@ synchronized void readerLock() {
 
 ==== Filósofos cenando
 
-Con la solución con semáforos de los <<dining_philosophers, filósofos cenando>> aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> provocados por un diseño descuidado. Planteado de forma correcta, el algoritmo con monitores es más simple y menos propenso a sufrir los problemas de semáforos. Debido a la exclusión mutua entre métodos, hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de provocar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después de que un hilo fue desbloqueado.
+Con la solución con semáforos de los filósofos cenando (<<dining_philosophers>>) aprendimos los problemas de eficiencia e <<deadlocks, interbloqueos>> provocados por un diseño descuidado. Planteado de forma correcta, el algoritmo con monitores es más simple y menos propenso a sufrir los problemas de semáforos. Debido a la exclusión mutua entre métodos, hay más _libertad_ para verificar y modificar las variables compartidas sin la preocupación de provocar condiciones de carrera o interbloqueos. Pero hay que ser meticulosos en verificar si se cumplen las condiciones después de que un hilo fue desbloqueado.
 
 El caso de los filósofos es otro ejemplo notable –como el de barreras– de la simplicidad que aportan los monitores. En los algoritmos con semáforos casi todo el código se ejecutaba dentro de una sección crítica, la excepción eran las operaciones bloqueantes de semáforos (i.e. los _wait_ de sincronización) que deben estar fuera de la sección crítica para evitar interbloqueos. Ese problema ya no existe con las variables de condición, el proceso que se bloquea automáticamente _libera_ el monitor.
 
@@ -597,7 +597,7 @@ class Table {
 
 El array +forks+ mantiene el estado de cada tenedor, +true+ si está disponible. El método +pick+ es simple: si ambos están disponibles los toma poniendo en +false+ al estado de los dos, caso contrario llama a +wait+ para bloquearse hasta que sus vecinos liberen los tenedores. La liberación de ambos tenedores (+release+) consiste en marcarlos como libres y señalizar por si hay filósofos esperando por alguno de los tenedores que acaba de liberar.
 
-El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es óptimo y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con <<dining_philosophers_semaphores, el de semáforos>> es también notable.
+El algoritmo cumple los <<philosophers_requisites, requisitos de filósofos>>, es óptimo y no produce interbloqueos porque no hay _retención y espera_. La simplicidad de este algoritmo comparado con el de semáforosfootnote:[<<dining_philosophers_semaphores>>] es también notable.
 
 ===== Con variables de condición
 A pesar de su simplicidad se puede observar otra vez la potencial ineficiencia, la _tormenta_ de procesos desbloqueados provocada por el +notifyAll+. Cada vez que un filósofo deja sus tenedores despierta a todos, aunque estén bloqueados esperando por tenedores diferentes. Para desbloquear selectivamente se necesitan diferentes variables de condición, pero el monitor nativo de Java no lo permite. Se pueden usar las clases de sincronización de +Lock+ y las variables de condición asociadas que se obtienen con +lock.newCondition()+.
@@ -658,7 +658,7 @@ Los demás tiempos en Java son muy similares, no sorprende, ya que comparten có
 ====
 La eficiencia de la exclusión mutua de los monitores en Java se debe a la implementación sofisticada de la máquina virtual con técnicas que vimos antes: instrucción _CAS_, _spinlocks_, _spin then block_ y bloqueo de hilos (usando las librerías de hilos estándares de cada sistema operativo). La entrada a la sección crítica de métodos o bloques _synchronized_ está gestionado por tres colas diferentes, un hilo puede estar solo en una de ellas:
 
-. _cxq_ (cola de competencia _contention queue_): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) entran primero a esta cola libre de bloqueos usando la instrucción atómica _CAS_, el _spinlock_ está optimizado con <<spin_then_block, _spin/park_>>. La cola tiene varios productores –los hilos que desean entrar al monitor– y un único consumidor que los mueve a la siguiente cola.
+. _cxq_ (cola de competencia _contention queue_): Los hilos recién llegados (_RAT_: _Recently Arrived Thread_) entran primero a esta cola libre de bloqueos usando la instrucción atómica _CAS_, el _spinlock_ está optimizado con _spin/park_ .footnote:[<<spin_then_block>>] La cola tiene varios productores –los hilos que desean entrar al monitor– y un único consumidor que los mueve a la siguiente cola.
 
 . _EntryList_: Pasado un tiempo los hilos bloqueados pasan a esta cola. Todavía no pueden entrar al monitor desde _EntryList_, tienen que hacerlo desde la siguiente.
 

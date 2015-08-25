@@ -415,7 +415,7 @@ while True:
 
 [NOTE]
 ====
-El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles. La mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo, la clase +ArrayBlockingQueue+ en Java, +Queue+ en Python (+queue+ partir de Python 3) y Ruby. Los mensajes nativos de Go son productores-consumidores que pueden ser síncronos o asíncronos (los estudiamos en el capítulo <<channels>>).
+El modelo productor-consumidor es muy común en informática, las _tuberías_ y _colas_ son construcciones muy útiles. La mayoría de lenguajes ofrecen una implementación nativa o por librerías. Por ejemplo, la clase +ArrayBlockingQueue+ en Java, +Queue+ en Python (+queue+ partir de Python 3) y Ruby. Los mensajes nativos de Go son productores-consumidores que pueden ser síncronos o asíncronos (los estudiamos en el <<channels>>).
 ====
 
 ===== Semáforos partidos
@@ -630,7 +630,7 @@ fork[1].wait()
 ----
 <1> El _filósofo~4~_ es el único que hace el +wait+ en orden decreciente.
 
-Todos quedarán bloqueados porque los semáforos _mutex_ están tomados, es un interbloqueo, como <<first_deadlock, vimos>> en el capítulo <<algorithms>>.
+Todos quedarán bloqueados porque los semáforos _mutex_ están tomados, es un interbloqueo, como <<first_deadlock, vimos>> en la <<algorithms>>.
 
 [[deadlocks]]
 ==== Interbloqueos
@@ -818,7 +818,7 @@ Aunque la más utilizada es _herencia de prioridades_, no hay un consenso sobre 
 Friends don't let friends use priority inheritance.
 
 
-Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es de programas erróneos, no una cuestión que deba resolver el núcleo. En 2006 Ingo Molnar consiguió introducir soporte para herencia de prioridades en la interfaz FUTEXfootnote:[La estudiamos en el capítulo <<futex>>.] (<<Molnar>>), usada para implementar los semáforos POSIX y los mecanismos de sincronización de POSIX Threads, las GLibc fueron adaptadas rápidamentefootnote:[El atributo  +PTHREAD_PRIO_INHERIT+ en la función +pthread_mutexattr_setprotocol+, POSIX Threads también soporta _priority ceiling_ con +PTHREAD_PRIO_PROTECT+ y la función +pthread_mutexattr_setprioceiling+.].
+Linus Torvalds se negaba a introducirla en Linux, consideraba que el problema es de programas erróneos, no una cuestión que deba resolver el núcleo. En 2006 Ingo Molnar consiguió introducir soporte para herencia de prioridades en la interfaz FUTEXfootnote:[La estudiamos en el <<futex>>.] (<<Molnar>>), usada para implementar los semáforos POSIX y los mecanismos de sincronización de POSIX Threads, las GLibc fueron adaptadas rápidamentefootnote:[El atributo  +PTHREAD_PRIO_INHERIT+ en la función +pthread_mutexattr_setprotocol+, POSIX Threads también soporta _priority ceiling_ con +PTHREAD_PRIO_PROTECT+ y la función +pthread_mutexattr_setprioceiling+.].
 
 
 [NOTE]

@@ -5,7 +5,7 @@ image::jrmora/07-futex.jpg[align="center"]
 
 Los mecanismos de sincronización sin espera activa son habitualmente implementados en el núcleo de los sistemas operativos, estos tienen mayor facilidad y capacidad para cambiar el estado de los procesos. Sin embargo, las llamadas de sistemas toman un tiempo considerable debido a la interrupción de software y posterior cambio de contexto a ejecución del núcleo.
 
-Se puede mejorar el rendimiento si se invoca al núcleo únicamente en caso de competencia entre procesos. Si solo uno desea entrar a una sección crítica, puede resolverse directamente en el _espacio de usuario_ con ayuda de las instrucciones atómicas estudiadas en el capítulo <<hardware>>.
+Se puede mejorar el rendimiento si se invoca al núcleo únicamente en caso de competencia entre procesos. Si solo uno desea entrar a una sección crítica, puede resolverse directamente en el _espacio de usuario_ con ayuda de las instrucciones atómicas estudiadas en el <<hardware>>.
 
 Un _mutex_ de este tipo puede usar una variable entera compartida (+mutex+) y la instrucción _swap_. En el _wait_ verifica si después del intercambio +local+ vale cero, en este caso no hay competencia y podrá continuar. En caso contrario, se hará la llamada de sistema para que el núcleo bloquee al proceso.
 
@@ -394,7 +394,7 @@ sys     0m3.898s
 ----
 
 
-En algunas situaciones, como alta competencia y secciones críticas muy breves, son preferibles las esperas activas breves a los costosos cambios de contexto (<<LockLess2>>). Esta técnica es conocida como _spin-then-block_ o _spin-and-park_, es muy usada en librerías y soportes _runtime_ de lenguajes de programación. Por ejemplo, la máquina virtual de Java lo usa para la implementación de sus <<java_monitor, monitores nativos>>.
+En algunas situaciones, como alta competencia y secciones críticas muy breves, son preferibles las esperas activas breves a los costosos cambios de contexto (<<LockLess2>>). Esta técnica es conocida como _spin-then-block_ o _spin-and-park_, es muy usada en librerías y soportes _runtime_ de lenguajes de programación. Por ejemplo, la máquina virtual de Java lo usa para la implementación de sus monitores nativos (<<java_monitor>>).
 
 
 === Barreras

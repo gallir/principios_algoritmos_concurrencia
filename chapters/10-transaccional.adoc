@@ -322,7 +322,7 @@ _TSX_ es el nombre de las extensiones _HTM_ de Intel para su arquitectura Haswel
 - _Restricted Transactional Memory_ o _RTM_.
 - _Hardware Lock Elision_ o _HLE_.
 
-_TSX_ usa la caché L1 de cada núcleo y el protocolo <<mesi_protocol, _MESI_>> para detectar conflictos. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64) con 32 KB en total, pero es compartida en los núcleos con _hyperthreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
+_TSX_ usa la caché L1 de cada núcleo y el protocolo _MESI_ para detectar conflictosfootnote:[<<mesi_protocol>>]. La caché L1 tiene 512 líneas y es _8-way_ (8 x 64) con 32 KB en total, pero es compartida en los núcleos con _hyperthreading_ por lo que la capacidad se reduce a la mitad. Cada línea tiene un bit adicional, _T_, para marcar las líneas que contienen direcciones que son parte del conjunto de la transacción activa.
 
 Cuando se lee una variable dentro de una transacción se pone en uno el bit _T_ de su línea de caché y es marcada como _exclusiva_ (ahora está en el _read-set_). Si la variable se modifica se marca su línea de caché como _modificada_ (ahora está en el _write-set_). Si se llega al final de la transacción sin conflictos se ponen los bits _T_ en cero por lo que todas las líneas modificadas son visibles a los demás procesadores.
 
@@ -335,7 +335,7 @@ La solución es técnicamente simple, eficiente y está integrada en el sistema 
 
 _HLE_ está basado en el trabajo de Ravi Rajwar y James R. Goodman publicado en 2001 (<<Rajwar>>)footnote:[Posteriormente Intel contrató a Ravi Rajwar.]. La idea es creativa y permite que programas compilados para _HLE_ funcionen en procesadores antiguos o sin soporte de _HTM_.
 
-Los _mutex_ con _spinlocks_ tradicionales, por ejemplo con <<get_and_set_alg, _get&set_>>, tienen el siguiente aspecto:
+Los _mutex_ con _spinlocks_ tradicionales, por ejemplo con _get&set_,footnote:[<<get_and_set_alg>>] tienen el siguiente aspecto:
 
 ----
 movl    $1, %eax

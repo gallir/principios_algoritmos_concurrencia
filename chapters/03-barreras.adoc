@@ -61,6 +61,7 @@ Los sistemas de caché más usados son los denominados _N-ways_, _N_ significa q
 
 Las arquitecturas _SMP_ deben mantener coherentes las copias de la memoria caché en cada procesador. Cada arquitectura puede o no garantizar la _coherencia de caché_; la buena noticia es que la mayoría de sistemas _SMP_ la aseguran.
 
+[[mesi_protocol]]
 ==== Coherencia de caché en multiprocesadores
 
 En arquitecturas _SMP_ los procesadores están conectados por una compleja red de comunicación, el _front side buffer_. La arquitectura de la red depende del fabricante. Puede ser del tipo _bus_, donde los datos se transfieren por un bus compartido; o arquitecturas más sofisticadas que permiten comunicaciones punto a punto entre procesadores, como la _QuickPath_ de Intel.
@@ -72,7 +73,6 @@ image::intel-quickpath.png[align="center"]
 
 Para mantener la consistencia entre las diferentes copias de caché se usa el algoritmo _MESI_ (por _Modified_, _Exclusive_, _Shared_ e _Invalid_, <<Papamarcos>>) y derivados como _MESIF_ de Intel (_F_ por _forward_).
 
-[[mesi_protocol]]
 [NOTE]
 .Protocolo _MESI_
 ====
@@ -93,7 +93,7 @@ Los sistemas de caché en sistemas _SMP_ aseguran la consistencia de caché. La 
 ====
 Era importante introducir el tema de la coherencia de caché ya que tiene una enorme influencia en el rendimiento de programas concurrentes en sistemas _SMP_.
 
-También es importante conocerla para comprender el funcionamiento de la _memoria transaccional por hardware_ que vemos en el capítulo <<tm>>.
+También es importante conocerla para comprender el funcionamiento de la _memoria transaccional por hardware_ que vemos en el <<tm>>.
 ====
 
 ===== La sobrecarga del acceso a variables compartidas
@@ -162,7 +162,7 @@ o
     c = a * 2
 
 
-El procesador detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Funciona perfectamente en procesos aislados, pero si se trata de procesos concurrentes es incapaz de detectar las dependencias causales entre ellos. Tomemos el algoritmo correcto más sencillo, <<peterson, Peterson>>, cuya entrada a la sección crítica es:
+El procesador detecta que la asignación a +c+ la puede hacer antes que +b+, o a la de +b+ antes que a +a+ porque no hay dependencias entre ellas. Funciona perfectamente en procesos aislados, pero si se trata de procesos concurrentes es incapaz de detectar las dependencias causales entre ellos. Tomemos el algoritmo correcto más sencillo, Petersonfootnote:[<<peterson>>], cuya entrada a la sección crítica es:
 
 [source,python]
 ----

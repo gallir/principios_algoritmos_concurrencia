@@ -5,7 +5,7 @@
 :copyrights: Attribution-NonCommercial-NoDerivatives 4.0 International CC BY-NC-ND 4.0
 :lang: es
 :docinfo:
-:revnumber: 1.0.1
+:revnumber: 1.0
 :keywords: concurrencia, algoritmos, spinlocks, semáforos, monitores, canales
 :toc:
 :toclevels: 2

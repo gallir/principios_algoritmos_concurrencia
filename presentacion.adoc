@@ -1,3 +1,21 @@
+
+En Create Space
+
+Con la popularización de los multiprocesadores la programación concurrente es un tema de moda. Pero hay mucha confusión y desconocimiento sobre qué es concurrencia y sus principios y algoritmos fundamentales. No hay muchos libros accesibles y actualizados que cubran estos temas de forma estructurada, genérica, con un enfoque moderno y a precios razonables. Este libro intenta llenar ese hueco, es accesible pero completo, riguroso y autocontenido.
+
+Está especialmente orientado a estudiantes y programadores que desean actualizarse o completar sus conocimientos de programación concurrente. Se tratan algoritmos y técnicas complejas pero no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación y estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
+
+Algunos de los temas son los que se estudian en asignaturas universitarias de programación concurrente: el problema de exclusión mutua y sincronización con semáforos, monitores y canales. También se tratan temas más avanzados como instrucciones de hardware, optimizaciones de spinlocks, la interfaz FUTEX del núcleo Linux y memoria transaccional por software y hardware.
+
+Para cada tema se explican el origen, conceptos y algoritmos fundamentales. Todos con ejemplos y código fuente en lenguajes populares (C, Python, Java, y Go).
+
+
+
+--------------
+
+
+
+
 Está orientado a estudiantes o programadores que desean actualizarse o completar sus conocimientos de programación concurrente. Aunque se explican algoritmos y técnicas complejas no se requieren ni se suponen conocimientos de concurrencia, solo experiencia en programación y estructuras de datos básicas. Comienza con los conceptos más básicos de procesos e hilos y avanza incrementalmente hasta las técnicas más sofisticadas.
 
 Algunos de los temas son los que se suelen estudiar en asignaturas universitarias de programación concurrente: el problema de exclusión mutua y sincronización con semáforos, monitores y canales. También se tratan temas más avanzados: instrucciones de hardware, optimizaciones de spinlocks, la interfaz FUTEX del núcleo Linux y memoria transaccional.

@@ -1,7 +1,7 @@
 [colophon]
 == Créditos
 
-Principios y algoritmos de concurrencia
+PRINCIPIOS Y ALGORITMOS DE CONCURRENCIA
 
 
 (C) Ricardo Galli Granada
@@ -19,12 +19,11 @@ Versión: {revnumber}, {localdate}
 
 Palma de Mallorca, 2015
 
-
-//ISBN: 978-84-606-8761-0
+ISBN: 978-1517029753
 
 Licencia: CC BY-NC-ND 4.0
 
 // –
 
 
-// image::legal.png[width=480, align="center"]
+image::legal.png[]

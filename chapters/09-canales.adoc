@@ -128,7 +128,7 @@ Los programas son equivalentes y muy similares. Las diferencias fundamentales so
 
 === Barreras
 
-Las <<sync_barrier, barreras de sincronización>> son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
+Las barreras de sincronizaciónfootnote:[<<sync_barrier>>] son un buen ejemplo para introducir el uso de canales como mecanismos de sincronización.
 
 ==== Barreras binarias
 Una <<sync_barrier, barrera>> para dos procesos es, al igual que con semáforos, un ejemplo sencillo para implementar con mensajes. Dos procesos, _A_ y _B_, deben coordinarse: _A_ no debe pasar de un punto hasta que _B_ haya llegado, y viceversa.
@@ -355,7 +355,7 @@ El problema de esta solución es la dimensión del _buffer_ del canal: su tamañ
 
 ==== Tamaño del _buffer_ independiente del valor
 
-Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de <<monitors_semaphores, semáforos con monitores>> o la implementación del <<futex_semaphore, semáforo con FUTEX>>. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usamos el canal +queue+ para mantener la cola de bloqueados.
+Una solución de este tipo requeriría, como en los algoritmos de barreras o productores-consumidores, de una cola para mantener un mensaje con el valor actual del semáforo (+value+) y otra cola para bloquear en _wait_ si el semáforo toma un valor negativo (+queue+). La solución no es muy diferente a la simulación de semáforos con monitoresfootnote:[<<monitors_semaphores>>] o la implementación del semáforo con FUTEXfootnote:[<<futex_semaphore>>]. En el primer caso usamos la cola de la variable de condición para bloquear a los procesos, en el segundo la cola del FUTEX. Para la siguiente solución usamos el canal +queue+ para mantener la cola de bloqueados.
 
 La estructura e inicialización es la siguiente (código completo en +semaphore2.go+):
 
@@ -894,7 +894,7 @@ El _mutex_ nativo de Go tiene tiempos similares a los de POSIX Threads y Java mi
 
 ==== Barreras
 
-El siguiente gráfico es también similar a la de <<barriers_monitor_java, monitores>>. Esta vez con semáforos y variables de condición de POSIX Threads, monitor de Java y canales en Go.
+El siguiente gráfico es también similar al de <<barriers_monitor_java, monitores>>. Esta vez con semáforos y variables de condición de POSIX Threads, monitor de Java y canales en Go.
 
 .Tiempos de ejecución de barreras, Intel
 [caption=""]
