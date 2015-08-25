@@ -968,7 +968,7 @@
       <xsl:value-of select="$body.font.master * 0.8"/><xsl:text>pt</xsl:text>
     </xsl:attribute>
     <xsl:attribute name="color"><xsl:value-of select="$link.color"/></xsl:attribute>
-    <xsl:attribute name="font-weight">bold</xsl:attribute>
+    <xsl:attribute name="font-weight">normal</xsl:attribute>
     <xsl:attribute name="padding">0 1pt</xsl:attribute>
   </xsl:attribute-set>
 
