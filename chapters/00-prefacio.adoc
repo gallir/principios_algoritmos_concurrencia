@@ -34,25 +34,26 @@ Ante esta situación, y dado que el tiempo para escribir un libro es finito, est
 
 === Del _ebook_ al papel
 
+Este libro fue originalmente diseñado para la versión electrónica, no entraba en los planes inmediatos publicar una versión en papelfootnote:[El _ebook_ está recibiendo buenas críticas y se está vendiendo bien, muchos me pidieron una versión en papel y buena gente de Create Space Europa me motivó. Implicaba mucho trabajo de conversión, adaptación y maquetación pero finalmente me convencieron.]. El siguiente texto es un fragmento del _manifiesto_ de la versión digital del libro:
+
 [quote]
 ____
 *Escribir un _ebook_ técnico legible*
 Este libro tiene muchos algoritmos y programas completos, mis experiencias con libros electrónicos de este tipo no son las mejores (estoy siendo comedido). La mayoría incluyen ejemplos de programas –con tratamientos de excepciones incluidas– cuyas líneas no alcanzan a mostrarse completas en la pequeña pantalla del lector. Me duele la cabeza de solo recordarlos, exigen un gran esfuerzo para descifrar la parte importante de los algoritmos.
 
-Al momento de escribir estas líneas no sé si habrá una versión impresa del libro –no contacté con ninguna editorial–, la intención desde el principio fue hacer un _ebook_ que fuese accesible, compacto y con ejemplos razonablemente fáciles de leer. Fui muy cuidadoso y meticuloso en estos aspectos y creo que el resultado es buenofootnote:[Como las notas son algo menos formales he de ser honesto: nunca vi un libro electrónico con tanto código tan legible como este.]. En vez de inventar otro pseudocódigo usé directamente Python: es expresivo, fácil de comprender y los programas además son válidos.
-____
+Al momento de escribir estas líneas no sé si habrá una versión impresa del libro –no contacté con ninguna editorial–, la intención desde el principio fue hacer un _ebook_ que fuese accesible, compacto y con ejemplos razonablemente fáciles de leer. Fui muy cuidadoso y meticuloso en estos aspectos y creo que el resultado es bueno. En vez de inventar otro pseudocódigo usé directamente Python: es expresivo, fácil de comprender y los programas además son válidos.
 
 Por esa claridad y expresividad muchos ejemplos están escritos en Python. Los programas completos están en cinco lenguajes diferentes (C, Python, Java, Go y ensamblador de ARM). Usé siempre el que me pareció más apropiado para demostrar lo que estaba explicando. En algunos casos traduje el código a Python para explicarlo en el texto, en otros casos usé el lenguaje original pero quitando lo accesorio (como largas listas de argumentos, tratamiento de excepciones y nombres extensos).
+____
 
-////
-De todas formas, me parece importante poder analizar el código completo. Dado que un _ebook_ no tiene las restricciones de un libro físico, todos los programas están disponibles directamente desde el lector. El listado completo de todos los programas <<source_code, está en los apéndices>> al final del libro (aproximadamente el 30 % del total de contenido del libro) y cada uno de ellos está enlazado desde el texto donde se discute el código simplificado. Ya en el apéndice, justo antes del código, está el enlace al original en https://github.com/gallir/concurrencia[Github].
-////
+La única diferencia entre la versión en papel y el _ebook_ es que esta no incluye los apéndices con los programas completos. No es económico ni cómodo añadir cientos de páginas de código. En un _ebook_ no tiene coste y se puede navegar fácilmente, pero no es el caso con el papel. Afortunadamente la intención desde el principio fue que la lectura fuese fluida y que el texto se comprendiese con el código incluido en el cuerpo, lo mismo vale para esta edición.
 
-Creo que en este aspecto cumplí los objetivos. Los algoritmos en el texto son legibles –aún en pantallas de teléfonos–, muestran la parte que interesa y no necesitan tres pantallas para leerse. Pero con un clic se puede ver el programa completo sin salir del libro y con otro clic se puede acceder al repositorio para bajarlo a un ordenador.
+Los programas completos están disponibles en el repositorio en Github: *https://github.com/gallir/concurrencia*. Si tenéis interés en profundizar o probarlos lo podéis bajar a vuestro ordenador de varias formas (bajando el ZIP o clonando el repositorio). El código está organizado por directorios, cada capítulo tiene el suyofootnote:[El nombre en inglés de cada uno corresponde el tema de su capítulo correspondiente: hardware, spinlocks, semaphores, futex, monitors, channels y transactional.]. En cada explicación de los algoritmos (que incluyen como mínimo el fragmento importante del programa) se indica cuál es el fichero correspondiente en Github.
 
+Fui muy cuidadoso en la selección del tipo de letra, la maquetación del código y la selección de la parte importante de los algoritmos. Estos son perfectamente legibles, muestran la parte relevante, no hay líneas de código que ocupan todo el ancho de la página y no hace falta recorrer varias páginas hacia atrás y hacia adelante para comprenderlos (pocas veces superan la docena de líneas). En este aspecto cumplí también los objetivos de claridad y legibilidad, creo que aún mejor que en la versión digital (que por otra parte no es complicado, en papel se puede definir mejor el aspecto final).
 
 === Sobre el contenido
-Intenté que este libro sea compacto e ir directamente al grano sin demasiadas analogías, como es habitual en los libros de texto. A pesar del esfuerzo deliberado por la brevedad, la longitud final es equivalente a más de 200 páginas –descontando el listado de los programas– de un libro impreso. Cada párrafo suele describir completamente una idea o concepto y cada oración es un avance hacia ese objetivo.
+Intenté que este libro sea compacto e ir directamente al grano sin demasiadas analogías, como es habitual en los libros de texto. Cada párrafo suele describir completamente una idea o concepto y cada oración es un avance hacia ese objetivo.
 
 La lectura puede dar la sensación de agobio por la rapidez con que se avanza, algo que también me pasaba durante las revisiones y correcciones. Pido disculpas por no saber hacerlo mejor, pero en cierta forma es inevitable si se escribe un texto donde se introducen tantos temas complejos e interdependientes.
 
@@ -67,7 +68,7 @@ Los programas están desarrollados y probados en GNU/Linux. Para ejecutarlos se 
 
 
 ==== Los programas
-Uno de los requisitos que me impuse fue que todo lo que explicase debía ir acompañado de programas que compilen y funcionen correctamente. Además de estar listados en los apéndices se pueden bajar desde Github. Son libres, puedes hacer con ellos lo que desees, incluso verificar si lo que explico en el libro es verdad.
+Uno de los requisitos que me impuse fue que todo lo que explicase debía ir acompañado de programas que compilen y funcionen correctamente. Son lo que están en Github, son libres, puedes hacer con ellos lo que desees, incluso verificar si lo que explico en el libro es verdad.
 
 Otro requisito autoimpuesto fue que todos los programas deberían poder ser compilados y ejecutados en el ordenador más básico posible: cualquier Raspberry Pi con sus distribuciones estándares de GNU/Linux. Están preparados para que funcionen con cualquier distribución relativamente moderna y probados sobre Raspberry Pi 1 y 2 con Debian Jessie y Ubuntu 14.04. Para compilarlos hay que instalar los paquetes del gcc, Golang, Python y el SDK de Java –todos disponibles en cualquier distribución– y ejecutar el comando +make+ en cada uno de los directorios organizados por capítulos.
 
@@ -130,13 +131,17 @@ De todas formas, aprender requiere esfuerzo personal e intelectual proporcional 
 === Fe de erratas
 Este libro está autoeditado y no fue revisado por editores ni correctores profesionales. Aunque revisé meticulosamente varias veces cada capítulo, publiqué los manuscritos https://gallir.wordpress.com/principios-de-concurrencia/[en mi blog] y pasó por la revisión de varias personas, seguro que tiene errores. Pido disculpas por adelantado y me comprometo a listarlas en https://gallir.wordpress.com/2015/06/21/principios-y-algoritmos-de-concurrencia-fe-de-erratas/[la página de fe de erratas] y actualizar el libro en todas las plataformas en las que lo haya publicado.
 
-Si tenéis consultas o encontráis errores, mi apodo es _gallir_ en casi todas las redes sociales.
+Si tenéis consultas o encontráis errores, mi apodo es _gallir_ en casi todas las redes sociales. También podéis mirar las novedades o contactarme en la página de https://www.facebook.com/concurrencia[Facebook].
 
 === Licencia
 
-Creo que el conocimiento debe estar accesible a todos y que es un honor tener lectores interesados en tu obra, independientemente de cómo la obtuvieron. Por eso este libro se distribuye sin DRM y tiene una licencia Creative Commons que te autoriza a dar copias a novios, amigos, compañeros y cuñados. Las únicas condiciones son que no lo hagas con fines comerciales y no plagies ni modifiques el contenido.
+Creo que el conocimiento debe estar accesible a todos y que es un honor tener lectores interesados en tu obra, independientemente de cómo la obtuvieron. Por eso este libro se distribuye sin DRM en su versión digital y tiene una licencia Creative Commons que te autoriza a hacer copias y fotocopias a novios, amigos, compañeros y cuñados. Las únicas condiciones son que no lo hagas con fines comerciales y no plagies ni modifiques el contenido.
 
-Aunque puedes copiarlo gratuitamente, este libro me costó mucho esfuerzo, tiempo y algo de dinero. No sé por qué, pero se me ocurrió ahora mismo que debo recordarte que se vende a un precio ridículamente bajo y si lo compras _online_ te resultará más cómodo que copiar ficheros desde el ordenador al lector o _tablet_.
+=== Tu colaboración es importante
+
+Aunque puedes copiarlo gratuitamente este libro me costó mucho esfuerzo, tiempo y algo de dinero. El hecho que haya sido autoeditado me generó más trabajo pero también me dio mucha libertad, sobre todo el poder de decidir el precio de venta. Por esta razón puedes comprarlo a precio muy inferior al habitual de este tipo de libros.
+
+Pero ser un autor _indie_ tiene sus desventajas, la fundamental es que no dispones de los canales de promoción de las editoriales. En este sentido tu colaboración es importante: si te agradó o te fue de utilidad coméntalo en el sitio donde lo hayas comprado y recomiéndalo a amigos, profesores y colegas.
 
 === Agradecimientos
 

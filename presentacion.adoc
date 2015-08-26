@@ -7,7 +7,7 @@ Está especialmente orientado a estudiantes y programadores que desean actualiza
 
 Algunos de los temas son los que se estudian en asignaturas universitarias de programación concurrente: el problema de exclusión mutua y sincronización con semáforos, monitores y canales. También se tratan temas más avanzados como instrucciones de hardware, optimizaciones de spinlocks, la interfaz FUTEX del núcleo Linux y memoria transaccional por software y hardware.
 
-Para cada tema se explican el origen, conceptos y algoritmos fundamentales. Todos con ejemplos y código fuente en lenguajes populares (C, Python, Java, y Go).
+Para cada tema se explican el origen, conceptos y algoritmos fundamentales. Todos con ejemplos y código fuente en lenguajes populares (C, Python, Java y Go).
 
 
 
