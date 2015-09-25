@@ -128,10 +128,6 @@ Si tenéis consultas o encontráis errores, mi apodo es _gallir_ en casi todas l
 
 === Licencia
 
-Creo que el conocimiento debe estar accesible a todos y que es un honor tener lectores interesados en tu obra, independientemente de cómo la obtuvieron. Por eso este libro se distribuye sin DRM y tiene una licencia Creative Commons que te autoriza a dar copias a novios, amigos, compañeros y cuñados. Las únicas condiciones son que no lo hagas con fines comerciales y no plagies ni modifiques el contenido.
-
-=== Licencia
-
 Creo que el conocimiento debe estar accesible a todos y que es un honor tener lectores interesados en tu obra, independientemente de cómo la obtuvieron. Por eso este libro se distribuye sin DRM en su versión digital y tiene una licencia Creative Commons que te autoriza a hacer copias y fotocopias a novios, amigos, compañeros y cuñados. Las únicas condiciones son que no lo hagas con fines comerciales y no plagies ni modifiques el contenido.
 
 === Tu colaboración es importante
