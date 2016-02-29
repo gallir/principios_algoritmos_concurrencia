@@ -3,8 +3,6 @@ Libro concurrencia
 
 29/02/2016: Abierto el repositorio del texo completo del libro. La rama master es la original del ebook, la rama paper tiene las modificaciones para el libro en papel
 
-Aquí está el código fuente ejemplo (en diferentes lenguajes) que preparo para
-el libro de "Principios y algoritmos de Concurrencia".
 
 El código fuente de los ejemplos están en https://github.com/gallir/concurrencia
 
@@ -14,7 +12,7 @@ EN Amazon (tapa blanda y Kindle): http://www.amazon.es/Principios-algoritmos-con
 
 En Google Play: https://play.google.com/store/books/details?id=cLXfCQAAQBAJ
 
-Para generar epub y html hay que instalar asciidoctor, docbook y a2x:
+Para generar epub y html hay que clonar también el repositorio del código el directorio "code" e instalar asciidoctor, docbook y a2x:
 
     make html
     
