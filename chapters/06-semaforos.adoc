@@ -801,7 +801,7 @@ La inversión de prioridades es un problema que se puede presentar en todos los 
 .Inversión de prioridadesfootnote:[Imagen de <<Shiftehfar>>.]
 image::priority-inversion.png[align="center"]
 
-_L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo _H_ hace _wait_ sobre el mismo semáforo. Antes de que _C_ pueda hacer el _signal_ es quitado del procesador (_preempted_) por el proceso _I_ de mayor prioridad. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_.
+_L_ entra en la sección crítica haciendo _wait_ en un semáforo, al poco tiempo _H_ hace _wait_ sobre el mismo semáforo. Antes de que _L_ pueda hacer el _signal_ es quitado del procesador (_preempted_) por el proceso _I_ de mayor prioridad. _H_ no podrá ejecutarse hasta que _I_ y todos los demás procesos con prioridad intermedia hayan liberado el procesador y permitan que _L_ haga el _signal_.
 
 Este interbloqueo causado por el _scheduler_ se denomina inversión de prioridades. Aunque _H_ tiene la mayor prioridad, no se puede ejecutar porque comparte recursos con _L_; que a su vez no se ejecuta porque tiene menor prioridad que _I_.
 
