@@ -22,7 +22,7 @@ struct Semaphore {
 Un semáforo puede ser inicializado con un valor no negativo, el siguiente pseudocódigo indica que el valor del semáforo (la variable +value+) es inicializada a 1:
 
 ----
-    Semaphore s.value = 1
+    Semaphore s = 1
 ----
 
 Además de la estructura de datos, los semáforos se componen de dos primitivas fundamentales: _P_ (de la contracción _prolaag_ del holandés _proberen te verlagen_, que significa _intentar decrementar_) y _V_ (del holandés _verhoog_ o _verhogen_, que significa _incrementar_).
