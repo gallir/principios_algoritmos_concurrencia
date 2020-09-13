@@ -29,7 +29,7 @@ Además de la estructura de datos, los semáforos se componen de dos primitivas 
 
 [horizontal]
 *_P_*:: Si el contador es mayor que cero lo decrementa, caso contrario bloquea al proceso que la llamó. Actualmente es más conocida como _wait_, _acquire_, o _lock_.
-*_V_*:: Si hay un algún proceso bloqueado en el semáforo, lo desbloquea. En caso contrario, incrementa el valor de la variable. Esta operación es más conocida como _signal_, _release_, o _post_.
+*_V_*:: Si hay algún proceso bloqueado en el semáforo, lo desbloquea. En caso contrario, incrementa el valor de la variable. Esta operación es más conocida como _signal_, _release_, o _post_.
 
 El algoritmo de ambasfootnote:[En el pseudocódigo uso la notación `objeto.método()` para que sean similares a la mayoría de los ejemplos en Python, programados con las clases de sincronización de +threading+.]:
 
