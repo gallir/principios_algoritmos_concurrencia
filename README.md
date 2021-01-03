@@ -1,5 +1,4 @@
-Libro concurrencia
-==================
+# Book "Principios y algoritmos de concurrencia"
 
 29/02/2016: Abierto el repositorio del texo completo del libro. La rama master es la original del ebook, la rama paper tiene las modificaciones para el libro en papel
 
